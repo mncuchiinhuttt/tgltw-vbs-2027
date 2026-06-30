@@ -19,7 +19,7 @@ Method/
 │   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro API vision-language handler
 │   ├── embedding.py       # QwenVL8BEmbedder & M2DClapEmbedder
 │   ├── asr.py             # PhoWhisper speech-to-text transcriber
-│   └── object_detector.py # DINO-X & Grounding DINO 1.5 Pro zero-shot detectors
+│   └── object_detector.py # Rex-Omni zero-shot object detector
 ├── preprocessing/         # Dataset indexing pipeline
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
 │   ├── .env               # API Keys and model configurations (ignored)
@@ -45,7 +45,7 @@ To avoid duplicate codebase wrappers, all model configurations and execution log
 
 - **VLM backends**: Supports offline local execution (HuggingFace Qwen3-VL) or OpenAI API (GPT 5.5 Pro).
 - **Embeddings**: `QwenVL8BEmbedder` (1536d text/image space) and `M2DClapEmbedder` (512d sound space).
-- **Object Detection**: `ObjectDetector` wraps DINO-X online API, DINO-X local weights, or Grounding DINO 1.5 Pro offline fallback.
+- **Object Detection**: `ObjectDetector` wraps local offline `Rex-Omni` (`IDEA-Research/Rex-Omni`) to locate target objects.
 - **ASR**: `PhoWhisperASR` for transcribing speech with timestamps.
 
 The scripts dynamically append the workspace root to `sys.path` to import `models.*` from anywhere.
@@ -55,7 +55,7 @@ The scripts dynamically append the workspace root to `sys.path` to import `model
 ## Getting Started
 
 ### 1. Download Model Checkpoints
-Run the download script from the root folder to download weights for PhoWhisper, CLAP, and Grounding DINO into the `weights/` folder:
+Run the download script from the root folder to download weights for PhoWhisper, CLAP, and Rex-Omni into the `weights/` folder:
 ```bash
 python download_assets.py
 ```

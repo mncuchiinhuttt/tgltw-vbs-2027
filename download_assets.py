@@ -45,19 +45,8 @@ def main():
     # 2. CLAP Environmental model
     download_model("laion/clap-htsat-fused", "clap-htsat-fused")
     
-    # 3. Grounding DINO weights
-    ensure_package("requests")
-    import requests
-    
-    dino_weights_url = "https://huggingface.co/IDEA-Research/groundingdino-1.5-large/resolve/main/groundingdino_1.5_large.pth"
-    dino_dest = WEIGHTS_DIR / "dino-x-pro.pth"
-    if not dino_dest.exists():
-        print(f"\n--- Downloading Grounding DINO weights to {dino_dest} ---")
-        res = requests.get(dino_weights_url, stream=True)
-        with open(dino_dest, "wb") as f:
-            for chunk in res.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print("DINO-X/Grounding DINO weights downloaded.")
+    # 3. Rex-Omni Zero-shot Detection model
+    download_model("IDEA-Research/Rex-Omni", "Rex-Omni")
         
     print("\n=== All requested models checked/downloaded! ===")
     print(f"Global weights stored in: {WEIGHTS_DIR}")

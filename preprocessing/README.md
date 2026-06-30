@@ -1,4 +1,4 @@
-# Preprocessing & Indexing Pipeline (HCMC AI Challenge 2025)
+# Preprocessing & Indexing Pipeline (HCMC AI Challenge 2026)
 
 This module handles the extraction, description, embedding generation, and Qdrant indexing of video, image, and audio files.
 
@@ -11,14 +11,8 @@ preprocessing/
 ├── requirements.txt       # Python dependencies
 ├── setup.sh               # Environment configuration script
 ├── CHANGELOG.md           # Log of project changes
-├── .gitignore             # Git ignored files
-├── models/
-│   ├── base_vlm.py        # Abstract base class for VLMs
-│   ├── qwen_vlm.py        # Local HuggingFace Qwen3-VL implementation
-│   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro implementation
-│   ├── embedding.py       # QwenVL8BEmbedder & M2DClapEmbedder
-│   ├── asr.py             # PhoWhisper ASR translation wrapper
-│   └── object_detector.py # DINO-X Pro & Grounding DINO 1.5 Pro detectors
+├── host_qdrant.sh         # Starts Qdrant (via Docker or standalone binary download)
+├── docker-compose.yml     # Docker Compose configuration for hosting Qdrant
 ├── video/
 │   ├── scene_detector.py  # Scene boundary detection and diversity sampling
 │   ├── ocr.py             # OCR text extraction and Vietnamese normalizations
@@ -29,12 +23,14 @@ preprocessing/
     └── indexer.py         # Qdrant vector database client connection and indexer
 ```
 
+*(Note: Shared models logic has been moved to the root `/models/` directory).*
+
 ## Features
 
-1. **Scene Boundary Detection & Diversity Sampling**: Cutes video using `PySceneDetect` and keeps only frames with high visual diversity (cosine distance > threshold) computed via Qwen3-Embedding-VL-8B.
+1. **Scene Boundary Detection & Diversity Sampling**: Cuts video using `PySceneDetect` and keeps only frames with high visual diversity (cosine distance > threshold) computed via Qwen3-Embedding-VL-8B.
 2. **Flexible VLM & Object Detection Engines**:
    - VLM options: Local offline HuggingFace models (`Qwen/Qwen2.5-VL-7B-Instruct`) or OpenAI APIs (`gpt-5.5-pro`).
-   - Object Detection options: DINO-X online APIs or Grounding DINO 1.5 Pro local offline models to locate objects zero-shot.
+   - Object Detection: Local offline `Rex-Omni` (`IDEA-Research/Rex-Omni`) to locate objects zero-shot based on label lists.
 3. **Advanced OCR & Text Processing**: Custom Vietnamese normalizations (Unicode NFC) indexing both accented and unaccented terms for robust BM25 search.
 4. **Speech & Audio Feature Extractors**: Speech transcription via PhoWhisper, environment audio indexing via M2D-CLAP.
 5. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections and loads detailed metadata payload alongside vectors.
