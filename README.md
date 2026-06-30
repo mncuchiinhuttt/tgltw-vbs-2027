@@ -1,6 +1,6 @@
-# HCMC AI Challenge 2025 - Multimedia Retrieval Pipeline
+# HCMC AI Challenge 2026 - Multimedia Retrieval Pipeline
 
-This repository contains the complete preprocessing, indexing, and inference system for HCMC AI Challenge 2025 (Group A) – Multimedia Retrieval.
+This repository contains the complete preprocessing, indexing, and inference system for HCMC AI Challenge 2026 (Group A) – Multimedia Retrieval.
 
 The system processes raw datasets (video, images, and audio), generates multimodal embeddings, indexes them to a Qdrant database, and retrieves matching frames/sequences for three types of queries: Textual-KIS (Type 1), VQA (Type 2), and Temporal-Alignment (Type 3).
 
