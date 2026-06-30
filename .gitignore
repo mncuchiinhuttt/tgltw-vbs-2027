@@ -1,0 +1,29 @@
+# Git ignore for HCMC AI Challenge 2026 Workspace
+
+# Exclude global weights and dataset directories at root level
+/weights/
+/datasets/
+
+# Exclude python environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Exclude credentials and environment files
+.env
+
+# Exclude runtime temporary files
+temp/
+*.log
+*.wav
+*.mp4
+
+# Exclude database storage directory (Qdrant)
+/preprocessing/qdrant_storage/
+
+# OS files
+.DS_Store
+Thumbs.db
