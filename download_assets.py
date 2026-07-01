@@ -3,6 +3,7 @@ import importlib.util
 import os
 import sys
 import subprocess
+import shutil
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -42,21 +43,207 @@ def ensure_package(package_name: str) -> None:
             f"Unable to import {package_name} after installing it into {DEPS_DIR}"
         )
 
-def download_model(repo_id: str, local_name: str):
-    ensure_package("huggingface_hub")
-    from huggingface_hub import snapshot_download
-    
+def get_hf_executable() -> str:
+    exe = shutil.which("hf")
+    if exe:
+        return exe
+    local_path = os.path.expanduser("~/.local/bin/hf")
+    if os.path.exists(local_path):
+        return local_path
+    return "hf"
+
+def download_model(repo_id: str, local_name: str, token: str = None):
     dest_path = WEIGHTS_DIR / local_name
-    print(f"\n--- Downloading {repo_id} to {dest_path} ---")
+    print(f"\n--- Downloading model {repo_id} to {dest_path} using hf CLI ---")
     dest_path.mkdir(parents=True, exist_ok=True)
     
-    snapshot_download(
-        repo_id=repo_id,
-        local_dir=str(dest_path),
-        local_dir_use_symlinks=False,
-        resume_download=True
-    )
+    hf_exe = get_hf_executable()
+    cmd = [
+        hf_exe, "download", repo_id,
+        "--local-dir", str(dest_path),
+        "--type", "model"
+    ]
+    
+    env = os.environ.copy()
+    if token:
+        env["HF_TOKEN"] = token
+        
+    subprocess.check_call(cmd, env=env)
     print(f"Download complete: {local_name}")
+
+def download_and_unzip_m2d_clap():
+    url = "https://github.com/nttcslab/m2d/releases/download/v0.5.0/m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025.zip"
+    dest_dir = WEIGHTS_DIR / "m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025"
+    zip_path = WEIGHTS_DIR / "m2d_clap_vit_base.zip"
+    
+    if (dest_dir / "checkpoint-30.pth").exists():
+        print(f"\n--- M2D-CLAP checkpoint already exists in {dest_dir} ---")
+        return
+        
+    print(f"\n--- Downloading M2D-CLAP model from {url} ---")
+    ensure_package("requests")
+    import requests
+    import zipfile
+    import shutil as sh
+    
+    # Download zip file
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(zip_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+                
+    print(f"Extracting M2D-CLAP model...")
+    # Extract to a temp directory first
+    temp_extract_dir = WEIGHTS_DIR / "_temp_m2d_clap"
+    temp_extract_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(temp_extract_dir)
+        
+    # Find checkpoint-30.pth inside temp_extract_dir
+    found_ckpt = None
+    for p in temp_extract_dir.glob("**/checkpoint-30.pth"):
+        found_ckpt = p
+        break
+        
+    if found_ckpt:
+        # Move it to weights/m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025/checkpoint-30.pth
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        sh.move(str(found_ckpt), str(dest_dir / "checkpoint-30.pth"))
+        print(f"Successfully placed checkpoint-30.pth in {dest_dir}")
+    else:
+        print("Warning: checkpoint-30.pth not found in zip archive.")
+        
+    # Clean up temp dir and zip file
+    if temp_extract_dir.exists():
+        sh.rmtree(temp_extract_dir)
+    if zip_path.exists():
+        zip_path.unlink()
+        
+    print("M2D-CLAP download and extraction complete.")
+
+def ensure_ffmpeg():
+    # Check if ffmpeg is available in PATH
+    if shutil.which("ffmpeg") is not None:
+        return
+        
+    bin_dir = ROOT_DIR / "bin"
+    ffmpeg_path = bin_dir / "ffmpeg"
+    
+    if ffmpeg_path.exists():
+        return
+        
+    print("\n--- ffmpeg not found on system. Downloading macOS static binary ---")
+    bin_dir.mkdir(exist_ok=True)
+    zip_path = bin_dir / "ffmpeg.zip"
+    
+    url = "https://evermeet.cx/ffmpeg/getrelease/zip"
+    ensure_package("requests")
+    import requests
+    import zipfile
+    
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(zip_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    
+        print("Extracting ffmpeg binary...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(bin_dir)
+            
+        # Make it executable
+        os.chmod(ffmpeg_path, 0o755)
+        
+        # Clean up
+        if zip_path.exists():
+            zip_path.unlink()
+            
+        # Quarantine workaround for macOS Gatekeeper
+        print("Removing quarantine attribute on macOS...")
+        subprocess.run(["xattr", "-dr", "com.apple.quarantine", str(ffmpeg_path)], capture_output=True)
+        
+        print("ffmpeg static binary successfully installed at:", ffmpeg_path)
+    except Exception as e:
+        print(f"Warning: Failed to download static ffmpeg: {e}. You may need to install it manually.")
+
+def download_dataset(repo_id: str, local_name: str, token: str = None):
+    dest_path = DATASETS_DIR / local_name
+    print(f"\n--- Downloading dataset {repo_id} to {dest_path} using hf CLI ---")
+    dest_path.mkdir(parents=True, exist_ok=True)
+    
+    # 1. Download metadata and everything EXCEPT videos first
+    hf_exe = get_hf_executable()
+    env = os.environ.copy()
+    if token:
+        env["HF_TOKEN"] = token
+        
+    cmd_exclude = [
+        hf_exe, "download", repo_id,
+        "--local-dir", str(dest_path),
+        "--type", "dataset",
+        "--exclude", "video/*"
+    ]
+    subprocess.check_call(cmd_exclude, env=env)
+    
+    # 2. Download only the first 2000 videos (video0.mp4 to video1999.mp4)
+    print("Downloading first 2000 videos in batches...")
+    batch_size = 100
+    for i in range(0, 2000, batch_size):
+        videos_batch = [f"video/video{j}.mp4" for j in range(i, min(i + batch_size, 2000))]
+        cmd_videos = [
+            hf_exe, "download", repo_id,
+        ] + videos_batch + [
+            "--local-dir", str(dest_path),
+            "--type", "dataset"
+        ]
+        subprocess.check_call(cmd_videos, env=env)
+        
+    # 3. Clean up any extra videos (>= 2000) to keep the limit strictly at 2000
+    video_dir = dest_path / "video"
+    if video_dir.exists():
+        print("Cleaning up any extra videos beyond the 2000 limit...")
+        for p in video_dir.glob("video*.mp4"):
+            try:
+                num = int(p.stem.replace("video", ""))
+                if num >= 2000:
+                    p.unlink()
+            except ValueError:
+                pass
+                
+    print("Dataset download complete: msrvtt-corpus (limited to 2000 videos)")
+
+def load_env_values():
+    env_vars = {}
+    
+    # Load from root .env if exists
+    root_env = ROOT_DIR / ".env"
+    if root_env.exists():
+        with open(root_env, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    env_vars[k.strip()] = v.strip()
+                    
+    # Load from preprocessing/.env if exists (overriding defaults)
+    pre_env = ROOT_DIR / "preprocessing" / ".env"
+    if pre_env.exists():
+        with open(pre_env, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    env_vars[k.strip()] = v.strip()
+                    
+    return env_vars
 
 def main():
     print("=== AIC2026 Assets Downloader ===")
@@ -65,19 +252,44 @@ def main():
     WEIGHTS_DIR.mkdir(exist_ok=True)
     DATASETS_DIR.mkdir(exist_ok=True)
     
+    # Load model configuration from .env files
+    env_vars = load_env_values()
+    qwen_vlm_id = env_vars.get("QWEN_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Thinking")
+    qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-8B")
+    phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
+    rex_omni_id = env_vars.get("REX_OMNI_MODEL_ID", "IDEA-Research/Rex-Omni")
+    vlm_option = env_vars.get("VLM_OPTION", "openai")
+    hf_token = env_vars.get("HF_TOKEN")
+    
     # Download weights
     # 1. PhoWhisper
-    download_model("vinai/PhoWhisper-large", "PhoWhisper-large")
+    download_model(phowhisper_id, phowhisper_id.split("/")[-1], token=hf_token)
     
-    # 2. CLAP Environmental model
-    download_model("laion/clap-htsat-fused", "clap-htsat-fused")
+    # 2. M2D-CLAP Environmental model (unzipped from URL)
+    download_and_unzip_m2d_clap()
     
     # 3. Rex-Omni Zero-shot Detection model
-    download_model("IDEA-Research/Rex-Omni", "Rex-Omni")
+    download_model(rex_omni_id, rex_omni_id.split("/")[-1], token=hf_token)
+    
+    # 4. Qwen VLM (if VLM_OPTION=local)
+    if vlm_option == "local":
+        download_model(qwen_vlm_id, qwen_vlm_id.split("/")[-1], token=hf_token)
+    else:
+        print(f"\nSkipping local Qwen VLM download (VLM_OPTION={vlm_option}).")
+        print("To download the local VLM, set VLM_OPTION=local in preprocessing/.env")
         
-    print("\n=== All requested models checked/downloaded! ===")
+    # 5. Qwen Embedding (always needed in preprocessing pipeline)
+    download_model(qwen_embed_id, qwen_embed_id.split("/")[-1], token=hf_token)
+    
+    # Ensure ffmpeg is installed
+    ensure_ffmpeg()
+    
+    # Download dataset
+    download_dataset("Tevatron/msrvtt-corpus", "msrvtt-corpus", token=hf_token)
+        
+    print("\n=== All requested models and datasets checked/downloaded! ===")
     print(f"Global weights stored in: {WEIGHTS_DIR}")
-    print(f"Place your raw dataset files in: {DATASETS_DIR}")
+    print(f"Dataset stored in: {DATASETS_DIR / 'msrvtt-corpus'}")
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,26 @@ def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD)
         start_sec = scene[0].get_seconds()
         end_sec = scene[1].get_seconds()
         scenes.append((start_sec, end_sec))
-    print(f"Detected {len(scenes)} scenes.")
+        
+    if not scenes:
+        # Fallback: treat the entire video as a single scene
+        import cv2
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        duration = 0.0
+        if fps > 0:
+            duration = frame_count / fps
+        cap.release()
+        
+        if duration <= 0:
+            duration = 10.0
+            
+        scenes.append((0.0, duration))
+        print(f"No scene cuts detected. Treating entire video as a single scene (0.0s - {duration:.2f}s).")
+    else:
+        print(f"Detected {len(scenes)} scenes.")
+        
     return scenes
 
 def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, sampling_rate_fps: float = 1.0) -> List[Dict[str, Any]]:

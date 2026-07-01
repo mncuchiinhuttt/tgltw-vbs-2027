@@ -45,6 +45,7 @@ chmod +x setup.sh
 ```
 
 Activate the environment:
+
 ```bash
 source venv/bin/activate
 ```
@@ -54,12 +55,14 @@ source venv/bin/activate
 You can host Qdrant locally/on your server using Docker or as a standalone binary:
 
 Run the script to launch Qdrant:
+
 ```bash
 chmod +x host_qdrant.sh
 ./host_qdrant.sh
 ```
-*   **Docker Mode**: If Docker or Docker Compose is installed, Qdrant will start in a container with persistent storage mapped to `./qdrant_storage`.
-*   **Standalone Binary Mode**: If Docker is not found, the script automatically downloads the correct precompiled binary from Qdrant's GitHub Releases (matched to your OS & architecture), extracts it into `./qdrant_bin`, and starts it as a background process (`nohup`).
+
+* **Docker Mode**: If Docker or Docker Compose is installed, Qdrant will start in a container with persistent storage mapped to `./qdrant_storage`.
+* **Standalone Binary Mode**: If Docker is not found, the script automatically downloads the correct precompiled binary from Qdrant's GitHub Releases (matched to your OS & architecture), extracts it into `./qdrant_bin`, and starts it as a background process (`nohup`).
 
 Once started, access the Web Dashboard at: [http://localhost:6333/dashboard](http://localhost:6333/dashboard)
 

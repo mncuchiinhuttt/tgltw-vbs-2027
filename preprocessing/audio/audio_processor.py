@@ -26,17 +26,30 @@ class AudioProcessor:
         if os.path.exists(output_audio_path):
             os.remove(output_audio_path)
             
+        import shutil
+        ffmpeg_cmd = "ffmpeg"
+        if shutil.which(ffmpeg_cmd) is None:
+            # Fall back to workspace bin/ffmpeg
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            local_ffmpeg = os.path.join(root_dir, "bin", "ffmpeg")
+            if os.path.exists(local_ffmpeg):
+                ffmpeg_cmd = local_ffmpeg
+            
         command = [
-            'ffmpeg', '-i', video_path,
+            ffmpeg_cmd, '-i', video_path,
             '-vn', '-acodec', 'pcm_s16le',
             '-ar', '16000', '-ac', '1',
             output_audio_path, '-y'
         ]
         try:
-            subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
             return output_audio_path
         except subprocess.CalledProcessError as e:
-            print(f"Failed to extract audio from video: {e}")
+            # If it failed because the video has no audio stream, treat it as a silent video
+            stderr_str = e.stderr or ""
+            if "does not contain any stream" in stderr_str or e.returncode == 234:
+                return ""
+            print(f"Failed to extract audio from video: {stderr_str.strip() or e}")
             return ""
 
     def transcribe_audio(self, audio_path: str) -> List[Dict[str, Any]]:

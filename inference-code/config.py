@@ -10,11 +10,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # Model configuration options
 # Options: "local" (uses Qwen3-VL locally) or "openai" (uses GPT 5.5 Pro / GPT-4o style API)
 VLM_OPTION = os.getenv("VLM_OPTION", "openai")
+DETECTOR_OPTION = os.getenv("DETECTOR_OPTION", "local")
 
 # Model Checkpoints (used if VLM_OPTION="local" or during local embeddings)
 QWEN_VLM_MODEL_ID = os.getenv("QWEN_VLM_MODEL_ID", "Qwen/Qwen2.5-VL-7B-Instruct")
 QWEN_EMBEDDING_MODEL_ID = os.getenv("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen2.5-VL-8B-Instruct")
-M2D_CLAP_MODEL_ID = os.getenv("M2D_CLAP_MODEL_ID", "laion/clap-htsat-fused")
 
 # Zero-shot Object Detector Checkpoint
 REX_OMNI_MODEL_ID = os.getenv("REX_OMNI_MODEL_ID", "IDEA-Research/Rex-Omni")

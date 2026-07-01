@@ -32,15 +32,28 @@ class ObjectDetector:
             print("Loaded Rex-Omni using rex_omni.RexOmniWrapper.")
         except ImportError:
             print("[INFO] 'rex_omni' package not found. Loading via HuggingFace transformers directly...")
-            from transformers import AutoProcessor, AutoModelForVision2Seq
+            from transformers import AutoProcessor
+            try:
+                from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
+            except ImportError:
+                from transformers import AutoModelForVision2Seq
+                
             self.processor = AutoProcessor.from_pretrained(self.model_id, trust_remote_code=True)
             self.model = AutoModelForVision2Seq.from_pretrained(
                 self.model_id, 
-                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                dtype=torch.float16 if self.device == "cuda" else torch.float32,
                 device_map="auto" if self.device == "cuda" else None,
                 trust_remote_code=True
             )
-            print("Loaded Rex-Omni via AutoModelForVision2Seq successfully.")
+            # Resize and align vocab/special tokens due to coordinate token expansion in Rex-Omni
+            self.model.resize_token_embeddings(len(self.processor.tokenizer))
+            image_pad_id = self.processor.tokenizer.convert_tokens_to_ids("<|image_pad|>")
+            if image_pad_id is not None:
+                self.model.config.image_token_id = image_pad_id
+                
+            if self.device != "cuda":
+                self.model = self.model.to(self.device)
+            print("Loaded Rex-Omni via AutoModelForVision2Seq/AutoModelForImageTextToText successfully.")
 
     def detect(self, image: Union[Image.Image, str], text_prompts: List[str]) -> List[Dict[str, Any]]:
         """
@@ -71,7 +84,23 @@ class ObjectDetector:
             categories_str = ", ".join(text_prompts)
             prompt = f"Detect the following objects in the image: {categories_str}. Output coordinate tags."
             
-            inputs = self.processor(images=img, text=prompt, return_tensors="pt").to(self.device)
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": img},
+                        {"type": "text", "text": prompt}
+                    ]
+                }
+            ]
+            text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            inputs = self.processor(
+                text=[text],
+                images=[img],
+                padding=True,
+                return_tensors="pt"
+            ).to(self.device)
+            
             with torch.no_grad():
                 generated_ids = self.model.generate(**inputs, max_new_tokens=512)
                 

@@ -8,22 +8,44 @@ class QdrantIndexer:
     """
     Manages connection to Qdrant, initializes collections, and pushes indexes.
     """
-    def __init__(self):
+    def __init__(self, visual_dim: int = 1536):
         print(f"Connecting to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}...")
         self.client = QdrantClient(
             host=QDRANT_HOST,
             port=QDRANT_PORT,
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
-        self._init_collections()
+        self._init_collections(visual_dim)
 
-    def _init_collections(self):
-        # 1. Collection for visual index (Qwen-VL space: 1536 dims)
-        if not self.client.collection_exists("visual_index"):
-            print("Creating collection 'visual_index'...")
+    def _init_collections(self, visual_dim: int = 1536):
+        # 1. Collection for visual index
+        recreate = False
+        if self.client.collection_exists("visual_index"):
+            try:
+                info = self.client.get_collection("visual_index")
+                vectors_config = info.config.params.vectors
+                current_size = None
+                if hasattr(vectors_config, "size"):
+                    current_size = vectors_config.size
+                elif isinstance(vectors_config, dict) and "size" in vectors_config:
+                    current_size = vectors_config["size"]
+                
+                if current_size is not None and current_size != visual_dim:
+                    print(f"Collection 'visual_index' exists but has size {current_size} instead of {visual_dim}. Recreating...")
+                    self.client.delete_collection("visual_index")
+                    recreate = True
+            except Exception as e:
+                print(f"Warning: Failed to verify collection dimension: {e}. Recreating...")
+                self.client.delete_collection("visual_index")
+                recreate = True
+        else:
+            recreate = True
+            
+        if recreate:
+            print(f"Creating collection 'visual_index' with size={visual_dim}...")
             self.client.create_collection(
                 collection_name="visual_index",
-                vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+                vectors_config=VectorParams(size=visual_dim, distance=Distance.COSINE)
             )
             
         # 2. Collection for audio index (M2D-CLAP space: typically 512 dims)

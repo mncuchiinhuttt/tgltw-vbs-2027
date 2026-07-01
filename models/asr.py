@@ -1,3 +1,4 @@
+import os
 import torch
 from typing import List, Dict, Any
 from config import PHOWHISPER_MODEL_ID
@@ -7,6 +8,11 @@ class PhoWhisperASR:
     ASR (Speech-to-Text) module wrapping PhoWhisper.
     """
     def __init__(self, model_id: str = PHOWHISPER_MODEL_ID):
+        # Check if local weights path exists under global weights/
+        local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", model_id.split("/")[-1])
+        if os.path.exists(local_path):
+            model_id = local_path
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Loading ASR model: {model_id}...")
         from transformers import pipeline

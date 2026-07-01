@@ -1,18 +1,18 @@
+import sys
 import os
 import uuid
 import argparse
 from PIL import Image
 import numpy as np
+from pathlib import Path
+
+# Add root directory to sys.path to load shared modules
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Config imports
 from preprocessing.config import (
     VLM_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS
 )
-
-# Add root directory to sys.path to load shared models module
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Models
 from models.qwen_vlm import QwenVLM
@@ -50,7 +50,20 @@ def main():
     vlm = load_vlm()
     detector = ObjectDetector(option=DETECTOR_OPTION)
     embedder = QwenVL8BEmbedder()
-    indexer = QdrantIndexer()
+    
+    # Resolve embedding dimension dynamically from model config
+    visual_dim = 1536
+    if hasattr(embedder, "model") and hasattr(embedder.model, "config"):
+        config = embedder.model.config
+        if hasattr(config, "vision_config"):
+            visual_dim = getattr(config.vision_config, "hidden_size", visual_dim)
+        elif hasattr(config, "text_config"):
+            visual_dim = getattr(config.text_config, "hidden_size", visual_dim)
+        else:
+            visual_dim = getattr(config, "hidden_size", visual_dim)
+    print(f"Dynamic Visual Index Dimension: {visual_dim}")
+    
+    indexer = QdrantIndexer(visual_dim=visual_dim)
     ocr_engine = TextDetectorOCR(vlm_client=vlm)
     captioner = ImageCaptioner(vlm_client=vlm)
     audio_engine = AudioProcessor()

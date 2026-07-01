@@ -1,7 +1,8 @@
+import os
 import torch
 from PIL import Image
 from typing import List, Union
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+from transformers import AutoProcessor
 from .base_vlm import BaseVLM
 from config import QWEN_VLM_MODEL_ID
 
@@ -10,13 +11,26 @@ class QwenVLM(BaseVLM):
     Offline local Qwen-VL model implementation.
     """
     def __init__(self, model_id: str = QWEN_VLM_MODEL_ID):
+        # Check if local weights path exists under global weights/
+        local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", model_id.split("/")[-1])
+        if os.path.exists(local_path):
+            model_id = local_path
+
         print(f"Loading local Qwen-VL model from: {model_id}...")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        
+        try:
+            from transformers import AutoModelForImageTextToText as AutoModel
+        except ImportError:
+            from transformers import AutoModelForVision2Seq as AutoModel
+
+        self.model = AutoModel.from_pretrained(
             model_id,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-            device_map="auto"
+            dtype=torch.float16 if self.device == "cuda" else torch.float32,
+            device_map="auto" if self.device == "cuda" else None
         )
+        if self.device != "cuda":
+            self.model = self.model.to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_id)
         print("Local Qwen-VL loaded successfully.")
 
