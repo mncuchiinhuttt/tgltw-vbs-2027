@@ -55,18 +55,23 @@ The scripts dynamically append the workspace root to `sys.path` to import `model
 ## Getting Started
 
 ### 1. Download Model Checkpoints
+
 Run the download script from the root folder to download weights for PhoWhisper, CLAP, and Rex-Omni into the `weights/` folder:
+
 ```bash
 python download_assets.py
 ```
 
 ### 2. Host the Database (Qdrant)
+
 Start the Qdrant server instance. The script will automatically try using Docker if installed, or download and run the native standalone Qdrant binary in the background:
+
 ```bash
 cd preprocessing
 chmod +x host_qdrant.sh
 ./host_qdrant.sh
 ```
+
 Access the Qdrant Dashboard at: [http://localhost:6333/dashboard](http://localhost:6333/dashboard).
 
 ---
@@ -100,16 +105,19 @@ Access the Qdrant Dashboard at: [http://localhost:6333/dashboard](http://localho
 3. Run search queries from CLI:
 
 #### Type 1: Textual-KIS (Retrieves matching video name and timestamp)
+
 ```bash
 python main.py --type 1 --query "một người đang lái xe máy đi qua ngã tư dưới trời mưa"
 ```
 
 #### Type 2: VQA (Detects targets, crops local bounding boxes, scores via VLM, and answers)
+
 ```bash
 python main.py --type 2 --query "người mặc áo đỏ đang dắt xe đạp màu xanh ở giây thứ mấy?"
 ```
 
 #### Type 3: Temporal-Alignment (Reranks sequence of events chronologically)
+
 ```bash
 python main.py --type 3 --query "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
 ```

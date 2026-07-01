@@ -3,6 +3,7 @@
 # Exclude global weights and dataset directories at root level
 /weights/
 /datasets/
+.download_assets_deps/
 
 # Exclude python environments
 venv/
@@ -23,6 +24,7 @@ temp/
 
 # Exclude database storage directory (Qdrant)
 /preprocessing/qdrant_storage/
+/preprocessing/qdrant_bin/
 
 # OS files
 .DS_Store
