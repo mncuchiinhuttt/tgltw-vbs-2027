@@ -1,0 +1,14 @@
+[
+  {
+    "type": 1,
+    "query": "một người đang lái xe máy dưới trời mưa"
+  },
+  {
+    "type": 2,
+    "query": "người mặc áo đỏ đang dắt xe đạp màu xanh ở giây thứ mấy?"
+  },
+  {
+    "type": 3,
+    "query": "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
+  }
+]

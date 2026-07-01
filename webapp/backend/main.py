@@ -1,0 +1,569 @@
+import os
+import sys
+import cv2
+import json
+import uuid
+import asyncio
+import subprocess
+import threading
+from pathlib import Path
+from typing import Optional, List
+from pydantic import BaseModel
+from PIL import Image
+import io
+
+from fastapi import FastAPI, HTTPException, Header, Response, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+
+# 1. Path Configuration
+BACKEND_DIR = Path(__file__).resolve().parent
+WORKSPACE_ROOT = BACKEND_DIR.parent.parent
+DATASETS_DIR = WORKSPACE_ROOT / "datasets"
+LOG_FILE_PATH = BACKEND_DIR / "preprocessing.log"
+
+# Add directories to sys.path to load config and models
+sys.path.append(str(WORKSPACE_ROOT))
+sys.path.append(str(WORKSPACE_ROOT / "inference-code"))
+
+app = FastAPI(title="Multimedia Retrieval API", version="1.0.0")
+
+# Enable CORS for frontend development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 2. Services Management (Lazy Singletons)
+_vlm = None
+_detector = None
+_embedder = None
+_query_proc = None
+_searcher = None
+_reranker = None
+_services_lock = threading.Lock()
+_preprocess_process = None
+_preprocess_logs = []
+
+def init_services(query_type: int = 1):
+    """
+    Initialize query processing and search services dynamically.
+    """
+    global _vlm, _detector, _embedder, _query_proc, _searcher, _reranker
+    with _services_lock:
+        # Check env variables inside function to allow updates
+        import config
+        from models.object_detector import ObjectDetector
+        from models.embedding import QwenVL8BEmbedder
+        from search.query_processor import QueryProcessor
+        from search.hybrid_search import HybridSearcher
+        from search.reranker import Reranker
+        from main import load_vlm
+
+        if _vlm is None:
+            print("Initializing VLM...")
+            _vlm = load_vlm()
+
+        if _embedder is None:
+            print("Initializing Embedder...")
+            _embedder = QwenVL8BEmbedder()
+
+        if _detector is None and query_type == 2:
+            print("Initializing Object Detector...")
+            _detector = ObjectDetector(option=config.DETECTOR_OPTION)
+
+        if _query_proc is None:
+            _query_proc = QueryProcessor(vlm_client=_vlm)
+
+        if _searcher is None:
+            _searcher = HybridSearcher(embedder=_embedder)
+
+        # Re-initialize reranker if detector is newly loaded
+        if _reranker is None or (_detector is not None and _reranker.detector is None):
+            _reranker = Reranker(vlm_client=_vlm, detector_client=_detector)
+
+        return _query_proc, _searcher, _reranker
+
+# Ensure datasets directory exists
+DATASETS_DIR.mkdir(parents=True, exist_ok=True)
+
+# 3. Request Models
+class SearchRequest(BaseModel):
+    type: int
+    query: str
+    dataset_dir: Optional[str] = None
+
+# 4. Helper to Get DB Stats
+def get_qdrant_stats():
+    try:
+        from qdrant_client import QdrantClient
+        import config
+        client = QdrantClient(
+            host=config.QDRANT_HOST,
+            port=config.QDRANT_PORT,
+            api_key=config.QDRANT_API_KEY if config.QDRANT_API_KEY else None
+        )
+        visual_count = 0
+        audio_count = 0
+        
+        # Check visual_index
+        try:
+            visual_info = client.get_collection(collection_name="visual_index")
+            visual_count = visual_info.points_count
+        except Exception:
+            pass
+            
+        # Check audio_env_index
+        try:
+            audio_info = client.get_collection(collection_name="audio_env_index")
+            audio_count = audio_info.points_count
+        except Exception:
+            pass
+            
+        return {
+            "status": "connected",
+            "host": config.QDRANT_HOST,
+            "port": config.QDRANT_PORT,
+            "visual_points": visual_count,
+            "audio_points": audio_count
+        }
+    except Exception as e:
+        return {
+            "status": "disconnected",
+            "error": str(e)
+        }
+
+# 5. API Endpoints
+
+@app.get("/api/status")
+def get_status():
+    """
+    Get backend status including models configuration, DB stats, and scanned datasets.
+    """
+    # Load configuration values
+    import config
+    
+    # List files in datasets folder
+    supported_exts = ('.mp4', '.avi', '.mkv', '.mov', '.jpg', '.jpeg', '.png', '.mp3', '.wav', '.m4a')
+    files_list = []
+    if DATASETS_DIR.exists():
+        for item in DATASETS_DIR.iterdir():
+            if item.is_file() and item.suffix.lower() in supported_exts:
+                files_list.append({
+                    "name": item.name,
+                    "size_mb": round(item.stat().st_size / (1024 * 1024), 2),
+                    "type": "video" if item.suffix.lower() in ('.mp4', '.avi', '.mkv', '.mov') else 
+                            "image" if item.suffix.lower() in ('.jpg', '.jpeg', '.png') else "audio"
+                })
+
+    db_stats = get_qdrant_stats()
+    
+    # Check if preprocessing is running
+    is_preprocessing = _preprocess_process is not None and _preprocess_process.poll() is None
+
+    return {
+        "workspace_root": str(WORKSPACE_ROOT),
+        "vlm_option": config.VLM_OPTION,
+        "detector_option": config.DETECTOR_OPTION,
+        "qdrant": db_stats,
+        "dataset_files": files_list,
+        "preprocessing_active": is_preprocessing
+    }
+
+@app.post("/api/search")
+async def run_search(request: SearchRequest):
+    """
+    Execute Type 1 (Textual-KIS), Type 2 (VQA), or Type 3 (Temporal-Alignment) search.
+    """
+    if request.type not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Invalid search type. Must be 1, 2, or 3.")
+        
+    try:
+        # Initialize services dynamically
+        query_proc, searcher, reranker = init_services(query_type=request.type)
+        
+        # Determine dataset_dir
+        dataset_dir = request.dataset_dir or str(DATASETS_DIR)
+        
+        # 1. Query Processing
+        hyde_query = query_proc.generate_hyde(request.query)
+        
+        # 2. Candidate Retrieval
+        query_hits = searcher.search(request.query, top_k=15)
+        hyde_hits = searcher.search(hyde_query, top_k=15)
+        candidates = searcher.merge_rrf(query_hits, hyde_hits)
+        
+        if not candidates:
+            return {
+                "query": request.query,
+                "type": request.type,
+                "results": [],
+                "message": "No candidate frames retrieved from database."
+            }
+
+        # 3. Type-specific Reranking
+        results = []
+        if request.type == 1:
+            # Type 1: Textual-KIS
+            top_candidates = reranker.rerank_type1(request.query, candidates[:10])
+            for idx, c in enumerate(top_candidates):
+                results.append({
+                    "rank": idx + 1,
+                    "score": c.get("rerank_score", 0.0),
+                    "id": c["id"],
+                    "payload": c["payload"]
+                })
+                
+        elif request.type == 2:
+            # Type 2: VQA
+            decomp = query_proc.decompose_query(request.query)
+            sub_queries = decomp.get("sub_queries", [request.query])
+            
+            top_candidates = reranker.rerank_type2_vqa(
+                request.query, sub_queries, candidates[:10], dataset_dir
+            )
+            
+            for idx, c in enumerate(top_candidates):
+                # Retrieve concise answer for the top candidate
+                answer = "N/A"
+                if idx == 0:
+                    # In backend we try to extract the real cropped frame for VLM answer if possible
+                    try:
+                        from PIL import Image
+                        import os
+                        video_name = c["payload"]["source_file"]
+                        timestamp = c["payload"]["timestamp"]
+                        frame_path = os.path.join(dataset_dir, video_name)
+                        frame_img = None
+                        if os.path.exists(frame_path) and frame_path.lower().endswith(('.jpg', '.jpeg', '.png')):
+                            frame_img = Image.open(frame_path).convert("RGB")
+                        else:
+                            # Try video extraction
+                            cap = cv2.VideoCapture(frame_path)
+                            fps = cap.get(cv2.CAP_PROP_FPS)
+                            if fps > 0:
+                                cap.set(cv2.CAP_PROP_POS_FRAMES, int(timestamp * fps))
+                                ret, frame = cap.read()
+                                if ret:
+                                    frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                                cap.release()
+                        
+                        answer_prompt = f"Answer the following question about this image: {request.query}. Be concise."
+                        from main import load_vlm
+                        vlm = load_vlm()
+                        answer = vlm.generate(frame_img, answer_prompt).strip()
+                    except Exception as e:
+                        print(f"Failed to generate answer for top result: {e}")
+                        answer = "Error generating answer"
+                
+                results.append({
+                    "rank": idx + 1,
+                    "score": c.get("final_score", 0.0),
+                    "vqa_score": c.get("vqa_score", 0.0),
+                    "rrf_score": c.get("rrf_score", 0.0),
+                    "id": c["id"],
+                    "payload": c["payload"],
+                    "answer": answer if idx == 0 else None
+                })
+                
+        elif request.type == 3:
+            # Type 3: Temporal Alignment
+            top_sequences = reranker.rerank_type3_temporal(request.query, candidates[:20])
+            for idx, seq in enumerate(top_sequences):
+                # Format to look like candidate output but grouped
+                results.append({
+                    "rank": idx + 1,
+                    "score": seq["score"],
+                    "video_name": seq["video_name"],
+                    "timestamps": seq["timestamps"],
+                    "frame_ids": seq["frame_ids"],
+                    "payload": {
+                        "source_file": seq["video_name"],
+                        "timestamp": seq["timestamps"][0] if seq["timestamps"] else 0.0,
+                        "caption": f"Sequence of {len(seq['frame_ids'])} frames. Timestamps: {seq['timestamps']}"
+                    }
+                })
+                
+        return {
+            "query": request.query,
+            "type": request.type,
+            "results": results
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@app.get("/api/media/frame")
+def get_frame(video_name: str, timestamp: float):
+    """
+    Dynamically extract a frame from a video at a specific timestamp and return as JPEG.
+    """
+    video_path = DATASETS_DIR / video_name
+    if not video_path.exists():
+        # Fallback to image check
+        if video_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+            return FileResponse(str(video_path))
+        raise HTTPException(status_code=404, detail="Media file not found")
+
+    # If it is a static image, return directly
+    if video_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+        return FileResponse(str(video_path))
+
+    # Read video
+    cap = cv2.VideoCapture(str(video_path))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 0:
+        cap.release()
+        raise HTTPException(status_code=400, detail="Unable to retrieve FPS from video")
+
+    frame_idx = int(timestamp * fps)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+    ret, frame = cap.read()
+    cap.release()
+
+    if not ret:
+        # Create an empty dark gray PIL Image
+        img = Image.new("RGB", (640, 360), color=(30, 41, 59))
+        output = io.BytesIO()
+        img.save(output, format="JPEG")
+        return Response(content=output.getvalue(), media_type="image/jpeg")
+
+    # Encode to JPEG
+    is_success, buffer = cv2.imencode(".jpg", frame)
+    if not is_success:
+        raise HTTPException(status_code=500, detail="Failed to encode frame")
+
+    return Response(content=buffer.tobytes(), media_type="image/jpeg")
+
+@app.get("/api/media/video/{video_name}")
+def get_video(video_name: str):
+    """
+    Serve video file directly with support for seeking/range queries.
+    """
+    video_path = DATASETS_DIR / video_name
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="Video file not found")
+        
+    return FileResponse(str(video_path))
+
+# 6. Preprocessing Subprocess Runner
+
+def run_preprocess_sync():
+    global _preprocess_process, _preprocess_logs
+    try:
+        # Start main.py script
+        cmd = [
+            sys.executable,
+            str(WORKSPACE_ROOT / "preprocessing" / "main.py"),
+            "--data_dir",
+            str(DATASETS_DIR)
+        ]
+        
+        with open(LOG_FILE_PATH, "w") as log_f:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=str(WORKSPACE_ROOT / "preprocessing")
+            )
+            
+            _preprocess_process = process
+            
+            # Read stdout line by line and save to log file + memory buffer
+            for line in iter(process.stdout.readline, ""):
+                _preprocess_logs.append(line.strip())
+                # Keep logs buffer to last 1000 lines
+                if len(_preprocess_logs) > 1000:
+                    _preprocess_logs.pop(0)
+                log_f.write(line)
+                log_f.flush()
+                
+            process.wait()
+    except Exception as e:
+        error_line = f"ERROR executing preprocessing: {str(e)}"
+        _preprocess_logs.append(error_line)
+        with open(LOG_FILE_PATH, "a") as log_f:
+            log_f.write(error_line + "\n")
+    finally:
+        _preprocess_process = None
+
+@app.post("/api/preprocess/run")
+def start_preprocessing(background_tasks: BackgroundTasks):
+    """
+    Trigger the preprocessing pipeline in a background task.
+    """
+    global _preprocess_process, _preprocess_logs
+    if _preprocess_process is not None and _preprocess_process.poll() is None:
+        return {"status": "already_running", "message": "Preprocessing pipeline is already running."}
+        
+    _preprocess_logs = ["--- Starting Preprocessing Pipeline ---"]
+    if LOG_FILE_PATH.exists():
+        try:
+            LOG_FILE_PATH.unlink()
+        except Exception:
+            pass
+            
+    background_tasks.add_task(run_preprocess_sync)
+    return {"status": "started", "message": "Preprocessing pipeline started in background."}
+
+@app.get("/api/preprocess/logs")
+def get_preprocess_logs():
+    """
+    Retrieve live progress logs of the preprocessing pipeline.
+    """
+    global _preprocess_process
+    is_running = _preprocess_process is not None and _preprocess_process.poll() is None
+    
+    # Read from file as source of truth if logs in memory are empty
+    logs = list(_preprocess_logs)
+    if not logs and LOG_FILE_PATH.exists():
+        try:
+            with open(LOG_FILE_PATH, "r") as f:
+                logs = [line.strip() for line in f.readlines()]
+        except Exception:
+            pass
+            
+    return {
+        "running": is_running,
+        "logs": logs
+    }
+
+# 7. Batch Query Subprocess Runner
+QUERIES_DIR = WORKSPACE_ROOT / "queries"
+BATCH_LOG_FILE_PATH = BACKEND_DIR / "batch_query.log"
+_batch_process = None
+_batch_logs = []
+
+def run_batch_sync():
+    global _batch_process, _batch_logs
+    try:
+        # Resolve python executable (prioritize venv)
+        venv_dir = WORKSPACE_ROOT / "preprocessing" / "venv"
+        venv_python = venv_dir / "bin" / "python"
+        if not venv_python.exists():
+            venv_python = venv_dir / "Scripts" / "python.exe"
+        py_executable = str(venv_python) if venv_python.exists() else sys.executable
+
+        cmd = [
+            py_executable,
+            str(WORKSPACE_ROOT / "inference-code" / "batch_query.py"),
+            "--query_file", str(QUERIES_DIR / "queries.json"),
+            "--output_dir", str(QUERIES_DIR),
+            "--dataset_dir", str(DATASETS_DIR)
+        ]
+        
+        with open(BATCH_LOG_FILE_PATH, "w") as log_f:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=str(WORKSPACE_ROOT / "inference-code")
+            )
+            
+            _batch_process = process
+            
+            for line in iter(process.stdout.readline, ""):
+                _batch_logs.append(line.strip())
+                if len(_batch_logs) > 1000:
+                    _batch_logs.pop(0)
+                log_f.write(line)
+                log_f.flush()
+                
+            process.wait()
+    except Exception as e:
+        error_line = f"ERROR executing batch query: {str(e)}"
+        _batch_logs.append(error_line)
+        with open(BATCH_LOG_FILE_PATH, "a") as log_f:
+            log_f.write(error_line + "\n")
+    finally:
+        _batch_process = None
+
+@app.get("/api/batch/status")
+def get_batch_status():
+    """
+    Get the status of the batch queries execution, files list in queries directory.
+    """
+    is_running = _batch_process is not None and _batch_process.poll() is None
+    
+    files = []
+    if QUERIES_DIR.exists():
+        for item in QUERIES_DIR.iterdir():
+            if item.is_file() and item.suffix.lower() in ['.json', '.csv']:
+                files.append({
+                    "name": item.name,
+                    "size_kb": round(item.stat().st_size / 1024, 2),
+                    "modified": item.stat().st_mtime
+                })
+                
+    return {
+        "running": is_running,
+        "files": files
+    }
+
+@app.post("/api/batch/run")
+def start_batch_query(background_tasks: BackgroundTasks):
+    """
+    Trigger the batch queries execution in a background task.
+    """
+    global _batch_process, _batch_logs
+    if _batch_process is not None and _batch_process.poll() is None:
+        return {"status": "already_running", "message": "Batch query execution is already running."}
+        
+    _batch_logs = ["--- Starting Batch Query Processing ---"]
+    if BATCH_LOG_FILE_PATH.exists():
+        try:
+            BATCH_LOG_FILE_PATH.unlink()
+        except Exception:
+            pass
+            
+    background_tasks.add_task(run_batch_sync)
+    return {"status": "started", "message": "Batch query process started in background."}
+
+@app.get("/api/batch/logs")
+def get_batch_logs():
+    """
+    Retrieve live progress logs of the batch query pipeline.
+    """
+    global _batch_process
+    is_running = _batch_process is not None and _batch_process.poll() is None
+    
+    logs = list(_batch_logs)
+    if not logs and BATCH_LOG_FILE_PATH.exists():
+        try:
+            with open(BATCH_LOG_FILE_PATH, "r") as f:
+                logs = [line.strip() for line in f.readlines()]
+        except Exception:
+            pass
+            
+    return {
+        "running": is_running,
+        "logs": logs
+    }
+
+@app.get("/api/batch/results")
+def get_batch_results():
+    """
+    Retrieve the results of the batch query.
+    """
+    results_path = QUERIES_DIR / "batch_results.json"
+    if not results_path.exists():
+        raise HTTPException(status_code=404, detail="Batch results file not found.")
+        
+    try:
+        with open(results_path, "r") as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading results: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    # Make sure we are in the correct directory when starting
+    os.chdir(str(BACKEND_DIR))
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

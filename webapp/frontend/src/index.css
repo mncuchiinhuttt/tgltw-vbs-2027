@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --background: #f4f6fa;
+  --foreground: #1e293b; /* Slate 800 */
+  
+  --card: rgba(255, 255, 255, 0.85);
+  --card-foreground: #1e293b;
+  
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  
+  --primary: #4f46e5; /* Tech Indigo */
+  --primary-foreground: #ffffff;
+  
+  --secondary: #e2e8f0; /* Slate 200 */
+  --secondary-foreground: #1e293b;
+  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  
+  --accent: #cbd5e1;
+  --accent-foreground: #1e293b;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #4f46e5;
+  
+  --radius: 0.75rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", system-ui, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  
+  /* High-tech tech grid pattern */
+  background-image: 
+    radial-gradient(rgba(79, 70, 229, 0.05) 1.5px, transparent 1.5px),
+    radial-gradient(rgba(79, 70, 229, 0.05) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Futuristic card with subtle borders and shadow effects */
+.tech-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(79, 70, 229, 0.08);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.03), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tech-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79, 70, 229, 0.25);
+  box-shadow: 
+    0 12px 20px -3px rgba(79, 70, 229, 0.08), 
+    0 4px 12px -2px rgba(79, 70, 229, 0.03);
+}
+
+/* Glow highlights */
+.tech-glow-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.tech-glow-button:hover {
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.35);
+}
+
+/* Dynamic scanning laser effect */
+@keyframes scanning {
+  0% { transform: translateY(-100%); }
+  50% { transform: translateY(100%); }
+  100% { transform: translateY(-100%); }
+}
+
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.6), transparent);
+  animation: scanning 4s linear infinite;
+  pointer-events: none;
+}

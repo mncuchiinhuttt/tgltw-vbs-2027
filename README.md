@@ -121,3 +121,42 @@ python main.py --type 2 --query "người mặc áo đỏ đang dắt xe đạp 
 ```bash
 python main.py --type 3 --query "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
 ```
+
+---
+
+## 5. WebApp Dashboard
+
+We provide a futuristic Light Mode dashboard for running single queries, batch queries, checking database statistics, and tracking logs.
+
+### Start the WebApp Dev Servers
+Concurrently run both the React frontend and the FastAPI backend dev servers with:
+```bash
+# Python Runner (Resolves port conflicts & detects venv automatically)
+python3 run_webapp.py
+
+# Bash Runner
+./run_webapp.sh
+```
+
+- Open **Dashboard (Vite)**: [http://localhost:5173](http://localhost:5173)
+- Open **API Docs (FastAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 6. Batch Queries (Process Multiple Queries)
+
+### CLI Execution
+To execute multiple queries in batch from the terminal:
+1. Place your queries in the `queries/queries.json` file.
+2. Run:
+```bash
+cd inference-code
+python batch_query.py --query_file ../queries/queries.json --output_dir ../queries/
+```
+3. Batch outputs will be saved to `queries/batch_results.json` and `queries/batch_results.csv`.
+
+### WebApp Dashboard Execution
+1. Navigate to the **Process Multiple Queries** tab in the main console.
+2. Click the **Process Multiple Queries** button to run batch inference.
+3. Review logs live in the terminal output widget, and interact with the results list (including click-to-play support for matched segments).
+
