@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-07-03
+
+### Changed
+- Aligned image preprocessing flow with the latest Notion guidelines.
+- Simplified payload structure by merging `source_id` into the existing `source_file` field.
+- Updated image `text_blob` creation to format text using whitespace separators without temporal elements.
+
 ## [1.0.0] - 2026-06-30
 
 ### Added

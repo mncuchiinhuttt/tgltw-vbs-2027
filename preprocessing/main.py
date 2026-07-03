@@ -227,15 +227,18 @@ def main():
         
         # Object detection
         detected = detector.detect(img, OBJECT_DETECTION_PROMPTS)
-        detected_labels = list(set([det["label"] for det in detected]))
+        detected_labels = [obj["label"] for obj in detected]
         
         # Structured attributes
         structured_attrs = captioner.extract_structured_attributes(img)
         final_attrs = captioner.merge_attributes_with_detections(structured_attrs, detected)
         
         # Construct Text Blob
-        text_blob_elements = [caption, ocr_text, " ".join(detected_labels)]
-        text_blob = " . ".join([elem for elem in text_blob_elements if elem])
+        text_blob = " ".join(filter(None, [
+            caption,
+            ocr_text,
+            " ".join(detected_labels),
+        ]))
         
         payload = {
             "modality": "visual",
