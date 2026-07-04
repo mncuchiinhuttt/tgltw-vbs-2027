@@ -13,7 +13,7 @@ class ObjectDetector:
     def __init__(self, option: str = None):
         # Maintain signature compatibility, using REX_OMNI_MODEL_ID from config
         self.model_id = REX_OMNI_MODEL_ID
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         self.model = None
         self.processor = None
         self.wrapper = None

@@ -13,8 +13,9 @@ class PhoWhisperASR:
         if os.path.exists(local_path):
             model_id = local_path
 
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Loading ASR model: {model_id}...")
+        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+        print(f"Loading ASR model: {model_id} on {self.device}...")
+
         from transformers import pipeline
         self.transcriber = pipeline(
             "automatic-speech-recognition",

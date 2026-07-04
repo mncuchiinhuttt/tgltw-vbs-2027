@@ -15,8 +15,8 @@ class QwenVL8BEmbedder:
         if os.path.exists(local_path):
             model_id = local_path
 
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Loading visual embedding model: {model_id}...")
+        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+        print(f"Loading visual embedding model: {model_id} on {self.device}...")
         from transformers import AutoModel, AutoProcessor
         self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = AutoModel.from_pretrained(model_id).to(self.device)
@@ -70,7 +70,7 @@ class M2DClapEmbedder:
     M2D-CLAP sound embedding wrapper generating 512d vectors.
     """
     def __init__(self, model_path: str = None):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         
         # Check if local weights path exists under global weights/
         root_dir = os.path.dirname(os.path.dirname(__file__))

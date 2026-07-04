@@ -17,7 +17,7 @@ class QwenVLM(BaseVLM):
             model_id = local_path
 
         print(f"Loading local Qwen-VL model from: {model_id}...")
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         
         try:
             from transformers import AutoModelForImageTextToText as AutoModel
@@ -26,7 +26,7 @@ class QwenVLM(BaseVLM):
 
         self.model = AutoModel.from_pretrained(
             model_id,
-            dtype=torch.float16 if self.device == "cuda" else torch.float32,
+            dtype=torch.float16 if self.device in ["cuda", "mps"] else torch.float32,
             device_map="auto" if self.device == "cuda" else None
         )
         if self.device != "cuda":
