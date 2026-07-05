@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-07-05
+
+### Changed
+- Swapped zero-shot object detector from Rex-Omni to **NVIDIA LocateAnything-3B** (`nvidia/LocateAnything-3B`) across the preprocessing config, download pipeline, and model wrappers.
+- Configured LocateAnything model loading via `transformers.pipeline` and manual `AutoModel` fallback.
+
 ## [1.1.0] - 2026-07-03
 
 ### Changed

@@ -257,7 +257,7 @@ def main():
     qwen_vlm_id = env_vars.get("QWEN_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Thinking")
     qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-8B")
     phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
-    rex_omni_id = env_vars.get("REX_OMNI_MODEL_ID", "IDEA-Research/Rex-Omni")
+    locate_anything_id = env_vars.get("LOCATE_ANYTHING_MODEL_ID", "nvidia/LocateAnything-3B")
     vlm_option = env_vars.get("VLM_OPTION", "openai")
     hf_token = env_vars.get("HF_TOKEN")
     
@@ -268,8 +268,8 @@ def main():
     # 2. M2D-CLAP Environmental model (unzipped from URL)
     download_and_unzip_m2d_clap()
     
-    # 3. Rex-Omni Zero-shot Detection model
-    download_model(rex_omni_id, rex_omni_id.split("/")[-1], token=hf_token)
+    # 3. LocateAnything-3B Zero-shot Detection model
+    download_model(locate_anything_id, locate_anything_id.split("/")[-1], token=hf_token)
     
     # 4. Qwen VLM (if VLM_OPTION=local)
     if vlm_option == "local":

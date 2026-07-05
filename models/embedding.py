@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from PIL import Image
 from typing import Union
-from config import QWEN_EMBEDDING_MODEL_ID
+from config import QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID
 
 class QwenVL8BEmbedder:
     """
@@ -69,15 +69,21 @@ class M2DClapEmbedder:
     """
     M2D-CLAP sound embedding wrapper generating 512d vectors.
     """
-    def __init__(self, model_path: str = None):
+    def __init__(self, model_path: str = M2D_CLAP_MODEL_ID):
         self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         
         # Check if local weights path exists under global weights/
         root_dir = os.path.dirname(os.path.dirname(__file__))
-        if model_path is None:
+        if model_path is None or model_path == "":
             model_path = os.path.join(root_dir, "weights", "m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025", "checkpoint-30.pth")
             if not os.path.exists(model_path):
                 model_path = os.path.join(root_dir, "weights", "checkpoint-30.pth")
+        
+        # Resolve model_path if relative
+        if not os.path.isabs(model_path):
+            abs_path = os.path.join(root_dir, model_path)
+            if os.path.exists(abs_path):
+                model_path = abs_path
 
         print(f"Loading local M2D-CLAP model from: {model_path}...")
         from .portable_m2d import PortableM2D

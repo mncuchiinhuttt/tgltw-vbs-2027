@@ -1121,7 +1121,7 @@ function DatabaseView() {
                   Ingested Metadata Schema Properties
                 </h4>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  The <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1 rounded font-mono">visual_index</code> maps visual keyframes using dense representations. Indexed metadata payloads contain raw transcripts, normalised Vietnamese NFC Unicode strings, detected object tags (bounding box coords resolved via Rex-Omni), and detailed keyframe caption narratives.
+                  The <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1 rounded font-mono">visual_index</code> maps visual keyframes using dense representations. Indexed metadata payloads contain raw transcripts, normalised Vietnamese NFC Unicode strings, detected object tags (bounding box coords resolved via LocateAnything), and detailed keyframe caption narratives.
                 </p>
               </div>
             </div>

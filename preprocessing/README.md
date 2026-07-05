@@ -30,7 +30,7 @@ preprocessing/
 1. **Scene Boundary Detection & Diversity Sampling**: Cuts video using `PySceneDetect` and keeps only frames with high visual diversity (cosine distance > threshold) computed via Qwen3-Embedding-VL-8B.
 2. **Flexible VLM & Object Detection Engines**:
    - VLM options: Local offline HuggingFace models (`Qwen/Qwen2.5-VL-7B-Instruct`) or OpenAI APIs (`gpt-5.5-pro`).
-   - Object Detection: Local offline `Rex-Omni` (`IDEA-Research/Rex-Omni`) to locate objects zero-shot based on label lists.
+   - Object Detection: Local offline `nvidia/LocateAnything-3B` to locate objects zero-shot based on label lists.
 3. **Advanced OCR & Text Processing**: Custom Vietnamese normalizations (Unicode NFC) indexing both accented and unaccented terms for robust BM25 search.
 4. **Speech & Audio Feature Extractors**: Speech transcription via PhoWhisper, environment audio indexing via M2D-CLAP.
 5. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections and loads detailed metadata payload alongside vectors.
