@@ -26,16 +26,16 @@ class HybridSearcher:
         Search visual index using QwenVL8BEmbedder text encoder.
         """
         query_vector = self.embedder.embed_text(query)
-        search_result = self.client.search(
+        search_result = self.client.query_points(
             collection_name="visual_index",
-            query_vector=query_vector.tolist(),
+            query=query_vector.tolist(),
             limit=top_k,
             query_filter=Filter(
                 must=[
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
             )
-        )
+        ).points
         return [
             {
                 "id": hit.id,

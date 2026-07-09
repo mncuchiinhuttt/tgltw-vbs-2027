@@ -24,7 +24,7 @@ inference-code/
 1. **CQR & HyDE Query Enhancement**: Prompts a VLM to rewrite queries using conversational history and generates hypothetical frame descriptions to boost embedding search recall.
 2. **Dense & Sparse Hybrid Search**: Retrieves candidates from Qdrant using both dense visual/text embeddings and sparse payload match queries, merging results via **RRF (Reciprocal Rank Fusion)**.
 3. **Type 1 (Textual-KIS)**: Reranks retrieved candidate frames using a VLM to score frames against the search query, returning `<video_name>, <timestamp>`.
-4. **Type 2 (Visual Question Answering)**: Decomposes queries into sub-queries, executes `nvidia/LocateAnything-3B` object detection on candidates, crops bounding boxes, scores VQA crops using a VLM, and returns `<video_name>, <timestamp>, <answer>`.
+4. **Type 2 (Visual Question Answering)**: Decomposes queries into sub-queries, executes YOLOE-26 object detection on candidates, crops bounding boxes, scores VQA crops using a VLM, and returns `<video_name>, <timestamp>, <answer>`.
 5. **Type 3 (Temporal-Alignment)**: Groups frames chronologically by video and evaluates the temporal correctness of sequence descriptions via a VLM, returning `<video_name>, <frame_id_1>, ..., <frame_id_n>`.
 
 ## Setup

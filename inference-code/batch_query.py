@@ -12,10 +12,10 @@ from PIL import Image
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, DETECTOR_OPTION
+from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
-from models.embedding import QwenVL8BEmbedder
+from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
@@ -29,6 +29,14 @@ def load_vlm():
         return OpenAIVLM()
     else:
         raise ValueError(f"Unknown VLM option: {VLM_OPTION}")
+
+def load_embedder():
+    if EMBEDDING_OPTION == "local":
+        return QwenVL8BEmbedder()
+    elif EMBEDDING_OPTION == "cloud":
+        return DashScopeCloudEmbedder()
+    else:
+        raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
 
 def main():
     parser = argparse.ArgumentParser(description="Batch Multimedia Retrieval Inference Engine")
@@ -57,7 +65,7 @@ def main():
     # 1. Initialize models
     print("=== Initializing Inference Models ===")
     vlm = load_vlm()
-    embedder = QwenVL8BEmbedder()
+    embedder = load_embedder()
     
     # Load detector lazily only if any Type 2 query exists
     detector = None

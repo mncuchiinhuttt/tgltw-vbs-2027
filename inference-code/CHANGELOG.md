@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-07-09
+
+### Changed
+- Swapped zero-shot object detector from NVIDIA LocateAnything-3B to **YOLOE-26** across search configuration and model loaders, matching the same swap in `preprocessing/`.
+- Added `EMBEDDING_OPTION` (`"local"`/`"cloud"`) support via a new `load_embedder()` helper in `main.py`, `batch_query.py`, and the webapp backend, mirroring the existing `load_vlm()` pattern; supports `DashScopeCloudEmbedder` as a temporary lower-memory alternative to the local `QwenVL8BEmbedder`.
+- `OpenAIVLM` now supports a configurable `base_url`/model name for use with alternative OpenAI-compatible providers (e.g. QwenCloud) instead of only OpenAI directly.
+
+### Fixed
+- Added missing `DETECTOR_OPTION` config value.
+- Migrated Qdrant client calls from the removed `QdrantClient.search()` method to `query_points()`, matching the installed `qdrant-client` 1.18 API.
+- Created `inference-code/.env` (was missing entirely - search/webapp queries were silently falling back to mismatched defaults, including a different embedding model than what the index was actually built with).
+
 ## [1.1.0] - 2026-07-05
 
 ### Changed

@@ -5,6 +5,7 @@ import subprocess
 import time
 import signal
 import socket
+import shutil
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -34,9 +35,32 @@ def run_npm_install():
     """Install frontend dependencies if node_modules does not exist."""
     node_modules = FRONTEND_DIR / "node_modules"
     if not node_modules.exists():
+        if shutil.which("npm") is None:
+            print("Warning: npm is not available, so frontend dependencies cannot be installed.")
+            return
         print("Frontend node_modules not found. Installing dependencies...")
         subprocess.run(["npm", "install"], cwd=str(FRONTEND_DIR), check=True)
         print("Frontend dependencies installed successfully.")
+
+def ensure_backend_dependencies(py_executable: str):
+    """Install backend Python dependencies into the selected environment when needed."""
+    try:
+        subprocess.run(
+            [py_executable, "-c", "import fastapi"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return
+    except subprocess.CalledProcessError:
+        pass
+
+    print("Backend dependencies missing. Installing webapp/backend requirements...")
+    subprocess.run(
+        [py_executable, "-m", "pip", "install", "-r", str(BACKEND_DIR / "requirements.txt")],
+        check=True,
+    )
+    print("Backend dependencies installed successfully.")
 
 def signal_handler(sig, frame):
     print("\nShutting down dev servers cleanly...")
@@ -47,6 +71,9 @@ def signal_handler(sig, frame):
             pass
     print("Webapp shut down completed.")
     sys.exit(0)
+
+def npm_is_available() -> bool:
+    return shutil.which("npm") is not None
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)
@@ -80,6 +107,8 @@ def main():
         print(f"Warning: Virtual environment not found at {venv_dir}. Using system python.")
         py_executable = sys.executable
 
+    ensure_backend_dependencies(py_executable)
+
     # 5. Start FastAPI Backend
     print("\nStarting Backend FastAPI Server (http://localhost:8000)...")
     backend_env = os.environ.copy()
@@ -95,22 +124,27 @@ def main():
     processes.append(p_backend)
 
     # 6. Start Vite Frontend
-    print("Starting Frontend Vite React Server (http://localhost:5173)...")
-    p_frontend = subprocess.Popen(
-        ["npm", "run", "dev"],
-        cwd=str(FRONTEND_DIR),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
-    processes.append(p_frontend)
+    if npm_is_available():
+        print("Starting Frontend Vite React Server (http://localhost:5173)...")
+        p_frontend = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=str(FRONTEND_DIR),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        processes.append(p_frontend)
+    else:
+        print("Warning: npm is not available. Skipping frontend startup and keeping the backend running.")
+        p_frontend = None
 
     # 7. Stream Logs with prefixes
     time.sleep(1.5)
     
     # Configure non-blocking stream reads
     os.set_blocking(p_backend.stdout.fileno(), False)
-    os.set_blocking(p_frontend.stdout.fileno(), False)
+    if p_frontend is not None:
+        os.set_blocking(p_frontend.stdout.fileno(), False)
 
     print("\nServers are now running! Press Ctrl+C to terminate both servers.")
     print("----------------------------------------------------------------")
@@ -122,7 +156,7 @@ def main():
             break
             
         # Check if frontend stopped
-        if p_frontend.poll() is not None:
+        if p_frontend is not None and p_frontend.poll() is not None:
             print(f"Frontend stopped with exit status {p_frontend.poll()}")
             break
 
@@ -135,12 +169,13 @@ def main():
             pass
 
         # Read frontend logs
-        try:
-            line = p_frontend.stdout.readline()
-            if line:
-                print(f"[FRONTEND] {line.strip()}")
-        except Exception:
-            pass
+        if p_frontend is not None:
+            try:
+                line = p_frontend.stdout.readline()
+                if line:
+                    print(f"[FRONTEND] {line.strip()}")
+            except Exception:
+                pass
 
         time.sleep(0.05)
 

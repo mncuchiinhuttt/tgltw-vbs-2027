@@ -24,15 +24,15 @@ client = QdrantClient(host="localhost", port=6333)
 Ensure that the distance metric matches the embedding generator:
 - **Cosine Distance** (recommended for CLIP/Qwen-VL space representations).
 - Standard dimensionalities:
-  - `visual_index`: 1536 dimensions (matching Qwen3-Embedding-VL-8B).
-  - `audio_env_index`: 512 dimensions (matching M2D-CLAP).
+  - `visual_index`: 4096 dimensions (matching Qwen3-VL-Embedding-8B).
+  - `audio_env_index`: 768 dimensions (matching M2D-CLAP with flat_features=True).
 
 ```python
 from qdrant_client.models import Distance, VectorParams
 
 client.create_collection(
     collection_name="visual_index",
-    vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+    vectors_config=VectorParams(size=4096, distance=Distance.COSINE)
 )
 ```
 

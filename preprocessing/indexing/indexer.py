@@ -8,53 +8,49 @@ class QdrantIndexer:
     """
     Manages connection to Qdrant, initializes collections, and pushes indexes.
     """
-    def __init__(self, visual_dim: int = 1536):
+    def __init__(self, visual_dim: int = 4096, audio_dim: int = 768):
         print(f"Connecting to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}...")
         self.client = QdrantClient(
             host=QDRANT_HOST,
             port=QDRANT_PORT,
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
-        self._init_collections(visual_dim)
+        self._init_collections(visual_dim, audio_dim)
 
-    def _init_collections(self, visual_dim: int = 1536):
-        # 1. Collection for visual index
+    def _ensure_collection(self, name: str, dim: int):
+        """Create the collection if missing, or recreate it if its existing vector size doesn't match dim."""
         recreate = False
-        if self.client.collection_exists("visual_index"):
+        if self.client.collection_exists(name):
             try:
-                info = self.client.get_collection("visual_index")
+                info = self.client.get_collection(name)
                 vectors_config = info.config.params.vectors
                 current_size = None
                 if hasattr(vectors_config, "size"):
                     current_size = vectors_config.size
                 elif isinstance(vectors_config, dict) and "size" in vectors_config:
                     current_size = vectors_config["size"]
-                
-                if current_size is not None and current_size != visual_dim:
-                    print(f"Collection 'visual_index' exists but has size {current_size} instead of {visual_dim}. Recreating...")
-                    self.client.delete_collection("visual_index")
+
+                if current_size is not None and current_size != dim:
+                    print(f"Collection '{name}' exists but has size {current_size} instead of {dim}. Recreating...")
+                    self.client.delete_collection(name)
                     recreate = True
             except Exception as e:
                 print(f"Warning: Failed to verify collection dimension: {e}. Recreating...")
-                self.client.delete_collection("visual_index")
+                self.client.delete_collection(name)
                 recreate = True
         else:
             recreate = True
-            
+
         if recreate:
-            print(f"Creating collection 'visual_index' with size={visual_dim}...")
+            print(f"Creating collection '{name}' with size={dim}...")
             self.client.create_collection(
-                collection_name="visual_index",
-                vectors_config=VectorParams(size=visual_dim, distance=Distance.COSINE)
+                collection_name=name,
+                vectors_config=VectorParams(size=dim, distance=Distance.COSINE)
             )
-            
-        # 2. Collection for audio index (M2D-CLAP space: typically 512 dims)
-        if not self.client.collection_exists("audio_env_index"):
-            print("Creating collection 'audio_env_index'...")
-            self.client.create_collection(
-                collection_name="audio_env_index",
-                vectors_config=VectorParams(size=512, distance=Distance.COSINE)
-            )
+
+    def _init_collections(self, visual_dim: int = 4096, audio_dim: int = 768):
+        self._ensure_collection("visual_index", visual_dim)
+        self._ensure_collection("audio_env_index", audio_dim)
 
     def index_visual_point(self, point_id: str, vector: np.ndarray, payload: Dict[str, Any]):
         """

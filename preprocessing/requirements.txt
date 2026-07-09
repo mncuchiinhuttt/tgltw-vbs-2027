@@ -20,3 +20,5 @@ einops
 nnAudio
 sentence_transformers
 torchvision
+ultralytics>=8.4.0
+dashscope>=1.26.0

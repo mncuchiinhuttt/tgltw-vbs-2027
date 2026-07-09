@@ -4,16 +4,17 @@ from PIL import Image
 from typing import List, Union
 from openai import OpenAI
 from .base_vlm import BaseVLM
-from config import OPENAI_API_KEY
+from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME
 
 class OpenAIVLM(BaseVLM):
     """
-    OpenAI API based VLM client.
+    VLM client for OpenAI or any OpenAI-compatible endpoint (e.g. QwenCloud's
+    DashScope-compatible API), selected via OPENAI_BASE_URL/OPENAI_VLM_MODEL_NAME.
     """
-    def __init__(self, model_name: str = "gpt-5.5-pro", api_key: str = OPENAI_API_KEY):
-        self.client = OpenAI(api_key=api_key)
+    def __init__(self, model_name: str = OPENAI_VLM_MODEL_NAME, api_key: str = OPENAI_API_KEY, base_url: str = OPENAI_BASE_URL):
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model_name = model_name
-        print(f"Initialized OpenAI VLM with model: {self.model_name}")
+        print(f"Initialized OpenAI-compatible VLM with model: {self.model_name}" + (f" at {base_url}" if base_url else ""))
 
     def _image_to_base64(self, image: Union[Image.Image, str]) -> str:
         if isinstance(image, str):

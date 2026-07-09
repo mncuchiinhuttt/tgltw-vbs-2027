@@ -66,7 +66,7 @@ class AudioProcessor:
         """
         import librosa
         if not os.path.exists(audio_path):
-            return np.zeros(512)
+            return np.zeros(self.clap_embedder.dim)
             
         try:
             # Load specific segment of audio
@@ -75,4 +75,4 @@ class AudioProcessor:
             return self.clap_embedder.embed_audio(y, sampling_rate=48000)
         except Exception as e:
             print(f"Error extracting CLAP embedding: {e}")
-            return np.zeros(512)
+            return np.zeros(self.clap_embedder.dim)

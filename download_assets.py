@@ -257,20 +257,30 @@ def main():
     qwen_vlm_id = env_vars.get("QWEN_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Thinking")
     qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-8B")
     phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
-    locate_anything_id = env_vars.get("LOCATE_ANYTHING_MODEL_ID", "nvidia/LocateAnything-3B")
+    yoloe_id = env_vars.get("YOLOE_MODEL_ID", "yoloe-26x-seg.pt")
     vlm_option = env_vars.get("VLM_OPTION", "openai")
+    embedding_option = env_vars.get("EMBEDDING_OPTION", "local")
     hf_token = env_vars.get("HF_TOKEN")
-    
+
     # Download weights
     # 1. PhoWhisper
     download_model(phowhisper_id, phowhisper_id.split("/")[-1], token=hf_token)
-    
+
     # 2. M2D-CLAP Environmental model (unzipped from URL)
     download_and_unzip_m2d_clap()
-    
-    # 3. LocateAnything-3B Zero-shot Detection model
-    download_model(locate_anything_id, locate_anything_id.split("/")[-1], token=hf_token)
-    
+
+    # 3. YOLOE-26 zero-shot detector - fetched via the ultralytics asset
+    # registry (GitHub releases), not the Hugging Face Hub like the other
+    # models here, so it's downloaded directly to its expected weights/ path
+    ensure_package("ultralytics")
+    from ultralytics import YOLOE
+    yoloe_path = WEIGHTS_DIR / yoloe_id
+    if not yoloe_path.exists():
+        print(f"\n--- Downloading YOLOE detector {yoloe_id} to {yoloe_path} ---")
+        YOLOE(str(yoloe_path))
+    else:
+        print(f"\n--- YOLOE detector already exists at {yoloe_path} ---")
+
     # 4. Qwen VLM (if VLM_OPTION=local)
     if vlm_option == "local":
         download_model(qwen_vlm_id, qwen_vlm_id.split("/")[-1], token=hf_token)
@@ -278,8 +288,11 @@ def main():
         print(f"\nSkipping local Qwen VLM download (VLM_OPTION={vlm_option}).")
         print("To download the local VLM, set VLM_OPTION=local in preprocessing/.env")
         
-    # 5. Qwen Embedding (always needed in preprocessing pipeline)
-    download_model(qwen_embed_id, qwen_embed_id.split("/")[-1], token=hf_token)
+    # 5. Qwen Embedding (if EMBEDDING_OPTION=local)
+    if embedding_option == "local":
+        download_model(qwen_embed_id, qwen_embed_id.split("/")[-1], token=hf_token)
+    else:
+        print(f"\nSkipping local Qwen embedding download (EMBEDDING_OPTION={embedding_option}).")
     
     # Ensure ffmpeg is installed
     ensure_ffmpeg()

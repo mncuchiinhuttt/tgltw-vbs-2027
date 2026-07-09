@@ -11,14 +11,15 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Config imports
 from preprocessing.config import (
-    VLM_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS
+    VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
+    TILED_DETECTION_LABELS, TILED_DETECTION_LABELS_EN
 )
 
 # Models
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.object_detector import ObjectDetector
-from models.embedding import QwenVL8BEmbedder
+from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
@@ -37,6 +38,25 @@ def load_vlm():
     else:
         raise ValueError(f"Unknown VLM option: {VLM_OPTION}")
 
+def load_embedder():
+    if EMBEDDING_OPTION == "local":
+        return QwenVL8BEmbedder()
+    elif EMBEDDING_OPTION == "cloud":
+        return DashScopeCloudEmbedder()
+    else:
+        raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
+
+def detect_objects(detector, image):
+    """
+    Full-frame detection across all configured categories, plus a
+    supplementary tiled pass for categories too small to reliably survive
+    full-frame downscaling (see TILED_DETECTION_LABELS), merged with
+    per-label IoU dedup so a plate found by both passes isn't double-counted.
+    """
+    detections = detector.detect(image, OBJECT_DETECTION_PROMPTS, embed_prompts=OBJECT_DETECTION_PROMPTS_EN)
+    tiled = detector.detect_tiled(image, TILED_DETECTION_LABELS, embed_prompts=TILED_DETECTION_LABELS_EN)
+    return detector._dedup_by_iou(detections + tiled, iou_thresh=0.5)
+
 def main():
     parser = argparse.ArgumentParser(description="Run Multimedia Preprocessing and Indexing Pipeline")
     parser.add_argument("--data_dir", type=str, required=True, help="Directory containing raw videos, images, and audio")
@@ -49,24 +69,20 @@ def main():
     print("=== Initializing Pipeline Models ===")
     vlm = load_vlm()
     detector = ObjectDetector(option=DETECTOR_OPTION)
-    embedder = QwenVL8BEmbedder()
-    
-    # Resolve embedding dimension dynamically from model config
-    visual_dim = 1536
-    if hasattr(embedder, "model") and hasattr(embedder.model, "config"):
-        config = embedder.model.config
-        if hasattr(config, "vision_config"):
-            visual_dim = getattr(config.vision_config, "hidden_size", visual_dim)
-        elif hasattr(config, "text_config"):
-            visual_dim = getattr(config.text_config, "hidden_size", visual_dim)
-        else:
-            visual_dim = getattr(config, "hidden_size", visual_dim)
-    print(f"Dynamic Visual Index Dimension: {visual_dim}")
-    
-    indexer = QdrantIndexer(visual_dim=visual_dim)
+    embedder = load_embedder()
     ocr_engine = TextDetectorOCR(vlm_client=vlm)
     captioner = ImageCaptioner(vlm_client=vlm)
     audio_engine = AudioProcessor()
+
+    # Resolve embedding dimensions empirically rather than guessing from model
+    # config/docs - both have been wrong before (visual was assumed 1536,
+    # actually 4096; audio was assumed 512, actually 768 with flat_features=True)
+    visual_dim = len(embedder.embed_text("dimension probe"))
+    audio_dim = len(audio_engine.clap_embedder.embed_text("dimension probe"))
+    print(f"Dynamic Visual Index Dimension: {visual_dim}")
+    print(f"Dynamic Audio Index Dimension: {audio_dim}")
+
+    indexer = QdrantIndexer(visual_dim=visual_dim, audio_dim=audio_dim)
 
     # Scan dataset
     supported_video_ext = (".mp4", ".avi", ".mkv", ".mov")
@@ -155,8 +171,8 @@ def main():
                 timestamp = kf["timestamp"]
                 frame_vector = kf["embed"]
                 
-                # Object Detection (DINO-X / Grounding DINO)
-                detected = detector.detect(frame_img, OBJECT_DETECTION_PROMPTS)
+                # Object Detection
+                detected = detect_objects(detector, frame_img)
                 
                 # OCR extraction & normalization
                 ocr_text = ocr_engine.extract_ocr(frame_img)
@@ -226,7 +242,7 @@ def main():
         caption = vlm.generate(img, "Describe this image in detail. Vietnamese is OK.").strip()
         
         # Object detection
-        detected = detector.detect(img, OBJECT_DETECTION_PROMPTS)
+        detected = detect_objects(detector, img)
         detected_labels = [obj["label"] for obj in detected]
         
         # Structured attributes

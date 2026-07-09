@@ -37,6 +37,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def load_vlm():
+    import config
+    from models.qwen_vlm import QwenVLM
+    from models.openai_vlm import OpenAIVLM
+    if config.VLM_OPTION == "local":
+        return QwenVLM()
+    elif config.VLM_OPTION == "openai":
+        return OpenAIVLM()
+    else:
+        raise ValueError(f"Unknown VLM option: {config.VLM_OPTION}")
+
+def load_embedder():
+    import config
+    from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+    if config.EMBEDDING_OPTION == "local":
+        return QwenVL8BEmbedder()
+    elif config.EMBEDDING_OPTION == "cloud":
+        return DashScopeCloudEmbedder()
+    else:
+        raise ValueError(f"Unknown embedding option: {config.EMBEDDING_OPTION}")
+
 # 2. Services Management (Lazy Singletons)
 _vlm = None
 _detector = None
@@ -57,11 +78,9 @@ def init_services(query_type: int = 1):
         # Check env variables inside function to allow updates
         import config
         from models.object_detector import ObjectDetector
-        from models.embedding import QwenVL8BEmbedder
         from search.query_processor import QueryProcessor
         from search.hybrid_search import HybridSearcher
         from search.reranker import Reranker
-        from main import load_vlm
 
         if _vlm is None:
             print("Initializing VLM...")
@@ -69,7 +88,7 @@ def init_services(query_type: int = 1):
 
         if _embedder is None:
             print("Initializing Embedder...")
-            _embedder = QwenVL8BEmbedder()
+            _embedder = load_embedder()
 
         if _detector is None and query_type == 2:
             print("Initializing Object Detector...")
@@ -252,7 +271,6 @@ async def run_search(request: SearchRequest):
                                 cap.release()
                         
                         answer_prompt = f"Answer the following question about this image: {request.query}. Be concise."
-                        from main import load_vlm
                         vlm = load_vlm()
                         answer = vlm.generate(frame_img, answer_prompt).strip()
                     except Exception as e:
@@ -566,4 +584,12 @@ if __name__ == "__main__":
     import uvicorn
     # Make sure we are in the correct directory when starting
     os.chdir(str(BACKEND_DIR))
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # reload=True only watches cwd by default (webapp/backend/) - explicitly
+    # include the shared code directories so edits there trigger a reload too
+    reload_dirs = [
+        str(BACKEND_DIR),
+        str(WORKSPACE_ROOT / "models"),
+        str(WORKSPACE_ROOT / "preprocessing"),
+        str(WORKSPACE_ROOT / "inference-code"),
+    ]
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=reload_dirs)

@@ -8,10 +8,10 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, DETECTOR_OPTION
+from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
-from models.embedding import QwenVL8BEmbedder
+from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
@@ -25,6 +25,14 @@ def load_vlm():
         return OpenAIVLM()
     else:
         raise ValueError(f"Unknown VLM option: {VLM_OPTION}")
+
+def load_embedder():
+    if EMBEDDING_OPTION == "local":
+        return QwenVL8BEmbedder()
+    elif EMBEDDING_OPTION == "cloud":
+        return DashScopeCloudEmbedder()
+    else:
+        raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
 
 def main():
     parser = argparse.ArgumentParser(description="Multimedia Retrieval Inference Engine")
@@ -43,7 +51,7 @@ def main():
         # Load detector only for Type 2 VQA crop-reranking
         detector = ObjectDetector(option=DETECTOR_OPTION)
         
-    embedder = QwenVL8BEmbedder()
+    embedder = load_embedder()
     
     # 2. Initialize search and reranking modules
     query_proc = QueryProcessor(vlm_client=vlm)

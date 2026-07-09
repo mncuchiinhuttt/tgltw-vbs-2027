@@ -17,9 +17,9 @@ Method/
 │   ├── base_vlm.py        # Abstract VLM interface
 │   ├── qwen_vlm.py        # Local Qwen3-VL vision-language model loader
 │   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro API vision-language handler
-│   ├── embedding.py       # QwenVL8BEmbedder & M2DClapEmbedder
+│   ├── embedding.py       # QwenVL8BEmbedder, M2DClapEmbedder & DashScopeCloudEmbedder
 │   ├── asr.py             # PhoWhisper speech-to-text transcriber
-│   └── object_detector.py # LocateAnything-3B zero-shot object detector
+│   └── object_detector.py # YOLOE-26 open-vocabulary object detector
 ├── preprocessing/         # Dataset indexing pipeline
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
 │   ├── .env               # API Keys and model configurations (ignored)
@@ -43,9 +43,9 @@ Method/
 
 To avoid duplicate codebase wrappers, all model configurations and execution logic are stored in the root `models/` directory.
 
-- **VLM backends**: Supports offline local execution (HuggingFace Qwen3-VL) or OpenAI API (GPT 5.5 Pro).
-- **Embeddings**: `QwenVL8BEmbedder` (1536d text/image space) and `M2DClapEmbedder` (512d sound space).
-- **Object Detection**: `ObjectDetector` wraps local offline `nvidia/LocateAnything-3B` to locate target objects.
+- **VLM backends** (`VLM_OPTION`): `local` (offline HuggingFace Qwen3-VL) or `openai` (any OpenAI-compatible endpoint - OpenAI itself, or another provider via `OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME`, e.g. QwenCloud's DashScope-compatible API).
+- **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, 1152d, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
+- **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with optional tiled inference for small objects (`detect_tiled`) and example-crop-based visual prompting (`detect_visual_prompt`).
 - **ASR**: `PhoWhisperASR` for transcribing speech with timestamps.
 
 The scripts dynamically append the workspace root to `sys.path` to import `models.*` from anywhere.
@@ -56,7 +56,7 @@ The scripts dynamically append the workspace root to `sys.path` to import `model
 
 ### 1. Download Model Checkpoints
 
-Run the download script from the root folder to download weights for PhoWhisper, CLAP, and LocateAnything-3B into the `weights/` folder:
+Run the download script from the root folder to download weights for PhoWhisper, CLAP, and the YOLOE-26 detector into the `weights/` folder:
 
 ```bash
 python download_assets.py
@@ -129,7 +129,9 @@ python main.py --type 3 --query "đầu tiên có người chạy bộ qua đư�
 We provide a futuristic Light Mode dashboard for running single queries, batch queries, checking database statistics, and tracking logs.
 
 ### Start the WebApp Dev Servers
+
 Concurrently run both the React frontend and the FastAPI backend dev servers with:
+
 ```bash
 # Python Runner (Resolves port conflicts & detects venv automatically)
 python3 run_webapp.py
@@ -146,17 +148,21 @@ python3 run_webapp.py
 ## 6. Batch Queries (Process Multiple Queries)
 
 ### CLI Execution
+
 To execute multiple queries in batch from the terminal:
+
 1. Place your queries in the `queries/queries.json` file.
 2. Run:
+
 ```bash
 cd inference-code
 python batch_query.py --query_file ../queries/queries.json --output_dir ../queries/
 ```
+
 3. Batch outputs will be saved to `queries/batch_results.json` and `queries/batch_results.csv`.
 
 ### WebApp Dashboard Execution
+
 1. Navigate to the **Process Multiple Queries** tab in the main console.
 2. Click the **Process Multiple Queries** button to run batch inference.
 3. Review logs live in the terminal output widget, and interact with the results list (including click-to-play support for matched segments).
-
