@@ -63,24 +63,28 @@ BIN_DIR="./qdrant_bin"
 mkdir -p "$BIN_DIR"
 mkdir -p "./qdrant_storage"
 
-echo "Detected OS: $OS, Arch: $ARCH"
-echo "Downloading Qdrant binary from: $DOWNLOAD_URL"
-
-# Download binary
-if command -v curl &> /dev/null; then
-    curl -L "$DOWNLOAD_URL" -o "${BIN_DIR}/qdrant.tar.gz"
-elif command -v wget &> /dev/null; then
-    wget "$DOWNLOAD_URL" -O "${BIN_DIR}/qdrant.tar.gz"
+if [ -x "${BIN_DIR}/qdrant" ]; then
+    echo "[INFO] Found existing Qdrant binary at ${BIN_DIR}/qdrant. Skipping download."
 else
-    echo "[ERROR] curl or wget is required to download the binary. Please install either tool or run with Docker."
-    exit 1
-fi
+    echo "Detected OS: $OS, Arch: $ARCH"
+    echo "Downloading Qdrant binary from: $DOWNLOAD_URL"
 
-# Extract binary
-echo "Extracting Qdrant binary..."
-tar -xzf "${BIN_DIR}/qdrant.tar.gz" -C "$BIN_DIR"
-rm "${BIN_DIR}/qdrant.tar.gz"
-chmod +x "${BIN_DIR}/qdrant"
+    # Download binary
+    if command -v curl &> /dev/null; then
+        curl -L "$DOWNLOAD_URL" -o "${BIN_DIR}/qdrant.tar.gz"
+    elif command -v wget &> /dev/null; then
+        wget "$DOWNLOAD_URL" -O "${BIN_DIR}/qdrant.tar.gz"
+    else
+        echo "[ERROR] curl or wget is required to download the binary. Please install either tool or run with Docker."
+        exit 1
+    fi
+
+    # Extract binary
+    echo "Extracting Qdrant binary..."
+    tar -xzf "${BIN_DIR}/qdrant.tar.gz" -C "$BIN_DIR"
+    rm "${BIN_DIR}/qdrant.tar.gz"
+    chmod +x "${BIN_DIR}/qdrant"
+fi
 
 # Run local binary
 echo "Starting Qdrant standalone binary in the background..."

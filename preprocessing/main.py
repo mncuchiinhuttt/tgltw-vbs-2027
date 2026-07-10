@@ -6,6 +6,11 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 
+# Force line-buffered stdout so print() shows up immediately instead of
+# sitting in a block buffer until it fills up (or the process exits) when
+# stdout isn't a real TTY (piped, redirected, run from an IDE task, etc).
+sys.stdout.reconfigure(line_buffering=True)
+
 # Add root directory to sys.path to load shared modules
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
@@ -102,14 +107,17 @@ def main():
         print(f"\n--- Processing Video: {video_name} ---")
         
         # Audio Extraction & Processing
+        print("Extracting audio track...")
         wav_path = os.path.join(args.temp_dir, f"{uuid.uuid4()}.wav")
         extracted_wav = audio_engine.extract_audio(video_path, wav_path)
-        
+
         transcripts = []
         if extracted_wav:
             # Transcript Speech
+            print("Transcribing speech (ASR)...")
             transcripts = audio_engine.transcribe_audio(extracted_wav)
-            
+            print(f"Transcribed {len(transcripts)} speech segments.")
+
             # Index spoken content segments
             for seg in transcripts:
                 seg_text = seg["text"]
@@ -148,6 +156,7 @@ def main():
             
             # Environmental Audio processing per scene
             if extracted_wav:
+                print(f"  Extracting ambient audio (CLAP) embedding for scene {scene_idx}...")
                 clap_vector = audio_engine.extract_clap_embedding(extracted_wav, start_sec, end_sec)
                 audio_payload = {
                     "modality": "ambient_audio",
@@ -163,6 +172,7 @@ def main():
             pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
             
             # Generate Scene-level Narrative Caption
+            print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
             scene_narrative = captioner.generate_scene_narrative(pil_keyframes)
 
             # Process each keyframe in the scene
@@ -170,16 +180,20 @@ def main():
                 frame_img = pil_keyframes[kf_idx]
                 timestamp = kf["timestamp"]
                 frame_vector = kf["embed"]
-                
+
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects...")
                 # Object Detection
                 detected = detect_objects(detector, frame_img)
-                
+
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR...")
                 # OCR extraction & normalization
                 ocr_text = ocr_engine.extract_ocr(frame_img)
-                
+
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: generating temporal caption (VLM)...")
                 # Temporal context captioning (using context window, simple surrogate here)
                 temporal_caption = captioner.generate_temporal_caption(frame_img, pil_keyframes)
-                
+
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: extracting structured attributes (VLM)...")
                 # Structured Attribute extraction
                 structured_attrs = captioner.extract_structured_attributes(frame_img)
                 

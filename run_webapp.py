@@ -62,6 +62,23 @@ def ensure_backend_dependencies(py_executable: str):
     )
     print("Backend dependencies installed successfully.")
 
+def ensure_qdrant_running():
+    """Start the local Qdrant vector database if it isn't already reachable."""
+    if check_port(6333):
+        print("Qdrant already running on port 6333.")
+        return
+
+    qdrant_script = ROOT_DIR / "preprocessing" / "host_qdrant.sh"
+    print("Qdrant not running. Starting local Qdrant server...")
+    subprocess.run(["bash", str(qdrant_script)], cwd=str(qdrant_script.parent), check=True)
+
+    for _ in range(30):
+        if check_port(6333):
+            print("Qdrant is up on port 6333.")
+            return
+        time.sleep(1)
+    print("Warning: Qdrant did not come up on port 6333 within 30s; continuing anyway.")
+
 def signal_handler(sig, frame):
     print("\nShutting down dev servers cleanly...")
     for p in processes:
@@ -109,7 +126,10 @@ def main():
 
     ensure_backend_dependencies(py_executable)
 
-    # 5. Start FastAPI Backend
+    # 5. Start local Qdrant vector database if not already running
+    ensure_qdrant_running()
+
+    # 6. Start FastAPI Backend
     print("\nStarting Backend FastAPI Server (http://localhost:8000)...")
     backend_env = os.environ.copy()
     
@@ -123,7 +143,7 @@ def main():
     )
     processes.append(p_backend)
 
-    # 6. Start Vite Frontend
+    # 7. Start Vite Frontend
     if npm_is_available():
         print("Starting Frontend Vite React Server (http://localhost:5173)...")
         p_frontend = subprocess.Popen(
@@ -138,7 +158,7 @@ def main():
         print("Warning: npm is not available. Skipping frontend startup and keeping the backend running.")
         p_frontend = None
 
-    # 7. Stream Logs with prefixes
+    # 8. Stream Logs with prefixes
     time.sleep(1.5)
     
     # Configure non-blocking stream reads

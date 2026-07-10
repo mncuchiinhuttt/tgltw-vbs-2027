@@ -10,8 +10,13 @@ def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD)
     Returns:
         List of tuples representing (start_time_seconds, end_time_seconds) for each scene.
     """
-    print(f"Detecting scenes in video: {video_path}...")
-    scene_list = detect(video_path, ContentDetector(threshold=threshold))
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    cap.release()
+    duration = frame_count / fps if fps > 0 else 0.0
+    print(f"Detecting scenes in video: {video_path} ({frame_count:.0f} frames, {duration:.1f}s @ {fps:.1f}fps)...")
+    scene_list = detect(video_path, ContentDetector(threshold=threshold), show_progress=True)
     scenes = []
     for scene in scene_list:
         start_sec = scene[0].get_seconds()
@@ -20,18 +25,9 @@ def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD)
         
     if not scenes:
         # Fallback: treat the entire video as a single scene
-        import cv2
-        cap = cv2.VideoCapture(video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        duration = 0.0
-        if fps > 0:
-            duration = frame_count / fps
-        cap.release()
-        
         if duration <= 0:
             duration = 10.0
-            
+
         scenes.append((0.0, duration))
         print(f"No scene cuts detected. Treating entire video as a single scene (0.0s - {duration:.2f}s).")
     else:
@@ -89,12 +85,15 @@ def select_diverse_keyframes(
     """
     if not candidate_frames:
         return []
-        
+
+    print(f"  Embedding {len(candidate_frames)} candidate frames for diversity sampling...")
+
     # Generate embedding for candidate 0
     candidate_frames[0]["embed"] = embedder.embed_image(candidate_frames[0]["frame_img"])
     selected = [candidate_frames[0]]
-    
-    for frame in candidate_frames[1:]:
+
+    for i, frame in enumerate(candidate_frames[1:], start=2):
+        print(f"  Embedding frame {i}/{len(candidate_frames)} (t={frame['timestamp']:.2f}s)...")
         frame["embed"] = embedder.embed_image(frame["frame_img"])
         sims = [cosine_sim(frame["embed"], s["embed"]) for s in selected]
         
