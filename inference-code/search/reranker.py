@@ -1,7 +1,20 @@
 import json
+import re
 import numpy as np
 from PIL import Image
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
+def _parse_vlm_score(text: str) -> Optional[float]:
+    """
+    Extract the first float from a VLM's score response, tolerating extra text
+    around it (e.g. "Score: 0.8" or "0.8 - strong match"). Returns None if no
+    number can be found, so callers can distinguish a genuine 0.0 score from a
+    parse failure instead of silently collapsing both to 0.0.
+    """
+    match = re.search(r"-?\d+(?:\.\d+)?", text)
+    if match is None:
+        return None
+    return float(match.group())
 
 class Reranker:
     """
@@ -32,13 +45,16 @@ Frame info: {frame_description}
 Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
 Score:"""
             
-            try:
-                # Text-only comparison as base/fallback, or vision if image is provided
-                score_str = self.vlm.generate(None, prompt).strip()
-                score = float(score_str)
-            except ValueError:
+            # Text-only comparison as base/fallback, or vision if image is provided
+            score_str = self.vlm.generate(None, prompt).strip()
+            score = _parse_vlm_score(score_str)
+            if score is None:
+                print(f"Warning: could not parse rerank score from VLM response: {score_str!r}. Defaulting to 0.0.")
                 score = 0.0
-                
+                hit["rerank_score_valid"] = False
+            else:
+                hit["rerank_score_valid"] = True
+
             hit["rerank_score"] = score
             scored.append(hit)
             
@@ -186,12 +202,12 @@ Chronological Frame Sequence in Video:
 Rate how well this sequence matches the chronological events described in the query from 0.0 (no match/wrong order) to 1.0 (perfect chronological match). Output only the score as a float.
 Score:"""
             
-            try:
-                score_str = self.vlm.generate(None, prompt).strip()
-                seq_score = float(score_str)
-            except Exception:
+            score_str = self.vlm.generate(None, prompt).strip()
+            seq_score = _parse_vlm_score(score_str)
+            if seq_score is None:
+                print(f"Warning: could not parse sequence score from VLM response: {score_str!r}. Defaulting to 0.0.")
                 seq_score = 0.0
-                
+
             scored_sequences.append({
                 "video_name": video,
                 "frame_ids": [f["id"] for f in sorted_frames],

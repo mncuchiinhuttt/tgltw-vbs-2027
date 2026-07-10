@@ -413,7 +413,7 @@ function SearchView() {
                             #{idx + 1}
                           </Badge>
                           <Badge variant="outline" className="bg-white/95 text-slate-700 font-bold text-xs border-slate-200/80 shadow-sm">
-                            Score: {hit.score ? hit.score.toFixed(3) : (hit.rrf_score ? hit.rrf_score.toFixed(4) : "N/A")}
+                            Score: {hit.score != null ? hit.score.toFixed(3) : (hit.rrf_score != null ? hit.rrf_score.toFixed(4) : "N/A")}
                           </Badge>
                         </div>
                         <div className="absolute top-3 right-3">

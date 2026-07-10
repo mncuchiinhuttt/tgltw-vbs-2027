@@ -1,7 +1,9 @@
 import numpy as np
 from typing import Dict, Any
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import (
+    Distance, VectorParams, PointStruct, TextIndexParams, TextIndexType, TokenizerType
+)
 from preprocessing.config import QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY
 
 class QdrantIndexer:
@@ -48,9 +50,27 @@ class QdrantIndexer:
                 vectors_config=VectorParams(size=dim, distance=Distance.COSINE)
             )
 
+    def _ensure_text_index(self, collection_name: str, field_name: str):
+        """Create a multilingual full-text payload index if it doesn't already exist."""
+        info = self.client.get_collection(collection_name)
+        if field_name in (info.payload_schema or {}):
+            return
+        print(f"Creating full-text index on '{collection_name}.{field_name}'...")
+        self.client.create_payload_index(
+            collection_name=collection_name,
+            field_name=field_name,
+            field_schema=TextIndexParams(
+                type=TextIndexType.TEXT,
+                tokenizer=TokenizerType.MULTILINGUAL,
+                min_token_len=2,
+                lowercase=True,
+            )
+        )
+
     def _init_collections(self, visual_dim: int = 4096, audio_dim: int = 768):
         self._ensure_collection("visual_index", visual_dim)
         self._ensure_collection("audio_env_index", audio_dim)
+        self._ensure_text_index("visual_index", "text_blob")
 
     def index_visual_point(self, point_id: str, vector: np.ndarray, payload: Dict[str, Any]):
         """

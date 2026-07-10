@@ -38,3 +38,7 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
 VQA_BOX_THRESHOLD = float(os.getenv("VQA_BOX_THRESHOLD", 0.3))
+# Minimum VLM rerank score for a Type 1 (Textual-KIS) candidate to be kept in
+# results, filtering out low-relevance frames that only made the initial
+# candidate pool via a noisy sparse/BM25 or HyDE match
+RERANK_SCORE_THRESHOLD = float(os.getenv("RERANK_SCORE_THRESHOLD", 0.2))

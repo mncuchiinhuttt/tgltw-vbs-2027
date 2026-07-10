@@ -227,7 +227,12 @@ async def run_search(request: SearchRequest):
         results = []
         if request.type == 1:
             # Type 1: Textual-KIS
+            import config
             top_candidates = reranker.rerank_type1(request.query, candidates[:10])
+            top_candidates = [
+                c for c in top_candidates
+                if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
+            ]
             for idx, c in enumerate(top_candidates):
                 results.append({
                     "rank": idx + 1,
