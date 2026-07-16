@@ -2,6 +2,19 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.3.0] - 2026-07-16
+
+### Changed
+- Replaced VLM-based OCR with **PP-OCRv6** (detection + recognition) in `preprocessing/video/ocr.py` - the VLM is now only used to re-read individual crops PP-OCRv6 recognized with low confidence (`OCR_REC_SCORE_THRESHOLD`), not run on every frame.
+- Merged the per-keyframe `temporal_caption` and `structured_attrs` VLM calls into a single unified JSON call (`ImageCaptioner.generate_frame_analysis`/`generate_frame_analysis_batch`), batched across a scene's keyframes in one `generate_batch()` call.
+- `OpenAIVLM.generate_batch()` now issues requests concurrently (`ThreadPoolExecutor`, `VLM_BATCH_CONCURRENCY`) instead of sequentially, and `QwenVLM.generate_batch()` now runs one true batched `model.generate()` call across images instead of looping - both needed to get any real throughput benefit from a batch-serving backend (e.g. a self-hosted vLLM server).
+- Replaced fixed-threshold greedy keyframe selection with **Adaptive Keyframe Sampling**: a lightweight CLIP (ViT-B/32) pass estimates per-scene visual variance to set a keyframe budget (1-8), then farthest-point sampling picks that many frames from the real Qwen embedding space.
+
+### Added
+- `host_vllm.sh` (repo root, shared by `preprocessing/` and `inference-code/`) - self-hosts the local VLM via vLLM's OpenAI-compatible server for batch inference (requires an NVIDIA/AMD GPU; does not run on Apple Silicon or CPU-only machines).
+- `models/clip_embedder.py` (`LightweightCLIPEmbedder`) - used only for Adaptive Keyframe Sampling's scene-variance step, not the indexing embedding space.
+- `DASHSCOPE_EMBEDDING_MODEL_NAME` config so `DashScopeCloudEmbedder`'s model can be swapped without code changes.
+
 ## [1.2.0] - 2026-07-09
 
 ### Changed

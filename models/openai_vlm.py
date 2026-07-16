@@ -1,10 +1,11 @@
 import base64
 import io
+from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 from typing import List, Union
 from openai import OpenAI
 from .base_vlm import BaseVLM
-from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME
+from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME, VLM_BATCH_CONCURRENCY
 
 class OpenAIVLM(BaseVLM):
     """
@@ -61,4 +62,15 @@ class OpenAIVLM(BaseVLM):
         return response.choices[0].message.content
 
     def generate_batch(self, images: List[Union[Image.Image, str]], prompt: str) -> List[str]:
-        return [self.generate(img, prompt) for img in images]
+        """
+        Issues requests concurrently rather than one at a time. The
+        OpenAI-compatible chat completions API has no native "batch of
+        images in one call" endpoint - batching benefit instead comes from
+        the server (e.g. a self-hosted vLLM instance's continuous batching)
+        handling many in-flight requests concurrently, which requires the
+        client to actually send them concurrently.
+        """
+        if not images:
+            return []
+        with ThreadPoolExecutor(max_workers=min(VLM_BATCH_CONCURRENCY, len(images))) as executor:
+            return list(executor.map(lambda img: self.generate(img, prompt), images))

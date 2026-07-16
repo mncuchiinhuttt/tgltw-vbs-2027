@@ -25,10 +25,12 @@ from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.object_detector import ObjectDetector
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+from models.clip_embedder import LightweightCLIPEmbedder
 
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
-    detect_scenes, extract_candidate_frames, select_diverse_keyframes
+    detect_scenes, extract_candidate_frames, compute_scene_variance,
+    get_adaptive_budget, select_diverse_keyframes
 )
 from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
@@ -75,6 +77,7 @@ def main():
     vlm = load_vlm()
     detector = ObjectDetector(option=DETECTOR_OPTION)
     embedder = load_embedder()
+    clip_embedder = LightweightCLIPEmbedder()
     ocr_engine = TextDetectorOCR(vlm_client=vlm)
     captioner = ImageCaptioner(vlm_client=vlm)
     audio_engine = AudioProcessor()
@@ -149,9 +152,15 @@ def main():
             candidates = extract_candidate_frames(video_path, start_sec, end_sec)
             if not candidates:
                 continue
-                
-            # Filter duplicates via Cosine Similarity / Qwen3-Embedding-VL-8B
-            diverse_keyframes = select_diverse_keyframes(candidates, embedder)
+
+            # Adaptive Keyframe Sampling: a cheap CLIP pass over this scene's
+            # candidates decides how many keyframes it needs (static scenes
+            # keep few, dynamic scenes keep more), then farthest-point
+            # sampling picks that many via the real (Qwen) embedding space.
+            variance = compute_scene_variance(candidates, clip_embedder)
+            budget = get_adaptive_budget(variance)
+            print(f"Scene {scene_idx}: variance={variance:.4f} -> keyframe budget={budget}")
+            diverse_keyframes = select_diverse_keyframes(candidates, embedder, budget=budget)
             print(f"Scene {scene_idx}: Selected {len(diverse_keyframes)} / {len(candidates)} keyframes.")
             
             # Environmental Audio processing per scene
@@ -175,30 +184,33 @@ def main():
             print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
             scene_narrative = captioner.generate_scene_narrative(pil_keyframes)
 
+            # Unified per-frame VLM analysis (temporal caption + structured
+            # attributes in ONE call per frame instead of two), batched
+            # across all of this scene's keyframes in a single generate_batch()
+            # call so a concurrent/batch-serving VLM backend (e.g. vLLM, see
+            # host_vllm.sh) processes them together instead of one at a time.
+            print(f"  Analyzing {len(pil_keyframes)} keyframes with VLM (batched, unified prompt)...")
+            frame_analyses = captioner.generate_frame_analysis_batch(pil_keyframes)
+
             # Process each keyframe in the scene
             for kf_idx, kf in enumerate(diverse_keyframes):
                 frame_img = pil_keyframes[kf_idx]
                 timestamp = kf["timestamp"]
                 frame_vector = kf["embed"]
+                analysis = frame_analyses[kf_idx]
 
                 print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects...")
                 # Object Detection
                 detected = detect_objects(detector, frame_img)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR...")
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (PP-OCRv6)...")
                 # OCR extraction & normalization
                 ocr_text = ocr_engine.extract_ocr(frame_img)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: generating temporal caption (VLM)...")
-                # Temporal context captioning (using context window, simple surrogate here)
-                temporal_caption = captioner.generate_temporal_caption(frame_img, pil_keyframes)
+                temporal_caption = analysis.pop("caption", "")
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: extracting structured attributes (VLM)...")
-                # Structured Attribute extraction
-                structured_attrs = captioner.extract_structured_attributes(frame_img)
-                
                 # Merge structured attributes with detector results
-                final_attrs = captioner.merge_attributes_with_detections(structured_attrs, detected)
+                final_attrs = captioner.merge_attributes_with_detections(analysis, detected)
                 
                 # Flatten detected labels for BM25 text blob
                 detected_labels = final_attrs.get("objects", [])
@@ -249,19 +261,17 @@ def main():
         img = Image.open(img_path).convert("RGB")
         frame_vector = embedder.embed_image(np.array(img))
         
-        # OCR
+        # OCR (PP-OCRv6)
         ocr_text = ocr_engine.extract_ocr(img)
-        
-        # General caption
-        caption = vlm.generate(img, "Describe this image in detail. Vietnamese is OK.").strip()
-        
+
         # Object detection
         detected = detect_objects(detector, img)
         detected_labels = [obj["label"] for obj in detected]
-        
-        # Structured attributes
-        structured_attrs = captioner.extract_structured_attributes(img)
-        final_attrs = captioner.merge_attributes_with_detections(structured_attrs, detected)
+
+        # Unified VLM analysis (caption + structured attributes in one call)
+        analysis = captioner.generate_frame_analysis(img)
+        caption = analysis.pop("caption", "")
+        final_attrs = captioner.merge_attributes_with_detections(analysis, detected)
         
         # Construct Text Blob
         text_blob = " ".join(filter(None, [

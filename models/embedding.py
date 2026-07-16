@@ -3,7 +3,9 @@ import torch
 import numpy as np
 from PIL import Image
 from typing import Union
-from config import QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID, OPENAI_API_KEY, OPENAI_BASE_URL
+from config import (
+    QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID, OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME
+)
 
 class QwenVL8BEmbedder:
     """
@@ -51,14 +53,20 @@ class QwenVL8BEmbedder:
 
 class DashScopeCloudEmbedder:
     """
-    Temporary drop-in for QwenVL8BEmbedder using QwenCloud/DashScope's
-    tongyi-embedding-vision-plus multimodal model instead of loading an 8B
-    model locally. Same embed_image/embed_text interface, but produces
-    1152-dim vectors (vs QwenVL8BEmbedder's 4096d) - fine since Qdrant
-    collection dimensions are probed empirically, not hardcoded. Swap
-    EMBEDDING_OPTION back to "local" to revert.
+    Temporary drop-in for QwenVL8BEmbedder using a DashScope-compatible
+    multimodal embedding model (default: QwenCloud's tongyi-embedding-vision-plus,
+    override via DASHSCOPE_EMBEDDING_MODEL_NAME) instead of loading an 8B
+    model locally. Same embed_image/embed_text interface, but vector
+    dimension depends on the model used - fine since Qdrant collection
+    dimensions are probed empirically, not hardcoded. Swap EMBEDDING_OPTION
+    back to "local" to revert.
     """
-    def __init__(self, model_name: str = "tongyi-embedding-vision-plus", api_key: str = OPENAI_API_KEY, base_url: str = OPENAI_BASE_URL):
+    def __init__(
+        self,
+        model_name: str = DASHSCOPE_EMBEDDING_MODEL_NAME,
+        api_key: str = OPENAI_API_KEY,
+        base_url: str = OPENAI_BASE_URL
+    ):
         import dashscope
         self.dashscope = dashscope
         if base_url:

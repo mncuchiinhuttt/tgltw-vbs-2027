@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-07-16
+
+### Changed
+- Replaced VLM-based OCR with **PP-OCRv6** in `TextDetectorOCR` (`video/ocr.py`) - previously every "has text" frame (gated by an EasyOCR presence check, or all frames if EasyOCR wasn't installed) had its text extracted by a full VLM call; now PP-OCRv6 handles detection+recognition directly, and the VLM only re-reads individual crops recognized below `OCR_REC_SCORE_THRESHOLD` (default 0.5).
+- Added an optional overlapping-tile OCR pass (`OCR_USE_TILING`, off by default) mirroring `ObjectDetector.detect_tiled()`'s pattern - written by hand rather than via `sahi`, since `sahi` 0.12.1's model registry has no `"paddleocr"` backend to plug into (`AutoDetectionModel.from_pretrained(model_type="paddleocr", ...)` isn't runnable as-is).
+- Merged `ImageCaptioner.generate_temporal_caption()` + `extract_structured_attributes()` (two separate VLM calls per keyframe) into one `generate_frame_analysis()`/`generate_frame_analysis_batch()` call using a single unified JSON prompt (`UNIFIED_FRAME_PROMPT`) - `ocr_text` is intentionally excluded from this prompt since OCR now runs via PP-OCRv6, not the VLM.
+- `main.py`'s per-scene keyframe loop now calls `generate_frame_analysis_batch()` once across all of a scene's keyframes instead of two VLM calls per keyframe in a loop.
+- Replaced `select_diverse_keyframes()`'s fixed-threshold greedy diversity filter with **Adaptive Keyframe Sampling**: `compute_scene_variance()` encodes a scene's candidate frames with a lightweight CLIP model and measures embedding variance; `get_adaptive_budget()` maps that variance to a keyframe budget (1 for static scenes, up to `KEYFRAME_MAX_BUDGET`=8 for dynamic ones); `select_diverse_keyframes()` then runs farthest-point sampling down to that budget using the real Qwen embedding space.
+- `OpenAIVLM.generate_batch()` now issues requests concurrently via `ThreadPoolExecutor` (`VLM_BATCH_CONCURRENCY`, default 4) instead of a sequential loop - the OpenAI-compatible API has no native batch endpoint, so batching benefit only comes from the server (e.g. vLLM's continuous batching) seeing multiple concurrent in-flight requests.
+- `QwenVLM.generate_batch()` now builds one batch of chat-template inputs and runs a single `model.generate()` call across all images, instead of looping `generate()` per image.
+
+### Added
+- `host_vllm.sh` (repo root, not `preprocessing/` - shared with `inference-code/` since both point at it via the same `models/openai_vlm.py` client) - self-hosts the local VLM via vLLM's OpenAI-compatible server for batch inference, mirroring `host_qdrant.sh`'s style. Requires an NVIDIA/AMD GPU - vLLM doesn't run on Apple Silicon or CPU-only machines, so this is meant for the actual GPU/competition server, not local dev.
+- `models/clip_embedder.py` (`LightweightCLIPEmbedder`) - CLIP ViT-B/32 wrapper used only for Adaptive Keyframe Sampling's scene-variance step, not the indexing embedding space.
+- Config: `OCR_LANG`, `OCR_REC_SCORE_THRESHOLD`, `OCR_USE_TILING`, `KEYFRAME_VARIANCE_LOW`/`KEYFRAME_VARIANCE_MID`/`KEYFRAME_MAX_BUDGET`, `VLM_BATCH_CONCURRENCY`, `DASHSCOPE_EMBEDDING_MODEL_NAME`.
+- `paddleocr`/`paddlepaddle` (PP-OCRv6) and `clip`/`ftfy`/`regex` (lightweight CLIP) added to `requirements.txt`.
+
+### Fixed
+- `select_diverse_keyframes()` crashed with `ValueError: The truth value of an array with more than one element is ambiguous` when removing a selected frame from the remaining candidates via `list.remove()` - dict equality compared the numpy `"embed"` arrays elementwise; fixed by removing by index instead.
+- `video/scene_detector.py`: a stray `import cv2` inside `detect_scenes()`'s fallback branch shadowed the module-level import for the whole function, causing `UnboundLocalError` on any `cv2` use earlier in the function.
+
 ## [1.3.0] - 2026-07-09
 
 ### Changed

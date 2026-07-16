@@ -22,3 +22,19 @@ sentence_transformers
 torchvision
 ultralytics>=8.4.0
 dashscope>=1.26.0
+
+# OCR (PP-OCRv6), replacing the previous VLM-based OCR path
+paddlepaddle>=3.0.0
+paddleocr>=3.0.0
+
+# Lightweight CLIP, used only for scene-variance estimation in Adaptive
+# Keyframe Sampling (not the indexing embedding space)
+clip @ git+https://github.com/openai/CLIP.git
+ftfy
+regex
+
+# vLLM (optional): only needed on the machine self-hosting the local VLM for
+# batch inference (see host_vllm.sh). Requires an NVIDIA/AMD GPU - does not
+# install/run on Apple Silicon or CPU-only machines, so it's intentionally
+# not a hard dependency here. Install separately on that host:
+#   pip install vllm

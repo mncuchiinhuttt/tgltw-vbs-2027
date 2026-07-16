@@ -11,13 +11,19 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # vision-capable model without loading a local VLM
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "") or None
 OPENAI_VLM_MODEL_NAME = os.getenv("OPENAI_VLM_MODEL_NAME", "gpt-5.5-pro")
+# How many OpenAIVLM.generate_batch() requests to issue concurrently. Raise
+# this when OPENAI_BASE_URL points at a self-hosted vLLM server (see
+# host_vllm.sh at the repo root) to get its continuous-batching throughput benefit.
+VLM_BATCH_CONCURRENCY = int(os.getenv("VLM_BATCH_CONCURRENCY", 4))
 
 # Model configuration options
 # Options: "local" (uses Qwen3-VL locally) or "openai" (uses GPT 5.5 Pro / GPT-4o style API)
 VLM_OPTION = os.getenv("VLM_OPTION", "openai")
 # Options: "local" (QwenVL8BEmbedder, ~15GB) or "cloud" (DashScopeCloudEmbedder,
-# tongyi-embedding-vision-plus via OPENAI_API_KEY/OPENAI_BASE_URL, no local weights)
+# via OPENAI_API_KEY/OPENAI_BASE_URL, no local weights)
 EMBEDDING_OPTION = os.getenv("EMBEDDING_OPTION", "local")
+# Model name DashScopeCloudEmbedder calls via dashscope.MultiModalEmbedding
+DASHSCOPE_EMBEDDING_MODEL_NAME = os.getenv("DASHSCOPE_EMBEDDING_MODEL_NAME", "tongyi-embedding-vision-plus")
 
 # Model Checkpoints (used if VLM_OPTION="local" or during local embeddings)
 QWEN_VLM_MODEL_ID = os.getenv("QWEN_VLM_MODEL_ID", "Qwen/Qwen2.5-VL-7B-Instruct")

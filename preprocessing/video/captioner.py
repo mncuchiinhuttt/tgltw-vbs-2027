@@ -12,11 +12,16 @@ Describe in 2-3 sentences:
 Be factual and dense. Vietnamese is OK.
 """
 
-VQA_EXTRACTION_PROMPT = """
-Analyze this frame and extract in JSON:
+# Combines what used to be two separate per-frame calls (temporal caption +
+# structured attribute extraction) into one, per the directive to call the
+# VLM once per frame during preprocessing rather than multiple times.
+# ocr_text is intentionally left out here - OCR now runs via PP-OCRv6
+# (see preprocessing/video/ocr.py), not the VLM.
+UNIFIED_FRAME_PROMPT = """
+Analyze this frame and output JSON:
 {
+  "caption": "Describe what is happening in this keyframe, keeping the temporal flow of events in mind.",
   "objects": ["xe máy", "ô tô", "người"],
-  "text_on_screen": ["51-B1 234.56", "UBND"],
   "colors_dominant": ["đỏ", "trắng"],
   "count_people": 3,
   "scene_type": "đường phố ban ngày",
@@ -26,22 +31,12 @@ Analyze this frame and extract in JSON:
     "indoor_outdoor": "outdoor"
   }
 }
-Only output JSON, no explanation.
+Only output JSON, no explanation. Vietnamese is OK for text fields.
 """
 
 class ImageCaptioner:
     def __init__(self, vlm_client):
         self.vlm = vlm_client
-
-    def generate_temporal_caption(self, current_frame: Image.Image, window_frames: List[Image.Image]) -> str:
-        """
-        Generate temporal caption using the current frame and window context.
-        """
-        # For simplicity, we can pass the main frame and ask the VLM to describe it with context if needed,
-        # or pass the window frames if the VLM interface supports multi-image inputs.
-        # Here we ask the model to describe the main frame keeping in mind the neighboring context.
-        prompt = "Describe what is happening in this keyframe. Keep the temporal flow of events in mind. Vietnamese is OK."
-        return self.vlm.generate(current_frame, prompt).strip()
 
     def generate_scene_narrative(self, keyframes: List[Image.Image]) -> str:
         """
@@ -55,34 +50,58 @@ class ImageCaptioner:
         rep_frame = keyframes[len(keyframes) // 2]
         return self.vlm.generate(rep_frame, SCENE_NARRATIVE_PROMPT).strip()
 
-    def extract_structured_attributes(self, frame_img: Image.Image) -> Dict[str, Any]:
-        """
-        Run structured attribute extraction on a frame.
-        """
-        raw_output = self.vlm.generate(frame_img, VQA_EXTRACTION_PROMPT).strip()
-        
-        # Clean JSON markdown fences if present
-        if raw_output.startswith("```json"):
-            raw_output = raw_output[7:]
+    def _parse_json_response(self, raw_output: str) -> Union[Dict[str, Any], None]:
+        raw_output = raw_output.strip()
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("\n", 1)[1] if "\n" in raw_output else ""
         if raw_output.endswith("```"):
             raw_output = raw_output[:-3]
-            
+
         try:
             return json.loads(raw_output.strip())
         except json.JSONDecodeError:
-            # Fallback structure
-            return {
-                "objects": [],
-                "text_on_screen": [],
-                "colors_dominant": [],
-                "count_people": 0,
-                "scene_type": "unknown",
-                "attributes": {
-                    "weather": "unknown",
-                    "time_of_day": "unknown",
-                    "indoor_outdoor": "unknown"
-                }
+            return None
+
+    def _empty_frame_analysis(self) -> Dict[str, Any]:
+        return {
+            "caption": "",
+            "objects": [],
+            "colors_dominant": [],
+            "count_people": 0,
+            "scene_type": "unknown",
+            "attributes": {
+                "weather": "unknown",
+                "time_of_day": "unknown",
+                "indoor_outdoor": "unknown"
             }
+        }
+
+    def generate_frame_analysis(self, frame_img: Image.Image) -> Dict[str, Any]:
+        """
+        Single unified VLM call combining what used to be a temporal caption
+        call plus a structured attribute extraction call.
+        """
+        raw_output = self.vlm.generate(frame_img, UNIFIED_FRAME_PROMPT)
+        parsed = self._parse_json_response(raw_output)
+        if parsed is None:
+            return self._empty_frame_analysis()
+        return parsed
+
+    def generate_frame_analysis_batch(self, frame_imgs: List[Image.Image]) -> List[Dict[str, Any]]:
+        """
+        Batched version of generate_frame_analysis - issues all of a scene's
+        keyframes through the VLM client's generate_batch() in one call, so a
+        concurrent/batch-serving backend (e.g. a self-hosted vLLM server) can
+        process them together instead of strictly one at a time.
+        """
+        if not frame_imgs:
+            return []
+        raw_outputs = self.vlm.generate_batch(frame_imgs, UNIFIED_FRAME_PROMPT)
+        results = []
+        for raw_output in raw_outputs:
+            parsed = self._parse_json_response(raw_output)
+            results.append(parsed if parsed is not None else self._empty_frame_analysis())
+        return results
 
     def merge_attributes_with_detections(
         self, 

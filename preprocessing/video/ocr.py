@@ -1,7 +1,9 @@
 import unicodedata
-import re
+import numpy as np
 from PIL import Image
-from typing import Union, List
+from typing import List, Dict, Any
+from paddleocr import PaddleOCR
+from preprocessing.config import OCR_LANG, OCR_REC_SCORE_THRESHOLD, OCR_USE_TILING
 
 # Simple dictionary mapping for removing Vietnamese accents
 ACCENT_MAP = {
@@ -52,38 +54,134 @@ def normalize_vn_ocr(text: str) -> str:
 
 class TextDetectorOCR:
     """
-    Text detector that checks if text is present in the frame (e.g. using CRAFT/DB-Net style check)
-    and then triggers a VLM to extract the actual text.
+    PP-OCRv6 text detection + recognition, replacing the previous path where
+    every frame's OCR was delegated to the VLM. The VLM is now only used to
+    re-read individual crops PP-OCRv6 recognized with low confidence, instead
+    of running on every frame.
     """
-    def __init__(self, vlm_client):
+    def __init__(self, vlm_client, lang: str = OCR_LANG, use_tiling: bool = OCR_USE_TILING):
         self.vlm = vlm_client
-        # Placeholder for CRAFT or DB-Net. EasyOCR makes a good surrogate for local checking.
-        self.local_detector = None
-        try:
-            import easyocr
-            self.local_detector = easyocr.Reader(['vi', 'en'])
-        except ImportError:
-            print("easyocr is not installed. Will default to calling VLM for all frames.")
+        self.use_tiling = use_tiling
+        print(f"Loading PP-OCRv6 OCR model (lang={lang})...")
+        self.ocr = PaddleOCR(
+            lang=lang,
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+        )
+        print("PP-OCRv6 model loaded successfully.")
+
+    def _detect_recognize(self, image: Image.Image, tile_origin=(0, 0)) -> List[Dict[str, Any]]:
+        """Run PP-OCRv6 on a single image/tile, offsetting boxes back to full-frame coordinates."""
+        img_np = np.array(image.convert("RGB"))
+        results = self.ocr.predict(img_np)
+        if not results:
+            return []
+
+        r = results[0]
+        ox, oy = tile_origin
+        boxes = []
+        for text, score, box in zip(r["rec_texts"], r["rec_scores"], r["rec_boxes"]):
+            x1, y1, x2, y2 = [float(v) for v in box]
+            boxes.append({
+                "text": text,
+                "confidence": float(score),
+                "bbox": [x1 + ox, y1 + oy, x2 + ox, y2 + oy],
+            })
+        return boxes
+
+    def _detect_recognize_tiled(
+        self,
+        image: Image.Image,
+        tile_size: int = 768,
+        overlap: float = 0.2,
+        iou_merge_thresh: float = 0.3,
+    ) -> List[Dict[str, Any]]:
+        """
+        Supplementary overlapping-tile pass (mirrors ObjectDetector.detect_tiled
+        in models/object_detector.py) so small or corner text surviving a
+        full-frame downscale isn't lost. Written by hand rather than via the
+        `sahi` library's SAHI slicing helper: sahi 0.12.1's model registry
+        (sahi.auto_model.MODEL_TYPE_TO_MODEL_CLASS_NAME) has no "paddleocr"
+        backend to plug into, so `AutoDetectionModel.from_pretrained(model_type="paddleocr", ...)`
+        isn't runnable as-is.
+        """
+        width, height = image.size
+        stride = max(int(tile_size * (1 - overlap)), 1)
+
+        xs = list(range(0, max(width - tile_size, 0) + 1, stride)) or [0]
+        ys = list(range(0, max(height - tile_size, 0) + 1, stride)) or [0]
+        if xs[-1] + tile_size < width:
+            xs.append(max(width - tile_size, 0))
+        if ys[-1] + tile_size < height:
+            ys.append(max(height - tile_size, 0))
+
+        all_boxes = self._detect_recognize(image)
+        for y0 in ys:
+            for x0 in xs:
+                x1, y1 = min(x0 + tile_size, width), min(y0 + tile_size, height)
+                tile = image.crop((x0, y0, x1, y1))
+                all_boxes.extend(self._detect_recognize(tile, tile_origin=(x0, y0)))
+
+        return self._dedup_by_iou(all_boxes, iou_merge_thresh)
+
+    @staticmethod
+    def _iou(box_a: List[float], box_b: List[float]) -> float:
+        ax1, ay1, ax2, ay2 = box_a
+        bx1, by1, bx2, by2 = box_b
+        ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+        ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+        inter = max(ix2 - ix1, 0) * max(iy2 - iy1, 0)
+        area_a = max(ax2 - ax1, 0) * max(ay2 - ay1, 0)
+        area_b = max(bx2 - bx1, 0) * max(by2 - by1, 0)
+        union = area_a + area_b - inter
+        return inter / union if union > 0 else 0.0
+
+    def _dedup_by_iou(self, boxes: List[Dict[str, Any]], iou_thresh: float) -> List[Dict[str, Any]]:
+        """Greedy NMS, highest confidence first - dedupes boxes seen in overlapping tiles."""
+        boxes = sorted(boxes, key=lambda b: b["confidence"], reverse=True)
+        kept = []
+        for box in boxes:
+            if all(self._iou(box["bbox"], k["bbox"]) < iou_thresh for k in kept):
+                kept.append(box)
+        return kept
 
     def has_text(self, image: Image.Image) -> bool:
-        """
-        Check if the keyframe has any text using local detector (CRAFT / DB-Net / EasyOCR surrogate).
-        """
-        if self.local_detector is None:
-            return True # Fallback: always run VLM
-            
-        import numpy as np
-        img_np = np.array(image)
-        results = self.local_detector.readtext(img_np)
-        return len(results) > 0
+        """Cheap presence check reusing the same PP-OCRv6 detector (no separate model needed)."""
+        return len(self._detect_recognize(image)) > 0
+
+    def extract_ocr_boxes(self, image: Image.Image) -> List[Dict[str, Any]]:
+        """Detect+recognize and return the raw per-box results ({bbox, text, confidence})."""
+        if self.use_tiling:
+            return self._detect_recognize_tiled(image)
+        return self._detect_recognize(image)
 
     def extract_ocr(self, image: Image.Image) -> str:
         """
-        Extract OCR text using VLM if text is detected in the keyframe.
+        Detect+recognize text via PP-OCRv6. Boxes recognized with confidence
+        below OCR_REC_SCORE_THRESHOLD are escalated to the VLM to re-read
+        just that crop - only a few blurry/hard cases hit the VLM, not the
+        whole frame.
         """
-        if not self.has_text(image):
+        boxes = self.extract_ocr_boxes(image)
+        if not boxes:
             return ""
-            
-        prompt = "Extract all text or signs visible on the screen. Return only the extracted text in Vietnamese/English, or nothing if there is no readable text."
-        raw_text = self.vlm.generate(image, prompt)
-        return normalize_vn_ocr(raw_text.strip())
+
+        texts = []
+        for box in boxes:
+            text = box["text"]
+            if box["confidence"] < OCR_REC_SCORE_THRESHOLD and self.vlm is not None:
+                x1, y1, x2, y2 = box["bbox"]
+                crop = image.crop((max(0, int(x1)), max(0, int(y1)), int(x2), int(y2)))
+                if min(crop.size) > 0:
+                    try:
+                        escalated = self.vlm.generate(
+                            crop, "Extract the text in this image exactly. Output only the text."
+                        ).strip()
+                        if escalated:
+                            text = escalated
+                    except Exception as e:
+                        print(f"Warning: VLM OCR escalation failed for a low-confidence crop: {e}")
+            texts.append(text)
+
+        return normalize_vn_ocr(" ".join(t for t in texts if t))

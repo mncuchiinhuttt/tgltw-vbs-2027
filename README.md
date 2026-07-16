@@ -13,11 +13,13 @@ Method/
 ├── README.md              # Global workspace documentation
 ├── .gitignore             # Root git ignore (excludes /weights/ and /datasets/)
 ├── download_assets.py     # Script to automate downloading weights from Hugging Face
+├── host_vllm.sh           # Self-hosts the local VLM via vLLM for batch inference (GPU only) - shared by preprocessing/ and inference-code/
 ├── models/                # [SHARED PYTHON MODELS] 
 │   ├── base_vlm.py        # Abstract VLM interface
 │   ├── qwen_vlm.py        # Local Qwen3-VL vision-language model loader
 │   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro API vision-language handler
 │   ├── embedding.py       # QwenVL8BEmbedder, M2DClapEmbedder & DashScopeCloudEmbedder
+│   ├── clip_embedder.py   # Lightweight CLIP embedder for keyframe scene-variance estimation
 │   ├── asr.py             # PhoWhisper speech-to-text transcriber
 │   └── object_detector.py # YOLOE-26 open-vocabulary object detector
 ├── preprocessing/         # Dataset indexing pipeline
@@ -43,9 +45,10 @@ Method/
 
 To avoid duplicate codebase wrappers, all model configurations and execution logic are stored in the root `models/` directory.
 
-- **VLM backends** (`VLM_OPTION`): `local` (offline HuggingFace Qwen3-VL) or `openai` (any OpenAI-compatible endpoint - OpenAI itself, or another provider via `OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME`, e.g. QwenCloud's DashScope-compatible API).
-- **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, 1152d, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
+- **VLM backends** (`VLM_OPTION`): `local` (offline HuggingFace Qwen3-VL, `generate_batch()` runs one true batched `model.generate()` call) or `openai` (any OpenAI-compatible endpoint - OpenAI itself, another provider via `OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` e.g. QwenCloud, or a self-hosted vLLM server for batch inference, see `host_vllm.sh` below). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit instead of one request at a time. Used identically by both `preprocessing/` and `inference-code/` since both point at the same shared `models/openai_vlm.py` client.
+- **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
 - **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with optional tiled inference for small objects (`detect_tiled`) and example-crop-based visual prompting (`detect_visual_prompt`).
+- **Adaptive Keyframe Sampling**: `models/clip_embedder.py`'s lightweight CLIP model estimates how visually static/dynamic a scene is, sizing a per-scene keyframe budget (1-8) before the real embedding model runs farthest-point sampling within it - see `preprocessing/video/scene_detector.py`.
 - **ASR**: `PhoWhisperASR` for transcribing speech with timestamps.
 
 The scripts dynamically append the workspace root to `sys.path` to import `models.*` from anywhere.
@@ -73,6 +76,24 @@ chmod +x host_qdrant.sh
 ```
 
 Access the Qdrant Dashboard at: [http://localhost:6333/dashboard](http://localhost:6333/dashboard).
+
+### 2b. Host the VLM via vLLM (optional, GPU required)
+
+For batch inference throughput when self-hosting the local VLM (instead of one-request-at-a-time HuggingFace `transformers` calls), serve it through vLLM's OpenAI-compatible server - shared by both `preprocessing/` and `inference-code/`:
+
+```bash
+chmod +x host_vllm.sh
+./host_vllm.sh
+```
+
+Requires an NVIDIA (CUDA) or AMD (ROCm) GPU - it does not run on Apple Silicon/macOS or CPU-only machines. Once the server is up, point either module's `.env` at it instead of loading a local HF model:
+
+```bash
+VLM_OPTION=openai
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_VLM_MODEL_NAME=<same model served by host_vllm.sh>
+VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batching
+```
 
 ---
 

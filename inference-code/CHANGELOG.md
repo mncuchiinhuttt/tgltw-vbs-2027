@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-07-16
+
+### Changed
+- `OpenAIVLM.generate_batch()` (shared `models/`) now issues requests concurrently via `ThreadPoolExecutor` instead of a sequential loop, and `QwenVLM.generate_batch()` now runs one true batched `model.generate()` call across images - enables real throughput benefit from a self-hosted vLLM backend for any inference-code flow that batches VLM calls.
+- `DashScopeCloudEmbedder`'s model name is now configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME` instead of hardcoded to `tongyi-embedding-vision-plus`.
+
+### Added
+- `VLM_BATCH_CONCURRENCY` config controlling how many concurrent requests `OpenAIVLM.generate_batch()` issues.
+- `host_vllm.sh` (repo root, shared with `preprocessing/`) - self-hosts the local VLM via vLLM's OpenAI-compatible server for batch inference (requires an NVIDIA/AMD GPU).
+
 ## [1.2.0] - 2026-07-09
 
 ### Changed

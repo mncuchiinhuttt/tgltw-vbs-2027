@@ -36,6 +36,8 @@ pip install -r requirements.txt
 
 Set up your `.env` variables (e.g. `OPENAI_API_KEY`, `QDRANT_HOST`, `VLM_OPTION`).
 
+For batch/concurrent VLM inference (e.g. when running `batch_query.py` against many queries), point `OPENAI_BASE_URL` at a self-hosted vLLM server instead of loading a local HF model - see `host_vllm.sh` at the repo root (GPU required) and raise `VLM_BATCH_CONCURRENCY` to actually use its continuous batching.
+
 ## Usage
 
 Run queries using the CLI:
