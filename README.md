@@ -14,6 +14,9 @@ Method/
 ├── .gitignore             # Root git ignore (excludes /weights/ and /datasets/)
 ├── download_assets.py     # Script to automate downloading weights from Hugging Face
 ├── host_vllm.sh           # Self-hosts the local VLM via vLLM for batch inference (GPU only) - shared by preprocessing/ and inference-code/
+├── evaluation/            # Standalone evaluation & benchmarking module
+│   ├── README.md          # Evaluation module documentation & instructions
+│   └── run_eval.py        # Standalone benchmark runner (Latency, Recall@K, MRR, Ragas)
 ├── models/                # [SHARED PYTHON MODELS] 
 │   ├── base_vlm.py        # Abstract VLM interface
 │   ├── qwen_vlm.py        # Local Qwen3-VL vision-language model loader
@@ -187,3 +190,24 @@ python batch_query.py --query_file ../queries/queries.json --output_dir ../queri
 1. Navigate to the **Process Multiple Queries** tab in the main console.
 2. Click the **Process Multiple Queries** button to run batch inference.
 3. Review logs live in the terminal output widget, and interact with the results list (including click-to-play support for matched segments).
+
+---
+
+## 7. System Evaluation & Benchmarking
+
+We provide a standalone, decoupled evaluation runner to measure **End-to-End Latency** and **Accuracy Metrics** (Recall@K, MRR, Ragas Faithfulness) without altering production codebase files.
+
+### Running Benchmarks via CLI
+
+Run the evaluation script from the `method/` directory:
+
+```bash
+# Run benchmark with default test queries
+python evaluation/run_eval.py
+
+# Run benchmark with custom query and dataset paths
+python evaluation/run_eval.py --query_file queries/queries.json --dataset_dir datasets --output_file evaluation/eval_results.json
+```
+
+- **Output Metrics**: Evaluates **Recall@1**, **Recall@5**, **MRR**, **Latency Breakdown** (HyDE, Search, Rerank), and **QPS Throughput** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries.
+- Detailed results are printed to stdout and saved to `evaluation/eval_results.json`. See `evaluation/README.md` for complete documentation.

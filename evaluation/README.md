@@ -1,13 +1,10 @@
 # Evaluation & Benchmarking Module
 
-This directory contains standalone tools to measure **End-to-End Latency** and **Information Retrieval (IR) Accuracy Metrics** for the Multimedia Video-RAG System (HCMC AI Challenge 2026).
-
 ---
 
 ## 📌 Overview
 
 The evaluation runner operates as a completely decoupled test harness:
-- **Zero Codebase Mutation**: It imports existing system modules without modifying any production codebase files.
 - **Latency Breakdown**: Measures exact execution times for **HyDE Generation**, **Qdrant Vector Search**, and **VLM Reranking**.
 - **Accuracy Metrics**: Computes **Recall@1**, **Recall@5**, **MRR (Mean Reciprocal Rank)**, **Ragas Faithfulness/Correctness**, and **Throughput (QPS)** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries.
 
