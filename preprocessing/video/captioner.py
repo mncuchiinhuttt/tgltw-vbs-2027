@@ -83,7 +83,7 @@ class ImageCaptioner:
         this is a text-only synthesis call, not another image analysis pass.
         """
         frame_lines = "\n".join(
-            f"{kf['timestamp']:.2f}s: {kf['caption']}"
+            f"{kf.get('timestamp', 0.0):.2f}s: {kf['caption']}"
             for kf in keyframe_captions if kf.get("caption")
         )
         if not frame_lines:
@@ -93,9 +93,16 @@ class ImageCaptioner:
         parsed = self._parse_json_response(self.vlm.generate(None, prompt))
         if parsed is None:
             return {"actions": [], "ordered_events": []}
+
+        # The model doesn't always follow the requested JSON schema exactly
+        # (e.g. "actions" coming back as a bare string instead of a list) -
+        # normalize to safe list defaults so callers (main.py's " ".join(...))
+        # don't silently mangle or crash on a malformed response.
+        actions = parsed.get("actions")
+        ordered_events = parsed.get("ordered_events")
         return {
-            "actions": parsed.get("actions", []),
-            "ordered_events": parsed.get("ordered_events", []),
+            "actions": actions if isinstance(actions, list) else [],
+            "ordered_events": ordered_events if isinstance(ordered_events, list) else [],
         }
 
     def _parse_json_response(self, raw_output: str) -> Union[Dict[str, Any], None]:
