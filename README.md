@@ -27,10 +27,10 @@ Method/
 │   ├── clip_embedder.py   # Lightweight CLIP embedder for keyframe scene-variance estimation
 │   ├── asr.py             # PhoWhisper speech-to-text transcriber
 │   ├── object_detector.py # YOLOE-26 open-vocabulary object detector
-│   ├── region_proposer.py # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
-│   ├── super_resolution.py# Real-ESRGAN x4 conditional upscaling for small OCR crops
+│   ├── region_proposer.py  # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
+│   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
 │   ├── vintern_ocr.py      # Vintern-1B-v3.5 OCR recognition ensemble member
-│   └── fallback_vlm.py    # Lightweight SmolVLM2 fallback for low-confidence OCR crops
+│   └── fallback_vlm.py     # Lightweight SmolVLM2 fallback for low-confidence OCR crops
 ├── preprocessing/         # Dataset indexing pipeline
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
 │   ├── .env               # API Keys and model configurations (ignored)
