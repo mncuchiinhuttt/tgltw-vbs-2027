@@ -2,6 +2,19 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.4.0] - 2026-07-27
+
+### Changed
+- Object Detection and OCR now run **SAM3-gated**, region-restricted instead of full-frame:
+  `RegionProposer` (`models/region_proposer.py`, `facebook/sam3` Promptable Concept Segmentation, zero-shot) proposes candidate regions from general concept prompts first - SAHI-style tiling (512x512, 0.2 overlap) and the actual detector/recognizer only run inside those regions, and the whole detection/OCR step is skipped for a keyframe if SAM3 finds no matching region at all.
+  - `ObjectDetector.detect_in_regions()` (`models/object_detector.py`) replaces the previous full-frame `detect()` + fixed-label (`TILED_DETECTION_LABELS`, license plates only) `detect_tiled()` merge in `preprocessing/main.py`'s `detect_objects()` - tiling now applies uniformly to whatever SAM3 flags, not one hardcoded category. `detect()`/`detect_tiled()` themselves are unchanged and still used at query-time by `inference-code/search/reranker.py`.
+  - `TextDetectorOCR` (`preprocessing/video/ocr.py`) is restructured into a two-stage pipeline: detection-only tiling within SAM3's proposed text/sign regions, then a separate recognition stage per surviving text-box crop. Crops shorter than `OCR_SR_MIN_HEIGHT_PX` (16px) are super-resolved (`SuperResolutionUpscaler`, `models/super_resolution.py`, Real-ESRGAN x4) before recognition. Recognition is now an **ensemble** of PP-OCRv6 and `VinternRecognizer` (`models/vintern_ocr.py`, Vintern-1B-v3.5) - highest-confidence result wins. If that's still below `OCR_REC_SCORE_THRESHOLD`, a dedicated lightweight fallback VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`, SmolVLM2-500M-Video-Instruct) re-reads the crop - previously this escalation path used the much more expensive main captioning VLM.
+  - Removed `OCR_USE_TILING` and `TILED_DETECTION_LABELS`/`_EN` (superseded by SAM3-gated region tiling, which now applies unconditionally). Added `SAM3_MODEL_ID`, `REGION_PROPOSAL_CONF_THRESHOLD`, `SAHI_TILE_SIZE`/`SAHI_TILE_OVERLAP`, `OBJECT_REGION_CONCEPTS_EN`, `OCR_REGION_CONCEPTS_EN`, `OCR_SR_MIN_HEIGHT_PX`, `REAL_ESRGAN_MODEL_ID`, `VINTERN_MODEL_ID`, `FALLBACK_VLM_MODEL_ID` in `preprocessing/config.py`.
+
+### Added
+- New Qdrant payload field `detected_text` - structured per-box OCR results (`{bbox, text, conf, accentless_text, source}`) alongside the existing flattened `ocr_text` string (kept for backward compatibility with `inference-code/search/reranker.py`, `evaluation/run_eval.py`, and the webapp frontend).
+- `download_assets.py` now also fetches SAM3 (gated - requires accepting the license at https://huggingface.co/facebook/sam3 and setting `HF_TOKEN`), Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN weights.
+
 ## [1.3.0] - 2026-07-16
 
 ### Changed

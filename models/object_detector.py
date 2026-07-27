@@ -127,6 +127,53 @@ class ObjectDetector:
 
         return self._dedup_by_iou(all_detections, iou_merge_thresh)
 
+    def detect_in_regions(
+        self,
+        image: Union[Image.Image, str],
+        regions: List[List[float]],
+        text_prompts: List[str],
+        embed_prompts: Optional[List[str]] = None,
+        tile_size: int = 512,
+        overlap: float = 0.2,
+        iou_merge_thresh: float = 0.5,
+    ) -> List[Dict[str, Any]]:
+        """
+        SAM3-gated detection: like detect_tiled(), but tiling is restricted to
+        the candidate regions a RegionProposer (models/region_proposer.py)
+        already proposed for this image, instead of the whole frame. Each
+        region is cropped out and handed to detect_tiled() unchanged, then
+        results are offset back to full-image coordinates. `regions` is
+        typically empty when SAM3 found no matching concept anywhere in the
+        image - callers should skip this call entirely in that case.
+        Returns: list of dicts: {"label", "bbox", "conf"}, deduplicated
+        across regions (and tile boundaries within each region) via per-label
+        IoU-based greedy NMS.
+        """
+        if isinstance(image, str):
+            img = Image.open(image).convert("RGB")
+        else:
+            img = image.convert("RGB")
+
+        width, height = img.size
+        all_detections = []
+        for rx1, ry1, rx2, ry2 in regions:
+            rx1, ry1 = max(0, int(rx1)), max(0, int(ry1))
+            rx2, ry2 = min(width, int(rx2)), min(height, int(ry2))
+            if rx2 <= rx1 or ry2 <= ry1:
+                continue
+
+            region_crop = img.crop((rx1, ry1, rx2, ry2))
+            region_detections = self.detect_tiled(
+                region_crop, text_prompts, embed_prompts,
+                tile_size=tile_size, overlap=overlap, iou_merge_thresh=iou_merge_thresh,
+            )
+            for det in region_detections:
+                bx1, by1, bx2, by2 = det["bbox"]
+                det["bbox"] = [bx1 + rx1, by1 + ry1, bx2 + rx1, by2 + ry1]
+            all_detections.extend(region_detections)
+
+        return self._dedup_by_iou(all_detections, iou_merge_thresh)
+
     def detect_visual_prompt(
         self,
         image: Union[Image.Image, str],
