@@ -209,6 +209,17 @@ def main():
             print(f"  Analyzing {len(pil_keyframes)} keyframes with VLM (batched, unified prompt)...")
             frame_analyses = captioner.generate_frame_analysis_batch(pil_keyframes)
 
+            # Segment-level Structured Events (ordered_events/actions): a
+            # text-only synthesis call over this scene's own per-frame
+            # captions + real timestamps, built here (before the per-keyframe
+            # loop below pops "caption" off each analysis dict).
+            print(f"  Extracting ordered events (VLM, text-only) for scene {scene_idx}...")
+            scene_frame_captions = [
+                {"timestamp": kf["timestamp"], "caption": analysis.get("caption", "")}
+                for kf, analysis in zip(diverse_keyframes, frame_analyses)
+            ]
+            scene_events = captioner.generate_scene_events(scene_frame_captions)
+
             # Process each keyframe in the scene
             for kf_idx, kf in enumerate(diverse_keyframes):
                 frame_img = pil_keyframes[kf_idx]
@@ -246,10 +257,11 @@ def main():
                     scene_narrative,
                     ocr_text,
                     " ".join(detected_labels),
+                    " ".join(scene_events.get("actions", [])),
                     speech_segment_text
                 ]
                 text_blob = " . ".join([elem for elem in text_blob_elements if elem])
-                
+
                 # Build metadata payload
                 payload = {
                     "modality": "visual",
@@ -262,6 +274,8 @@ def main():
                     "detected_text": ocr_results,
                     "structured_attrs": final_attrs,
                     "detected_objects": detected,
+                    "ordered_events": scene_events.get("ordered_events", []),
+                    "actions": scene_events.get("actions", []),
                     "text_blob": text_blob
                 }
 

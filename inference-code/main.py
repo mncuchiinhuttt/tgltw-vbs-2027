@@ -77,6 +77,14 @@ def main():
         print("No candidates found in Qdrant database.")
         sys.exit(0)
 
+    # Result Diversification: collapse candidates from the same scene down to
+    # their best-scoring representative before reranking, so top-K isn't
+    # flooded by near-duplicate keyframes from one event (see "Our method" ->
+    # Result Diversification). Applied once here since all three query types
+    # slice from this same candidate pool below.
+    candidates = searcher.diversify_by_scene(candidates, top_k=20)
+    print(f"Diversified to {len(candidates)} candidates (deduped by scene).")
+
     # 5. Type-specific Reasoning and Reranking
     if args.type == 1:
         # Type 1: Textual-KIS

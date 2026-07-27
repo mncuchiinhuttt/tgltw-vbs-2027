@@ -104,6 +104,29 @@ class HybridSearcher:
             
         return merged_results
 
+    def diversify_by_scene(self, candidates: list, top_k: int) -> list:
+        """
+        Result Diversification: collapses candidates down to the
+        highest-RRF-scoring one per (source_file, scene_id) before reranking,
+        so top-K isn't flooded by several near-duplicate keyframes from the
+        same scene/event instead of covering distinct events (Khoa: Adaptive
+        Sampling & Retrieval Accuracy, merged into "Our method" -> Result
+        Diversification). Apply this right after merge_rrf, before slicing
+        candidates for Stage 3 reranking - for all three query types.
+        """
+        seen_scenes = set()
+        diversified = []
+        for hit in sorted(candidates, key=lambda h: h["rrf_score"], reverse=True):
+            payload = hit["payload"]
+            key = (payload.get("source_file"), payload.get("scene_id"))
+            if key in seen_scenes:
+                continue
+            seen_scenes.add(key)
+            diversified.append(hit)
+            if len(diversified) >= top_k:
+                break
+        return diversified
+
     def search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
         """
         Perform hybrid search query and return fused rankings.

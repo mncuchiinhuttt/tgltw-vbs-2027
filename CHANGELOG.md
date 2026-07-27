@@ -2,6 +2,13 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.5.0] - 2026-07-27
+
+### Added
+- **Segment-level Structured Events** (`preprocessing/video/captioner.py`): `ImageCaptioner.generate_scene_events()` synthesizes an `{actions, ordered_events}` list per scene from its already-computed per-frame captions + real timestamps (text-only VLM call, no extra image analysis) - helps Type 3 (Temporal-Alignment) skip inferring event order from prose captions alone. Stored in the Qdrant payload under `ordered_events`/`actions`, with `actions` also flattened into `text_blob` for BM25. `SCENE_NARRATIVE_PROMPT` is now capped to ~30-50 words so `scene_narrative` reads as a compact summary rather than a free-form paragraph.
+- **Result Diversification** (`inference-code/search/hybrid_search.py`): `HybridSearcher.diversify_by_scene()` collapses candidates down to the best-scoring one per `(source_file, scene_id)` right after RRF fusion, before Stage 3 reranking, across all three query types - top-K no longer gets flooded by several near-duplicate keyframes from the same event at the expense of covering distinct events.
+- Both features originate from Khoa's segment-centric retrieval proposal ("Khoa: Adaptive Sampling & Retrieval Accuracy") - adapted to layer on top of the existing frame-level index rather than replacing it, since Type 1/3 require an exact frame-level output.
+
 ## [1.4.0] - 2026-07-27
 
 ### Changed
