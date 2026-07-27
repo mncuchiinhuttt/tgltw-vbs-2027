@@ -1,0 +1,12 @@
+# Optional dependencies for evaluation/run_eval.py's generation-quality metrics
+# (Ragas Faithfulness, Answer Correctness, Context Recall).
+#
+# These are NOT required to run the script: without them, run_eval.py still
+# reports Latency, Recall@K, and MRR, and prints "N/A" for the Ragas-based
+# metrics instead of fabricating a score.
+#
+# Install with: pip install -r evaluation/requirements.txt
+# Ragas needs a judge LLM to score faithfulness/correctness/context_recall;
+# it defaults to OpenAI, so OPENAI_API_KEY must be set (see inference-code/config.py).
+ragas>=0.2.0
+datasets>=2.19.0
