@@ -23,9 +23,26 @@ torchvision
 ultralytics>=8.4.0
 dashscope>=1.26.0
 
-# OCR (PP-OCRv6), replacing the previous VLM-based OCR path
+# OCR (PP-OCRv6 detection + recognition ensemble member)
 paddlepaddle>=3.0.0
 paddleocr>=3.0.0
+
+# SAM3 region-proposal pre-filter (Promptable Concept Segmentation) - gates
+# both Object Detection and OCR. Gated on Hugging Face: accept the license at
+# https://huggingface.co/facebook/sam3 and set HF_TOKEN before first run.
+# Sam3Model/Sam3Processor need a recent transformers release - bump the pin
+# above (or `pip install -U transformers`) if those classes aren't importable.
+
+# Conditional Super-Resolution (Real-ESRGAN x4) for small OCR crops.
+# Known gotcha: basicsr imports torchvision.transforms.functional_tensor,
+# which newer torchvision releases removed - if `pip install` breaks on this,
+# either pin an older torchvision or patch that import out of basicsr.
+basicsr
+realesrgan
+
+# Vintern-1B-v3.5 (InternVL-family Vietnamese OCR/VLM) - OCR recognition
+# ensemble member alongside PP-OCRv6. Uses trust_remote_code=True; loads via
+# the transformers/timm/einops already required above.
 
 # Lightweight CLIP, used only for scene-variance estimation in Adaptive
 # Keyframe Sampling (not the indexing embedding space)

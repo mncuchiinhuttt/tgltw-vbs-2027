@@ -57,16 +57,14 @@ KEYFRAME_VARIANCE_LOW = float(os.getenv("KEYFRAME_VARIANCE_LOW", 0.01))
 KEYFRAME_VARIANCE_MID = float(os.getenv("KEYFRAME_VARIANCE_MID", 0.05))
 KEYFRAME_MAX_BUDGET = int(os.getenv("KEYFRAME_MAX_BUDGET", 8))
 
-# OCR settings (PP-OCRv6 detection+recognition, replacing the previous
-# VLM-based OCR path - the VLM is now only used to re-read individual crops
-# PP-OCRv6 recognized with low confidence)
+# OCR settings (PP-OCRv6 detection + ensemble recognition, gated by SAM3
+# region proposal - see SAM3/SAHI settings below)
 OCR_LANG = os.getenv("OCR_LANG", "vi")
+# Also doubles as the OCR recognition-ensemble -> fallback-VLM escalation
+# threshold (see FALLBACK_VLM_MODEL_ID below): if the best of PP-OCRv6 /
+# Vintern-1B-v3.5's rec confidence is below this, the fallback VLM re-reads
+# the crop.
 OCR_REC_SCORE_THRESHOLD = float(os.getenv("OCR_REC_SCORE_THRESHOLD", 0.5))
-# Supplementary overlapping-tile OCR pass (mirrors ObjectDetector.detect_tiled)
-# to catch small/corner text a full-frame pass might downscale away. Off by
-# default: it multiplies OCR cost per keyframe by roughly the tile count, and
-# PP-OCRv6's own full-frame detection already handles most cases well.
-OCR_USE_TILING = os.getenv("OCR_USE_TILING", "false").lower() == "true"
 
 # Object Detection classes to search for in video frames. Labels are Vietnamese
 # (stored/reported/indexed for BM25 matching against Vietnamese queries); the
@@ -76,9 +74,41 @@ OCR_USE_TILING = os.getenv("OCR_USE_TILING", "false").lower() == "true"
 OBJECT_DETECTION_PROMPTS = ["xe máy", "biển số xe", "bảng hiệu", "cờ", "người", "ô tô", "xe đạp"]
 OBJECT_DETECTION_PROMPTS_EN = ["motorbike", "license plate", "signboard", "flag", "person", "car", "bicycle"]
 
-# Subset of the above categories that are small enough to get lost when a
-# full frame is downscaled to the detector's input size (e.g. license plates
-# are tiny in dashcam-style footage). These get a supplementary tiled pass
-# (see ObjectDetector.detect_tiled) merged into the full-frame detections.
-TILED_DETECTION_LABELS = ["biển số xe"]
-TILED_DETECTION_LABELS_EN = ["license plate"]
+# SAM3 region-proposal pre-filter (Promptable Concept Segmentation, ~0.9B,
+# zero-shot, gated on Hugging Face - accept the license at
+# https://huggingface.co/facebook/sam3 and set HF_TOKEN before first run).
+# Gates BOTH Object Detection and OCR: SAHI-style tiling + downstream
+# detection/recognition only run inside the candidate boxes SAM3 proposes for
+# a keyframe, and the whole detection/OCR step is skipped for that keyframe
+# if SAM3 finds no matching region at all.
+SAM3_MODEL_ID = os.getenv("SAM3_MODEL_ID", "facebook/sam3")
+REGION_PROPOSAL_CONF_THRESHOLD = float(os.getenv("REGION_PROPOSAL_CONF_THRESHOLD", 0.3))
+
+# SAHI-style tiling parameters applied only within SAM3's candidate regions
+# (hand-rolled tiling reused from ObjectDetector.detect_tiled /
+# TextDetectorOCR._detect_recognize_tiled - SAHI's own model registry has no
+# PaddleOCR backend to plug into, see the comment in preprocessing/video/ocr.py).
+SAHI_TILE_SIZE = int(os.getenv("SAHI_TILE_SIZE", 512))
+SAHI_TILE_OVERLAP = float(os.getenv("SAHI_TILE_OVERLAP", 0.2))
+
+# General concept prompts SAM3 proposes candidate regions for, ahead of the
+# specific-class YOLOE pass run per region.
+OBJECT_REGION_CONCEPTS_EN = ["text or sign region", "human", "vehicle", "small distinct object"]
+# Concept prompt SAM3 proposes text/sign regions for, ahead of the OCR pass.
+OCR_REGION_CONCEPTS_EN = ["text or sign region"]
+
+# Conditional Super-Resolution (Real-ESRGAN x4): OCR crops shorter than this
+# many pixels get upscaled before recognition; taller crops skip SR and go
+# straight to recognition.
+OCR_SR_MIN_HEIGHT_PX = int(os.getenv("OCR_SR_MIN_HEIGHT_PX", 16))
+REAL_ESRGAN_MODEL_ID = os.getenv("REAL_ESRGAN_MODEL_ID", "RealESRGAN_x4plus.pth")
+
+# OCR Recognition ensemble: PP-OCRv6 (already loaded above) + Vintern-1B-v3.5
+# (VLM OCR reader) race on every text-box crop, highest-confidence result wins.
+VINTERN_MODEL_ID = os.getenv("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
+
+# Dedicated lightweight fallback VLM for crops where the recognition
+# ensemble's best confidence is still below OCR_REC_SCORE_THRESHOLD -
+# deliberately NOT the main captioning VLM (QwenVLM/OpenAIVLM), which is far
+# more expensive to run per-crop.
+FALLBACK_VLM_MODEL_ID = os.getenv("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")

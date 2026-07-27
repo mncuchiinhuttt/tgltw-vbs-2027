@@ -123,6 +123,25 @@ def download_and_unzip_m2d_clap():
         
     print("M2D-CLAP download and extraction complete.")
 
+def download_real_esrgan(local_name: str):
+    dest_path = WEIGHTS_DIR / local_name
+    if dest_path.exists():
+        print(f"\n--- Real-ESRGAN weights already exist at {dest_path} ---")
+        return
+
+    url = f"https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/{local_name}"
+    print(f"\n--- Downloading Real-ESRGAN weights from {url} ---")
+    ensure_package("requests")
+    import requests
+
+    response = requests.get(url, stream=True, timeout=60)
+    response.raise_for_status()
+    with open(dest_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+    print(f"Real-ESRGAN weights downloaded to {dest_path}")
+
 def ensure_ffmpeg():
     # Check if ffmpeg is available in PATH
     if shutil.which("ffmpeg") is not None:
@@ -258,6 +277,10 @@ def main():
     qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-8B")
     phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
     yoloe_id = env_vars.get("YOLOE_MODEL_ID", "yoloe-26x-seg.pt")
+    sam3_id = env_vars.get("SAM3_MODEL_ID", "facebook/sam3")
+    vintern_id = env_vars.get("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
+    fallback_vlm_id = env_vars.get("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")
+    real_esrgan_id = env_vars.get("REAL_ESRGAN_MODEL_ID", "RealESRGAN_x4plus.pth")
     vlm_option = env_vars.get("VLM_OPTION", "openai")
     embedding_option = env_vars.get("EMBEDDING_OPTION", "local")
     hf_token = env_vars.get("HF_TOKEN")
@@ -293,7 +316,23 @@ def main():
         download_model(qwen_embed_id, qwen_embed_id.split("/")[-1], token=hf_token)
     else:
         print(f"\nSkipping local Qwen embedding download (EMBEDDING_OPTION={embedding_option}).")
-    
+
+    # 6. SAM3 region-proposal pre-filter (gated - accept the license at
+    # https://huggingface.co/facebook/sam3 and set HF_TOKEN before this runs)
+    if not hf_token:
+        print("\nWarning: HF_TOKEN not set - SAM3 (facebook/sam3) is a gated repo and this "
+              "download will likely fail until you accept its license and set HF_TOKEN.")
+    download_model(sam3_id, "sam3", token=hf_token)
+
+    # 7. Vintern-1B-v3.5 - OCR recognition ensemble member alongside PP-OCRv6
+    download_model(vintern_id, "Vintern-1B-v3_5", token=hf_token)
+
+    # 8. Fallback VLM for low-confidence OCR crops (SmolVLM2 by default)
+    download_model(fallback_vlm_id, fallback_vlm_id.split("/")[-1], token=hf_token)
+
+    # 9. Real-ESRGAN x4 weights - conditional Super-Resolution for small OCR crops
+    download_real_esrgan(real_esrgan_id)
+
     # Ensure ffmpeg is installed
     ensure_ffmpeg()
     

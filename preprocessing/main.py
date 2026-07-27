@@ -17,13 +17,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 # Config imports
 from preprocessing.config import (
     VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
-    TILED_DETECTION_LABELS, TILED_DETECTION_LABELS_EN
+    OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP
 )
 
 # Models
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.object_detector import ObjectDetector
+from models.region_proposer import RegionProposer
+from models.super_resolution import SuperResolutionUpscaler
+from models.vintern_ocr import VinternRecognizer
+from models.fallback_vlm import SmolVLM2FallbackVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 from models.clip_embedder import LightweightCLIPEmbedder
 
@@ -53,16 +57,23 @@ def load_embedder():
     else:
         raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
 
-def detect_objects(detector, image):
+def detect_objects(region_proposer, detector, image):
     """
-    Full-frame detection across all configured categories, plus a
-    supplementary tiled pass for categories too small to reliably survive
-    full-frame downscaling (see TILED_DETECTION_LABELS), merged with
-    per-label IoU dedup so a plate found by both passes isn't double-counted.
+    SAM3-gated detection: RegionProposer (SAM3) proposes candidate regions
+    from general concept prompts first (OBJECT_REGION_CONCEPTS_EN); if it
+    finds none, detection is skipped entirely for this keyframe. Otherwise
+    YOLOE-26 runs per-class SAHI-style tiling restricted to those regions
+    (detector.detect_in_regions), replacing the previous full-frame
+    detect() + fixed-label detect_tiled() merge.
     """
-    detections = detector.detect(image, OBJECT_DETECTION_PROMPTS, embed_prompts=OBJECT_DETECTION_PROMPTS_EN)
-    tiled = detector.detect_tiled(image, TILED_DETECTION_LABELS, embed_prompts=TILED_DETECTION_LABELS_EN)
-    return detector._dedup_by_iou(detections + tiled, iou_thresh=0.5)
+    regions = region_proposer.propose(image, OBJECT_REGION_CONCEPTS_EN)
+    if not regions:
+        return []
+    region_bboxes = [r["bbox"] for r in regions]
+    return detector.detect_in_regions(
+        image, region_bboxes, OBJECT_DETECTION_PROMPTS, embed_prompts=OBJECT_DETECTION_PROMPTS_EN,
+        tile_size=SAHI_TILE_SIZE, overlap=SAHI_TILE_OVERLAP,
+    )
 
 def main():
     parser = argparse.ArgumentParser(description="Run Multimedia Preprocessing and Indexing Pipeline")
@@ -76,9 +87,15 @@ def main():
     print("=== Initializing Pipeline Models ===")
     vlm = load_vlm()
     detector = ObjectDetector(option=DETECTOR_OPTION)
+    region_proposer = RegionProposer()
+    sr_model = SuperResolutionUpscaler()
+    vintern = VinternRecognizer()
+    fallback_vlm = SmolVLM2FallbackVLM()
     embedder = load_embedder()
     clip_embedder = LightweightCLIPEmbedder()
-    ocr_engine = TextDetectorOCR(vlm_client=vlm)
+    ocr_engine = TextDetectorOCR(
+        region_proposer=region_proposer, vintern=vintern, fallback_vlm=fallback_vlm, sr_model=sr_model,
+    )
     captioner = ImageCaptioner(vlm_client=vlm)
     audio_engine = AudioProcessor()
 
@@ -199,13 +216,14 @@ def main():
                 frame_vector = kf["embed"]
                 analysis = frame_analyses[kf_idx]
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects...")
-                # Object Detection
-                detected = detect_objects(detector, frame_img)
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
+                # SAM3-gated Object Detection
+                detected = detect_objects(region_proposer, detector, frame_img)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (PP-OCRv6)...")
-                # OCR extraction & normalization
-                ocr_text = ocr_engine.extract_ocr(frame_img)
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6 + Vintern ensemble)...")
+                # SAM3-gated OCR extraction, recognition ensemble & normalization
+                ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
+                ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
 
                 temporal_caption = analysis.pop("caption", "")
 
@@ -241,11 +259,12 @@ def main():
                     "caption": temporal_caption,
                     "scene_narrative": scene_narrative,
                     "ocr_text": ocr_text,
+                    "detected_text": ocr_results,
                     "structured_attrs": final_attrs,
                     "detected_objects": detected,
                     "text_blob": text_blob
                 }
-                
+
                 point_id = str(uuid.uuid4())
                 indexer.index_visual_point(point_id, frame_vector, payload)
         
@@ -261,11 +280,12 @@ def main():
         img = Image.open(img_path).convert("RGB")
         frame_vector = embedder.embed_image(np.array(img))
         
-        # OCR (PP-OCRv6)
-        ocr_text = ocr_engine.extract_ocr(img)
+        # SAM3-gated OCR (PP-OCRv6 + Vintern ensemble)
+        ocr_results = ocr_engine.extract_ocr_detailed(img)
+        ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
 
-        # Object detection
-        detected = detect_objects(detector, img)
+        # SAM3-gated Object detection
+        detected = detect_objects(region_proposer, detector, img)
         detected_labels = [obj["label"] for obj in detected]
 
         # Unified VLM analysis (caption + structured attributes in one call)
@@ -287,6 +307,7 @@ def main():
             "scene_id": 0,
             "caption": caption,
             "ocr_text": ocr_text,
+            "detected_text": ocr_results,
             "structured_attrs": final_attrs,
             "detected_objects": detected,
             "text_blob": text_blob

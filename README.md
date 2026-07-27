@@ -26,7 +26,11 @@ Method/
 │   ├── embedding.py       # QwenVL8BEmbedder, M2DClapEmbedder & DashScopeCloudEmbedder
 │   ├── clip_embedder.py   # Lightweight CLIP embedder for keyframe scene-variance estimation
 │   ├── asr.py             # PhoWhisper speech-to-text transcriber
-│   └── object_detector.py # YOLOE-26 open-vocabulary object detector
+│   ├── object_detector.py # YOLOE-26 open-vocabulary object detector
+│   ├── region_proposer.py  # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
+│   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
+│   ├── vintern_ocr.py      # Vintern-1B-v3.5 OCR recognition ensemble member
+│   └── fallback_vlm.py     # Lightweight SmolVLM2 fallback for low-confidence OCR crops
 ├── preprocessing/         # Dataset indexing pipeline
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
 │   ├── .env               # API Keys and model configurations (ignored)
@@ -52,7 +56,9 @@ To avoid duplicate codebase wrappers, all model configurations and execution log
 
 - **VLM backends** (`VLM_OPTION`): `local` (offline HuggingFace Qwen3-VL, `generate_batch()` runs one true batched `model.generate()` call) or `openai` (any OpenAI-compatible endpoint - OpenAI itself, another provider via `OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` e.g. QwenCloud, or a self-hosted vLLM server for batch inference, see `host_vllm.sh` below). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit instead of one request at a time. Used identically by both `preprocessing/` and `inference-code/` since both point at the same shared `models/openai_vlm.py` client.
 - **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
-- **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with optional tiled inference for small objects (`detect_tiled`) and example-crop-based visual prompting (`detect_visual_prompt`).
+- **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with tiled inference for small objects (`detect_tiled`), example-crop-based visual prompting (`detect_visual_prompt`), and SAM3-gated region-restricted tiling (`detect_in_regions`) used by the preprocessing pipeline (see below).
+- **SAM3-gated Detection & OCR pre-filter**: `RegionProposer` (`models/region_proposer.py`) wraps `facebook/sam3` (Promptable Concept Segmentation, zero-shot, **gated on Hugging Face** - accept the license at https://huggingface.co/facebook/sam3 and set `HF_TOKEN` before downloading/running it) to propose candidate regions from general concept prompts ("human"/"vehicle"/"small distinct object" for Object Detection, "text or sign region" for OCR) before SAHI-style tiling (512x512, 0.2 overlap) and the actual detector/recognizer run - a keyframe's detection/OCR step is skipped entirely if SAM3 finds no matching region.
+- **OCR recognition ensemble**: `preprocessing/video/ocr.py`'s `TextDetectorOCR` recognizes each text-box crop with both PP-OCRv6 and `VinternRecognizer` (`models/vintern_ocr.py`, Vintern-1B-v3.5), keeping whichever is more confident; crops shorter than 16px are upscaled first via `SuperResolutionUpscaler` (`models/super_resolution.py`, Real-ESRGAN x4), and crops where the ensemble's best confidence is still low fall back to a dedicated lightweight VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`) rather than the main captioning VLM.
 - **Adaptive Keyframe Sampling**: `models/clip_embedder.py`'s lightweight CLIP model estimates how visually static/dynamic a scene is, sizing a per-scene keyframe budget (1-8) before the real embedding model runs farthest-point sampling within it - see `preprocessing/video/scene_detector.py`.
 - **ASR**: `PhoWhisperASR` for transcribing speech with timestamps.
 
@@ -64,7 +70,9 @@ The scripts dynamically append the workspace root to `sys.path` to import `model
 
 ### 1. Download Model Checkpoints
 
-Run the download script from the root folder to download weights for PhoWhisper, CLAP, and the YOLOE-26 detector into the `weights/` folder:
+Before running the download script, accept the SAM3 license at https://huggingface.co/facebook/sam3 (it's a gated repo) and set `HF_TOKEN` in your `.env` - the SAM3 download will fail without it.
+
+Run the download script from the root folder to download weights for PhoWhisper, CLAP, the YOLOE-26 detector, SAM3, Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
 
 ```bash
 python download_assets.py
