@@ -5,11 +5,35 @@ from preprocessing.config import OBJECT_DETECTION_PROMPTS
 
 SCENE_NARRATIVE_PROMPT = """
 You are watching multiple keyframes from one continuous scene.
-Describe in 2-3 sentences:
+Describe in 1-2 sentences, about 30-50 words total:
 (1) What is happening overall in this scene?
 (2) Any motion, change, or key event across the frames?
 (3) Key objects, text, or people that appear?
-Be factual and dense. Vietnamese is OK.
+Be factual and dense, compact enough to serve as a short embedded summary. Vietnamese is OK.
+"""
+
+# Text-only (image=None) synthesis over a scene's already-computed per-frame
+# captions + real timestamps, rather than another image call - ordering
+# events needs the actual keyframe sequence and real timestamps, which a
+# single representative frame (see generate_scene_narrative) can't provide.
+# Segment-level structured event list (Khoa: Adaptive Sampling & Retrieval
+# Accuracy, merged into "Our method" -> Video processing / Result
+# Diversification) - helps Type 3 (Temporal-Alignment) skip inferring event
+# order from prose captions alone.
+SCENE_EVENTS_PROMPT_TEMPLATE = """
+You are given a chronological list of per-frame captions from one continuous video scene, each with its real timestamp in seconds:
+
+{frame_captions}
+
+Extract the key actions/events in this scene in chronological order as JSON:
+{{
+  "actions": ["knock door", "press doorbell"],
+  "ordered_events": [
+    {{"action": "knock door", "time_sec": 91.2}},
+    {{"action": "press doorbell", "time_sec": 95.4}}
+  ]
+}}
+Use the given timestamps for time_sec - do not invent new ones. Only output JSON, no explanation. Vietnamese is OK.
 """
 
 # Combines what used to be two separate per-frame calls (temporal caption +
@@ -49,6 +73,37 @@ class ImageCaptioner:
         # or combine them if supported. Let's use the middle/representative frame as target, or pass it.
         rep_frame = keyframes[len(keyframes) // 2]
         return self.vlm.generate(rep_frame, SCENE_NARRATIVE_PROMPT).strip()
+
+    def generate_scene_events(self, keyframe_captions: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Structured chronological event list for a scene: {"actions": [...],
+        "ordered_events": [{"action", "time_sec"}, ...]}. keyframe_captions is
+        a list of {"timestamp": float, "caption": str} for the scene's
+        keyframes (already computed by generate_frame_analysis_batch), so
+        this is a text-only synthesis call, not another image analysis pass.
+        """
+        frame_lines = "\n".join(
+            f"{kf.get('timestamp', 0.0):.2f}s: {kf['caption']}"
+            for kf in keyframe_captions if kf.get("caption")
+        )
+        if not frame_lines:
+            return {"actions": [], "ordered_events": []}
+
+        prompt = SCENE_EVENTS_PROMPT_TEMPLATE.format(frame_captions=frame_lines)
+        parsed = self._parse_json_response(self.vlm.generate(None, prompt))
+        if parsed is None:
+            return {"actions": [], "ordered_events": []}
+
+        # The model doesn't always follow the requested JSON schema exactly
+        # (e.g. "actions" coming back as a bare string instead of a list) -
+        # normalize to safe list defaults so callers (main.py's " ".join(...))
+        # don't silently mangle or crash on a malformed response.
+        actions = parsed.get("actions")
+        ordered_events = parsed.get("ordered_events")
+        return {
+            "actions": actions if isinstance(actions, list) else [],
+            "ordered_events": ordered_events if isinstance(ordered_events, list) else [],
+        }
 
     def _parse_json_response(self, raw_output: str) -> Union[Dict[str, Any], None]:
         raw_output = raw_output.strip()
