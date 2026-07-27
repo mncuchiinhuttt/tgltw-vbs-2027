@@ -1,0 +1,32 @@
+[
+  {
+    "type": 1,
+    "query": "a person riding a red motorcycle in the morning",
+    "ground_truth": {
+      "video_name": "video_0012.mp4",
+      "timestamp": 45.5
+    }
+  },
+  {
+    "type": 2,
+    "query": "What is the license plate of the red motorcycle next to the gas station?",
+    "ground_truth": {
+      "video_name": "video_0045.mp4",
+      "timestamp": 12.0,
+      "answer": "License plate 59-X1 12345"
+    }
+  },
+  {
+    "type": 3,
+    "query": "First a person opens the car door, then steps inside and drives away",
+    "ground_truth": {
+      "video_name": "video_0089.mp4",
+      "event_frames": [
+        { "timestamp": 100.0 },
+        { "timestamp": 105.5 },
+        { "timestamp": 112.0 }
+      ],
+      "reference_summary": "A person opens a car door, gets inside, and the car drives away."
+    }
+  }
+]
