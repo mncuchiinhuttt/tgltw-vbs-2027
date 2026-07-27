@@ -8,6 +8,10 @@ from preprocessing.config import (
     SAHI_TILE_SIZE, SAHI_TILE_OVERLAP, OCR_SR_MIN_HEIGHT_PX,
 )
 
+# Nominal confidence attached to fallback-VLM reads (see _recognize_crop) -
+# the fallback VLM has no calibrated score of its own, unlike PP-OCRv6/Vintern.
+FALLBACK_VLM_CONFIDENCE = 0.6
+
 # Simple dictionary mapping for removing Vietnamese accents
 ACCENT_MAP = {
     'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
@@ -228,7 +232,13 @@ class TextDetectorOCR:
                     crop, "Extract the text in this image exactly. Output only the text."
                 ).strip()
                 if escalated:
-                    text, source = escalated, "fallback-vlm"
+                    # The fallback VLM doesn't emit a calibrated confidence the
+                    # way PP-OCRv6/Vintern do - leaving the old (low) ensemble
+                    # score attached to this replacement text would make the
+                    # returned tuple self-contradictory (a "confident" crop
+                    # whose conf still reads as low-confidence), so it's
+                    # bumped to a fixed nominal value instead.
+                    text, confidence, source = escalated, FALLBACK_VLM_CONFIDENCE, "fallback-vlm"
             except Exception as e:
                 print(f"Warning: fallback VLM OCR escalation failed for a low-confidence crop: {e}")
 
@@ -246,11 +256,16 @@ class TextDetectorOCR:
             return []
 
         text_boxes = self._detect_text_boxes(image, region_bboxes)
+        img_width, img_height = image.size
 
         results = []
         for box in text_boxes:
             x1, y1, x2, y2 = box["bbox"]
-            crop = image.crop((max(0, int(x1)), max(0, int(y1)), int(x2), int(y2)))
+            crop_box = (
+                max(0, int(x1)), max(0, int(y1)),
+                min(img_width, int(x2)), min(img_height, int(y2)),
+            )
+            crop = image.crop(crop_box)
             text, confidence, source = self._recognize_crop(crop)
             if not text:
                 continue

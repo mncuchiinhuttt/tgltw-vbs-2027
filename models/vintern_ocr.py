@@ -107,7 +107,8 @@ class VinternRecognizer:
         generation_config = dict(max_new_tokens=128, do_sample=do_sample)
         if do_sample:
             generation_config["temperature"] = temperature
-        return self.model.chat(self.tokenizer, pixel_values, OCR_PROMPT, generation_config).strip()
+        with torch.no_grad():
+            return self.model.chat(self.tokenizer, pixel_values, OCR_PROMPT, generation_config).strip()
 
     def recognize(self, crop: Image.Image) -> Tuple[str, float]:
         """

@@ -42,7 +42,7 @@ class RegionProposer:
     ) -> List[Dict[str, Any]]:
         """
         Propose candidate regions for each concept prompt, zero-shot.
-        Returns: list of dicts: {"concept_id", "bbox": [x1,y1,x2,y2], "score"}
+        Returns: list of dicts: {"concept", "bbox": [x1,y1,x2,y2], "score"}
         Empty list means no concept matched anywhere in the image - callers
         should skip the corresponding detection/OCR step for this keyframe.
         """
@@ -68,7 +68,7 @@ class RegionProposer:
             for box, score in zip(boxes, scores):
                 x1, y1, x2, y2 = [float(v) for v in box]
                 regions.append({
-                    "concept_id": concept,
+                    "concept": concept,
                     "bbox": [x1, y1, x2, y2],
                     "score": float(score),
                 })

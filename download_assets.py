@@ -134,7 +134,7 @@ def download_real_esrgan(local_name: str):
     ensure_package("requests")
     import requests
 
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()
     with open(dest_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
