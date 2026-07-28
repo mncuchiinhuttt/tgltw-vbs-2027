@@ -4,7 +4,7 @@ from PIL import Image
 from typing import List, Union
 from transformers import AutoProcessor
 from .base_vlm import BaseVLM
-from config import QWEN_VLM_MODEL_ID
+from config import QWEN_VLM_MODEL_ID, VLM_MIN_PIXELS, VLM_MAX_PIXELS
 
 class QwenVLM(BaseVLM):
     """
@@ -31,8 +31,12 @@ class QwenVLM(BaseVLM):
         )
         if self.device != "cuda":
             self.model = self.model.to(self.device)
-        self.processor = AutoProcessor.from_pretrained(model_id)
-        print("Local Qwen-VL loaded successfully.")
+        self.processor = AutoProcessor.from_pretrained(model_id, min_pixels=VLM_MIN_PIXELS, max_pixels=VLM_MAX_PIXELS)
+        print(
+            f"Local Qwen-VL loaded successfully "
+            f"(pixel budget: {VLM_MIN_PIXELS}-{VLM_MAX_PIXELS}, "
+            f"~{VLM_MAX_PIXELS // (28 * 28)} max tokens/image)."
+        )
 
     def _prepare_image(self, image: Union[Image.Image, str]) -> Image.Image:
         if isinstance(image, str):
