@@ -112,3 +112,7 @@ VINTERN_MODEL_ID = os.getenv("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
 # deliberately NOT the main captioning VLM (QwenVLM/OpenAIVLM), which is far
 # more expensive to run per-crop.
 FALLBACK_VLM_MODEL_ID = os.getenv("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")
+
+
+VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
+VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
