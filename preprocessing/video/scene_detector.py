@@ -3,8 +3,11 @@ import numpy as np
 from typing import List, Dict, Any, Tuple
 from scenedetect import detect, ContentDetector
 from preprocessing.config import (
-    SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET
+    SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET,
+    FAST_PATHWAY_DENSE_SAMPLING_FPS, FAST_PATHWAY_FPS_TARGET,
+    FAST_PATHWAY_MIN_FRAMES, FAST_PATHWAY_MAX_FRAMES,
 )
+from preprocessing.video.motion_sampling import select_fast_pathway_frames
 
 def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD) -> List[Tuple[float, float]]:
     """
@@ -140,3 +143,41 @@ def select_diverse_keyframes(
         selected.append(remaining.pop(best_idx))
 
     return selected
+
+def select_fast_pathway_frames_for_scene(
+    video_path: str,
+    start_sec: float,
+    end_sec: float,
+    dense_sampling_fps: float = FAST_PATHWAY_DENSE_SAMPLING_FPS,
+    fps_target: float = FAST_PATHWAY_FPS_TARGET,
+    min_frames: int = FAST_PATHWAY_MIN_FRAMES,
+    max_frames: int = FAST_PATHWAY_MAX_FRAMES,
+) -> List[Dict[str, Any]]:
+    """
+    Fast pathway: independent of AKS/Slow above (does not read
+    diverse_keyframes or its budget) - decodes this scene at a denser fps
+    than AKS's diversity candidates need (motion needs finer temporal
+    resolution than farthest-point sampling does), measures real
+    optical-flow motion between consecutive decoded frames, and returns a
+    motion-weighted subset via inverse-CDF sampling - concentrated where the
+    scene actually moves, rather than spread uniformly or missed entirely by
+    a variance-based proxy. Reuses extract_candidate_frames (just at a
+    higher sampling_rate_fps) rather than a separate decode path, and
+    returns the same {"frame_img", "timestamp", "frame_idx"} shape AKS's own
+    candidates/keyframes use, so callers (main.py) handle both identically
+    (e.g. the same `Image.fromarray(f["frame_img"])` conversion).
+    """
+    dense_frames = extract_candidate_frames(video_path, start_sec, end_sec, sampling_rate_fps=dense_sampling_fps)
+    if not dense_frames:
+        return []
+
+    frame_imgs = [f["frame_img"] for f in dense_frames]
+    timestamps = [f["timestamp"] for f in dense_frames]
+    scene_duration = end_sec - start_sec
+
+    sampled = select_fast_pathway_frames(
+        frame_imgs, timestamps, scene_duration_sec=scene_duration,
+        fps_target=fps_target, min_frames=min_frames, max_frames=max_frames,
+    )
+
+    return [{"frame_img": frame, "timestamp": ts, "frame_idx": None} for ts, frame in sampled]
