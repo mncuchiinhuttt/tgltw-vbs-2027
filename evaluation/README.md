@@ -41,16 +41,27 @@ for demonstrating the schema) — replace it with real annotations for your data
 before trusting the accuracy numbers.
 
 ```jsonc
-// Type 1 & 2 — a single target frame
-"ground_truth": { "video_name": "video_0012.mp4", "timestamp": 45.5 }
+// Type 1 & 2 — a single target frame. "frame_id" (native video frame index,
+// what the AIC competition's <frame_id> answer field actually is) is
+// preferred over "timestamp" when both are present - matching then uses
+// FRAME_MATCH_TOLERANCE (frames) instead of TIMESTAMP_TOLERANCE_SEC (seconds).
+// "timestamp" alone still works for older ground_truth files.
+"ground_truth": { "video_name": "video_0012.mp4", "timestamp": 45.5, "frame_id": 1365 }
 // Type 2 also accepts an "answer" string, used for Ragas answer_correctness:
-"ground_truth": { "video_name": "video_0045.mp4", "timestamp": 12.0, "answer": "License plate 59-X1 12345" }
+"ground_truth": { "video_name": "video_0045.mp4", "timestamp": 12.0, "frame_id": 360, "answer": "License plate 59-X1 12345" }
 
-// Type 3 — the target video, the expected event frame timestamps (for Sequence
-// Recall), and optionally a free-text reference summary (for Ragas context_recall)
+// Type 3 — the target video, the expected event frames (each with a
+// "frame_id" and/or "timestamp", for Sequence Recall), and optionally a
+// free-text reference summary (for Ragas context_recall). The competition's
+// per-event TRAKE window is documented as usually under 10 frames, far
+// tighter than a few seconds - always include "frame_id" here if you have it.
 "ground_truth": {
   "video_name": "video_0089.mp4",
-  "event_frames": [{ "timestamp": 100.0 }, { "timestamp": 105.5 }, { "timestamp": 112.0 }],
+  "event_frames": [
+    { "timestamp": 100.0, "frame_id": 3000 },
+    { "timestamp": 105.5, "frame_id": 3165 },
+    { "timestamp": 112.0, "frame_id": 3360 }
+  ],
   "reference_summary": "A person opens a car door, gets inside, and the car drives away."
 }
 ```

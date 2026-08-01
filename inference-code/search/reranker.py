@@ -210,7 +210,12 @@ Score:"""
 
             scored_sequences.append({
                 "video_name": video,
-                "frame_ids": [f["id"] for f in sorted_frames],
+                # Native video frame index (see preprocessing/main.py's
+                # "frame_idx" payload field), NOT f["id"] - that's the Qdrant
+                # point UUID assigned at index time, which carries no
+                # temporal/frame-position meaning at all and would produce a
+                # meaningless <frame_id> in the actual submission format.
+                "frame_ids": [f["payload"].get("frame_idx") for f in sorted_frames],
                 "timestamps": [f["payload"]["timestamp"] for f in sorted_frames],
                 "score": seq_score
             })

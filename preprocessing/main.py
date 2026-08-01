@@ -276,6 +276,11 @@ def main():
                     "modality": "visual",
                     "source_file": video_name,
                     "timestamp": timestamp,
+                    # Native video frame index (from extract_candidate_frames),
+                    # not a re-derived/estimated value - this is what the AIC
+                    # submission format's <frame_id> actually refers to, not
+                    # `timestamp`. See "Our method" -> Frame-accurate output.
+                    "frame_idx": kf["frame_idx"],
                     "scene_id": scene_idx,
                     "caption": temporal_caption,
                     "scene_narrative": scene_narrative,
@@ -327,6 +332,10 @@ def main():
             "modality": "visual",
             "source_file": img_name,
             "timestamp": 0.0,
+            # No video frame index for a standalone image - the AIC submission
+            # format is video-only per the competition rules, so this is None
+            # rather than a fabricated 0.
+            "frame_idx": None,
             "scene_id": 0,
             "caption": caption,
             "ocr_text": ocr_text,

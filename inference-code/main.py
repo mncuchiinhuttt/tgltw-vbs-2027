@@ -94,9 +94,13 @@ def main():
             best = top_candidates[0]
             payload = best["payload"]
             video_name = payload.get("source_file", "unknown")
-            timestamp = payload.get("timestamp", 0.0)
+            frame_idx = payload.get("frame_idx")
+            if frame_idx is None:
+                print(f"[WARN] No frame_idx in payload for '{video_name}' - "
+                      f"falling back to timestamp (re-run preprocessing to fix).")
+                frame_idx = payload.get("timestamp", 0.0)
             print("\n=== FINAL RESULT ===")
-            print(f"{video_name}, {timestamp:.2f}")
+            print(f"{video_name}, {frame_idx}")
             
     elif args.type == 2:
         # Type 2: Visual Question Answering (VQA)
@@ -111,15 +115,19 @@ def main():
             best = top_candidates[0]
             payload = best["payload"]
             video_name = payload.get("source_file", "unknown")
-            timestamp = payload.get("timestamp", 0.0)
-            
+            frame_idx = payload.get("frame_idx")
+            if frame_idx is None:
+                print(f"[WARN] No frame_idx in payload for '{video_name}' - "
+                      f"falling back to timestamp (re-run preprocessing to fix).")
+                frame_idx = payload.get("timestamp", 0.0)
+
             # Answer generation using VLM on best match
             answer_prompt = f"Answer the following question about this image: {args.query}. Be concise."
             # In a real setup we load the best crop/full image. Here we call VLM with empty image or load if present
             answer = vlm.generate(None, answer_prompt).strip()
-            
+
             print("\n=== FINAL RESULT ===")
-            print(f"{video_name}, {timestamp:.2f}, {answer}")
+            print(f"{video_name}, {frame_idx}, {answer}")
             
     elif args.type == 3:
         # Type 3: Temporal-alignment
