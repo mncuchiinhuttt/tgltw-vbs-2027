@@ -57,6 +57,24 @@ KEYFRAME_VARIANCE_LOW = float(os.getenv("KEYFRAME_VARIANCE_LOW", 0.01))
 KEYFRAME_VARIANCE_MID = float(os.getenv("KEYFRAME_VARIANCE_MID", 0.05))
 KEYFRAME_MAX_BUDGET = int(os.getenv("KEYFRAME_MAX_BUDGET", 8))
 
+# DAKE (Dynamic-Aware Keyframe Extraction, U-CESE arXiv:2605.23274) - a
+# training-free pre-filter run before Adaptive Keyframe Sampling's CLIP pass
+# above: JPEG-encodes each candidate frame and measures the rate of change
+# in compressed file size between nearby frames as a free motion proxy (no
+# model inference at all), keeping only the highest-"steepness" fraction of
+# candidates. Supplementary, not a replacement - AKS's own CLIP-variance
+# budget and Qwen-embedding farthest-point sampling still run afterward on
+# whatever this keeps; it only cuts how many candidates those (much more
+# expensive) passes have to process.
+KEYFRAME_DAKE_ENABLED = os.getenv("KEYFRAME_DAKE_ENABLED", "true").lower() == "true"
+KEYFRAME_DAKE_RATIO = float(os.getenv("KEYFRAME_DAKE_RATIO", 0.5))
+KEYFRAME_DAKE_WINDOW = int(os.getenv("KEYFRAME_DAKE_WINDOW", 3))
+# DAKE's own safeguard ("at least one keyframe every 2x fps frames") adapted
+# to our already-~1fps-downsampled candidate stream (extract_candidate_frames'
+# default sampling_rate_fps) - expressed directly as a candidate-list index
+# gap rather than a native-video-fps multiple.
+KEYFRAME_DAKE_MAX_GAP = int(os.getenv("KEYFRAME_DAKE_MAX_GAP", 4))
+
 # OCR settings (PP-OCRv6 detection + ensemble recognition, gated by SAM3
 # region proposal - see SAM3/SAHI settings below)
 OCR_LANG = os.getenv("OCR_LANG", "vi")

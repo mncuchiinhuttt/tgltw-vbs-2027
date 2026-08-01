@@ -17,7 +17,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 # Config imports
 from preprocessing.config import (
     VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
-    OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP
+    OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP,
+    KEYFRAME_DAKE_ENABLED, KEYFRAME_DAKE_RATIO, KEYFRAME_DAKE_WINDOW, KEYFRAME_DAKE_MAX_GAP,
 )
 
 # Models
@@ -44,6 +45,7 @@ from preprocessing.official_assets import (
     load_official_keyframe_index_map, nearest_official_keyframe,
     load_official_objects, load_official_metadata,
 )
+from preprocessing.video.dake_prefilter import dake_prefilter_candidates
 
 def load_vlm():
     if VLM_OPTION == "local":
@@ -182,6 +184,20 @@ def main():
             candidates = extract_candidate_frames(video_path, start_sec, end_sec)
             if not candidates:
                 continue
+
+            # DAKE pre-filter (training-free, no model inference): drops the
+            # candidates with the least JPEG-size "steepness" (U-CESE
+            # arXiv:2605.23274) before the much more expensive CLIP/Qwen
+            # embedding passes below ever see them. Supplementary to AKS, not
+            # a replacement - AKS's own variance budget + farthest-point
+            # sampling still run afterward on whatever this keeps.
+            if KEYFRAME_DAKE_ENABLED:
+                pre_dake_count = len(candidates)
+                candidates = dake_prefilter_candidates(
+                    candidates, keep_ratio=KEYFRAME_DAKE_RATIO,
+                    window=KEYFRAME_DAKE_WINDOW, max_gap=KEYFRAME_DAKE_MAX_GAP,
+                )
+                print(f"Scene {scene_idx}: DAKE pre-filter kept {len(candidates)}/{pre_dake_count} candidates.")
 
             # Adaptive Keyframe Sampling: a cheap CLIP pass over this scene's
             # candidates decides how many keyframes it needs (static scenes
