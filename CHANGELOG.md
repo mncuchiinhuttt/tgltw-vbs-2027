@@ -2,6 +2,16 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.9.0] - 2026-08-02
+
+### Added
+- **`preprocessing/official_assets.py`**: optional loaders for the AIC dataset assets BTC provides alongside raw videos (`Thong tin vong So tuyen AIC2026.pdf`, section 3) - `Objects/` (Faster R-CNN/OpenImages V4 detections), `Metadata/` (YouTube title/description JSON), and a keyframe-index map used to nearest-match our own extracted keyframes (from scene-detection + AKS) to BTC's own keyframe numbering. Every lookup gracefully returns empty when a video has no matching official file, so this has zero effect on datasets that don't ship these assets.
+  - `preprocessing/main.py`: merges official Objects detections into `detected_objects` (IoU-deduped against YOLOE+SAM3, denormalized against the actual keyframe size) for whichever official keyframe is nearest (by `frame_idx`) to ours; folds official Metadata title/description into `text_blob` and a new `video_metadata` payload field.
+  - **Not wired in this PR**: the CLIP-features (`clip-ViT-B-32`) `.npy` loader exists (`load_official_clip_feature`) but isn't used to replace `LightweightCLIPEmbedder`'s scene-variance step - BTC's official keyframes are much sparser than our own per-scene Adaptive Keyframe Sampling candidates, so most candidate frames wouldn't have a close-enough official match to substitute; left as a documented follow-up rather than forcing an awkward partial integration.
+  - **Verify against real data before fully trusting**: no real downloaded sample was available when this was written - field/path names are reconstructed from the PDF's prose description (see the module's own docstring for exactly which assumptions are riskiest, especially the keyframe-index-map file format, which the PDF never actually names).
+
+Source: `Thong tin vong So tuyen AIC2026.pdf` - see Notion "Long Note Aug 2 2026" (item 5) for the full list of pipeline/competition-rule misalignments this addresses.
+
 ## [1.8.0] - 2026-08-02
 
 ### Changed

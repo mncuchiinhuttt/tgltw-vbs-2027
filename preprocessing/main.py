@@ -40,6 +40,10 @@ from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
 from preprocessing.audio.audio_processor import AudioProcessor
 from preprocessing.indexing.indexer import QdrantIndexer
+from preprocessing.official_assets import (
+    load_official_keyframe_index_map, nearest_official_keyframe,
+    load_official_objects, load_official_metadata,
+)
 
 def load_vlm():
     if VLM_OPTION == "local":
@@ -125,7 +129,16 @@ def main():
     for video_path in video_files:
         video_name = os.path.basename(video_path)
         print(f"\n--- Processing Video: {video_name} ---")
-        
+
+        # Official BTC-provided assets for this video (optional - see
+        # preprocessing/official_assets.py; every lookup here gracefully
+        # returns empty/None when the video has no matching official file,
+        # which is the normal case for non-competition datasets).
+        official_metadata = load_official_metadata(args.data_dir, video_name)
+        official_keyframe_index_map = load_official_keyframe_index_map(args.data_dir, video_name)
+        official_text_parts = [official_metadata.get("title", ""), official_metadata.get("description", "")]
+        official_metadata_text = " . ".join(p for p in official_text_parts if p)
+
         # Audio Extraction & Processing
         print("Extracting audio track...")
         wav_path = os.path.join(args.temp_dir, f"{uuid.uuid4()}.wav")
@@ -240,6 +253,22 @@ def main():
                 # SAM3-gated Object Detection
                 detected = detect_objects(region_proposer, detector, frame_img)
 
+                # Merge in BTC-provided Faster R-CNN/OpenImages detections for
+                # whichever official keyframe is nearest (by frame_idx) to
+                # this one, if the video has official assets at all - our own
+                # scene-detection + AKS samples different frames than BTC's
+                # own keyframe extraction, so this is a nearest-match, not an
+                # exact one (see preprocessing/official_assets.py).
+                official_kf_filename = nearest_official_keyframe(official_keyframe_index_map, kf["frame_idx"])
+                if official_kf_filename:
+                    official_objects = load_official_objects(args.data_dir, video_name, official_kf_filename)
+                    if official_objects:
+                        width, height = frame_img.size
+                        for obj in official_objects:
+                            x1, y1, x2, y2 = obj["bbox"]
+                            obj["bbox"] = [x1 * width, y1 * height, x2 * width, y2 * height]
+                        detected = detector._dedup_by_iou(detected + official_objects, iou_thresh=0.5)
+
                 print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6 + Vintern ensemble)...")
                 # SAM3-gated OCR extraction, recognition ensemble & normalization
                 ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
@@ -267,7 +296,8 @@ def main():
                     ocr_text,
                     " ".join(detected_labels),
                     " ".join(scene_events.get("actions", [])),
-                    speech_segment_text
+                    speech_segment_text,
+                    official_metadata_text,
                 ]
                 text_blob = " . ".join([elem for elem in text_blob_elements if elem])
 
@@ -290,6 +320,7 @@ def main():
                     "detected_objects": detected,
                     "ordered_events": scene_events.get("ordered_events", []),
                     "actions": scene_events.get("actions", []),
+                    "video_metadata": official_metadata,
                     "text_blob": text_blob
                 }
 
