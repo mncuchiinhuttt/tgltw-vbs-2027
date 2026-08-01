@@ -8,10 +8,14 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K
+from config import (
+    VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K,
+    SECONDARY_EMBEDDER_ENABLED,
+)
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+from models.siglip_embedder import SigLIPEmbedder
 from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
@@ -34,6 +38,10 @@ def load_embedder():
     else:
         raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
 
+def load_secondary_embedder():
+    """None when disabled - see models/siglip_embedder.py."""
+    return SigLIPEmbedder() if SECONDARY_EMBEDDER_ENABLED else None
+
 def main():
     parser = argparse.ArgumentParser(description="Multimedia Retrieval Inference Engine")
     parser.add_argument("--type", type=int, choices=[1, 2, 3], required=True, 
@@ -52,10 +60,11 @@ def main():
         detector = ObjectDetector(option=DETECTOR_OPTION)
         
     embedder = load_embedder()
-    
+    secondary_embedder = load_secondary_embedder()
+
     # 2. Initialize search and reranking modules
     query_proc = QueryProcessor(vlm_client=vlm)
-    searcher = HybridSearcher(embedder=embedder)
+    searcher = HybridSearcher(embedder=embedder, secondary_embedder=secondary_embedder)
     reranker = Reranker(vlm_client=vlm, detector_client=detector)
 
     # 3. Query Processing Stage
@@ -70,9 +79,12 @@ def main():
     # up to 100 answers per query (R@1/5/20/50/100), not just the single best.
     query_hits = searcher.search(args.query, top_k=SUBMISSION_TOP_K)
     hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
+    # Fusionista2.0/VERGE-inspired secondary embedder ensemble - returns []
+    # when SECONDARY_EMBEDDER_ENABLED is off, so this is always safe to include.
+    secondary_hits = searcher.dense_search_secondary(args.query, top_k=SUBMISSION_TOP_K)
 
     # Merge candidates from both searches via RRF
-    candidates = searcher.merge_rrf(query_hits, hyde_hits)
+    candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
     print(f"Retrieved {len(candidates)} unique candidate frames.")
 
     if not candidates:

@@ -70,5 +70,13 @@ TRAKE_MAX_VIDEOS_TO_ALIGN = int(os.getenv("TRAKE_MAX_VIDEOS_TO_ALIGN", 20))
 
 
 
+# Secondary embedder ensemble (Fusionista2.0/VERGE-inspired, VBS2026 - see
+# models/siglip_embedder.py + preprocessing/config.py for the indexing side).
+# Must match whatever preprocessing was actually run with - if the
+# "visual_index" collection wasn't (re)built with a named "siglip" vector,
+# leave this false regardless of preprocessing/config.py's setting.
+SECONDARY_EMBEDDER_ENABLED = os.getenv("SECONDARY_EMBEDDER_ENABLED", "false").lower() == "true"
+SIGLIP_MODEL_ID = os.getenv("SIGLIP_MODEL_ID", "google/siglip-so400m-patch14-384")
+
 VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
 VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
