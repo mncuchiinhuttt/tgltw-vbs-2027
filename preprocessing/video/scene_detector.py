@@ -166,6 +166,13 @@ def select_fast_pathway_frames_for_scene(
     returns the same {"frame_img", "timestamp", "frame_idx"} shape AKS's own
     candidates/keyframes use, so callers (main.py) handle both identically
     (e.g. the same `Image.fromarray(f["frame_img"])` conversion).
+
+    Cost note: this decodes each scene a second time (~dense_sampling_fps,
+    default 8fps) on top of AKS's own 1fps candidate decode above - roughly
+    8x more per-scene video I/O for the Fast pathway alone. Intentional
+    trade of CPU decode/optical-flow cost for VLM token savings; worth
+    measuring actual end-to-end preprocessing throughput at dataset scale
+    rather than assuming it's a net win.
     """
     dense_frames = extract_candidate_frames(video_path, start_sec, end_sec, sampling_rate_fps=dense_sampling_fps)
     if not dense_frames:

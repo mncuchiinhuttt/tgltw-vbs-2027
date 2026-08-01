@@ -32,6 +32,21 @@ class QwenVLM(BaseVLM):
         if self.device != "cuda":
             self.model = self.model.to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_id, min_pixels=VLM_MIN_PIXELS, max_pixels=VLM_MAX_PIXELS)
+        # Dedicated processor for generate_multi_image(): Qwen's image
+        # processor applies ONE shared (min_pixels, max_pixels) window to
+        # every image in a call, not per-image - so Fast-pathway frames
+        # (pre-resized down to FAST_PATHWAY_MIN_PIXELS, well below
+        # VLM_MIN_PIXELS) would get resized back UP to VLM_MIN_PIXELS by
+        # self.processor's floor, silently losing their token savings. This
+        # processor's floor is widened down to FAST_PATHWAY_MIN_PIXELS
+        # instead, so it's a no-op on any image already resized (via
+        # resize_image_for_vlm) into either budget - Slow keyframes are
+        # unaffected since native video frames are practically always well
+        # above either floor to begin with; only max_pixels (still
+        # VLM_MAX_PIXELS) ever actually constrains them, same as before.
+        self._multi_image_processor = AutoProcessor.from_pretrained(
+            model_id, min_pixels=FAST_PATHWAY_MIN_PIXELS, max_pixels=VLM_MAX_PIXELS
+        )
         print(
             f"Local Qwen-VL loaded successfully "
             f"(pixel budget: {VLM_MIN_PIXELS}-{VLM_MAX_PIXELS}, "
@@ -118,17 +133,23 @@ class QwenVLM(BaseVLM):
         """
         Slow/Fast dual-budget pathway for the local HF path.
 
-        !! CẢNH BÁO CHƯA VERIFY !!: self.processor được init với
-        min_pixels=VLM_MIN_PIXELS cố định. Dù secondary_images được resize
-        thủ công xuống FAST_PATHWAY_MIN_PIXELS/MAX_PIXELS (thấp hơn
-        VLM_MIN_PIXELS) trước khi vào đây, processor có thể tự resize NGƯỢC
-        LẠI lên VLM_MIN_PIXELS vì đó là sàn nó đã được cấu hình - làm mất
-        tác dụng giảm token của Fast pathway. Cần test thật bằng cách log
-        inputs["image_grid_thw"] (xem hàm test đề xuất) trước khi tin dùng
-        đường này cho production. Đường OpenAIVLM (qua vLLM) không có rủi ro
-        này vì resize xảy ra client-side, độc lập với processor server.
+        Uses self._multi_image_processor (widened floor down to
+        FAST_PATHWAY_MIN_PIXELS - see __init__) instead of self.processor,
+        and pre-resizes BOTH groups client-side via resize_image_for_vlm
+        before they ever reach that processor, so its own internal resize
+        step is a no-op on already-correctly-sized images regardless of
+        which budget they belong to. Fixes the token-budget-collapse risk
+        flagged in review: with the original self.processor (floor fixed at
+        VLM_MIN_PIXELS), Fast frames pre-resized down to
+        FAST_PATHWAY_MIN_PIXELS would have been silently resized back up to
+        VLM_MIN_PIXELS, losing the Fast pathway's whole point.
+        Set VLM_LOG_TOKEN_ESTIMATE=1 to log inputs["image_grid_thw"] and
+        spot-check the actual per-image token counts landed as expected.
         """
-        primary_imgs = [self._prepare_image(img) for img in primary_images]
+        primary_imgs = [
+            resize_image_for_vlm(self._prepare_image(img), VLM_MIN_PIXELS, VLM_MAX_PIXELS)
+            for img in primary_images
+        ]
         secondary_imgs = [
             resize_image_for_vlm(self._prepare_image(img), FAST_PATHWAY_MIN_PIXELS, FAST_PATHWAY_MAX_PIXELS)
             for img in secondary_images
@@ -140,8 +161,8 @@ class QwenVLM(BaseVLM):
         content = [{"type": "image", "image": img} for img in all_imgs]
         content.append({"type": "text", "text": prompt})
         messages = [{"role": "user", "content": content}]
-        text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = self.processor(text=[text], images=all_imgs, padding=True, return_tensors="pt").to(self.device)
+        text = self._multi_image_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = self._multi_image_processor(text=[text], images=all_imgs, padding=True, return_tensors="pt").to(self.device)
 
         if os.environ.get("VLM_LOG_TOKEN_ESTIMATE"):
             grid_thw = inputs.get("image_grid_thw")
@@ -152,7 +173,7 @@ class QwenVLM(BaseVLM):
             generated_ids_trimmed = [
                 out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs["input_ids"], generated_ids)
             ]
-            output_text = self.processor.batch_decode(
+            output_text = self._multi_image_processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )
         return output_text[0]

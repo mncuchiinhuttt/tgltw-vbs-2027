@@ -15,7 +15,7 @@ measures per (image, budget):
     reading the side-by-side report, not trusted blindly)
 
 Usage:
-    python benchmark_visual_tokens.py --images_dir ./sample_keyframes \
+    python benchmark_visual_token.py --images_dir ./sample_keyframes \
         --pixel_budgets 256 512 768 1280 \
         --prompt "Describe this scene in one paragraph, including key objects, people, and actions."
 
