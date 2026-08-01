@@ -2,6 +2,14 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.10.0] - 2026-08-02
+
+### Added
+- **DAKE keyframe pre-filter** (`preprocessing/video/dake_prefilter.py`, `KEYFRAME_DAKE_*` config) - a training-free pass run before Adaptive Keyframe Sampling's CLIP-variance step: JPEG-encodes each candidate frame in-memory and measures the rate of change ("steepness") in compressed file size between nearby frames as a free motion proxy, no model inference at all. Keeps only the top `KEYFRAME_DAKE_RATIO` (default 50%) of candidates by steepness, with a `KEYFRAME_DAKE_MAX_GAP` safeguard ensuring no run of dropped candidates exceeds that gap (adapted from DAKE's own "at least one keyframe every 2x fps frames" rule to our already-~1fps-downsampled candidate stream). Supplementary to AKS, not a replacement - AKS's own variance budget and Qwen-embedding farthest-point sampling still run afterward on whatever this keeps; it only cuts how many candidates those far more expensive passes have to process. Can be disabled via `KEYFRAME_DAKE_ENABLED=false`.
+  - Reference: DAKE in *U-CESE: Unified Clip-based Event Search Engine for AI Challenge HCMC 2025* (arXiv:2605.23274, team Nomial).
+
+Source: AIC 2024/2025 team research - see Notion "Long Note Aug 2 2026" (item 7, marked optional/low-priority) for the full list of pipeline/competition-rule misalignments and research this addresses.
+
 ## [1.9.0] - 2026-08-02
 
 ### Added
