@@ -294,7 +294,7 @@ async def run_search(request: SearchRequest):
                 
         elif request.type == 3:
             # Type 3: Temporal Alignment
-            top_sequences = reranker.rerank_type3_temporal(request.query, candidates[:20])
+            top_sequences = reranker.rerank_type3_temporal(request.query, candidates[:20], query_proc, searcher)
             for idx, seq in enumerate(top_sequences):
                 # Format to look like candidate output but grouped
                 results.append({

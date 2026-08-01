@@ -138,11 +138,11 @@ def main():
     elif args.type == 3:
         # Type 3: Temporal-alignment
         # Output format: <Tên file video>, <Frame ID_1>, ..., <Frame ID_N>
-        # No head/tail split needed here - rerank_type3_temporal calls the
-        # VLM once per distinct video in the candidate pool, not once per
-        # frame, so widening the input pool doesn't multiply VLM cost the
-        # way per-frame reranking would.
-        top_sequences = reranker.rerank_type3_temporal(args.query, candidates[:SUBMISSION_TOP_K])
+        # DANTE-inspired DP alignment (see reranker.py) - decomposes the
+        # query into ordered sub-events and aligns them against each
+        # candidate video's full frame timeline, not just a single holistic
+        # VLM score over the initial candidate hits.
+        top_sequences = reranker.rerank_type3_temporal(args.query, candidates[:SUBMISSION_TOP_K], query_proc, searcher)
         print(f"\n=== FINAL RESULTS ({len(top_sequences)} ranked sequences) ===")
         for rank, seq in enumerate(top_sequences, start=1):
             frame_ids_str = ", ".join(str(fid) for fid in seq["frame_ids"])

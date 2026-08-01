@@ -3,6 +3,66 @@ import re
 import numpy as np
 from PIL import Image
 from typing import Callable, List, Dict, Any, Optional
+from config import TRAKE_MAX_VIDEOS_TO_ALIGN
+
+def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
+    denom = float(np.linalg.norm(a) * np.linalg.norm(b))
+    return float(np.dot(a, b) / denom) if denom > 0 else 0.0
+
+def _align_events_dp(similarity_matrix: List[List[float]]) -> List[int]:
+    """
+    DANTE-inspired (arXiv:2512.13169) subsequence-alignment DP: given an
+    N (sub-events) x M (candidate frames, chronologically ordered) similarity
+    matrix, finds the assignment of one frame per event - in strictly
+    increasing frame-index order, so the N answers come out chronologically
+    ordered as TRAKE's answer format requires - maximizing total assigned
+    similarity. Classic O(N*M) weighted-subsequence DP (same structure as
+    weighted LIS / global sequence alignment). Optimizes globally over the
+    whole matrix rather than depending on frames' original retrieval-rank
+    order, so it tolerates "temporally-incoherent" retrieval noise the way
+    the previous single-holistic-VLM-score approach couldn't.
+    Returns a list of N frame-column indices (one per event); an event gets
+    -1 if no valid assignment exists (e.g. fewer frames than events).
+    """
+    n = len(similarity_matrix)
+    if n == 0:
+        return []
+    m = len(similarity_matrix[0]) if similarity_matrix[0] else 0
+    if m < n:
+        return [-1] * n
+
+    NEG_INF = float("-inf")
+    # dp[i][j]: best total similarity aligning events[0..i] using only
+    # frames[0..j] (event i assigned to some frame <= j).
+    dp = [[NEG_INF] * m for _ in range(n)]
+    take_here = [[False] * m for _ in range(n)]
+
+    for i in range(n):
+        for j in range(m):
+            best_skip = dp[i][j - 1] if j > 0 else NEG_INF
+            if i == 0:
+                prior = 0.0
+            else:
+                prior = dp[i - 1][j - 1] if j > 0 else NEG_INF
+            best_take = prior + similarity_matrix[i][j] if prior != NEG_INF else NEG_INF
+
+            if best_take >= best_skip:
+                dp[i][j] = best_take
+                take_here[i][j] = True
+            else:
+                dp[i][j] = best_skip
+                take_here[i][j] = False
+
+    assigned = [-1] * n
+    i, j = n - 1, m - 1
+    while i >= 0 and j >= 0:
+        if take_here[i][j]:
+            assigned[i] = j
+            i -= 1
+            j -= 1
+        else:
+            j -= 1
+    return assigned
 
 def rerank_with_tail(
     rerank_fn: Callable[[List[Dict[str, Any]]], List[Dict[str, Any]]],
@@ -180,66 +240,87 @@ Score:"""
         return sorted(scored, key=lambda x: x["final_score"], reverse=True)
 
     def rerank_type3_temporal(
-        self, 
-        query: str, 
-        candidate_frames: List[Dict[str, Any]]
+        self,
+        query: str,
+        candidate_frames: List[Dict[str, Any]],
+        query_proc,
+        searcher,
+        max_videos: int = TRAKE_MAX_VIDEOS_TO_ALIGN,
     ) -> List[Dict[str, Any]]:
         """
-        Type 3 Temporal Alignment reasoning:
-        1. Group frames by video file.
-        2. Sort chronologically by timestamp to construct sequences.
-        3. Score sequences based on continuity, temporal order, and match to query.
+        DANTE-inspired (arXiv:2512.13169) two-stage TRAKE alignment,
+        replacing the previous single holistic VLM score for the whole
+        sequence with an actual N-events <-> M-frames alignment:
+
+        Stage 1 (Retrieval): rank candidate VIDEOS by the best rrf_score
+        among each video's frame-hits already in candidate_frames (per the
+        competition's own "find the one video" framing, generalized here to
+        the top `max_videos` rather than exactly one - the AIC scoring rule
+        separately rewards submitting up to 100 ranked answers per query, so
+        multiple candidate videos each get their own aligned sequence,
+        ranked by alignment quality, instead of only ever offering one guess).
+        Stage 2 (Alignment): for each of those videos, decompose the query
+        into N ordered sub-events (query_proc.decompose_temporal_events) and
+        fetch EVERY indexed point of that video (searcher.get_all_points_for_
+        video - not just whatever made the initial candidate pool), then run
+        a dynamic-programming subsequence alignment (_align_events_dp) over
+        the N x M similarity matrix to pick the best chronologically-ordered
+        frame per sub-event.
         """
-        print("Executing Type 3 Temporal reasoning...")
-        
-        # Group by video
-        groups = {}
+        print("Executing Type 3 Temporal reasoning (DP alignment)...")
+
+        if not candidate_frames:
+            return []
+
+        # Stage 1: rank candidate videos by their best frame-hit's rrf_score
+        video_scores: Dict[str, float] = {}
         for hit in candidate_frames:
             video = hit["payload"]["source_file"]
-            if video not in groups:
-                groups[video] = []
-            groups[video].append(hit)
-            
-        scored_sequences = []
-        
-        for video, frames in groups.items():
-            # Sort chronologically
-            sorted_frames = sorted(frames, key=lambda x: x["payload"]["timestamp"])
-            
-            # Construct a narrative description of the temporal sequence
-            sequence_desc = []
-            for idx, f in enumerate(sorted_frames):
-                payload = f["payload"]
-                sequence_desc.append(
-                    f"Frame {idx+1} at {payload['timestamp']:.2f}s: Caption: {payload.get('caption', '')}. OCR: {payload.get('ocr_text', '')}"
-                )
-            seq_text = "\n".join(sequence_desc)
-            
-            prompt = f"""
-Query description of event sequence: "{query}"
-Chronological Frame Sequence in Video:
-{seq_text}
+            video_scores[video] = max(video_scores.get(video, 0.0), hit.get("rrf_score", 0.0))
+        ranked_videos = sorted(video_scores, key=video_scores.get, reverse=True)[:max_videos]
 
-Rate how well this sequence matches the chronological events described in the query from 0.0 (no match/wrong order) to 1.0 (perfect chronological match). Output only the score as a float.
-Score:"""
-            
-            score_str = self.vlm.generate(None, prompt).strip()
-            seq_score = _parse_vlm_score(score_str)
-            if seq_score is None:
-                print(f"Warning: could not parse sequence score from VLM response: {score_str!r}. Defaulting to 0.0.")
-                seq_score = 0.0
+        events = query_proc.decompose_temporal_events(query)
+        event_vectors = [np.asarray(searcher.embedder.embed_text(ev)) for ev in events]
 
-            scored_sequences.append({
+        sequences = []
+        for video in ranked_videos:
+            all_points = searcher.get_all_points_for_video(video)
+            all_points = [
+                p for p in all_points
+                if p["payload"].get("frame_idx") is not None or p["payload"].get("timestamp") is not None
+            ]
+            all_points.sort(
+                key=lambda p: p["payload"]["frame_idx"] if p["payload"].get("frame_idx") is not None
+                else p["payload"]["timestamp"]
+            )
+
+            if len(all_points) < len(events):
+                # Not enough frames in this video to host every sub-event -
+                # skip rather than force a degenerate partial alignment.
+                continue
+
+            similarity_matrix = [
+                [_cosine_sim(ev_vec, np.asarray(p["vector"])) for p in all_points]
+                for ev_vec in event_vectors
+            ]
+            assigned_indices = _align_events_dp(similarity_matrix)
+            if any(idx < 0 for idx in assigned_indices):
+                continue
+
+            aligned_points = [all_points[j] for j in assigned_indices]
+            total_sim = sum(similarity_matrix[i][j] for i, j in enumerate(assigned_indices))
+
+            sequences.append({
                 "video_name": video,
                 # Native video frame index (see preprocessing/main.py's
-                # "frame_idx" payload field), NOT f["id"] - that's the Qdrant
-                # point UUID assigned at index time, which carries no
-                # temporal/frame-position meaning at all and would produce a
-                # meaningless <frame_id> in the actual submission format.
-                "frame_ids": [f["payload"].get("frame_idx") for f in sorted_frames],
-                "timestamps": [f["payload"]["timestamp"] for f in sorted_frames],
-                "score": seq_score
+                # "frame_idx" payload field), NOT a Qdrant point UUID - that
+                # carries no temporal/frame-position meaning at all and would
+                # produce a meaningless <frame_id> in the submission format.
+                "frame_ids": [p["payload"].get("frame_idx") for p in aligned_points],
+                "timestamps": [p["payload"].get("timestamp") for p in aligned_points],
+                "score": total_sim / len(events),
+                "events": events,
             })
-            
-        return sorted(scored_sequences, key=lambda x: x["score"], reverse=True)
+
+        return sorted(sequences, key=lambda s: s["score"], reverse=True)
 import os

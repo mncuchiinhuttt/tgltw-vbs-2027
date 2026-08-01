@@ -61,6 +61,12 @@ RERANK_SCORE_THRESHOLD = float(os.getenv("RERANK_SCORE_THRESHOLD", 0.2))
 SUBMISSION_TOP_K = int(os.getenv("SUBMISSION_TOP_K", 100))
 RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", 20))
 
+# TRAKE (Type 3): how many top candidate videos get a full DP alignment pass
+# (Reranker.rerank_type3_temporal) - each pass costs one Qdrant scroll +
+# len(events) text embedding calls, so this is capped well below
+# SUBMISSION_TOP_K rather than aligning every distinct video in the pool.
+TRAKE_MAX_VIDEOS_TO_ALIGN = int(os.getenv("TRAKE_MAX_VIDEOS_TO_ALIGN", 20))
+
 
 
 

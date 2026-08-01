@@ -2,6 +2,16 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.8.0] - 2026-08-02
+
+### Changed
+- **TRAKE (Type 3) reranking replaced with DANTE-inspired DP alignment** (`Reranker.rerank_type3_temporal()`, `inference-code/search/reranker.py`) - previously scored an entire candidate sequence with one holistic VLM call; now runs the competition's own two-stage design (`Thong tin vong So tuyen AIC2026.pdf`):
+  - **Stage 1 (Retrieval)**: ranks candidate videos by their best frame-hit's RRF score (generalized to the top `TRAKE_MAX_VIDEOS_TO_ALIGN` videos rather than exactly one, so the AIC scoring rule's up-to-100-ranked-answers allowance still applies to TRAKE).
+  - **Stage 2 (Alignment)**: `QueryProcessor.decompose_temporal_events()` splits the query into an ordered list of sub-events; `HybridSearcher.get_all_points_for_video()` fetches the video's *entire* frame timeline (not just whatever made the initial candidate pool); a new dynamic-programming subsequence alignment (`_align_events_dp`, O(N events x M frames)) picks the best chronologically-ordered frame per sub-event, maximizing total cosine similarity. Verified against brute-force search over 200 randomized small inputs - exact match every time.
+  - Reference: DANTE in *"Integrated Semantic and Temporal Alignment for Interactive Video Retrieval"* (arXiv:2512.13169, AIC 2025).
+
+Source: `Thong tin vong So tuyen AIC2026.pdf` + AIC 2024/2025 team research - see Notion "Long Note Aug 2 2026" (item 4) for the full list of pipeline/competition-rule misalignments this addresses.
+
 ## [1.7.0] - 2026-08-02
 
 ### Added
