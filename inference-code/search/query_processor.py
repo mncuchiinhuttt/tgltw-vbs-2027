@@ -77,3 +77,34 @@ JSON:"""
                 "sub_queries": [query],
                 "constraints": []
             }
+
+    def decompose_temporal_events(self, query: str) -> list:
+        """
+        Decompose a TRAKE (Type 3, temporal-alignment) query into an ORDERED
+        list of short visual sub-event descriptions, in the exact
+        chronological order they occur - e.g. the PDF's "nhảy cao" example
+        decomposes to ["chạy đà (bàn chân chạm đất, bước qua vạch xuất
+        phát)", "giậm nhảy (chân giậm nhảy rời khỏi mặt đất)", "bay qua xà
+        (hông ở vị trí cao nhất)", "tiếp đất (lưng chạm đệm)"]. Order in the
+        returned list is load-bearing - Reranker.rerank_type3_temporal's DP
+        alignment assumes event i must occur no later than event i+1.
+        """
+        prompt = f"""
+Given a query describing a sequence of chronological events/moments in a video, split it into an ORDERED list of short visual descriptions, one per event, in the exact order they happen.
+Output ONLY valid JSON matching this format:
+{{"events": ["...", "...", "..."]}}
+Query: "{query}"
+JSON:"""
+
+        raw_output = self.vlm.generate(None, prompt).strip()
+        if raw_output.startswith("```json"):
+            raw_output = raw_output[7:]
+        if raw_output.endswith("```"):
+            raw_output = raw_output[:-3]
+
+        try:
+            parsed = json.loads(raw_output.strip())
+            events = parsed.get("events", [])
+            return events if events else [query]
+        except json.JSONDecodeError:
+            return [query]

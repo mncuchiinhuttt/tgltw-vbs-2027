@@ -272,7 +272,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
         elif q_type == 3:
             # No head/tail split needed - rerank_type3_temporal calls the VLM
             # once per distinct video in the pool, not once per frame.
-            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K])
+            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K], query_proc, searcher)
             for seq in top_sequences:
                 timestamps = seq.get("timestamps") or []
                 results.append({

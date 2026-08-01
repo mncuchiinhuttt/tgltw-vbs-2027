@@ -181,7 +181,7 @@ def main():
             # once per distinct video in the candidate pool, not once per
             # frame, so widening the input pool doesn't multiply VLM cost the
             # way per-frame reranking would.
-            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K])
+            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K], query_proc, searcher)
             output_data["results"] = [
                 # Real per-frame video indices (reranker.rerank_type3_temporal
                 # fix) - this used to be Qdrant point UUIDs, which are not a

@@ -134,3 +134,30 @@ class HybridSearcher:
         dense_hits = self.dense_search(query, top_k)
         sparse_hits = self.sparse_search(query, top_k)
         return self.merge_rrf(dense_hits, sparse_hits)
+
+    def get_all_points_for_video(self, video_name: str, limit: int = 10000) -> list:
+        """
+        Fetches every indexed visual point for a single video, not just
+        whatever made it into the initial top-K hybrid-search candidate pool
+        - needed for TRAKE's alignment stage (Reranker.rerank_type3_temporal),
+        which must consider the video's full frame timeline rather than only
+        the handful of frames that happened to score well enough to reach the
+        candidate pool. Includes stored vectors (with_vectors=True) so
+        callers can compute similarity without re-embedding frame images.
+        Single scroll call with a generous limit rather than full pagination
+        - a reasonable simplification since one video's keyframe count is
+        typically at most a few hundred, well under the default limit.
+        """
+        points, _ = self.client.scroll(
+            collection_name="visual_index",
+            scroll_filter=Filter(
+                must=[
+                    FieldCondition(key="modality", match=MatchValue(value="visual")),
+                    FieldCondition(key="source_file", match=MatchValue(value=video_name)),
+                ]
+            ),
+            limit=limit,
+            with_payload=True,
+            with_vectors=True,
+        )
+        return [{"id": p.id, "payload": p.payload, "vector": p.vector} for p in points]
