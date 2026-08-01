@@ -2,7 +2,28 @@ import json
 import re
 import numpy as np
 from PIL import Image
-from typing import List, Dict, Any, Optional
+from typing import Callable, List, Dict, Any, Optional
+
+def rerank_with_tail(
+    rerank_fn: Callable[[List[Dict[str, Any]]], List[Dict[str, Any]]],
+    candidates: List[Dict[str, Any]],
+    rerank_top_k: int,
+    submission_top_k: int,
+) -> List[Dict[str, Any]]:
+    """
+    Runs the (expensive, VLM-based) rerank_fn on just the head of candidates
+    (rerank_top_k) and appends the rest (up to submission_top_k) in their
+    original retrieval-rank order, instead of VLM-reranking the whole pool.
+    The AIC competition's scoring rewards submitting up to 100 ranked answers
+    per query (R@1/5/20/50/100, see SUBMISSION_TOP_K in config.py) - this
+    lets R@1/5/20 benefit from full VLM reranking quality while R@50/R@100
+    still get filled out with more candidates, without paying for a VLM call
+    per candidate just to rank the tail.
+    """
+    head = candidates[:rerank_top_k]
+    tail = candidates[rerank_top_k:submission_top_k]
+    reranked_head = rerank_fn(head) if head else []
+    return reranked_head + tail
 
 def _parse_vlm_score(text: str) -> Optional[float]:
     """

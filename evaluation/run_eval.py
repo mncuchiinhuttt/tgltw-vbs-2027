@@ -23,7 +23,7 @@ sys.path.append(str(METHOD_DIR))
 sys.path.append(str(INFERENCE_DIR))
 
 try:
-    from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION
+    from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K
     from models.qwen_vlm import QwenVLM
     from models.openai_vlm import OpenAIVLM
     from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
@@ -31,7 +31,7 @@ try:
 
     from search.query_processor import QueryProcessor
     from search.hybrid_search import HybridSearcher
-    from search.reranker import Reranker
+    from search.reranker import Reranker, rerank_with_tail
 except ImportError as err:
     print(f"[ERROR] Failed to import inference modules: {err}")
     print("Ensure you are running from the project environment.")
@@ -210,21 +210,30 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
         hyde_query = query_proc.generate_hyde(q_text)
         t1_hyde = time.perf_counter()
 
-        # 2. Candidate Retrieval (Dense + Sparse Hybrid Search)
+        # 2. Candidate Retrieval (Dense + Sparse Hybrid Search). Widened to
+        # SUBMISSION_TOP_K so accuracy metrics here reflect what
+        # batch_query.py actually submits (a ranked list up to 100 answers,
+        # not just the top 10-20).
         t0_search = time.perf_counter()
-        query_hits = searcher.search(q_text, top_k=15)
-        hyde_hits = searcher.search(hyde_query, top_k=15)
+        query_hits = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
+        hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
         candidates = searcher.merge_rrf(query_hits, hyde_hits)
+        candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
         t1_search = time.perf_counter()
 
-        # 3. Type-specific Reranking
+        # 3. Type-specific Reranking. Type 1/2 only VLM-rerank the head
+        # (RERANK_TOP_K) of the pool, same as batch_query.py/main.py, so
+        # Recall@50/@100 measured here reflect the same tail-passthrough
+        # behavior that will actually be submitted.
         t0_rerank = time.perf_counter()
         results = []
         generated_answer = None
         top_candidates = []
 
         if q_type == 1:
-            top_candidates = reranker.rerank_type1(q_text, candidates[:10])
+            top_candidates = rerank_with_tail(
+                lambda c: reranker.rerank_type1(q_text, c), candidates, RERANK_TOP_K, SUBMISSION_TOP_K
+            )
             for item in top_candidates:
                 results.append({
                     "video_name": item["payload"].get("source_file"),
@@ -235,7 +244,10 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
         elif q_type == 2:
             decomp = query_proc.decompose_query(q_text)
             sub_queries = decomp.get("sub_queries", [q_text])
-            top_candidates = reranker.rerank_type2_vqa(q_text, sub_queries, candidates[:10], dataset_dir)
+            top_candidates = rerank_with_tail(
+                lambda c: reranker.rerank_type2_vqa(q_text, sub_queries, c, dataset_dir),
+                candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
+            )
             for item in top_candidates:
                 results.append({
                     "video_name": item["payload"].get("source_file"),
@@ -258,7 +270,9 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
                 print(f"  ├─ VLM Generated Answer: \"{generated_answer}\"")
 
         elif q_type == 3:
-            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:20])
+            # No head/tail split needed - rerank_type3_temporal calls the VLM
+            # once per distinct video in the pool, not once per frame.
+            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K])
             for seq in top_sequences:
                 timestamps = seq.get("timestamps") or []
                 results.append({

@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION
+from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
@@ -16,7 +16,7 @@ from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
 from search.hybrid_search import HybridSearcher
-from search.reranker import Reranker
+from search.reranker import Reranker, rerank_with_tail
 
 def load_vlm():
     if VLM_OPTION == "local":
@@ -65,10 +65,12 @@ def main():
     
     # 4. Candidate Retrieval (Dense + Sparse Hybrid Search)
     print("\nRetrieving candidate frames from Qdrant...")
-    # Search on both original query and HyDE query, merge results
-    query_hits = searcher.search(args.query, top_k=15)
-    hyde_hits = searcher.search(hyde_query, top_k=15)
-    
+    # Search on both original query and HyDE query, merge results. Widened to
+    # SUBMISSION_TOP_K (100) - the AIC scoring rule rewards a ranked list of
+    # up to 100 answers per query (R@1/5/20/50/100), not just the single best.
+    query_hits = searcher.search(args.query, top_k=SUBMISSION_TOP_K)
+    hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
+
     # Merge candidates from both searches via RRF
     candidates = searcher.merge_rrf(query_hits, hyde_hits)
     print(f"Retrieved {len(candidates)} unique candidate frames.")
@@ -82,66 +84,69 @@ def main():
     # flooded by near-duplicate keyframes from one event (see "Our method" ->
     # Result Diversification). Applied once here since all three query types
     # slice from this same candidate pool below.
-    candidates = searcher.diversify_by_scene(candidates, top_k=20)
+    candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
     print(f"Diversified to {len(candidates)} candidates (deduped by scene).")
+
+    def frame_id_of(payload):
+        frame_idx = payload.get("frame_idx")
+        if frame_idx is None:
+            print(f"[WARN] No frame_idx in payload for '{payload.get('source_file')}' - "
+                  f"falling back to timestamp (re-run preprocessing to fix).")
+            frame_idx = payload.get("timestamp", 0.0)
+        return frame_idx
 
     # 5. Type-specific Reasoning and Reranking
     if args.type == 1:
-        # Type 1: Textual-KIS
-        # Output format: <Tên file video>, <Frame Idx>
-        top_candidates = reranker.rerank_type1(args.query, candidates[:10])
-        if top_candidates:
-            best = top_candidates[0]
-            payload = best["payload"]
-            video_name = payload.get("source_file", "unknown")
-            frame_idx = payload.get("frame_idx")
-            if frame_idx is None:
-                print(f"[WARN] No frame_idx in payload for '{video_name}' - "
-                      f"falling back to timestamp (re-run preprocessing to fix).")
-                frame_idx = payload.get("timestamp", 0.0)
-            print("\n=== FINAL RESULT ===")
-            print(f"{video_name}, {frame_idx}")
-            
+        # Type 1: Textual-KIS - Output format: <Tên file video>, <Frame Idx>
+        # Only the top RERANK_TOP_K candidates get the (expensive) VLM
+        # rerank pass; the rest fill out the ranked list up to
+        # SUBMISSION_TOP_K in their original retrieval-rank order.
+        ranked = rerank_with_tail(
+            lambda c: reranker.rerank_type1(args.query, c), candidates, RERANK_TOP_K, SUBMISSION_TOP_K
+        )
+        print(f"\n=== FINAL RESULTS ({len(ranked)} ranked answers) ===")
+        for rank, item in enumerate(ranked, start=1):
+            payload = item["payload"]
+            print(f"{rank}. {payload.get('source_file', 'unknown')}, {frame_id_of(payload)}")
+
     elif args.type == 2:
         # Type 2: Visual Question Answering (VQA)
         # Decompose query
         decomp = query_proc.decompose_query(args.query)
         sub_queries = decomp.get("sub_queries", [args.query])
         print(f"Decomposed query into objects: {sub_queries}")
-        
-        # Crop-rerank candidates
-        top_candidates = reranker.rerank_type2_vqa(args.query, sub_queries, candidates[:10], args.dataset_dir)
-        if top_candidates:
-            best = top_candidates[0]
-            payload = best["payload"]
-            video_name = payload.get("source_file", "unknown")
-            frame_idx = payload.get("frame_idx")
-            if frame_idx is None:
-                print(f"[WARN] No frame_idx in payload for '{video_name}' - "
-                      f"falling back to timestamp (re-run preprocessing to fix).")
-                frame_idx = payload.get("timestamp", 0.0)
 
-            # Answer generation using VLM on best match
-            answer_prompt = f"Answer the following question about this image: {args.query}. Be concise."
-            # In a real setup we load the best crop/full image. Here we call VLM with empty image or load if present
-            answer = vlm.generate(None, answer_prompt).strip()
+        # Crop-rerank candidates (same head/tail split as Type 1)
+        ranked = rerank_with_tail(
+            lambda c: reranker.rerank_type2_vqa(args.query, sub_queries, c, args.dataset_dir),
+            candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
+        )
 
-            print("\n=== FINAL RESULT ===")
-            print(f"{video_name}, {frame_idx}, {answer}")
-            
+        # Answer generation using VLM on the best match only - generating a
+        # distinct per-frame answer for up to 100 candidates would be far too
+        # expensive, and the question is about the same fact regardless of
+        # which candidate location it's paired with, so the single best-effort
+        # answer travels with every ranked location guess.
+        answer_prompt = f"Answer the following question about this image: {args.query}. Be concise."
+        answer = vlm.generate(None, answer_prompt).strip()
+
+        print(f"\n=== FINAL RESULTS ({len(ranked)} ranked answers) ===")
+        for rank, item in enumerate(ranked, start=1):
+            payload = item["payload"]
+            print(f"{rank}. {payload.get('source_file', 'unknown')}, {frame_id_of(payload)}, {answer}")
+
     elif args.type == 3:
         # Type 3: Temporal-alignment
         # Output format: <Tên file video>, <Frame ID_1>, ..., <Frame ID_N>
-        top_sequences = reranker.rerank_type3_temporal(args.query, candidates[:20])
-        if top_sequences:
-            best = top_sequences[0]
-            video_name = best["video_name"]
-            frame_ids = best["frame_ids"]
-            
-            # Format output sequence
-            frame_ids_str = ", ".join([str(fid) for fid in frame_ids])
-            print("\n=== FINAL RESULT ===")
-            print(f"{video_name}, {frame_ids_str}")
+        # No head/tail split needed here - rerank_type3_temporal calls the
+        # VLM once per distinct video in the candidate pool, not once per
+        # frame, so widening the input pool doesn't multiply VLM cost the
+        # way per-frame reranking would.
+        top_sequences = reranker.rerank_type3_temporal(args.query, candidates[:SUBMISSION_TOP_K])
+        print(f"\n=== FINAL RESULTS ({len(top_sequences)} ranked sequences) ===")
+        for rank, seq in enumerate(top_sequences, start=1):
+            frame_ids_str = ", ".join(str(fid) for fid in seq["frame_ids"])
+            print(f"{rank}. {seq['video_name']}, {frame_ids_str}")
 
 if __name__ == "__main__":
     main()
