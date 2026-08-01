@@ -62,17 +62,27 @@ class ImageCaptioner:
     def __init__(self, vlm_client):
         self.vlm = vlm_client
 
-    def generate_scene_narrative(self, keyframes: List[Image.Image]) -> str:
+    def generate_scene_narrative(
+        self,
+        keyframes: List[Image.Image],
+        fast_frames: List[Image.Image] = None,
+    ) -> str:
         """
-        Generate a single scene-level narrative caption representing the events across all keyframes in the scene.
+        Generate a single scene-level narrative caption representing the
+        events across all keyframes in the scene.
+
+        Combines Slow keyframes (from AKS - few frames, high spatial detail)
+        and Fast frames (from motion_sampling.py - more frames, low detail,
+        motion-weighted) into ONE generate_multi_image() call, so the model
+        sees every Slow keyframe plus dense temporal/motion coverage instead
+        of just a single representative frame. Replaces the previous
+        approach, which discarded every keyframe but the middle one and
+        couldn't reflect any motion across the scene at all.
         """
         if not keyframes:
             return ""
-        # If the model doesn't support multiple images natively in one prompt, we can use the middle frame
-        # or merge frames into a grid. For this implementation, we pass the first frame as representative
-        # or combine them if supported. Let's use the middle/representative frame as target, or pass it.
-        rep_frame = keyframes[len(keyframes) // 2]
-        return self.vlm.generate(rep_frame, SCENE_NARRATIVE_PROMPT).strip()
+        fast_frames = fast_frames or []
+        return self.vlm.generate_multi_image(keyframes, fast_frames, SCENE_NARRATIVE_PROMPT).strip()
 
     def generate_scene_events(self, keyframe_captions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """

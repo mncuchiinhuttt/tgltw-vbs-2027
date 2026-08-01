@@ -69,3 +69,20 @@ class SmolVLM2FallbackVLM(BaseVLM):
     def generate_batch(self, images: List[Union[Image.Image, str]], prompt: str) -> List[str]:
         """Only implemented to satisfy BaseVLM - this fallback path is always invoked one crop at a time."""
         return [self.generate(img, prompt) for img in images]
+
+    def generate_multi_image(
+        self,
+        primary_images: List[Union[Image.Image, str]],
+        secondary_images: List[Union[Image.Image, str]],
+        prompt: str,
+    ) -> str:
+        """
+        Only implemented to satisfy BaseVLM's abstract contract - this class
+        is never actually used for the Slow/Fast dual-pathway scene
+        captioning that calls generate_multi_image() (ImageCaptioner is
+        always constructed with the main QwenVLM/OpenAIVLM client, not this
+        OCR-only fallback), so there's no dual-budget behavior to implement.
+        Falls back to a plain single-image generate() call.
+        """
+        images = list(primary_images) + list(secondary_images)
+        return self.generate(images[0] if images else None, prompt)

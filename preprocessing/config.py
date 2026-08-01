@@ -112,3 +112,18 @@ VINTERN_MODEL_ID = os.getenv("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
 # deliberately NOT the main captioning VLM (QwenVLM/OpenAIVLM), which is far
 # more expensive to run per-crop.
 FALLBACK_VLM_MODEL_ID = os.getenv("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")
+
+
+VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
+VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
+
+# Slow/Fast dual-budget pathway (Method 2) - Fast pathway adds MORE frames per
+# scene for motion coverage, so its per-frame pixel budget must sit well below
+# VLM_MIN_PIXELS or total tokens per scene call go UP instead of down.
+# fps params tuned for long/dense videos (higher motion-sampling density).
+FAST_PATHWAY_DENSE_SAMPLING_FPS = float(os.getenv("FAST_PATHWAY_DENSE_SAMPLING_FPS", 8.0))  # decode fps cho optical flow
+FAST_PATHWAY_FPS_TARGET = float(os.getenv("FAST_PATHWAY_FPS_TARGET", 2.5))                   # mật độ frame Fast mong muốn
+FAST_PATHWAY_MIN_FRAMES = int(os.getenv("FAST_PATHWAY_MIN_FRAMES", 4))
+FAST_PATHWAY_MAX_FRAMES = int(os.getenv("FAST_PATHWAY_MAX_FRAMES", 16))
+FAST_PATHWAY_MIN_PIXELS = int(os.getenv("FAST_PATHWAY_MIN_PIXELS", 64 * 28 * 28))   # ~64 token/frame (sàn)
+FAST_PATHWAY_MAX_PIXELS = int(os.getenv("FAST_PATHWAY_MAX_PIXELS", 128 * 28 * 28))  # ~128 token/frame (trần)

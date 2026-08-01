@@ -1,32 +1,55 @@
 import base64
 import io
+import os
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 from typing import List, Union
 from openai import OpenAI
 from .base_vlm import BaseVLM
-from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME, VLM_BATCH_CONCURRENCY
+from .image_resize import resize_image_for_vlm, estimate_token_count
+from config import (
+    OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME, VLM_BATCH_CONCURRENCY,
+    VLM_MIN_PIXELS, VLM_MAX_PIXELS, FAST_PATHWAY_MIN_PIXELS, FAST_PATHWAY_MAX_PIXELS,
+)
 
 class OpenAIVLM(BaseVLM):
     """
     VLM client for OpenAI or any OpenAI-compatible endpoint (e.g. QwenCloud's
     DashScope-compatible API), selected via OPENAI_BASE_URL/OPENAI_VLM_MODEL_NAME.
     """
-    def __init__(self, model_name: str = OPENAI_VLM_MODEL_NAME, api_key: str = OPENAI_API_KEY, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model_name: str = OPENAI_VLM_MODEL_NAME, api_key: str = OPENAI_API_KEY, base_url: str = OPENAI_BASE_URL,
+                 min_pixels: int = VLM_MIN_PIXELS, max_pixels: int = VLM_MAX_PIXELS):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model_name = model_name
-        print(f"Initialized OpenAI-compatible VLM with model: {self.model_name}" + (f" at {base_url}" if base_url else ""))
+        self.min_pixels = min_pixels
+        self.max_pixels = max_pixels
+        print(f"Initialized OpenAI-compatible VLM with model: {self.model_name}" + (f" at {base_url}" if base_url else "")
+            + f" (pixel budget: {min_pixels}-{max_pixels}, ~{max_pixels // (28 * 28)} max tokens/image)"
+        )
+
+    def _image_to_base64_budget(self, image: Union[Image.Image, str], min_pixels: int, max_pixels: int) -> str:
+        """
+        Like _image_to_base64 below, but with an explicit pixel-budget
+        override instead of self.min_pixels/self.max_pixels - lets
+        Fast-pathway frames use a much lower budget than Slow-pathway frames
+        within the same generate_multi_image() call.
+        """
+        if isinstance(image, str):
+            image = Image.open(image)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+
+        image = resize_image_for_vlm(image, min_pixels, max_pixels)
+        if os.environ.get("VLM_LOG_TOKEN_ESTIMATE"):
+            w, h = image.size
+            print(f"[OpenAIVLM] resized image to {w}x{h} (~{estimate_token_count(h, w)} tokens)")
+
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def _image_to_base64(self, image: Union[Image.Image, str]) -> str:
-        if isinstance(image, str):
-            with open(image, "rb") as image_file:
-                return base64.b64encode(image_file.read()).decode('utf-8')
-        else:
-            buffered = io.BytesIO()
-            if image.mode in ("RGBA", "P"):
-                image = image.convert("RGB")
-            image.save(buffered, format="JPEG")
-            return base64.b64encode(buffered.getvalue()).decode('utf-8')
+        return self._image_to_base64_budget(image, self.min_pixels, self.max_pixels)
 
     def generate(self, image: Union[Image.Image, str], prompt: str) -> str:
         if image is None:
@@ -40,7 +63,7 @@ class OpenAIVLM(BaseVLM):
             return response.choices[0].message.content
 
         base64_image = self._image_to_base64(image)
-        
+
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -74,3 +97,31 @@ class OpenAIVLM(BaseVLM):
             return []
         with ThreadPoolExecutor(max_workers=min(VLM_BATCH_CONCURRENCY, len(images))) as executor:
             return list(executor.map(lambda img: self.generate(img, prompt), images))
+
+    def generate_multi_image(
+        self,
+        primary_images: List[Union[Image.Image, str]],
+        secondary_images: List[Union[Image.Image, str]],
+        prompt: str,
+    ) -> str:
+        """
+        Slow/Fast dual-budget pathway: primary_images (Slow keyframes) at the
+        instance's normal budget, secondary_images (Fast motion frames) at
+        FAST_PATHWAY_MIN_PIXELS/MAX_PIXELS - both resized client-side before
+        base64 encoding, so the per-group budget is enforced regardless of
+        what the server does with the bytes it receives.
+        """
+        content = [{"type": "text", "text": prompt}]
+        for img in primary_images:
+            b64 = self._image_to_base64_budget(img, self.min_pixels, self.max_pixels)
+            content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+        for img in secondary_images:
+            b64 = self._image_to_base64_budget(img, FAST_PATHWAY_MIN_PIXELS, FAST_PATHWAY_MAX_PIXELS)
+            content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": content}],
+            max_tokens=1000,
+        )
+        return response.choices[0].message.content

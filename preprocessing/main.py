@@ -34,7 +34,7 @@ from models.clip_embedder import LightweightCLIPEmbedder
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
     detect_scenes, extract_candidate_frames, compute_scene_variance,
-    get_adaptive_budget, select_diverse_keyframes
+    get_adaptive_budget, select_diverse_keyframes, select_fast_pathway_frames_for_scene
 )
 from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
@@ -196,10 +196,19 @@ def main():
 
             # Convert numpy frames to PIL for VLMs
             pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
-            
+
+            # Fast pathway: independent of AKS above - denser, motion-weighted
+            # frames (via optical flow, see motion_sampling.py) for temporal
+            # coverage, at a much lower per-frame token budget than the Slow
+            # keyframes above (enforced inside generate_multi_image()).
+            print(f"  Selecting Fast-pathway motion frames for scene {scene_idx}...")
+            fast_frames = select_fast_pathway_frames_for_scene(video_path, start_sec, end_sec)
+            pil_fast_frames = [Image.fromarray(f["frame_img"]) for f in fast_frames]
+            print(f"Scene {scene_idx}: Selected {len(pil_fast_frames)} Fast-pathway frames.")
+
             # Generate Scene-level Narrative Caption
             print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
-            scene_narrative = captioner.generate_scene_narrative(pil_keyframes)
+            scene_narrative = captioner.generate_scene_narrative(pil_keyframes, pil_fast_frames)
 
             # Unified per-frame VLM analysis (temporal caption + structured
             # attributes in ONE call per frame instead of two), batched
