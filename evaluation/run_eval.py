@@ -49,6 +49,14 @@ except ImportError:
     RAGAS_AVAILABLE = False
 
 TIMESTAMP_TOLERANCE_SEC = 3.0
+# Frame-index tolerance for TRAKE (Type 3) ground truth matching - the AIC
+# competition's actual per-event semantic-keyframe window is documented as
+# "thường dưới 10 frame" (usually under 10 frames), which at typical 25-30fps
+# is a fraction of a second - TIMESTAMP_TOLERANCE_SEC (3s) is roughly 10x too
+# loose for TRAKE and was overestimating recall against the real scoring rule.
+# Type 1/2's exact [s,e] window width isn't specified in the competition doc,
+# so TIMESTAMP_TOLERANCE_SEC is kept as their (unconfirmed) default.
+FRAME_MATCH_TOLERANCE = 5
 _RAGAS_METRICS = {
     "faithfulness": faithfulness if RAGAS_AVAILABLE else None,
     "answer_correctness": answer_correctness if RAGAS_AVAILABLE else None,
@@ -221,6 +229,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
                 results.append({
                     "video_name": item["payload"].get("source_file"),
                     "timestamp": item["payload"].get("timestamp"),
+                    "frame_idx": item["payload"].get("frame_idx"),
                     "score": item.get("rerank_score", 0.0)
                 })
         elif q_type == 2:
@@ -231,6 +240,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
                 results.append({
                     "video_name": item["payload"].get("source_file"),
                     "timestamp": item["payload"].get("timestamp"),
+                    "frame_idx": item["payload"].get("frame_idx"),
                     "score": item.get("final_score", 0.0)
                 })
 
@@ -284,10 +294,17 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
         if ground_truth and results and q_type in (1, 2):
             gt_video = ground_truth.get("video_name")
             gt_time = ground_truth.get("timestamp")
+            gt_frame_id = ground_truth.get("frame_id")
 
             def is_match(res):
                 if res["video_name"] != gt_video:
                     return False
+                # Prefer frame_id matching when both sides have it - the
+                # actual competition ground truth window is frame-based, not
+                # a fixed number of seconds. Falls back to timestamp for
+                # older ground_truth entries that only have "timestamp".
+                if gt_frame_id is not None and res.get("frame_idx") is not None:
+                    return abs(res["frame_idx"] - gt_frame_id) <= FRAME_MATCH_TOLERANCE
                 if gt_time is not None:
                     return abs(res["timestamp"] - gt_time) <= TIMESTAMP_TOLERANCE_SEC
                 return True
@@ -352,21 +369,36 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
 
             matched_seq = results[video_rank] if video_rank >= 0 else None
             seq_timestamps = matched_seq.get("sequence_timestamps") or [] if matched_seq else []
+            seq_frame_ids = matched_seq.get("sequence_frame_ids") or [] if matched_seq else []
+
+            def event_matches(ef):
+                # Prefer frame_id matching (the real TRAKE ground-truth unit,
+                # window "usually under 10 frames" per the competition rules)
+                # over timestamp - falls back to timestamp for ground_truth
+                # entries that only have it. reranker.rerank_type3_temporal
+                # now returns real per-frame video indices here (previously
+                # this field held meaningless Qdrant point UUIDs).
+                gt_frame_id = ef.get("frame_id")
+                if gt_frame_id is not None and seq_frame_ids:
+                    return any(
+                        fid is not None and abs(fid - gt_frame_id) <= FRAME_MATCH_TOLERANCE
+                        for fid in seq_frame_ids
+                    )
+                return any(abs(ts - ef.get("timestamp", float("inf"))) <= TIMESTAMP_TOLERANCE_SEC for ts in seq_timestamps)
 
             sequence_recall = None
             order_pass = None
             if matched_seq is not None and event_frames:
-                matched_count = sum(
-                    1 for ef in event_frames
-                    if any(abs(ts - ef.get("timestamp", float("inf"))) <= TIMESTAMP_TOLERANCE_SEC for ts in seq_timestamps)
-                )
+                matched_count = sum(1 for ef in event_frames if event_matches(ef))
                 sequence_recall = matched_count / len(event_frames)
                 st["sequence_recall_sum"] += sequence_recall
                 st["sequence_recall_n"] += 1
 
             if matched_seq is not None and len(seq_timestamps) > 1:
-                # Order is validated on timestamps (chronology), not on Qdrant point IDs --
-                # point IDs are assigned at index time and carry no guaranteed temporal order.
+                # Order is validated on timestamps (chronology) rather than
+                # frame_ids/point IDs, since timestamps are guaranteed
+                # monotonic by construction (sorted at rerank time) and don't
+                # depend on frame_idx having been populated for every point.
                 order_pass = all(seq_timestamps[i] < seq_timestamps[i + 1] for i in range(len(seq_timestamps) - 1))
                 st["order_n"] += 1
                 if order_pass:

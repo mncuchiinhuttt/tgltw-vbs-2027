@@ -2,6 +2,19 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.6.0] - 2026-08-02
+
+### Fixed
+- **Type 3 (TRAKE) `frame_ids` were Qdrant point UUIDs, not real video frame indices**: `Reranker.rerank_type3_temporal()` returned `[f["id"] for f in sorted_frames]` - a random UUID assigned at index time, carrying no temporal/frame-position meaning. Fixed to use the frame's real native video frame index (`payload["frame_idx"]`), matching the AIC competition's actual `<video_id>, <frame_id_1>, ..., <frame_id_N>` answer format.
+- **Type 1/2 output used `timestamp` (seconds) instead of `frame_id` (frame index)**: the AIC competition's answer format is `<video_id>, <frame_id>` where `frame_id` is a native video frame index, not a timestamp in seconds. `inference-code/main.py`, `inference-code/batch_query.py` now report `payload["frame_idx"]` (falling back to timestamp with a warning for older indexed points that predate this field).
+- **TRAKE ground-truth tolerance was ~10x too loose**: the competition's per-event semantic-keyframe window is documented as usually under 10 frames (a fraction of a second at typical fps), while `evaluation/run_eval.py` used a flat 3-second tolerance for all query types. Added `FRAME_MATCH_TOLERANCE` (frame-based, default 5) preferred over `TIMESTAMP_TOLERANCE_SEC` whenever `frame_id` is present in `ground_truth`/`event_frames`.
+
+### Added
+- `preprocessing/main.py`: every video keyframe payload now carries `frame_idx` (the native video frame index already computed by `extract_candidate_frames`, previously computed but discarded before this fix).
+- `evaluation/eval_queries.json` / `evaluation/README.md`: ground truth schema now documents `frame_id` (preferred) alongside `timestamp` (fallback) for Type 1/2's target and Type 3's `event_frames`.
+
+Source: `Thong tin vong So tuyen AIC2026.pdf` (AIC 2026 Sơ tuyển rules) - see Notion "Long Note Aug 2 2026" for the full list of pipeline/competition-rule misalignments this addresses (this is item 2+3 of that list).
+
 ## [1.5.0] - 2026-07-27
 
 ### Added

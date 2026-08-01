@@ -113,8 +113,16 @@ def main():
                 best = top_candidates[0]
                 payload = best["payload"]
                 video_name = payload.get("source_file", "unknown")
-                timestamp = payload.get("timestamp", 0.0)
-                output_data["result"] = f"{video_name}, {timestamp:.2f}"
+                # AIC's required answer format is <video_id>, <frame_id> (a
+                # native frame index), not a timestamp in seconds - fall back
+                # to a timestamp-derived value only for points indexed before
+                # frame_idx was added to the payload.
+                frame_idx = payload.get("frame_idx")
+                if frame_idx is None:
+                    print(f"  [WARN] No frame_idx in payload for '{video_name}' - "
+                          f"falling back to timestamp (re-run preprocessing to fix).")
+                    frame_idx = payload.get("timestamp", 0.0)
+                output_data["result"] = f"{video_name}, {frame_idx}"
 
         elif q_type == 2:
             decomp = query_proc.decompose_query(q_text)
@@ -125,11 +133,18 @@ def main():
                 payload = best["payload"]
                 video_name = payload.get("source_file", "unknown")
                 timestamp = payload.get("timestamp", 0.0)
-                
+                frame_idx = payload.get("frame_idx")
+                if frame_idx is None:
+                    print(f"  [WARN] No frame_idx in payload for '{video_name}' - "
+                          f"falling back to timestamp (re-run preprocessing to fix).")
+                    frame_idx = timestamp
+
                 # Answer generation
                 answer_prompt = f"Answer the following question about this image: {q_text}. Be concise."
-                
-                # Extract frame from video or load image if available
+
+                # Extract frame from video or load image if available. Uses
+                # the real timestamp (not frame_idx) since cv2 seeking here
+                # is independent of what gets reported in the answer format.
                 frame_img = None
                 frame_path = os.path.join(args.dataset_dir, video_name)
                 if os.path.exists(frame_path):
@@ -145,15 +160,18 @@ def main():
                             if ret:
                                 frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                         cap.release()
-                
+
                 answer = vlm.generate(frame_img, answer_prompt).strip()
-                output_data["result"] = f"{video_name}, {timestamp:.2f}, {answer}"
+                output_data["result"] = f"{video_name}, {frame_idx}, {answer}"
 
         elif q_type == 3:
             top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:20])
             if top_sequences:
                 best = top_sequences[0]
                 video_name = best["video_name"]
+                # Real per-frame video indices (reranker.rerank_type3_temporal
+                # fix) - this used to be Qdrant point UUIDs, which are not a
+                # valid <frame_id> for the submission format at all.
                 frame_ids = best["frame_ids"]
                 frame_ids_str = ", ".join([str(fid) for fid in frame_ids])
                 output_data["result"] = f"{video_name}, {frame_ids_str}"
