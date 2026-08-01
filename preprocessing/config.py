@@ -75,6 +75,29 @@ KEYFRAME_DAKE_WINDOW = int(os.getenv("KEYFRAME_DAKE_WINDOW", 3))
 # gap rather than a native-video-fps multiple.
 KEYFRAME_DAKE_MAX_GAP = int(os.getenv("KEYFRAME_DAKE_MAX_GAP", 4))
 
+# SSM-inspired scene boundary refinement (VIREO at VBS2026, MMM 2026 LNCS
+# 16415 ch.19 - "Merging weak boundaries"): PySceneDetect's ContentDetector
+# uses one fixed threshold for the whole video, which VIREO found
+# under-segments dense/short videos and over-segments long uniform ones.
+# Rather than reimplementing their full self-similarity-matrix + kernel
+# temporal segmentation pipeline (built on BLIP embeddings), this scopes
+# down to just their "local refinement" + "merging weak boundaries" steps
+# as an optional post-process on PySceneDetect's own candidate cuts, reusing
+# the already-loaded LightweightCLIPEmbedder instead of adding a second
+# heavy model (BLIP) just for this. Preprocessing-only cost (offline, not
+# against the Sơ tuyển round's 4-hour submission window) - OFF by default
+# since it's the least-certain-payoff of this round's changes for a
+# V3C-like general dataset (VIREO's own gain was specific to MVK/LHE75's
+# unusually short/long, homogeneous videos).
+SCENE_MERGE_ENABLED = os.getenv("SCENE_MERGE_ENABLED", "false").lower() == "true"
+SCENE_MERGE_WINDOW_SEC = float(os.getenv("SCENE_MERGE_WINDOW_SEC", 1.5))
+SCENE_MERGE_SAMPLES_PER_SIDE = int(os.getenv("SCENE_MERGE_SAMPLES_PER_SIDE", 3))
+# A boundary is "weak" (merged away) when cross-boundary similarity is at
+# least this fraction of the average within-scene similarity of its two
+# neighbors - i.e. the cut barely separates anything relative to how much
+# each side already varies internally.
+SCENE_MERGE_THRESHOLD_RATIO = float(os.getenv("SCENE_MERGE_THRESHOLD_RATIO", 0.9))
+
 # OCR settings (PP-OCRv6 detection + ensemble recognition, gated by SAM3
 # region proposal - see SAM3/SAHI settings below)
 OCR_LANG = os.getenv("OCR_LANG", "vi")

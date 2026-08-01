@@ -19,6 +19,7 @@ from preprocessing.config import (
     VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
     OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP,
     KEYFRAME_DAKE_ENABLED, KEYFRAME_DAKE_RATIO, KEYFRAME_DAKE_WINDOW, KEYFRAME_DAKE_MAX_GAP,
+    SCENE_MERGE_ENABLED,
 )
 
 # Models
@@ -35,7 +36,8 @@ from models.clip_embedder import LightweightCLIPEmbedder
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
     detect_scenes, extract_candidate_frames, compute_scene_variance,
-    get_adaptive_budget, select_diverse_keyframes, select_fast_pathway_frames_for_scene
+    get_adaptive_budget, select_diverse_keyframes, select_fast_pathway_frames_for_scene,
+    refine_scene_boundaries,
 )
 from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
@@ -176,7 +178,12 @@ def main():
         
         # Scene Boundary Detection
         scenes = detect_scenes(video_path)
-        
+        if SCENE_MERGE_ENABLED:
+            pre_merge_count = len(scenes)
+            scenes = refine_scene_boundaries(video_path, scenes, clip_embedder)
+            print(f"Scene merge (VIREO-inspired): {pre_merge_count} -> {len(scenes)} scenes.")
+
+
         for scene_idx, (start_sec, end_sec) in enumerate(scenes):
             print(f"Processing Scene {scene_idx}: {start_sec:.2f}s - {end_sec:.2f}s")
             

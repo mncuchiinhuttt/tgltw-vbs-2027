@@ -6,6 +6,7 @@ from preprocessing.config import (
     SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET,
     FAST_PATHWAY_DENSE_SAMPLING_FPS, FAST_PATHWAY_FPS_TARGET,
     FAST_PATHWAY_MIN_FRAMES, FAST_PATHWAY_MAX_FRAMES,
+    SCENE_MERGE_WINDOW_SEC, SCENE_MERGE_SAMPLES_PER_SIDE, SCENE_MERGE_THRESHOLD_RATIO,
 )
 from preprocessing.video.motion_sampling import select_fast_pathway_frames
 
@@ -78,6 +79,99 @@ def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, 
 
 def cosine_sim(v1: np.ndarray, v2: np.ndarray) -> float:
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+def _avg_pairwise_sim(embeds: List[np.ndarray]) -> float:
+    """Average cosine similarity across all pairs in embeds; 1.0 if fewer than 2 (nothing to compare)."""
+    if len(embeds) < 2:
+        return 1.0
+    sims = [cosine_sim(embeds[i], embeds[j]) for i in range(len(embeds)) for j in range(i + 1, len(embeds))]
+    return sum(sims) / len(sims)
+
+def _avg_cross_sim(embeds_a: List[np.ndarray], embeds_b: List[np.ndarray]) -> float:
+    """Average cosine similarity between every pair (a, b) across the two groups; 0.0 if either is empty."""
+    if not embeds_a or not embeds_b:
+        return 0.0
+    sims = [cosine_sim(a, b) for a in embeds_a for b in embeds_b]
+    return sum(sims) / len(sims)
+
+def _boundary_is_weak(
+    before_embeds: List[np.ndarray],
+    after_embeds: List[np.ndarray],
+    threshold_ratio: float = SCENE_MERGE_THRESHOLD_RATIO,
+) -> bool:
+    """
+    VIREO-inspired (VBS2026, MMM 2026 LNCS 16415 ch.19) "merging weak
+    boundaries": compares average within-scene similarity on each side of a
+    candidate cut to the cross-boundary similarity between them. If the cut
+    barely separates anything relative to how much each side already
+    varies internally - cross-boundary similarity is at least
+    threshold_ratio of the average within-scene similarity - the boundary
+    is "weak" and should be merged away.
+    """
+    if not before_embeds or not after_embeds:
+        return False
+    within_avg = (_avg_pairwise_sim(before_embeds) + _avg_pairwise_sim(after_embeds)) / 2.0
+    if within_avg <= 0:
+        return False
+    cross = _avg_cross_sim(before_embeds, after_embeds)
+    return (cross / within_avg) >= threshold_ratio
+
+def refine_scene_boundaries(
+    video_path: str,
+    scenes: List[Tuple[float, float]],
+    clip_embedder,
+    window_sec: float = SCENE_MERGE_WINDOW_SEC,
+    samples_per_side: int = SCENE_MERGE_SAMPLES_PER_SIDE,
+    threshold_ratio: float = SCENE_MERGE_THRESHOLD_RATIO,
+) -> List[Tuple[float, float]]:
+    """
+    VIREO-inspired (VBS2026) scoped-down "merging weak boundaries"
+    post-process on PySceneDetect's own candidate cuts - see
+    SCENE_MERGE_ENABLED in config.py for why this doesn't reimplement
+    VIREO's full self-similarity-matrix + kernel-temporal-segmentation
+    pipeline. Samples a few frames on each side of every adjacent scene
+    pair, embeds them with the already-loaded LightweightCLIPEmbedder
+    (compute_scene_variance's embedder, not a separate BLIP load), and
+    merges the pair when the cut is "weak" (_boundary_is_weak). Repeats
+    until no more merges happen in a full pass - a merge can make a
+    previously-strong neighboring boundary weak too, e.g. three
+    near-identical short shots in a row.
+    """
+    if len(scenes) < 2:
+        return scenes
+
+    merged = list(scenes)
+    changed = True
+    while changed and len(merged) >= 2:
+        changed = False
+        i = 0
+        while i < len(merged) - 1:
+            start_i, _ = merged[i]
+            _, end_next = merged[i + 1]
+            boundary_t = merged[i][1]  # == merged[i+1][0] for PySceneDetect's contiguous scene list
+
+            sampling_fps = max(1.0, samples_per_side / window_sec) if window_sec > 0 else 1.0
+            before = extract_candidate_frames(
+                video_path, max(start_i, boundary_t - window_sec), boundary_t,
+                sampling_rate_fps=sampling_fps,
+            )[-samples_per_side:]
+            after = extract_candidate_frames(
+                video_path, boundary_t, min(end_next, boundary_t + window_sec),
+                sampling_rate_fps=sampling_fps,
+            )[:samples_per_side]
+
+            before_embeds = [clip_embedder.embed_image(f["frame_img"]) for f in before]
+            after_embeds = [clip_embedder.embed_image(f["frame_img"]) for f in after]
+
+            if _boundary_is_weak(before_embeds, after_embeds, threshold_ratio):
+                merged[i] = (start_i, end_next)
+                del merged[i + 1]
+                changed = True
+                # stay at i to re-check the newly-merged scene against its new next neighbor
+            else:
+                i += 1
+
+    return merged
 
 def compute_scene_variance(candidate_frames: List[Dict[str, Any]], clip_embedder) -> float:
     """
