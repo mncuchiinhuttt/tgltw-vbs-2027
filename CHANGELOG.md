@@ -2,6 +2,16 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.7.0] - 2026-08-02
+
+### Added
+- **Ranked-list submission output (up to 100 answers/query)**: the AIC scoring rule averages `R@1/5/20/50/100` (best score within each rank prefix) - submitting only 1 answer per query wastes the credit available at higher k. `SUBMISSION_TOP_K` (default 100) widens retrieval/diversification; `RERANK_TOP_K` (default 20) scopes the expensive VLM rerank pass to the head of that pool, with the rest appended in original retrieval-rank order (`reranker.rerank_with_tail()`, `inference-code/search/reranker.py`) rather than paying for a VLM call per candidate just to rank the tail. `rerank_type3_temporal` (TRAKE) needs no head/tail split - it VLM-scores once per distinct candidate video, not per frame.
+- `inference-code/batch_query.py` now writes a real ranked submission file, `batch_submission.csv` (one row per `(query, rank, answer)` up to `SUBMISSION_TOP_K`) - the existing `batch_results.json`/`batch_results.csv` (rank-1 only) are kept unchanged for backward compatibility with the webapp's batch results table.
+- `inference-code/main.py` (CLI) and `evaluation/run_eval.py` updated to the same widened-pool/`rerank_with_tail` behavior, so a manual query and the eval harness both reflect what `batch_query.py` actually submits.
+- `webapp/backend/main.py` (`/api/search`) intentionally left unchanged - it's an interactive human-facing search UI, not the competition submission path, and widening it to 100 candidates per click would slow down live search for no scoring benefit.
+
+Source: `Thong tin vong So tuyen AIC2026.pdf` (AIC 2026 Sơ tuyển rules) - see Notion "Long Note Aug 2 2026" (item 1) for the full list of pipeline/competition-rule misalignments this addresses.
+
 ## [1.6.0] - 2026-08-02
 
 ### Fixed

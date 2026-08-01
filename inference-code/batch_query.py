@@ -12,7 +12,7 @@ from PIL import Image
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION
+from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
@@ -20,7 +20,18 @@ from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
 from search.hybrid_search import HybridSearcher
-from search.reranker import Reranker
+from search.reranker import Reranker, rerank_with_tail
+
+def frame_id_of(payload):
+    """AIC's required answer format is <video_id>, <frame_id> (a native frame
+    index), not a timestamp in seconds - fall back to a timestamp-derived
+    value only for points indexed before frame_idx was added to the payload."""
+    frame_idx = payload.get("frame_idx")
+    if frame_idx is None:
+        print(f"  [WARN] No frame_idx in payload for '{payload.get('source_file')}' - "
+              f"falling back to timestamp (re-run preprocessing to fix).")
+        frame_idx = payload.get("timestamp", 0.0)
+    return frame_idx
 
 def load_vlm():
     if VLM_OPTION == "local":
@@ -89,16 +100,20 @@ def main():
 
         # Generate HyDE description
         hyde_query = query_proc.generate_hyde(q_text)
-        
-        # Dense + Sparse Hybrid Search
-        query_hits = searcher.search(q_text, top_k=15)
-        hyde_hits = searcher.search(hyde_query, top_k=15)
+
+        # Dense + Sparse Hybrid Search. Widened to SUBMISSION_TOP_K (100) -
+        # the AIC scoring rule rewards a ranked list of up to 100 answers per
+        # query (R@1/5/20/50/100), not just the single best one.
+        query_hits = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
+        hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
         candidates = searcher.merge_rrf(query_hits, hyde_hits)
+        candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
 
         output_data = {
             "query": q_text,
             "type": q_type,
-            "result": "N/A"
+            "result": "N/A",   # rank-1 answer - kept for backward compat with the webapp's batch results table
+            "results": [],     # NEW: full ranked list (up to SUBMISSION_TOP_K), used for the actual submission export
         }
 
         if not candidates:
@@ -106,95 +121,112 @@ def main():
             results.append(output_data)
             continue
 
-        # Type Reranking
+        # Type Reranking. Type 1/2 only VLM-rerank the head (RERANK_TOP_K) of
+        # the pool - the rest fill out the ranked list in original
+        # retrieval-rank order (see rerank_with_tail) rather than costing a
+        # VLM call per candidate just to rank the tail.
         if q_type == 1:
-            top_candidates = reranker.rerank_type1(q_text, candidates[:10])
-            if top_candidates:
-                best = top_candidates[0]
-                payload = best["payload"]
-                video_name = payload.get("source_file", "unknown")
-                # AIC's required answer format is <video_id>, <frame_id> (a
-                # native frame index), not a timestamp in seconds - fall back
-                # to a timestamp-derived value only for points indexed before
-                # frame_idx was added to the payload.
-                frame_idx = payload.get("frame_idx")
-                if frame_idx is None:
-                    print(f"  [WARN] No frame_idx in payload for '{video_name}' - "
-                          f"falling back to timestamp (re-run preprocessing to fix).")
-                    frame_idx = payload.get("timestamp", 0.0)
-                output_data["result"] = f"{video_name}, {frame_idx}"
+            ranked = rerank_with_tail(
+                lambda c: reranker.rerank_type1(q_text, c), candidates, RERANK_TOP_K, SUBMISSION_TOP_K
+            )
+            output_data["results"] = [
+                f"{item['payload'].get('source_file', 'unknown')}, {frame_id_of(item['payload'])}"
+                for item in ranked
+            ]
 
         elif q_type == 2:
             decomp = query_proc.decompose_query(q_text)
             sub_queries = decomp.get("sub_queries", [q_text])
-            top_candidates = reranker.rerank_type2_vqa(q_text, sub_queries, candidates[:10], args.dataset_dir)
-            if top_candidates:
-                best = top_candidates[0]
-                payload = best["payload"]
-                video_name = payload.get("source_file", "unknown")
-                timestamp = payload.get("timestamp", 0.0)
-                frame_idx = payload.get("frame_idx")
-                if frame_idx is None:
-                    print(f"  [WARN] No frame_idx in payload for '{video_name}' - "
-                          f"falling back to timestamp (re-run preprocessing to fix).")
-                    frame_idx = timestamp
+            ranked = rerank_with_tail(
+                lambda c: reranker.rerank_type2_vqa(q_text, sub_queries, c, args.dataset_dir),
+                candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
+            )
 
-                # Answer generation
-                answer_prompt = f"Answer the following question about this image: {q_text}. Be concise."
+            if ranked:
+                best_payload = ranked[0]["payload"]
+                best_video = best_payload.get("source_file", "unknown")
+                best_timestamp = best_payload.get("timestamp", 0.0)
 
-                # Extract frame from video or load image if available. Uses
-                # the real timestamp (not frame_idx) since cv2 seeking here
-                # is independent of what gets reported in the answer format.
+                # Answer generation - grounded on the best match's actual
+                # frame only. Generating a distinct per-frame answer for up
+                # to 100 candidates would be far too expensive, and the
+                # question is about the same fact regardless of which
+                # candidate location it's paired with, so this single
+                # best-effort answer travels with every ranked location guess.
                 frame_img = None
-                frame_path = os.path.join(args.dataset_dir, video_name)
+                frame_path = os.path.join(args.dataset_dir, best_video)
                 if os.path.exists(frame_path):
                     if frame_path.lower().endswith(('.jpg', '.jpeg', '.png')):
                         frame_img = Image.open(frame_path).convert("RGB")
                     else:
-                        # Extract frame from video
                         cap = cv2.VideoCapture(frame_path)
                         fps = cap.get(cv2.CAP_PROP_FPS)
                         if fps > 0:
-                            cap.set(cv2.CAP_PROP_POS_FRAMES, int(timestamp * fps))
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, int(best_timestamp * fps))
                             ret, frame = cap.read()
                             if ret:
                                 frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                         cap.release()
 
+                answer_prompt = f"Answer the following question about this image: {q_text}. Be concise."
                 answer = vlm.generate(frame_img, answer_prompt).strip()
-                output_data["result"] = f"{video_name}, {frame_idx}, {answer}"
+
+                output_data["results"] = [
+                    f"{item['payload'].get('source_file', 'unknown')}, {frame_id_of(item['payload'])}, {answer}"
+                    for item in ranked
+                ]
 
         elif q_type == 3:
-            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:20])
-            if top_sequences:
-                best = top_sequences[0]
-                video_name = best["video_name"]
+            # No head/tail split needed - rerank_type3_temporal calls the VLM
+            # once per distinct video in the candidate pool, not once per
+            # frame, so widening the input pool doesn't multiply VLM cost the
+            # way per-frame reranking would.
+            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K])
+            output_data["results"] = [
                 # Real per-frame video indices (reranker.rerank_type3_temporal
                 # fix) - this used to be Qdrant point UUIDs, which are not a
                 # valid <frame_id> for the submission format at all.
-                frame_ids = best["frame_ids"]
-                frame_ids_str = ", ".join([str(fid) for fid in frame_ids])
-                output_data["result"] = f"{video_name}, {frame_ids_str}"
+                f"{seq['video_name']}, {', '.join(str(fid) for fid in seq['frame_ids'])}"
+                for seq in top_sequences
+            ]
 
-        print(f"Result: {output_data['result']}")
+        if output_data["results"]:
+            output_data["result"] = output_data["results"][0]
+
+        print(f"Result: {output_data['result']} ({len(output_data['results'])} ranked answers total)")
         results.append(output_data)
 
     # Write output
     os.makedirs(args.output_dir, exist_ok=True)
     json_out = os.path.join(args.output_dir, "batch_results.json")
     csv_out = os.path.join(args.output_dir, "batch_results.csv")
+    submission_out = os.path.join(args.output_dir, "batch_submission.csv")
 
     with open(json_out, "w") as f:
         json.dump(results, f, indent=2)
 
+    # Rank-1-only export, kept for backward compat with the webapp's batch
+    # results table (webapp/frontend/src/App.tsx reads res.result as a
+    # single string per query).
     with open(csv_out, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Query Index", "Query Type", "Query String", "Result Output"])
         for idx, res in enumerate(results):
             writer.writerow([idx + 1, res["type"], res["query"], res["result"]])
 
+    # Ranked submission export: one row per (query, rank) pair, up to
+    # SUBMISSION_TOP_K per query - this is the file that actually reflects
+    # the AIC scoring rule (submit up to 100 ranked answers, R@1/5/20/50/100),
+    # which the single-answer batch_results.csv above cannot represent.
+    with open(submission_out, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Query Index", "Query Type", "Query String", "Rank", "Answer"])
+        for idx, res in enumerate(results):
+            for rank, answer in enumerate(res["results"], start=1):
+                writer.writerow([idx + 1, res["type"], res["query"], rank, answer])
+
     print(f"\nBatch processing finished successfully!")
-    print(f"Results saved to:\n  JSON: {json_out}\n  CSV: {csv_out}")
+    print(f"Results saved to:\n  JSON: {json_out}\n  CSV (rank-1): {csv_out}\n  CSV (ranked submission): {submission_out}")
 
 if __name__ == "__main__":
     main()

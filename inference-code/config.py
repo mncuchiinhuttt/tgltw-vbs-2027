@@ -49,6 +49,18 @@ VQA_BOX_THRESHOLD = float(os.getenv("VQA_BOX_THRESHOLD", 0.3))
 # candidate pool via a noisy sparse/BM25 or HyDE match
 RERANK_SCORE_THRESHOLD = float(os.getenv("RERANK_SCORE_THRESHOLD", 0.2))
 
+# AIC competition scoring rewards submitting up to 100 ranked answers per
+# query (Final Score averages R@1/5/20/50/100 - the best score within each
+# k-sized prefix) - submitting only 1 answer makes R@1=R@5=...=R@100, wasting
+# the credit available at higher k. SUBMISSION_TOP_K widens the candidate
+# pool/output list toward that; RERANK_TOP_K keeps the (expensive, VLM-based)
+# Type 1/2 rerank pass scoped to just the head of that pool - the tail
+# (RERANK_TOP_K..SUBMISSION_TOP_K) is appended in original retrieval-rank
+# order rather than costing a VLM call per candidate just to fill out
+# R@50/R@100 with more ranked options.
+SUBMISSION_TOP_K = int(os.getenv("SUBMISSION_TOP_K", 100))
+RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", 20))
+
 
 
 
