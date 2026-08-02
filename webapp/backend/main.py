@@ -16,6 +16,8 @@ from fastapi import FastAPI, HTTPException, Header, Response, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
+import dres_client
+
 # 1. Path Configuration
 BACKEND_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = BACKEND_DIR.parent.parent
@@ -83,6 +85,24 @@ _preprocess_logs = []
 # "last_query_vector" holds the most recent dense query vector so
 # /api/feedback has a base vector to Rocchio-adjust from.
 _session_state = {"history": [], "last_query_vector": None}
+# DRES session - single global value, matching the "one operator per
+# backend instance" model (see plan) rather than a per-user session store.
+_dres_session_id = None
+
+def _dres_config():
+    """
+    Reads DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD/DRES_EVALUATION_ID from
+    the environment. `import config` first so inference-code/config.py's
+    load_dotenv() side effect has run at least once in this process (this
+    module has no separate .env loading of its own).
+    """
+    import config  # noqa: F401 - triggers load_dotenv() as a side effect
+    return {
+        "base_url": os.getenv("DRES_BASE_URL", ""),
+        "username": os.getenv("DRES_USERNAME", ""),
+        "password": os.getenv("DRES_PASSWORD", ""),
+        "evaluation_id": os.getenv("DRES_EVALUATION_ID", ""),
+    }
 
 def init_services(query_type: int = 1):
     """
@@ -145,6 +165,15 @@ class TemporalSearchRequest(BaseModel):
     query_b: str
     window_frames: int = 150
     top_k: int = 15
+
+class DresSubmitRequest(BaseModel):
+    task_id: str
+    payload: dict
+
+class InVideoSearchRequest(BaseModel):
+    query: str
+    video_name: str
+    dataset_dir: Optional[str] = None
 
 # 4. Helper to Get DB Stats
 def get_qdrant_stats():
@@ -293,11 +322,12 @@ async def run_search(request: SearchRequest):
             decomp = query_proc.decompose_query(resolved_query)
             sub_queries = decomp.get("sub_queries", [resolved_query])
 
-            # In-Video Retrieval: surface frames from the top candidate
-            # videos that scored too low to make the initial pool at all
-            # (see HybridSearcher.in_video_refine).
-            candidates = searcher.in_video_refine(resolved_query, candidates)
-
+            # In-Video Retrieval used to run automatically here on every
+            # search (see HybridSearcher.in_video_refine) - fine for AIC's
+            # 4-hour batch window, too slow as a default per-query cost for
+            # VBS's live 5-7 minute task clock. Now a manual action the
+            # operator triggers explicitly via /api/in-video-search once
+            # they've spotted a promising video in the initial results.
             top_candidates = reranker.rerank_type2_vqa(
                 resolved_query, sub_queries, candidates[:10], dataset_dir
             )
@@ -491,6 +521,53 @@ def browse_video(video_name: str):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Browse video failed: {str(e)}")
 
+@app.post("/api/in-video-search")
+async def run_in_video_search(request: InVideoSearchRequest):
+    """
+    In-Video Retrieval (NII-UIT-inspired, VBS2026), as a manual operator
+    action instead of an automatic step in /api/search's Type 2 flow (see
+    the comment removed from there). Call this once the operator has
+    spotted a promising video in the initial results and wants to search
+    its full frame timeline directly (HybridSearcher.in_video_refine) rather
+    than only whatever made the original candidate pool.
+    """
+    try:
+        query_proc, searcher, reranker = init_services(query_type=2)
+        dataset_dir = request.dataset_dir or str(DATASETS_DIR)
+
+        # Seed in_video_refine with a single synthetic candidate for the
+        # requested video (top_videos=1 scopes it to exactly that video,
+        # rather than re-deriving "top videos" from a full search pool).
+        seed = [{"id": "seed", "rrf_score": 1.0, "payload": {"source_file": request.video_name}}]
+        candidates = searcher.in_video_refine(request.query, seed, top_videos=1, top_frames_per_video=20)
+        # Drop the synthetic seed placeholder (no real timestamp/payload) -
+        # if it's the only thing left, the video has no indexed frames at all.
+        candidates = [c for c in candidates if c["id"] != "seed"]
+        if not candidates:
+            return {"query": request.query, "video_name": request.video_name, "results": [],
+                    "message": f"No indexed frames found for video '{request.video_name}'."}
+
+        decomp = query_proc.decompose_query(request.query)
+        sub_queries = decomp.get("sub_queries", [request.query])
+        top_candidates = reranker.rerank_type2_vqa(request.query, sub_queries, candidates[:10], dataset_dir)
+
+        results = [
+            {
+                "rank": idx + 1,
+                "score": c.get("final_score", 0.0),
+                "vqa_score": c.get("vqa_score", 0.0),
+                "rrf_score": c.get("rrf_score", 0.0),
+                "id": c["id"],
+                "payload": c["payload"],
+            }
+            for idx, c in enumerate(top_candidates)
+        ]
+        return {"query": request.query, "video_name": request.video_name, "results": results}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"In-video search failed: {str(e)}")
+
 @app.get("/api/media/frame")
 def get_frame(video_name: str, timestamp: float):
     """
@@ -543,6 +620,62 @@ def get_video(video_name: str):
         raise HTTPException(status_code=404, detail="Video file not found")
         
     return FileResponse(str(video_path))
+
+# 5b. DRES Integration (VBS_GUIDE.md section 6) - proxied through this
+# backend so DRES_USERNAME/DRES_PASSWORD never reach the frontend.
+
+@app.post("/api/dres/login")
+def dres_login():
+    """
+    Logs into DRES using DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD from the
+    environment, stores the session id in-memory (single global session -
+    see _dres_session_id above). Call this once at the start of an
+    operating session; re-call if a later DRES call reports the session
+    expired.
+    """
+    global _dres_session_id
+    cfg = _dres_config()
+    if not cfg["base_url"] or not cfg["username"] or not cfg["password"]:
+        raise HTTPException(status_code=400, detail="DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD not configured")
+    try:
+        _dres_session_id = dres_client.login(cfg["base_url"], cfg["username"], cfg["password"])
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"status": "ok"}
+
+@app.get("/api/dres/current-task")
+def dres_current_task():
+    """Fetch the current task for the configured DRES_EVALUATION_ID. Requires a prior /api/dres/login."""
+    if _dres_session_id is None:
+        raise HTTPException(status_code=401, detail="Not logged into DRES - call /api/dres/login first")
+    cfg = _dres_config()
+    if not cfg["evaluation_id"]:
+        raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
+    try:
+        return dres_client.get_current_task(cfg["base_url"], _dres_session_id, cfg["evaluation_id"])
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+@app.post("/api/dres/submit")
+def dres_submit(request: DresSubmitRequest):
+    """
+    Submit an answer for `request.task_id`. `request.payload`'s exact shape
+    depends on the task type (KIS/AVS/VQA - see dres_client.submit_answer's
+    docstring) and is built by the frontend/caller, not this endpoint -
+    kept intentionally generic since the real DRES submission schema isn't
+    verified against a live instance yet.
+    """
+    if _dres_session_id is None:
+        raise HTTPException(status_code=401, detail="Not logged into DRES - call /api/dres/login first")
+    cfg = _dres_config()
+    if not cfg["evaluation_id"]:
+        raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
+    try:
+        return dres_client.submit_answer(
+            cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, request.payload
+        )
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
 # 6. Preprocessing Subprocess Runner
 
