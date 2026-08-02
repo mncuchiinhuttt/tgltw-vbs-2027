@@ -19,6 +19,7 @@ from preprocessing.config import (
     VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
     OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP,
     KEYFRAME_DAKE_ENABLED, KEYFRAME_DAKE_RATIO, KEYFRAME_DAKE_WINDOW, KEYFRAME_DAKE_MAX_GAP,
+    SECONDARY_EMBEDDER_ENABLED,
 )
 
 # Models
@@ -31,6 +32,7 @@ from models.vintern_ocr import VinternRecognizer
 from models.fallback_vlm import SmolVLM2FallbackVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 from models.clip_embedder import LightweightCLIPEmbedder
+from models.siglip_embedder import SigLIPEmbedder
 
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
@@ -62,6 +64,15 @@ def load_embedder():
         return DashScopeCloudEmbedder()
     else:
         raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
+
+def load_secondary_embedder():
+    """
+    Fusionista2.0/VERGE-inspired secondary embedder (see
+    models/siglip_embedder.py) - None when SECONDARY_EMBEDDER_ENABLED is
+    false, so callers can pass its result straight through without an
+    extra branch (index_visual_point already handles secondary_vector=None).
+    """
+    return SigLIPEmbedder() if SECONDARY_EMBEDDER_ENABLED else None
 
 def detect_objects(region_proposer, detector, image):
     """
@@ -99,6 +110,7 @@ def main():
     fallback_vlm = SmolVLM2FallbackVLM()
     embedder = load_embedder()
     clip_embedder = LightweightCLIPEmbedder()
+    secondary_embedder = load_secondary_embedder()
     ocr_engine = TextDetectorOCR(
         region_proposer=region_proposer, vintern=vintern, fallback_vlm=fallback_vlm, sr_model=sr_model,
     )
@@ -110,10 +122,13 @@ def main():
     # actually 4096; audio was assumed 512, actually 768 with flat_features=True)
     visual_dim = len(embedder.embed_text("dimension probe"))
     audio_dim = len(audio_engine.clap_embedder.embed_text("dimension probe"))
+    secondary_dim = len(secondary_embedder.embed_text("dimension probe")) if secondary_embedder else None
     print(f"Dynamic Visual Index Dimension: {visual_dim}")
     print(f"Dynamic Audio Index Dimension: {audio_dim}")
+    if secondary_dim is not None:
+        print(f"Dynamic Secondary (SigLIP) Index Dimension: {secondary_dim}")
 
-    indexer = QdrantIndexer(visual_dim=visual_dim, audio_dim=audio_dim)
+    indexer = QdrantIndexer(visual_dim=visual_dim, audio_dim=audio_dim, secondary_dim=secondary_dim)
 
     # Scan dataset
     supported_video_ext = (".mp4", ".avi", ".mkv", ".mov")
@@ -263,6 +278,7 @@ def main():
                 frame_img = pil_keyframes[kf_idx]
                 timestamp = kf["timestamp"]
                 frame_vector = kf["embed"]
+                secondary_vector = secondary_embedder.embed_image(frame_img) if secondary_embedder else None
                 analysis = frame_analyses[kf_idx]
 
                 print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
@@ -341,8 +357,8 @@ def main():
                 }
 
                 point_id = str(uuid.uuid4())
-                indexer.index_visual_point(point_id, frame_vector, payload)
-        
+                indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
+
         # Clean up temp WAV file
         if extracted_wav and os.path.exists(extracted_wav):
             os.remove(extracted_wav)
@@ -354,6 +370,7 @@ def main():
         
         img = Image.open(img_path).convert("RGB")
         frame_vector = embedder.embed_image(np.array(img))
+        secondary_vector = secondary_embedder.embed_image(img) if secondary_embedder else None
         
         # SAM3-gated OCR (PP-OCRv6 + Vintern ensemble)
         ocr_results = ocr_engine.extract_ocr_detailed(img)
@@ -393,7 +410,7 @@ def main():
         }
         
         point_id = str(uuid.uuid4())
-        indexer.index_visual_point(point_id, frame_vector, payload)
+        indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
 
     # 4. Process Standalone Audio Files
     for audio_path in audio_files:

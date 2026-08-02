@@ -132,6 +132,17 @@ VINTERN_MODEL_ID = os.getenv("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
 FALLBACK_VLM_MODEL_ID = os.getenv("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")
 
 
+# Secondary embedder ensemble (Fusionista2.0/VERGE-inspired, VBS2026 - see
+# models/siglip_embedder.py). Opt-in and OFF by default: enabling it means
+# preprocessing must compute a second embedding per keyframe and the Qdrant
+# "visual_index" collection must be (re)created with a named "siglip" vector
+# alongside the primary one - a one-time reprocessing cost paid before the
+# Sơ tuyển round's query day, not against its 4-hour submission window, but
+# real GPU/wall-clock time nonetheless. Existing single-vector collections
+# are unaffected until this is turned on and preprocessing is re-run.
+SECONDARY_EMBEDDER_ENABLED = os.getenv("SECONDARY_EMBEDDER_ENABLED", "false").lower() == "true"
+SIGLIP_MODEL_ID = os.getenv("SIGLIP_MODEL_ID", "google/siglip-so400m-patch14-384")
+
 VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
 VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
 
