@@ -29,6 +29,38 @@ class HybridSearcher:
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
 
+    def _dense_search_vector(self, vector, top_k: int) -> list:
+        """
+        Shared primary-vector search core: query_points against the
+        "default" named vector (or the collection's sole unnamed vector
+        when SECONDARY_EMBEDDER_ENABLED is off), given an already-computed
+        query vector. dense_search (text) and dense_search_by_vector
+        (pre-computed, e.g. relevance feedback or query-by-example) both
+        funnel through this so the actual Qdrant call logic lives in one
+        place.
+        """
+        vector_list = vector.tolist() if hasattr(vector, "tolist") else list(vector)
+        search_kwargs = {"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}
+        search_result = self.client.query_points(
+            collection_name="visual_index",
+            query=vector_list,
+            limit=top_k,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(key="modality", match=MatchValue(value="visual"))
+                ]
+            ),
+            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
+            **search_kwargs,
+        ).points
+        return [
+            {
+                "id": hit.id,
+                "score": hit.score,
+                "payload": hit.payload
+            } for hit in search_result
+        ]
+
     def dense_search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
         """
         Search visual index using QwenVL8BEmbedder text encoder.
@@ -46,27 +78,32 @@ class HybridSearcher:
         rationale/citation. Falls back to approximate search (default
         Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled.
         """
-        query_vector = self.embedder.embed_text(query)
-        search_kwargs = {"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}
-        search_result = self.client.query_points(
-            collection_name="visual_index",
-            query=query_vector.tolist(),
-            limit=top_k,
-            query_filter=Filter(
-                must=[
-                    FieldCondition(key="modality", match=MatchValue(value="visual"))
-                ]
-            ),
-            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
-            **search_kwargs,
-        ).points
-        return [
-            {
-                "id": hit.id,
-                "score": hit.score,
-                "payload": hit.payload
-            } for hit in search_result
-        ]
+        return self._dense_search_vector(self.embedder.embed_text(query), top_k)
+
+    def dense_search_by_vector(self, vector, top_k: int = TOP_K_RETRIEVAL) -> list:
+        """
+        Same as dense_search, but takes an already-computed dense vector
+        instead of embedding text - used for VBS interactive session
+        actions (Phase C) that build their own query vector: relevance
+        feedback's Rocchio-adjusted vector, or query-by-example's vector
+        retrieved directly from an existing Qdrant point (no re-embedding
+        needed).
+        """
+        return self._dense_search_vector(vector, top_k)
+
+    def get_point_vector(self, point_id):
+        """
+        Fetches the stored primary ("default") dense vector for a single
+        already-indexed point - used by query-by-example to reuse a
+        result's own embedding as the next query without re-running the
+        image through the embedder. Returns None if the point doesn't
+        exist or has no vector stored.
+        """
+        points = self.client.retrieve(collection_name="visual_index", ids=[point_id], with_vectors=True)
+        if not points:
+            return None
+        vector = points[0].vector
+        return vector.get("default") if isinstance(vector, dict) else vector
 
     def dense_search_secondary(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
         """
@@ -228,6 +265,86 @@ class HybridSearcher:
         def _primary_vector(v):
             return v.get("default") if isinstance(v, dict) else v
         return [{"id": p.id, "payload": p.payload, "vector": _primary_vector(p.vector)} for p in points]
+
+    def rocchio_adjust(
+        self,
+        base_vector,
+        positive_vectors: list,
+        negative_vectors: list,
+        alpha: float = 1.0,
+        beta: float = 0.75,
+        gamma: float = 0.15,
+    ):
+        """
+        Classic Rocchio relevance-feedback formula: shifts a query vector
+        toward the centroid of vectors marked positive and away from the
+        centroid of vectors marked negative, then re-normalizes. Used by
+        /api/feedback (webapp/backend/main.py, Phase C) as a lightweight
+        relevance-feedback mechanism for VBS's live interactive search -
+        pure vector arithmetic, no extra model/VLM call, unlike a full
+        Bayesian relevance model (CVHunter/PraK) or LLM-based query
+        rewriting.
+        new_vector = alpha*base + beta*mean(positive) - gamma*mean(negative),
+        re-normalized to unit length.
+        """
+        base = np.asarray(base_vector, dtype=float)
+        result = alpha * base
+        if positive_vectors:
+            result = result + beta * np.mean(np.asarray(positive_vectors, dtype=float), axis=0)
+        if negative_vectors:
+            result = result - gamma * np.mean(np.asarray(negative_vectors, dtype=float), axis=0)
+        norm = float(np.linalg.norm(result))
+        return result / norm if norm > 0 else result
+
+    def temporal_window_match(self, hits_a: list, hits_b: list, window_frames: int = 150) -> list:
+        """
+        VBS-style temporal query (2 sequential text descriptions, distinct
+        from AIC's TRAKE which auto-aligns N events via DP - see
+        Reranker.rerank_type3_temporal): given two independently-searched
+        hit lists, finds videos where some frame from hits_a occurs before
+        (by frame_idx) and within window_frames of some frame from hits_b.
+        Picks the best-scoring valid (a, b) frame pair per video and ranks
+        videos by combined RRF score. A lighter 2-query variant of
+        PraK/Exquisitor's more general N-query sequence-chain matching -
+        covers the common VBS temporal-query case; extend to N later if a
+        3+-step temporal task actually needs it.
+        """
+        def _group_by_video(hits):
+            grouped = {}
+            for hit in hits:
+                video = hit["payload"].get("source_file")
+                frame_idx = hit["payload"].get("frame_idx")
+                if video is None or frame_idx is None:
+                    continue
+                grouped.setdefault(video, []).append(hit)
+            return grouped
+
+        by_video_a = _group_by_video(hits_a)
+        by_video_b = _group_by_video(hits_b)
+
+        matches = []
+        for video in set(by_video_a) & set(by_video_b):
+            best_pair, best_score = None, -1.0
+            for ha in by_video_a[video]:
+                frame_a = ha["payload"]["frame_idx"]
+                for hb in by_video_b[video]:
+                    frame_b = hb["payload"]["frame_idx"]
+                    if frame_a < frame_b and (frame_b - frame_a) <= window_frames:
+                        combined = ha.get("rrf_score", 0.0) + hb.get("rrf_score", 0.0)
+                        if combined > best_score:
+                            best_score, best_pair = combined, (ha, hb)
+            if best_pair is not None:
+                ha, hb = best_pair
+                matches.append({
+                    "video_name": video,
+                    "score": best_score,
+                    "frame_a": ha["payload"]["frame_idx"],
+                    "frame_b": hb["payload"]["frame_idx"],
+                    "payload_a": ha["payload"],
+                    "payload_b": hb["payload"],
+                })
+
+        return sorted(matches, key=lambda m: m["score"], reverse=True)
 
     def in_video_refine(self, query: str, candidates: list, top_videos: int = 5, top_frames_per_video: int = 5) -> list:
         """

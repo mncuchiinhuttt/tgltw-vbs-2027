@@ -79,6 +79,12 @@ _reranker = None
 _services_lock = threading.Lock()
 _preprocess_process = None
 _preprocess_logs = []
+# Single global interactive-session state, matching the "one operator per
+# backend instance" model (no per-user session_id/store needed). "history"
+# holds past {query, answer} turns for QueryProcessor.rewrite_query_cqr;
+# "last_query_vector" holds the most recent dense query vector so
+# /api/feedback has a base vector to Rocchio-adjust from.
+_session_state = {"history": [], "last_query_vector": None}
 # DRES session - single global value, matching the "one operator per
 # backend instance" model (see plan) rather than a per-user session store.
 _dres_session_id = None
@@ -144,6 +150,21 @@ class SearchRequest(BaseModel):
     type: int
     query: str
     dataset_dir: Optional[str] = None
+
+class FeedbackRequest(BaseModel):
+    positive_ids: List[str] = []
+    negative_ids: List[str] = []
+    top_k: int = 20
+
+class QueryByExampleRequest(BaseModel):
+    point_id: str
+    top_k: int = 20
+
+class TemporalSearchRequest(BaseModel):
+    query_a: str
+    query_b: str
+    window_frames: int = 150
+    top_k: int = 15
 
 class DresSubmitRequest(BaseModel):
     task_id: str
@@ -245,16 +266,31 @@ async def run_search(request: SearchRequest):
         
         # Determine dataset_dir
         dataset_dir = request.dataset_dir or str(DATASETS_DIR)
-        
+
+        # 0. CQR: resolve pronouns/implicit references against this
+        # session's prior turns (QueryProcessor.rewrite_query_cqr existed
+        # since the AIC-era code but was never called anywhere - VBS's
+        # multi-turn interactive session is exactly what it was written
+        # for). No-op (returns the query unchanged) on the first search of
+        # a session, when history is empty.
+        resolved_query = query_proc.rewrite_query_cqr(request.query, _session_state["history"])
+
         # 1. Query Processing
-        hyde_query = query_proc.generate_hyde(request.query)
-        
+        hyde_query = query_proc.generate_hyde(resolved_query)
+
         # 2. Candidate Retrieval
-        query_hits = searcher.search(request.query, top_k=15)
+        query_hits = searcher.search(resolved_query, top_k=15)
         hyde_hits = searcher.search(hyde_query, top_k=15)
-        secondary_hits = searcher.dense_search_secondary(request.query, top_k=15)
+        secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15)
         candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
-        
+
+        # Remember this turn's resolved query + dense vector for later
+        # session actions: /api/feedback Rocchio-adjusts from
+        # last_query_vector, and history lets the NEXT search's CQR
+        # rewrite resolve references back to this one.
+        _session_state["last_query_vector"] = searcher.embedder.embed_text(resolved_query)
+        _session_state["history"].append({"query": resolved_query})
+
         if not candidates:
             return {
                 "query": request.query,
@@ -268,7 +304,7 @@ async def run_search(request: SearchRequest):
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
-            top_candidates = reranker.rerank_type1(request.query, candidates[:10])
+            top_candidates = reranker.rerank_type1(resolved_query, candidates[:10])
             top_candidates = [
                 c for c in top_candidates
                 if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
@@ -283,8 +319,8 @@ async def run_search(request: SearchRequest):
                 
         elif request.type == 2:
             # Type 2: VQA
-            decomp = query_proc.decompose_query(request.query)
-            sub_queries = decomp.get("sub_queries", [request.query])
+            decomp = query_proc.decompose_query(resolved_query)
+            sub_queries = decomp.get("sub_queries", [resolved_query])
 
             # In-Video Retrieval used to run automatically here on every
             # search (see HybridSearcher.in_video_refine) - fine for AIC's
@@ -293,7 +329,7 @@ async def run_search(request: SearchRequest):
             # operator triggers explicitly via /api/in-video-search once
             # they've spotted a promising video in the initial results.
             top_candidates = reranker.rerank_type2_vqa(
-                request.query, sub_queries, candidates[:10], dataset_dir
+                resolved_query, sub_queries, candidates[:10], dataset_dir
             )
             
             for idx, c in enumerate(top_candidates):
@@ -321,7 +357,7 @@ async def run_search(request: SearchRequest):
                                     frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                                 cap.release()
                         
-                        answer_prompt = f"Answer the following question about this image: {request.query}. Be concise."
+                        answer_prompt = f"Answer the following question about this image: {resolved_query}. Be concise."
                         vlm = load_vlm()
                         answer = vlm.generate(frame_img, answer_prompt).strip()
                     except Exception as e:
@@ -337,10 +373,16 @@ async def run_search(request: SearchRequest):
                     "payload": c["payload"],
                     "answer": answer if idx == 0 else None
                 })
-                
+            # Record the generated answer against this turn so a later CQR
+            # rewrite (e.g. "was there a sign in that scene too?") can
+            # resolve against what the system actually answered, not just
+            # the query text.
+            if results and results[0].get("answer"):
+                _session_state["history"][-1]["answer"] = results[0]["answer"]
+
         elif request.type == 3:
             # Type 3: Temporal Alignment
-            top_sequences = reranker.rerank_type3_temporal(request.query, candidates[:20], query_proc, searcher)
+            top_sequences = reranker.rerank_type3_temporal(resolved_query, candidates[:20], query_proc, searcher)
             for idx, seq in enumerate(top_sequences):
                 # Format to look like candidate output but grouped
                 results.append({
@@ -365,6 +407,119 @@ async def run_search(request: SearchRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@app.post("/api/feedback")
+def run_feedback(request: FeedbackRequest):
+    """
+    Relevance feedback: Rocchio-adjusts the session's last query vector
+    toward candidates the operator marked positive and away from ones
+    marked negative (HybridSearcher.rocchio_adjust), then re-searches with
+    that adjusted vector directly (dense_search_by_vector) - no new text
+    query needed. Requires a prior /api/search call in this session to
+    have set _session_state["last_query_vector"].
+    """
+    if _session_state["last_query_vector"] is None:
+        raise HTTPException(status_code=400, detail="No active query in this session - run /api/search first")
+    if not request.positive_ids and not request.negative_ids:
+        raise HTTPException(status_code=400, detail="Provide at least one positive_ids or negative_ids")
+
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        positive_vectors = [v for pid in request.positive_ids if (v := searcher.get_point_vector(pid)) is not None]
+        negative_vectors = [v for pid in request.negative_ids if (v := searcher.get_point_vector(pid)) is not None]
+
+        adjusted_vector = searcher.rocchio_adjust(
+            _session_state["last_query_vector"], positive_vectors, negative_vectors
+        )
+        _session_state["last_query_vector"] = adjusted_vector
+
+        hits = searcher.dense_search_by_vector(adjusted_vector, top_k=request.top_k)
+        results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
+                   for idx, hit in enumerate(hits)]
+        return {"results": results}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Feedback search failed: {str(e)}")
+
+@app.post("/api/query-by-example")
+def run_query_by_example(request: QueryByExampleRequest):
+    """
+    Query-by-example: reuses an already-indexed point's own stored dense
+    vector (HybridSearcher.get_point_vector) as the next query, instead of
+    re-embedding an image - the operator clicks a result and searches for
+    "more like this" directly.
+    """
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        vector = searcher.get_point_vector(request.point_id)
+        if vector is None:
+            raise HTTPException(status_code=404, detail=f"No stored vector found for point '{request.point_id}'")
+
+        _session_state["last_query_vector"] = vector
+        hits = searcher.dense_search_by_vector(vector, top_k=request.top_k)
+        results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
+                   for idx, hit in enumerate(hits)]
+        return {"results": results}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Query-by-example failed: {str(e)}")
+
+@app.post("/api/temporal-search")
+def run_temporal_search(request: TemporalSearchRequest):
+    """
+    VBS-style temporal query: two sequential text descriptions ("a bicycle
+    passes, then a red car") searched independently, then combined via
+    HybridSearcher.temporal_window_match into per-video (frame_a, frame_b)
+    pairs where frame_a occurs before frame_b within window_frames.
+    """
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        hits_a = searcher.search(request.query_a, top_k=request.top_k)
+        hits_b = searcher.search(request.query_b, top_k=request.top_k)
+        matches = searcher.temporal_window_match(hits_a, hits_b, window_frames=request.window_frames)
+        results = [
+            {
+                "rank": idx + 1,
+                "score": m["score"],
+                "video_name": m["video_name"],
+                "frame_a": m["frame_a"],
+                "frame_b": m["frame_b"],
+                "payload_a": m["payload_a"],
+                "payload_b": m["payload_b"],
+            }
+            for idx, m in enumerate(matches)
+        ]
+        return {"query_a": request.query_a, "query_b": request.query_b, "results": results}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Temporal search failed: {str(e)}")
+
+@app.get("/api/browse-video/{video_name}")
+def browse_video(video_name: str):
+    """
+    Full keyframe browse for one specific video - reuses
+    HybridSearcher.get_all_points_for_video() verbatim (already built for
+    TRAKE's DP alignment), sorted by frame_idx, so the operator can page
+    through everything indexed for a video they've spotted as promising.
+    """
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        points = searcher.get_all_points_for_video(video_name)
+        points = [p for p in points if p["payload"].get("frame_idx") is not None]
+        points.sort(key=lambda p: p["payload"]["frame_idx"])
+        return {
+            "video_name": video_name,
+            "frames": [{"id": p["id"], "payload": p["payload"]} for p in points],
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Browse video failed: {str(e)}")
 
 @app.post("/api/in-video-search")
 async def run_in_video_search(request: InVideoSearchRequest):
