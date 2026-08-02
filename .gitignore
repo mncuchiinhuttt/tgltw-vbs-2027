@@ -40,3 +40,6 @@ ffmpeg
 # Evaluation benchmark output reports
 eval_results.json
 evaluation/eval_results.json
+
+# Private files
+VBS-2026-978-981-95-6963-2.pdf
