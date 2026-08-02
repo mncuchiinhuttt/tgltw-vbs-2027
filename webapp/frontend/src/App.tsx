@@ -245,7 +245,7 @@ function SearchView() {
     }
   }
 
-  const handleSubmitToDres = async (hit: ResultHit) => {
+  const handleSubmitToDres = async (hit: ResultHit, force = false) => {
     if (!currentTask?.task_id) {
       setActionMessage("Chưa có task DRES hiện tại - đăng nhập DRES trước.")
       return
@@ -261,10 +261,25 @@ function SearchView() {
         body: JSON.stringify({
           task_id: currentTask.task_id,
           payload: { mediaItemName: hit.payload.source_file, timestamp: hit.payload.timestamp },
+          video_name: hit.payload.source_file,
+          force,
         }),
       })
       const data = await response.json()
-      setActionMessage(response.ok ? `Đã nộp: ${JSON.stringify(data)}` : (data.detail || "Nộp thất bại"))
+      if (response.ok) {
+        setActionMessage(`Đã nộp: ${JSON.stringify(data)}`)
+        return
+      }
+      // AVS duplicate-video guard (Phase H): 409 is a soft warning, not a
+      // hard block - let the operator confirm and force-resubmit if they
+      // have a real reason to.
+      if (response.status === 409 && data.detail?.warning) {
+        if (window.confirm(`${data.detail.warning}\n\nNộp lại?`)) {
+          await handleSubmitToDres(hit, true)
+        }
+        return
+      }
+      setActionMessage(data.detail?.warning || data.detail || "Nộp thất bại")
     } catch (err: any) {
       setActionMessage(err.message || "Nộp thất bại")
     }
