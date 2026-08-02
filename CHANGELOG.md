@@ -2,6 +2,33 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.12.0] - 2026-08-03
+
+### Added
+- **MIT `LICENSE`** (copyright Long Minh Vo) with a short README "License" section clarifying it covers only this repo's code, not the third-party model weights `download_assets.py` fetches separately (SAM3 in particular is a gated Hugging Face repo under Meta's own license terms).
+- **Git commit signing (SSH)**: `gpg.format=ssh` + `user.signingkey`/`commit.gpgsign=true` configured locally against the existing `~/.ssh/id_ed25519` key, registered with GitHub as a signing key (`gh ssh-key add --type signing`) - commits now show GitHub's "Verified" badge.
+
+## [1.11.0] - 2026-08-02
+
+### Changed - VBS2027 repo split from AIC2026 (batch → interactive)
+Cloned full git history from the AIC2026 `method` repo into a new repo (`mncuchiinhuttt/tgltw-vbs-2027`) to target VBS 2027 instead - a **live/interactive** competition (5-7 min/task, operator-driven) rather than AIC's **batch/offline** Sơ tuyển (~45 queries submitted at once within a 4-hour window). See `VBS_GUIDE.md` for the full competition reference.
+
+- **Query-time speed flip** (`inference-code/config.py`): `QDRANT_EXACT_SEARCH` and `VERIFICATION_RERANK_ENABLED` defaults flipped `true`→`false` - VBS's live per-query latency pressure makes AIC's batch-era "always pay for max accuracy" defaults the wrong tradeoff. `HybridSearcher.in_video_refine()` (Type 2) changed from an automatic step to a manually-triggered `/api/in-video-search` action.
+- **DRES integration** (`webapp/backend/dres_client.py`): thin REST wrapper for the Distributed Retrieval Evaluation Server (login/current-task/submit/logging), proxied through 3 new backend endpoints so credentials never reach the frontend. Unverified against a live DRES instance - schema is best-effort from `VBS_GUIDE.md`.
+- **Interactive session state** (`webapp/backend/main.py`, single global session matching "one operator per backend instance"): `/api/feedback` (Rocchio relevance feedback), `/api/query-by-example` (reuse an indexed point's own vector), `/api/temporal-search` (2-query window match), `/api/browse-video/{video_name}`. Wired `QueryProcessor.rewrite_query_cqr` (dead code since AIC-era) into `/api/search` using session history - directly serves VBS's KIS-C ("chat/conversational") task type.
+- **Frontend UI** (`webapp/frontend/src/components/ResultCard.tsx`, `BrowseVideoDialog.tsx`): per-result feedback/query-by-example/in-video-search/DRES-submit actions; temporal-search toggle; video keyframe browser dialog.
+- **Interaction logging** (`webapp/backend/interaction_log.py`): every search/feedback/query-by-example/temporal-search/DRES-submit action logged to local JSONL first, then best-effort pushed to DRES - a DRES outage never blocks the operator's response (VBS's post-hoc analyses have dropped teams for incomplete logs).
+
+Source: `VBS_GUIDE.md` + `vbs-2026-paper-methods-and-team-analysis.md` (12-team VBS2026 method survey) - see Notion "Our method (VBS)" for full phase-by-phase detail and PR links (#1-#4).
+
+### Added - Cross-referenced improvements from 12-team VBS2026 method analysis
+- **N-query temporal chain** (`HybridSearcher.temporal_chain_match`, replacing the old hardcoded-2-query `temporal_window_match`): step-wise DP generalizing Exquisitor's temporal sequence-chain matching to N≥2 independently-searched queries per video. `/api/temporal-search` now takes `queries: List[str]`.
+- **Result explainability** (`HybridSearcher.merge_rrf`'s optional `labels` param): fused hits get a `matched_via` field (query/hyde/secondary) so an operator sees *why* a result matched instead of one opaque score (VIREO/SnapMind/NII-UIT-inspired). VQA answer cards now show their OCR/scene-narrative evidence unconditionally instead of hiding it behind "Inspect Metadata".
+- **AVS duplicate-submission guard** (`/api/dres/submit`): per VBS_GUIDE.md §5.2, resubmitting an already-scored video earns no additional AVS credit and a wrong resubmission penalizes the whole video's score. Soft 409 warning (not a hard block) when a video is resubmitted for the same `task_id`, overridable with `force=true`.
+- **Escalate precision on-demand**: `HybridSearcher.dense_search*`/`search()` and `Reranker.rerank_type1`/`rerank_type2_vqa` gained optional `exact`/`verify` overrides (U-Cker/PraK-inspired) - an operator stuck on a hard task can trade latency for precision per-search via two new frontend checkboxes, without editing `.env`/restarting the backend.
+
+PR links: #1-#8 on `mncuchiinhuttt/tgltw-vbs-2027`. All verified via dependency-free logic tests (numpy/qdrant_client/fastapi/pydantic stubbed, since this sandbox has none of those installed) - not yet tested against a live Qdrant/DRES instance or in a real browser.
+
 ## [1.10.0] - 2026-08-02
 
 ### Added
