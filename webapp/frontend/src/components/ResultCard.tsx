@@ -22,6 +22,7 @@ export interface ResultHit {
   score?: number
   rrf_score?: number
   answer?: string | null
+  matched_via?: string[]
   payload: {
     source_file?: string
     timestamp?: number
@@ -113,6 +114,24 @@ export function ResultCard({
             </span>
           </div>
 
+          {/* Explainability (VIREO/SnapMind/NII-UIT-inspired, VBS2026):
+              which fusion source(s) surfaced this result, always visible
+              instead of hidden behind "Inspect Metadata" - helps the
+              operator judge trust/feedback quickly. */}
+          {hit.matched_via && hit.matched_via.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {hit.matched_via.map((src) => (
+                <Badge
+                  key={src}
+                  variant="outline"
+                  className="bg-violet-50 border-violet-100 text-violet-700 text-[10px] font-bold px-1.5 py-0 capitalize"
+                >
+                  matched via {src}
+                </Badge>
+              ))}
+            </div>
+          )}
+
           {hit.answer && (
             <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg mb-3">
               <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -120,6 +139,20 @@ export function ResultCard({
                 VQA Generated Answer
               </p>
               <p className="text-sm text-slate-700 font-semibold">{hit.answer}</p>
+              {/* Evidence the answer was based on - shown unconditionally
+                  for the answer card instead of requiring "Inspect
+                  Metadata", so the operator can verify before submitting
+                  (NII-UIT's Locate->Suggest->Verify pattern, VBS2026). */}
+              {(payload.ocr_text || payload.scene_narrative) && (
+                <div className="mt-2 pt-2 border-t border-emerald-100 space-y-1">
+                  {payload.scene_narrative && (
+                    <p className="text-xs text-slate-600">{payload.scene_narrative}</p>
+                  )}
+                  {payload.ocr_text && (
+                    <p className="text-xs text-slate-500 font-mono">OCR: {payload.ocr_text}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

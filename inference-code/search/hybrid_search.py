@@ -164,7 +164,7 @@ class HybridSearcher:
             } for idx, hit in enumerate(search_result)
         ]
 
-    def merge_rrf(self, *ranked_lists: list, k: int = RRF_CONSTANT) -> list:
+    def merge_rrf(self, *ranked_lists: list, k: int = RRF_CONSTANT, labels: list = None) -> list:
         """
         Reciprocal Rank Fusion (RRF) to merge an arbitrary number of ranked
         hit lists - e.g. dense text-query hits, HyDE hits, and (when
@@ -178,27 +178,47 @@ class HybridSearcher:
         Still callable exactly as before with 2 positional lists
         (merge_rrf(dense_hits, sparse_hits)) - k stays keyword-only, no
         existing caller passed it positionally.
+
+        `labels` (VIREO/SnapMind/NII-UIT-inspired explainability, VBS2026):
+        optional list of human-readable names, one per positional
+        ranked_lists entry (e.g. ["query", "hyde", "secondary"]). When
+        provided, each fused hit gets a `matched_via` field listing which
+        named source(s) it appeared in, so an operator can see WHY a result
+        matched instead of just a single opaque fused score. Omitted by
+        default (None) so the 4 existing callers (CLI main.py, batch_query.py,
+        evaluation/run_eval.py, and this class's own search()) keep their
+        exact prior behavior unchanged - only webapp/backend/main.py's
+        /api/search opts in.
         """
+        if labels is not None and len(labels) != len(ranked_lists):
+            raise ValueError("labels must have the same length as ranked_lists")
+
         rrf_scores = {}
         payload_map = {}
+        matched_via = {}
 
-        for hits in ranked_lists:
+        for list_idx, hits in enumerate(ranked_lists):
             for rank, hit in enumerate(hits):
                 doc_id = hit["id"]
                 payload_map[doc_id] = hit["payload"]
                 rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (k + (rank + 1)))
+                if labels is not None:
+                    matched_via.setdefault(doc_id, []).append(labels[list_idx])
 
         # Sort by RRF score descending
         sorted_ids = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-        
+
         merged_results = []
         for doc_id, rrf_score in sorted_ids:
-            merged_results.append({
+            result = {
                 "id": doc_id,
                 "rrf_score": rrf_score,
                 "payload": payload_map[doc_id]
-            })
-            
+            }
+            if labels is not None:
+                result["matched_via"] = matched_via[doc_id]
+            merged_results.append(result)
+
         return merged_results
 
     def diversify_by_scene(self, candidates: list, top_k: int) -> list:
