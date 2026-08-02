@@ -44,32 +44,27 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
 
-# AIC's Sơ tuyển round is NOT a live/interactive setting like VBS (BTC sends
-# ~45 queries once, we have 4 hours to submit all of them) - so there's no
-# per-query latency pressure that would justify Qdrant's default approximate
-# HNSW search. QDRANT_EXACT_SEARCH runs a full brute-force scan instead
-# (U-Cker/VBS2026, arXiv LNCS 16415 ch.18 - "we prioritize exact computation
-# in order to guarantee reliability... rather than approximate nearest
-# neighbor methods"), trading query latency (still well within the 4h
-# budget at our dataset scale) for zero HNSW recall loss. Set to false to
-# fall back to approximate search if the collection ever grows large enough
-# that even brute-force scan blows the time budget.
-QDRANT_EXACT_SEARCH = os.getenv("QDRANT_EXACT_SEARCH", "true").lower() == "true"
+# VBS is a LIVE/interactive competition, not AIC's batch Sơ tuyển round - an
+# operator issues queries live and every second counts toward the task's
+# KIS score (score = 50 + (300-t)/6 - 10*|wrong submissions|). Qdrant's
+# default approximate HNSW search is the right choice here (fast, small
+# recall trade-off), unlike AIC's batch/4h-window setting where brute-force
+# exact search cost nothing against the time budget. Set to true only if
+# testing shows HNSW's recall loss is unacceptable and per-query latency
+# still fits comfortably within a task's 5-7 minute clock.
+QDRANT_EXACT_SEARCH = os.getenv("QDRANT_EXACT_SEARCH", "false").lower() == "true"
 VQA_BOX_THRESHOLD = float(os.getenv("VQA_BOX_THRESHOLD", 0.3))
 # Minimum VLM rerank score for a Type 1 (Textual-KIS) candidate to be kept in
 # results, filtering out low-relevance frames that only made the initial
 # candidate pool via a noisy sparse/BM25 or HyDE match
 RERANK_SCORE_THRESHOLD = float(os.getenv("RERANK_SCORE_THRESHOLD", 0.2))
 
-# AIC competition scoring rewards submitting up to 100 ranked answers per
-# query (Final Score averages R@1/5/20/50/100 - the best score within each
-# k-sized prefix) - submitting only 1 answer makes R@1=R@5=...=R@100, wasting
-# the credit available at higher k. SUBMISSION_TOP_K widens the candidate
-# pool/output list toward that; RERANK_TOP_K keeps the (expensive, VLM-based)
-# Type 1/2 rerank pass scoped to just the head of that pool - the tail
-# (RERANK_TOP_K..SUBMISSION_TOP_K) is appended in original retrieval-rank
-# order rather than costing a VLM call per candidate just to fill out
-# R@50/R@100 with more ranked options.
+# Inherited from AIC's batch scoring (rewarded submitting up to 100 ranked
+# answers per query, R@1/5/20/50/100) - VBS's KIS submission is a single
+# answer per attempt instead, so SUBMISSION_TOP_K here just controls how deep
+# the operator's browsable result grid goes, not a submission format.
+# RERANK_TOP_K still keeps the (expensive) VLM rerank pass scoped to the head
+# of that pool - the tail is appended in original retrieval-rank order.
 SUBMISSION_TOP_K = int(os.getenv("SUBMISSION_TOP_K", 100))
 RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", 20))
 
@@ -79,10 +74,12 @@ RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", 20))
 # candidate is verified against them - catching cases where a candidate
 # superficially matches the query's embedding/VLM-similarity score but fails
 # a specific attribute check. Adds VERIFICATION_NUM_QUESTIONS extra VLM calls
-# per reranked candidate (bounded by RERANK_TOP_K above), which is affordable
-# given the Sơ tuyển round's 4-hour batch submission window rather than
-# VBS-style live per-query latency.
-VERIFICATION_RERANK_ENABLED = os.getenv("VERIFICATION_RERANK_ENABLED", "true").lower() == "true"
+# per reranked candidate (bounded by RERANK_TOP_K above) EVERY search - fine
+# for AIC's 4-hour batch window, too slow as a default for VBS's live 5-7
+# minute-per-task clock. Leave off by default; an operator can still flip
+# this on mid-task via env/restart if a task has time to spare, or it can be
+# wired to a manual "verify these results" UI action later.
+VERIFICATION_RERANK_ENABLED = os.getenv("VERIFICATION_RERANK_ENABLED", "false").lower() == "true"
 VERIFICATION_NUM_QUESTIONS = int(os.getenv("VERIFICATION_NUM_QUESTIONS", 3))
 # Type 1 blend: (1 - VERIFICATION_WEIGHT_TYPE1) * vlm_score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 VERIFICATION_WEIGHT_TYPE1 = float(os.getenv("VERIFICATION_WEIGHT_TYPE1", 0.3))
