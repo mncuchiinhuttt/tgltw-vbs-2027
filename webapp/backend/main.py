@@ -58,10 +58,19 @@ def load_embedder():
     else:
         raise ValueError(f"Unknown embedding option: {config.EMBEDDING_OPTION}")
 
+def load_secondary_embedder():
+    """None when disabled - see models/siglip_embedder.py."""
+    import config
+    if not config.SECONDARY_EMBEDDER_ENABLED:
+        return None
+    from models.siglip_embedder import SigLIPEmbedder
+    return SigLIPEmbedder()
+
 # 2. Services Management (Lazy Singletons)
 _vlm = None
 _detector = None
 _embedder = None
+_secondary_embedder = None
 _query_proc = None
 _searcher = None
 _reranker = None
@@ -73,7 +82,7 @@ def init_services(query_type: int = 1):
     """
     Initialize query processing and search services dynamically.
     """
-    global _vlm, _detector, _embedder, _query_proc, _searcher, _reranker
+    global _vlm, _detector, _embedder, _secondary_embedder, _query_proc, _searcher, _reranker
     with _services_lock:
         # Check env variables inside function to allow updates
         import config
@@ -89,6 +98,7 @@ def init_services(query_type: int = 1):
         if _embedder is None:
             print("Initializing Embedder...")
             _embedder = load_embedder()
+            _secondary_embedder = load_secondary_embedder()
 
         if _detector is None and query_type == 2:
             print("Initializing Object Detector...")
@@ -98,7 +108,7 @@ def init_services(query_type: int = 1):
             _query_proc = QueryProcessor(vlm_client=_vlm)
 
         if _searcher is None:
-            _searcher = HybridSearcher(embedder=_embedder)
+            _searcher = HybridSearcher(embedder=_embedder, secondary_embedder=_secondary_embedder)
 
         # Re-initialize reranker if detector is newly loaded
         if _reranker is None or (_detector is not None and _reranker.detector is None):
@@ -213,7 +223,8 @@ async def run_search(request: SearchRequest):
         # 2. Candidate Retrieval
         query_hits = searcher.search(request.query, top_k=15)
         hyde_hits = searcher.search(hyde_query, top_k=15)
-        candidates = searcher.merge_rrf(query_hits, hyde_hits)
+        secondary_hits = searcher.dense_search_secondary(request.query, top_k=15)
+        candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
         
         if not candidates:
             return {
@@ -245,7 +256,12 @@ async def run_search(request: SearchRequest):
             # Type 2: VQA
             decomp = query_proc.decompose_query(request.query)
             sub_queries = decomp.get("sub_queries", [request.query])
-            
+
+            # In-Video Retrieval: surface frames from the top candidate
+            # videos that scored too low to make the initial pool at all
+            # (see HybridSearcher.in_video_refine).
+            candidates = searcher.in_video_refine(request.query, candidates)
+
             top_candidates = reranker.rerank_type2_vqa(
                 request.query, sub_queries, candidates[:10], dataset_dir
             )

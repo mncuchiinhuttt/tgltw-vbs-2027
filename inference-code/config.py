@@ -43,6 +43,18 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 # Search settings
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
+
+# AIC's Sơ tuyển round is NOT a live/interactive setting like VBS (BTC sends
+# ~45 queries once, we have 4 hours to submit all of them) - so there's no
+# per-query latency pressure that would justify Qdrant's default approximate
+# HNSW search. QDRANT_EXACT_SEARCH runs a full brute-force scan instead
+# (U-Cker/VBS2026, arXiv LNCS 16415 ch.18 - "we prioritize exact computation
+# in order to guarantee reliability... rather than approximate nearest
+# neighbor methods"), trading query latency (still well within the 4h
+# budget at our dataset scale) for zero HNSW recall loss. Set to false to
+# fall back to approximate search if the collection ever grows large enough
+# that even brute-force scan blows the time budget.
+QDRANT_EXACT_SEARCH = os.getenv("QDRANT_EXACT_SEARCH", "true").lower() == "true"
 VQA_BOX_THRESHOLD = float(os.getenv("VQA_BOX_THRESHOLD", 0.3))
 # Minimum VLM rerank score for a Type 1 (Textual-KIS) candidate to be kept in
 # results, filtering out low-relevance frames that only made the initial
@@ -61,6 +73,25 @@ RERANK_SCORE_THRESHOLD = float(os.getenv("RERANK_SCORE_THRESHOLD", 0.2))
 SUBMISSION_TOP_K = int(os.getenv("SUBMISSION_TOP_K", 100))
 RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", 20))
 
+# Verification Reranking (Fusionista2.0-inspired, MMM 2026 LNCS 16415 ch.17
+# "Reranking with Interactive Confirmation"): an LLM breaks the query into a
+# few yes/no checks on specific attributes/objects/actions, and each
+# candidate is verified against them - catching cases where a candidate
+# superficially matches the query's embedding/VLM-similarity score but fails
+# a specific attribute check. Adds VERIFICATION_NUM_QUESTIONS extra VLM calls
+# per reranked candidate (bounded by RERANK_TOP_K above), which is affordable
+# given the Sơ tuyển round's 4-hour batch submission window rather than
+# VBS-style live per-query latency.
+VERIFICATION_RERANK_ENABLED = os.getenv("VERIFICATION_RERANK_ENABLED", "true").lower() == "true"
+VERIFICATION_NUM_QUESTIONS = int(os.getenv("VERIFICATION_NUM_QUESTIONS", 3))
+# Type 1 blend: (1 - VERIFICATION_WEIGHT_TYPE1) * vlm_score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
+VERIFICATION_WEIGHT_TYPE1 = float(os.getenv("VERIFICATION_WEIGHT_TYPE1", 0.3))
+# Type 2 blend replaces the old fixed 0.4 rrf / 0.6 vqa split with a 3-way
+# weighted sum (should sum to 1.0)
+TYPE2_RRF_WEIGHT = float(os.getenv("TYPE2_RRF_WEIGHT", 0.3))
+TYPE2_VQA_WEIGHT = float(os.getenv("TYPE2_VQA_WEIGHT", 0.5))
+TYPE2_VERIFICATION_WEIGHT = float(os.getenv("TYPE2_VERIFICATION_WEIGHT", 0.2))
+
 # TRAKE (Type 3): how many top candidate videos get a full DP alignment pass
 # (Reranker.rerank_type3_temporal) - each pass costs one Qdrant scroll +
 # len(events) text embedding calls, so this is capped well below
@@ -69,6 +100,14 @@ TRAKE_MAX_VIDEOS_TO_ALIGN = int(os.getenv("TRAKE_MAX_VIDEOS_TO_ALIGN", 20))
 
 
 
+
+# Secondary embedder ensemble (Fusionista2.0/VERGE-inspired, VBS2026 - see
+# models/siglip_embedder.py + preprocessing/config.py for the indexing side).
+# Must match whatever preprocessing was actually run with - if the
+# "visual_index" collection wasn't (re)built with a named "siglip" vector,
+# leave this false regardless of preprocessing/config.py's setting.
+SECONDARY_EMBEDDER_ENABLED = os.getenv("SECONDARY_EMBEDDER_ENABLED", "false").lower() == "true"
+SIGLIP_MODEL_ID = os.getenv("SIGLIP_MODEL_ID", "google/siglip-so400m-patch14-384")
 
 VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
 VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)

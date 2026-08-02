@@ -3,7 +3,11 @@ import re
 import numpy as np
 from PIL import Image
 from typing import Callable, List, Dict, Any, Optional
-from config import TRAKE_MAX_VIDEOS_TO_ALIGN
+from config import (
+    TRAKE_MAX_VIDEOS_TO_ALIGN,
+    VERIFICATION_RERANK_ENABLED, VERIFICATION_NUM_QUESTIONS, VERIFICATION_WEIGHT_TYPE1,
+    TYPE2_RRF_WEIGHT, TYPE2_VQA_WEIGHT, TYPE2_VERIFICATION_WEIGHT,
+)
 
 def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     denom = float(np.linalg.norm(a) * np.linalg.norm(b))
@@ -105,27 +109,85 @@ class Reranker:
         self.vlm = vlm_client
         self.detector = detector_client
 
+    def generate_verification_questions(self, query: str, n: int = VERIFICATION_NUM_QUESTIONS) -> List[str]:
+        """
+        Fusionista2.0-inspired (VBS2026, MMM 2026 LNCS 16415 ch.17 -
+        "Reranking with Interactive Confirmation") verification pass: ask the
+        VLM to break the query down into n short yes/no checks, each on ONE
+        specific object/attribute/action it mentions. Called once per query
+        (not per-candidate) - the same questions are then checked against
+        every candidate by verify_candidate below, instead of trusting one
+        holistic similarity score that can be fooled by a partial match.
+        """
+        prompt = f"""Given a video search query, generate {n} short yes/no verification questions that each check ONE specific object/attribute/action mentioned in the query.
+Output ONLY valid JSON matching this format:
+{{"questions": ["...", "..."]}}
+Query: "{query}"
+JSON:"""
+        raw_output = self.vlm.generate(None, prompt).strip()
+        if raw_output.startswith("```json"):
+            raw_output = raw_output[7:]
+        if raw_output.endswith("```"):
+            raw_output = raw_output[:-3]
+        try:
+            parsed = json.loads(raw_output.strip())
+            questions = parsed.get("questions", [])
+            return questions[:n] if questions else [query]
+        except json.JSONDecodeError:
+            return [query]
+
+    def verify_candidate(
+        self,
+        image: Optional[Image.Image],
+        context_text: str,
+        questions: List[str],
+    ) -> float:
+        """
+        Checks each verification question against a candidate - against its
+        actual image when one is available (Type 2's cropped frame), or
+        against its text metadata otherwise (Type 1 has no guaranteed local
+        image path, see rerank_type1) - and returns the fraction answered
+        YES. This "match ratio" blends into the existing rerank score
+        (rerank_type1/rerank_type2_vqa) rather than replacing it, so a
+        candidate that fails some but not all checks is dampened, not
+        zeroed out.
+        """
+        if not questions:
+            return 1.0
+        matches = 0
+        for q in questions:
+            if image is not None:
+                prompt = f"Looking at this image, answer this yes/no question: {q}\nAnswer only YES or NO."
+                response = self.vlm.generate(image, prompt).strip().upper()
+            else:
+                prompt = f"Frame info: {context_text}\nBased on this info, answer this yes/no question: {q}\nAnswer only YES or NO."
+                response = self.vlm.generate(None, prompt).strip().upper()
+            if response.startswith("YES"):
+                matches += 1
+        return matches / len(questions)
+
     def rerank_type1(self, query: str, candidate_frames: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Rerank candidates using VLM comparing query with frame data.
         """
         print(f"Reranking {len(candidate_frames)} candidates for Type 1 query...")
+        questions = self.generate_verification_questions(query) if VERIFICATION_RERANK_ENABLED else []
         scored = []
         for hit in candidate_frames:
             payload = hit["payload"]
-            
+
             # Since the raw image path might be needed, we assume image path can be loaded
             # or generated. If we don't have local paths, we fallback to payload data text comparison
             # or load image if we mock/simulate it. Let's write the code assuming image is loaded if available,
             # or run on metadata.
             frame_description = f"Caption: {payload.get('caption', '')}. Narrative: {payload.get('scene_narrative', '')}. OCR: {payload.get('ocr_text', '')}."
-            
+
             prompt = f"""
 Query: "{query}"
 Frame info: {frame_description}
 Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
 Score:"""
-            
+
             # Text-only comparison as base/fallback, or vision if image is provided
             score_str = self.vlm.generate(None, prompt).strip()
             score = _parse_vlm_score(score_str)
@@ -136,9 +198,14 @@ Score:"""
             else:
                 hit["rerank_score_valid"] = True
 
+            if questions:
+                verification_ratio = self.verify_candidate(None, frame_description, questions)
+                hit["verification_ratio"] = verification_ratio
+                score = (1 - VERIFICATION_WEIGHT_TYPE1) * score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
+
             hit["rerank_score"] = score
             scored.append(hit)
-            
+
         return sorted(scored, key=lambda x: x["rerank_score"], reverse=True)
 
     def crop_bounding_box(self, image: Image.Image, bbox: List[float]) -> Image.Image:
@@ -172,8 +239,9 @@ Score:"""
         4. Calculate weighted score: 0.4 * rrf_score + 0.6 * vqa_score.
         """
         print(f"Executing Type 2 VQA reranking for query: '{query}'...")
+        questions = self.generate_verification_questions(query) if VERIFICATION_RERANK_ENABLED else []
         scored = []
-        
+
         for hit in candidate_frames:
             payload = hit["payload"]
             video_name = payload["source_file"]
@@ -231,10 +299,21 @@ Score:"""
                 print(f"VQA scoring failed for frame: {e}")
                 vqa_score = 0.5 # neutral score on failure
                 
-            # Weighted fusion: original_rank (rrf_score) and vqa_score
+            # Weighted fusion: original_rank (rrf_score), vqa_score, and
+            # (if enabled) the verification match ratio against crop_img -
+            # falls back to the original rrf/vqa-only split when disabled.
             rrf_score = hit.get("rrf_score", 0.0)
             hit["vqa_score"] = vqa_score
-            hit["final_score"] = 0.4 * rrf_score + 0.6 * vqa_score
+            if questions:
+                verification_ratio = self.verify_candidate(crop_img, "", questions)
+                hit["verification_ratio"] = verification_ratio
+                hit["final_score"] = (
+                    TYPE2_RRF_WEIGHT * rrf_score
+                    + TYPE2_VQA_WEIGHT * vqa_score
+                    + TYPE2_VERIFICATION_WEIGHT * verification_ratio
+                )
+            else:
+                hit["final_score"] = 0.4 * rrf_score + 0.6 * vqa_score
             scored.append(hit)
             
         return sorted(scored, key=lambda x: x["final_score"], reverse=True)

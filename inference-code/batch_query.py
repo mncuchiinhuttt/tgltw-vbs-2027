@@ -12,10 +12,14 @@ from PIL import Image
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from config import VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K
+from config import (
+    VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K,
+    SECONDARY_EMBEDDER_ENABLED,
+)
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+from models.siglip_embedder import SigLIPEmbedder
 from models.object_detector import ObjectDetector
 
 from search.query_processor import QueryProcessor
@@ -49,6 +53,10 @@ def load_embedder():
     else:
         raise ValueError(f"Unknown embedding option: {EMBEDDING_OPTION}")
 
+def load_secondary_embedder():
+    """None when disabled - see models/siglip_embedder.py."""
+    return SigLIPEmbedder() if SECONDARY_EMBEDDER_ENABLED else None
+
 def main():
     parser = argparse.ArgumentParser(description="Batch Multimedia Retrieval Inference Engine")
     parser.add_argument("--query_file", type=str, default="../queries/queries.json", 
@@ -77,14 +85,15 @@ def main():
     print("=== Initializing Inference Models ===")
     vlm = load_vlm()
     embedder = load_embedder()
-    
+    secondary_embedder = load_secondary_embedder()
+
     # Load detector lazily only if any Type 2 query exists
     detector = None
     if any(q.get("type") == 2 for q in queries):
         detector = ObjectDetector(option=DETECTOR_OPTION)
-        
+
     query_proc = QueryProcessor(vlm_client=vlm)
-    searcher = HybridSearcher(embedder=embedder)
+    searcher = HybridSearcher(embedder=embedder, secondary_embedder=secondary_embedder)
     reranker = Reranker(vlm_client=vlm, detector_client=detector)
 
     results = []
@@ -106,7 +115,8 @@ def main():
         # query (R@1/5/20/50/100), not just the single best one.
         query_hits = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
         hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
-        candidates = searcher.merge_rrf(query_hits, hyde_hits)
+        secondary_hits = searcher.dense_search_secondary(q_text, top_k=SUBMISSION_TOP_K)
+        candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
         candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
 
         output_data = {
@@ -137,6 +147,10 @@ def main():
         elif q_type == 2:
             decomp = query_proc.decompose_query(q_text)
             sub_queries = decomp.get("sub_queries", [q_text])
+            # In-Video Retrieval: surface frames from the top candidate
+            # videos that scored too low to make the initial pool at all
+            # (see HybridSearcher.in_video_refine).
+            candidates = searcher.in_video_refine(q_text, candidates)
             ranked = rerank_with_tail(
                 lambda c: reranker.rerank_type2_vqa(q_text, sub_queries, c, args.dataset_dir),
                 candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
