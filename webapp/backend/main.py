@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
 import dres_client
+import interaction_log
 
 # 1. Path Configuration
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -392,6 +393,10 @@ async def run_search(request: SearchRequest):
                     }
                 })
                 
+        interaction_log.log_query(
+            "search", resolved_query, [r.get("id") for r in results],
+            dres_config=_dres_config(), session_id=_dres_session_id,
+        )
         return {
             "query": request.query,
             "type": request.type,
@@ -430,6 +435,12 @@ def run_feedback(request: FeedbackRequest):
         hits = searcher.dense_search_by_vector(adjusted_vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        interaction_log.log_query(
+            "feedback",
+            f"positive={request.positive_ids} negative={request.negative_ids}",
+            [r["id"] for r in results],
+            dres_config=_dres_config(), session_id=_dres_session_id,
+        )
         return {"results": results}
     except Exception as e:
         import traceback
@@ -454,6 +465,10 @@ def run_query_by_example(request: QueryByExampleRequest):
         hits = searcher.dense_search_by_vector(vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        interaction_log.log_query(
+            "query_by_example", f"point_id={request.point_id}", [r["id"] for r in results],
+            dres_config=_dres_config(), session_id=_dres_session_id,
+        )
         return {"results": results}
     except HTTPException:
         raise
@@ -487,6 +502,11 @@ def run_temporal_search(request: TemporalSearchRequest):
             }
             for idx, m in enumerate(matches)
         ]
+        interaction_log.log_query(
+            "temporal_search", f"{request.query_a} -> {request.query_b}",
+            [r["video_name"] for r in results],
+            dres_config=_dres_config(), session_id=_dres_session_id,
+        )
         return {"query_a": request.query_a, "query_b": request.query_b, "results": results}
     except Exception as e:
         import traceback
@@ -618,9 +638,14 @@ def dres_submit(request: DresSubmitRequest):
     if not cfg["evaluation_id"]:
         raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
     try:
-        return dres_client.submit_answer(
+        result = dres_client.submit_answer(
             cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, request.payload
         )
+        interaction_log.log_interaction(
+            "dres_submit", {"task_id": request.task_id, "payload": request.payload, "result": result},
+            dres_config=cfg, session_id=_dres_session_id,
+        )
+        return result
     except dres_client.DresError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
