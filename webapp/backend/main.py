@@ -89,6 +89,35 @@ _session_state = {"history": [], "last_query_vector": None}
 # DRES session - single global value, matching the "one operator per
 # backend instance" model (see plan) rather than a per-user session store.
 _dres_session_id = None
+# AVS duplicate-video submission guard: task_id -> set of video names
+# already submitted for that task. Reset naturally per task_id (a fresh
+# task_id starts with an empty set via .get(task_id, set())) - no explicit
+# reset needed when DRES moves to the next task.
+_avs_submitted_by_task: dict = {}
+
+
+def _check_avs_duplicate(task_id: str, video_name: Optional[str], force: bool, submitted_by_task: dict) -> Optional[dict]:
+    """
+    Pure-logic AVS duplicate-video guard (VBS_GUIDE.md §5.2: resubmitting an
+    already-scored video earns no additional credit, and a wrong submission
+    before the first correct one penalizes the whole video), factored out
+    of dres_submit() so it's testable without importing fastapi/cv2/etc.
+    Returns a warning dict if this submission should be blocked (soft - the
+    caller can override with force=True), else None.
+    """
+    if not video_name or force:
+        return None
+    if video_name in submitted_by_task.get(task_id, set()):
+        return {
+            "warning": (
+                f"Video '{video_name}' already submitted for task '{task_id}' - "
+                "VBS's AVS scoring gives no additional credit for a second shot "
+                "from an already-scored video. Resend with force=true to submit anyway."
+            ),
+            "video_name": video_name,
+            "task_id": task_id,
+        }
+    return None
 
 def _dres_config():
     """
@@ -169,6 +198,13 @@ class TemporalSearchRequest(BaseModel):
 class DresSubmitRequest(BaseModel):
     task_id: str
     payload: dict
+    # AVS duplicate-video guard (VBS_GUIDE.md §5.2: resubmitting an
+    # already-scored video earns no additional credit, and each wrong
+    # submission before the first correct one penalizes the whole video) -
+    # optional so KIS/VQA submissions (which don't need this check) can
+    # simply omit video_name.
+    video_name: Optional[str] = None
+    force: bool = False
 
 class InVideoSearchRequest(BaseModel):
     query: str
@@ -692,18 +728,40 @@ def dres_submit(request: DresSubmitRequest):
     docstring) and is built by the frontend/caller, not this endpoint -
     kept intentionally generic since the real DRES submission schema isn't
     verified against a live instance yet.
+
+    AVS duplicate-video guard (VBS_GUIDE.md §5.2): if `video_name` is
+    provided and already recorded as submitted for this task_id, this is a
+    soft warning, not a hard veto - responds 409 WITHOUT calling DRES,
+    unless `force=True`, since VBS's live time pressure means the operator
+    should be able to override a false alarm instead of being blocked
+    outright.
     """
     if _dres_session_id is None:
         raise HTTPException(status_code=401, detail="Not logged into DRES - call /api/dres/login first")
     cfg = _dres_config()
     if not cfg["evaluation_id"]:
         raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
+
+    duplicate_warning = _check_avs_duplicate(
+        request.task_id, request.video_name, request.force, _avs_submitted_by_task
+    )
+    if duplicate_warning is not None:
+        raise HTTPException(status_code=409, detail=duplicate_warning)
+
     try:
         result = dres_client.submit_answer(
             cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, request.payload
         )
+        if request.video_name:
+            _avs_submitted_by_task.setdefault(request.task_id, set()).add(request.video_name)
         interaction_log.log_interaction(
-            "dres_submit", {"task_id": request.task_id, "payload": request.payload, "result": result},
+            "dres_submit",
+            {
+                "task_id": request.task_id,
+                "payload": request.payload,
+                "video_name": request.video_name,
+                "result": result,
+            },
             dres_config=cfg, session_id=_dres_session_id,
         )
         return result
