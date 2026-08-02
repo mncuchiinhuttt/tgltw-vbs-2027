@@ -22,6 +22,11 @@ temp/
 *.wav
 *.mp4
 
+# Interaction logs (webapp/backend/interaction_log.py) - local JSONL
+# fallback so nothing is lost if DRES's log endpoint is down, but not
+# meant to be committed to the repo.
+webapp/backend/logs/
+
 # Exclude model weight/checkpoint files
 *.pt
 /preprocessing/mobileclip2_b.ts
