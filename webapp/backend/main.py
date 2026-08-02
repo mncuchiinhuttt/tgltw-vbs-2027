@@ -282,7 +282,14 @@ async def run_search(request: SearchRequest):
         query_hits = searcher.search(resolved_query, top_k=15)
         hyde_hits = searcher.search(hyde_query, top_k=15)
         secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15)
-        candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
+        # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
+        # VBS2026): tags each fused hit with which source(s) it came from
+        # ("query" = original text, "hyde" = HyDE hypothetical description,
+        # "secondary" = the secondary embedder ensemble) so the operator can
+        # see WHY a result matched instead of one opaque combined score.
+        candidates = searcher.merge_rrf(
+            query_hits, hyde_hits, secondary_hits, labels=["query", "hyde", "secondary"]
+        )
 
         # Remember this turn's resolved query + dense vector for later
         # session actions: /api/feedback Rocchio-adjusts from
@@ -314,7 +321,8 @@ async def run_search(request: SearchRequest):
                     "rank": idx + 1,
                     "score": c.get("rerank_score", 0.0),
                     "id": c["id"],
-                    "payload": c["payload"]
+                    "payload": c["payload"],
+                    "matched_via": c.get("matched_via", [])
                 })
                 
         elif request.type == 2:
@@ -371,7 +379,8 @@ async def run_search(request: SearchRequest):
                     "rrf_score": c.get("rrf_score", 0.0),
                     "id": c["id"],
                     "payload": c["payload"],
-                    "answer": answer if idx == 0 else None
+                    "answer": answer if idx == 0 else None,
+                    "matched_via": c.get("matched_via", [])
                 })
             # Record the generated answer against this turn so a later CQR
             # rewrite (e.g. "was there a sign in that scene too?") can
