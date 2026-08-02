@@ -166,12 +166,19 @@ JSON:"""
                 matches += 1
         return matches / len(questions)
 
-    def rerank_type1(self, query: str, candidate_frames: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def rerank_type1(
+        self, query: str, candidate_frames: List[Dict[str, Any]], verify: Optional[bool] = None
+    ) -> List[Dict[str, Any]]:
         """
         Rerank candidates using VLM comparing query with frame data.
+
+        `verify`, when not None, overrides VERIFICATION_RERANK_ENABLED for
+        this call - lets an operator escalate to verification reranking
+        on-demand for a stuck query without editing .env/restarting.
         """
         print(f"Reranking {len(candidate_frames)} candidates for Type 1 query...")
-        questions = self.generate_verification_questions(query) if VERIFICATION_RERANK_ENABLED else []
+        use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
+        questions = self.generate_verification_questions(query) if use_verify else []
         scored = []
         for hit in candidate_frames:
             payload = hit["payload"]
@@ -225,11 +232,12 @@ Score:"""
         return image.crop((x1, y1, x2, y2))
 
     def rerank_type2_vqa(
-        self, 
-        query: str, 
-        sub_queries: List[str], 
-        candidate_frames: List[Dict[str, Any]], 
-        dataset_dir: str
+        self,
+        query: str,
+        sub_queries: List[str],
+        candidate_frames: List[Dict[str, Any]],
+        dataset_dir: str,
+        verify: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         """
         Type 2 Visual Question Answering crop-reranking logic:
@@ -237,9 +245,13 @@ Score:"""
         2. Crop image around matching bounding boxes if found.
         3. Pass crop (or fallback full frame) to VLM to answer query.
         4. Calculate weighted score: 0.4 * rrf_score + 0.6 * vqa_score.
+
+        `verify`, when not None, overrides VERIFICATION_RERANK_ENABLED for
+        this call - see rerank_type1's docstring for the rationale.
         """
         print(f"Executing Type 2 VQA reranking for query: '{query}'...")
-        questions = self.generate_verification_questions(query) if VERIFICATION_RERANK_ENABLED else []
+        use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
+        questions = self.generate_verification_questions(query) if use_verify else []
         scored = []
 
         for hit in candidate_frames:

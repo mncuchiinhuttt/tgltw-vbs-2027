@@ -125,6 +125,12 @@ function SearchView() {
     setExtraQueries((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev))
   const updateTemporalStep = (idx: number, value: string) =>
     setExtraQueries((prev) => prev.map((v, i) => (i === idx ? value : v)))
+
+  // Escalate-precision-on-demand (Phase I, U-Cker/PraK-inspired): both
+  // default off so the server's config defaults (fast/no-verify) apply -
+  // an operator ticks these on mid-task when stuck on a hard query.
+  const [exactSearch, setExactSearch] = useState(false)
+  const [verifyResults, setVerifyResults] = useState(false)
   const [browsingVideo, setBrowsingVideo] = useState<string | null>(null)
   const [dresLoggedIn, setDresLoggedIn] = useState(false)
   const [currentTask, setCurrentTask] = useState<any>(null)
@@ -147,7 +153,12 @@ function SearchView() {
       const endpoint = temporalMode ? "/api/temporal-search" : "/api/search"
       const body = temporalMode
         ? { queries: [query, ...extraQueries] }
-        : { type: queryType, query: query }
+        : {
+            type: queryType,
+            query: query,
+            ...(exactSearch ? { exact: true } : {}),
+            ...(verifyResults ? { verify: true } : {}),
+          }
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -461,6 +472,35 @@ function SearchView() {
                   Temporal search (chuỗi nhiều mô tả nối tiếp)
                 </label>
               </div>
+
+              {!temporalMode && (
+                <div className="flex items-center gap-4 mb-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="exact-search"
+                      type="checkbox"
+                      checked={exactSearch}
+                      onChange={(e) => setExactSearch(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="exact-search" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Tìm chính xác (chậm hơn)
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="verify-results"
+                      type="checkbox"
+                      checked={verifyResults}
+                      onChange={(e) => setVerifyResults(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="verify-results" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Xác thực kỹ (chậm hơn)
+                    </label>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
 
                 {/* Shadcn Select Component */}
