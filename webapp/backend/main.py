@@ -16,6 +16,8 @@ from fastapi import FastAPI, HTTPException, Header, Response, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
+import dres_client
+
 # 1. Path Configuration
 BACKEND_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = BACKEND_DIR.parent.parent
@@ -83,6 +85,24 @@ _preprocess_logs = []
 # "last_query_vector" holds the most recent dense query vector so
 # /api/feedback has a base vector to Rocchio-adjust from.
 _session_state = {"history": [], "last_query_vector": None}
+# DRES session - single global value, matching the "one operator per
+# backend instance" model (see plan) rather than a per-user session store.
+_dres_session_id = None
+
+def _dres_config():
+    """
+    Reads DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD/DRES_EVALUATION_ID from
+    the environment. `import config` first so inference-code/config.py's
+    load_dotenv() side effect has run at least once in this process (this
+    module has no separate .env loading of its own).
+    """
+    import config  # noqa: F401 - triggers load_dotenv() as a side effect
+    return {
+        "base_url": os.getenv("DRES_BASE_URL", ""),
+        "username": os.getenv("DRES_USERNAME", ""),
+        "password": os.getenv("DRES_PASSWORD", ""),
+        "evaluation_id": os.getenv("DRES_EVALUATION_ID", ""),
+    }
 
 def init_services(query_type: int = 1):
     """
@@ -145,6 +165,10 @@ class TemporalSearchRequest(BaseModel):
     query_b: str
     window_frames: int = 150
     top_k: int = 15
+
+class DresSubmitRequest(BaseModel):
+    task_id: str
+    payload: dict
 
 # 4. Helper to Get DB Stats
 def get_qdrant_stats():
@@ -543,6 +567,62 @@ def get_video(video_name: str):
         raise HTTPException(status_code=404, detail="Video file not found")
         
     return FileResponse(str(video_path))
+
+# 5b. DRES Integration (VBS_GUIDE.md section 6) - proxied through this
+# backend so DRES_USERNAME/DRES_PASSWORD never reach the frontend.
+
+@app.post("/api/dres/login")
+def dres_login():
+    """
+    Logs into DRES using DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD from the
+    environment, stores the session id in-memory (single global session -
+    see _dres_session_id above). Call this once at the start of an
+    operating session; re-call if a later DRES call reports the session
+    expired.
+    """
+    global _dres_session_id
+    cfg = _dres_config()
+    if not cfg["base_url"] or not cfg["username"] or not cfg["password"]:
+        raise HTTPException(status_code=400, detail="DRES_BASE_URL/DRES_USERNAME/DRES_PASSWORD not configured")
+    try:
+        _dres_session_id = dres_client.login(cfg["base_url"], cfg["username"], cfg["password"])
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"status": "ok"}
+
+@app.get("/api/dres/current-task")
+def dres_current_task():
+    """Fetch the current task for the configured DRES_EVALUATION_ID. Requires a prior /api/dres/login."""
+    if _dres_session_id is None:
+        raise HTTPException(status_code=401, detail="Not logged into DRES - call /api/dres/login first")
+    cfg = _dres_config()
+    if not cfg["evaluation_id"]:
+        raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
+    try:
+        return dres_client.get_current_task(cfg["base_url"], _dres_session_id, cfg["evaluation_id"])
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+@app.post("/api/dres/submit")
+def dres_submit(request: DresSubmitRequest):
+    """
+    Submit an answer for `request.task_id`. `request.payload`'s exact shape
+    depends on the task type (KIS/AVS/VQA - see dres_client.submit_answer's
+    docstring) and is built by the frontend/caller, not this endpoint -
+    kept intentionally generic since the real DRES submission schema isn't
+    verified against a live instance yet.
+    """
+    if _dres_session_id is None:
+        raise HTTPException(status_code=401, detail="Not logged into DRES - call /api/dres/login first")
+    cfg = _dres_config()
+    if not cfg["evaluation_id"]:
+        raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
+    try:
+        return dres_client.submit_answer(
+            cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, request.payload
+        )
+    except dres_client.DresError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
 # 6. Preprocessing Subprocess Runner
 
