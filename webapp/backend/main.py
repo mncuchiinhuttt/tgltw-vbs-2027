@@ -162,8 +162,7 @@ class QueryByExampleRequest(BaseModel):
     top_k: int = 20
 
 class TemporalSearchRequest(BaseModel):
-    query_a: str
-    query_b: str
+    queries: List[str]
     window_frames: int = 150
     top_k: int = 15
 
@@ -486,34 +485,34 @@ def run_query_by_example(request: QueryByExampleRequest):
 @app.post("/api/temporal-search")
 def run_temporal_search(request: TemporalSearchRequest):
     """
-    VBS-style temporal query: two sequential text descriptions ("a bicycle
-    passes, then a red car") searched independently, then combined via
-    HybridSearcher.temporal_window_match into per-video (frame_a, frame_b)
-    pairs where frame_a occurs before frame_b within window_frames.
+    VBS-style temporal chain query: N>=2 sequential text descriptions ("a
+    bicycle passes, then a red car, then a dog runs by") searched
+    independently, then combined via HybridSearcher.temporal_chain_match
+    into per-video frame chains where each step's frame occurs after the
+    previous step's within window_frames.
     """
+    if len(request.queries) < 2:
+        raise HTTPException(status_code=400, detail="Provide at least 2 queries for a temporal chain")
     try:
         _, searcher, _ = init_services(query_type=1)
-        hits_a = searcher.search(request.query_a, top_k=request.top_k)
-        hits_b = searcher.search(request.query_b, top_k=request.top_k)
-        matches = searcher.temporal_window_match(hits_a, hits_b, window_frames=request.window_frames)
+        hit_lists = [searcher.search(q, top_k=request.top_k) for q in request.queries]
+        matches = searcher.temporal_chain_match(hit_lists, window_frames=request.window_frames)
         results = [
             {
                 "rank": idx + 1,
                 "score": m["score"],
                 "video_name": m["video_name"],
-                "frame_a": m["frame_a"],
-                "frame_b": m["frame_b"],
-                "payload_a": m["payload_a"],
-                "payload_b": m["payload_b"],
+                "frames": m["frames"],
+                "payloads": m["payloads"],
             }
             for idx, m in enumerate(matches)
         ]
         interaction_log.log_query(
-            "temporal_search", f"{request.query_a} -> {request.query_b}",
+            "temporal_search", " -> ".join(request.queries),
             [r["video_name"] for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
         )
-        return {"query_a": request.query_a, "query_b": request.query_b, "results": results}
+        return {"queries": request.queries, "results": results}
     except Exception as e:
         import traceback
         traceback.print_exc()
