@@ -43,6 +43,18 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 # Search settings
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
+
+# AIC's Sơ tuyển round is NOT a live/interactive setting like VBS (BTC sends
+# ~45 queries once, we have 4 hours to submit all of them) - so there's no
+# per-query latency pressure that would justify Qdrant's default approximate
+# HNSW search. QDRANT_EXACT_SEARCH runs a full brute-force scan instead
+# (U-Cker/VBS2026, arXiv LNCS 16415 ch.18 - "we prioritize exact computation
+# in order to guarantee reliability... rather than approximate nearest
+# neighbor methods"), trading query latency (still well within the 4h
+# budget at our dataset scale) for zero HNSW recall loss. Set to false to
+# fall back to approximate search if the collection ever grows large enough
+# that even brute-force scan blows the time budget.
+QDRANT_EXACT_SEARCH = os.getenv("QDRANT_EXACT_SEARCH", "true").lower() == "true"
 VQA_BOX_THRESHOLD = float(os.getenv("VQA_BOX_THRESHOLD", 0.3))
 # Minimum VLM rerank score for a Type 1 (Textual-KIS) candidate to be kept in
 # results, filtering out low-relevance frames that only made the initial

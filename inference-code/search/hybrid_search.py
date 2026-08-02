@@ -2,10 +2,13 @@ import numpy as np
 import sys
 from pathlib import Path
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchText
+from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchText, SearchParams
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT
+from config import (
+    QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT,
+    QDRANT_EXACT_SEARCH,
+)
 
 class HybridSearcher:
     """
@@ -24,6 +27,13 @@ class HybridSearcher:
     def dense_search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
         """
         Search visual index using QwenVL8BEmbedder text encoder.
+
+        AIC's Sơ tuyển round submits a batch of queries within a 4-hour
+        window rather than under VBS-style live per-query latency pressure,
+        so QDRANT_EXACT_SEARCH defaults to a full brute-force scan instead
+        of Qdrant's default approximate HNSW search - see config.py for the
+        rationale/citation. Falls back to approximate search (default
+        Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled.
         """
         query_vector = self.embedder.embed_text(query)
         search_result = self.client.query_points(
@@ -34,7 +44,8 @@ class HybridSearcher:
                 must=[
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
-            )
+            ),
+            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
         ).points
         return [
             {
