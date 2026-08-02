@@ -1,22 +1,16 @@
 import React, { useState, useEffect, useRef } from "react"
 import { HashRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom"
-import { 
-  Search as SearchIcon, 
-  Play, 
-  Database, 
-  Cpu, 
-  RefreshCw, 
-  Sliders, 
-  Tag, 
-  FileText, 
-  Sparkles, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle2, 
-  Volume2, 
+import {
+  Search as SearchIcon,
+  Database,
+  Cpu,
+  RefreshCw,
+  Sliders,
+  FileText,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
   Terminal,
-  ChevronDown,
-  ChevronUp,
   FileCode,
   FolderOpen,
   Eye,
@@ -29,13 +23,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select"
+import { ResultCard, type ResultHit } from "@/components/ResultCard"
+import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 
 const BACKEND_URL = "http://localhost:8000"
 
@@ -115,12 +111,24 @@ function SearchView() {
   const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number} | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
+  // VBS interactive-session states (Phase C backend / Phase D UI of the
+  // batch-to-interactive plan): temporal query mode, video-browse dialog,
+  // and DRES login/current-task so "Nộp câu trả lời" has a task_id to
+  // submit against.
+  const [temporalMode, setTemporalMode] = useState(false)
+  const [queryB, setQueryB] = useState("")
+  const [browsingVideo, setBrowsingVideo] = useState<string | null>(null)
+  const [dresLoggedIn, setDresLoggedIn] = useState(false)
+  const [currentTask, setCurrentTask] = useState<any>(null)
+  const [actionMessage, setActionMessage] = useState<string | null>(null)
+
   // -----------------------------------------------------------
   // SINGLE QUERY INFERENCE
   // -----------------------------------------------------------
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
+    if (temporalMode && !queryB.trim()) return
 
     setLoading(true)
     setError(null)
@@ -128,10 +136,14 @@ function SearchView() {
     setExpandedIndex(null)
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/search`, {
+      const endpoint = temporalMode ? "/api/temporal-search" : "/api/search"
+      const body = temporalMode
+        ? { query_a: query, query_b: queryB }
+        : { type: queryType, query: query }
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: queryType, query: query })
+        body: JSON.stringify(body)
       })
 
       if (!response.ok) {
@@ -140,11 +152,110 @@ function SearchView() {
       }
 
       const data = await response.json()
+      // /api/temporal-search returns {video_name, frame_a, frame_b,
+      // payload_a, payload_b} per match instead of the usual
+      // {id, score, payload} shape - normalize into the same ResultHit
+      // shape ResultCard expects (using payload_a as the displayed frame,
+      // noting frame_b's timing in the caption) rather than building a
+      // second rendering path just for this one mode.
+      const normalized = temporalMode
+        ? (data.results || []).map((m: any) => ({
+            id: `${m.video_name}:${m.frame_a}-${m.frame_b}`,
+            score: m.score,
+            payload: {
+              ...m.payload_a,
+              caption: `${m.payload_a?.caption || ""} → (event 2 tại frame ${m.frame_b})`.trim(),
+            },
+          }))
+        : (data.results || [])
+      setResults(normalized)
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // -----------------------------------------------------------
+  // VBS INTERACTIVE-SESSION ACTIONS (feedback, query-by-example,
+  // in-video search, DRES) - Phase D of the batch-to-interactive plan.
+  // Each re-runs a search and swaps `results`, same as handleSearch above.
+  // -----------------------------------------------------------
+  const runSessionSearch = async (endpoint: string, body: any) => {
+    setLoading(true)
+    setError(null)
+    setExpandedIndex(null)
+    try {
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Request failed")
+      }
+      const data = await response.json()
       setResults(data.results || [])
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFeedback = (id: string, positive: boolean) => {
+    runSessionSearch("/api/feedback", positive ? { positive_ids: [id] } : { negative_ids: [id] })
+  }
+
+  const handleUseAsQuery = (id: string) => {
+    runSessionSearch("/api/query-by-example", { point_id: id })
+  }
+
+  const handleInVideoSearch = async (videoName: string) => {
+    if (!query.trim()) return
+    await runSessionSearch("/api/in-video-search", { query, video_name: videoName })
+  }
+
+  const handleBrowseVideo = (videoName: string) => setBrowsingVideo(videoName)
+
+  const handleDresLogin = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/dres/login`, { method: "POST" })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "DRES login failed")
+      }
+      setDresLoggedIn(true)
+      const taskResponse = await fetch(`${BACKEND_URL}/api/dres/current-task`)
+      if (taskResponse.ok) setCurrentTask(await taskResponse.json())
+    } catch (err: any) {
+      setActionMessage(err.message || "DRES login failed")
+    }
+  }
+
+  const handleSubmitToDres = async (hit: ResultHit) => {
+    if (!currentTask?.task_id) {
+      setActionMessage("Chưa có task DRES hiện tại - đăng nhập DRES trước.")
+      return
+    }
+    try {
+      // Payload shape is unverified against a live DRES schema (see
+      // dres_client.py's docstring) - this is a best-effort KIS-style
+      // {mediaItemName, timestamp} guess, adjust once the real schema
+      // for VBS 2027's DRES instance is confirmed.
+      const response = await fetch(`${BACKEND_URL}/api/dres/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task_id: currentTask.task_id,
+          payload: { mediaItemName: hit.payload.source_file, timestamp: hit.payload.timestamp },
+        }),
+      })
+      const data = await response.json()
+      setActionMessage(response.ok ? `Đã nộp: ${JSON.stringify(data)}` : (data.detail || "Nộp thất bại"))
+    } catch (err: any) {
+      setActionMessage(err.message || "Nộp thất bại")
     }
   }
 
@@ -283,12 +394,51 @@ function SearchView() {
       {/* ------------------------------------------------------- */}
       {activeTab === "single" && (
         <>
+          {/* DRES panel: login + current task display so "Nộp câu trả lời"
+              on each result card has a task_id to submit against. */}
+          <Card className="tech-card border-indigo-100/60 mb-4 bg-white">
+            <CardContent className="pt-4 pb-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="text-left">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-0.5">DRES</span>
+                {currentTask ? (
+                  <span className="text-sm font-semibold text-slate-700">
+                    Task: {currentTask.task_id || currentTask.type || JSON.stringify(currentTask)}
+                  </span>
+                ) : (
+                  <span className="text-sm text-slate-400">{dresLoggedIn ? "Logged in - no current task" : "Not logged in"}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {actionMessage && <span className="text-xs text-slate-500 max-w-xs truncate">{actionMessage}</span>}
+                <button
+                  onClick={handleDresLogin}
+                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  {dresLoggedIn ? "Refresh task" : "Login to DRES"}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="tech-card border-indigo-100/60 mb-8 overflow-hidden relative bg-white">
             {loading && <div className="scan-line" />}
             <CardContent className="pt-6">
+              <div className="flex items-center gap-2 mb-4 text-left">
+                <input
+                  id="temporal-mode"
+                  type="checkbox"
+                  checked={temporalMode}
+                  onChange={(e) => setTemporalMode(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <label htmlFor="temporal-mode" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Temporal search (2 mô tả nối tiếp)
+                </label>
+              </div>
               <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-                
+
                 {/* Shadcn Select Component */}
+                {!temporalMode && (
                 <div className="w-full md:w-56 text-left">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Retrieval Method
@@ -307,10 +457,11 @@ function SearchView() {
                     </SelectContent>
                   </Select>
                 </div>
+                )}
 
                 <div className="flex-1 text-left">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Natural Text Description
+                    {temporalMode ? "Sự kiện thứ 1" : "Natural Text Description"}
                   </label>
                   <div className="relative">
                     <input
@@ -318,10 +469,10 @@ function SearchView() {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder={
-                        queryType === 1 
-                          ? "Search details (e.g. một người đang lái xe máy dưới mưa...)" 
-                          : queryType === 2 
-                          ? "Visual Question (e.g. người mặc áo đỏ đang dắt xe đạp ở giây thứ mấy?)" 
+                        queryType === 1
+                          ? "Search details (e.g. một người đang lái xe máy dưới mưa...)"
+                          : queryType === 2
+                          ? "Visual Question (e.g. người mặc áo đỏ đang dắt xe đạp ở giây thứ mấy?)"
                           : "Chronological actions (e.g. đầu tiên xe máy đi qua, sau đó ô tô đi qua...)"
                       }
                       className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
@@ -329,6 +480,24 @@ function SearchView() {
                     <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   </div>
                 </div>
+
+                {temporalMode && (
+                  <div className="flex-1 text-left">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Sự kiện thứ 2 (xảy ra sau)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={queryB}
+                        onChange={(e) => setQueryB(e.target.value)}
+                        placeholder="e.g. ô tô màu đỏ đi qua"
+                        className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-end">
                   <button
@@ -391,128 +560,21 @@ function SearchView() {
 
           {!loading && results.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {results.map((hit, idx) => {
-                const payload = hit.payload || {}
-                const videoName = payload.source_file || "Unknown File"
-                const timestamp = payload.timestamp !== undefined ? payload.timestamp : 0.0
-                const frameUrl = `${BACKEND_URL}/api/media/frame?video_name=${encodeURIComponent(videoName)}&timestamp=${timestamp}`
-                const isExpanded = expandedIndex === idx
-
-                return (
-                  <Card key={hit.id || idx} className="tech-card overflow-hidden flex flex-col justify-between">
-                    <div>
-                      <div className="relative group aspect-video bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100">
-                        <img
-                          src={frameUrl}
-                          alt={`Frame ${videoName}`}
-                          className="object-cover w-full h-full group-hover:scale-102 transition-transform duration-500"
-                          loading="lazy"
-                        />
-                        <div className="absolute top-3 left-3 flex gap-1.5">
-                          <Badge variant="default" className="bg-slate-900/90 text-white font-bold text-xs py-0.5 border border-slate-800">
-                            #{idx + 1}
-                          </Badge>
-                          <Badge variant="outline" className="bg-white/95 text-slate-700 font-bold text-xs border-slate-200/80 shadow-sm">
-                            Score: {hit.score != null ? hit.score.toFixed(3) : (hit.rrf_score != null ? hit.rrf_score.toFixed(4) : "N/A")}
-                          </Badge>
-                        </div>
-                        <div className="absolute top-3 right-3">
-                          <Badge variant="outline" className="bg-white/95 text-xs font-semibold border-slate-200 text-indigo-600 shadow-sm flex gap-1 items-center capitalize">
-                            {payload.modality === "ambient_audio" ? <Volume2 className="h-3 w-3" /> : <Tag className="h-3 w-3" />}
-                            {payload.modality || "visual"}
-                          </Badge>
-                        </div>
-                        <div className="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <button
-                            onClick={() => setSelectedVideo({ name: videoName, time: timestamp })}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full p-4"
-                          >
-                            <Play className="h-6 w-6 fill-white" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="p-5 text-left">
-                        <h4 className="font-bold text-slate-800 truncate text-base mb-1" title={videoName}>
-                          {videoName}
-                        </h4>
-                        <div className="flex items-center gap-1.5 text-slate-500 text-xs font-semibold mb-3">
-                          <Clock className="h-4 w-4 text-indigo-500" />
-                          <span>Timestamp:</span>
-                          <span className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">
-                            {timestamp.toFixed(2)}s
-                          </span>
-                        </div>
-
-                        {hit.answer && (
-                          <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg mb-3">
-                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" />
-                              VQA Generated Answer
-                            </p>
-                            <p className="text-sm text-slate-700 font-semibold">
-                              {hit.answer}
-                            </p>
-                          </div>
-                        )}
-
-                        <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
-                          {payload.caption || "No visual caption metadata indexed."}
-                        </p>
-
-                        {isExpanded && (
-                          <div className="space-y-4 pt-4 border-t border-slate-100 mt-3 animate-in fade-in duration-200">
-                            {payload.scene_narrative && (
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Scene Narrative</span>
-                                <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                                  {payload.scene_narrative}
-                                </p>
-                              </div>
-                            )}
-                            {payload.ocr_text && (
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">OCR Normalized Text</span>
-                                <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 font-mono text-xs py-1 px-2.5">
-                                  {payload.ocr_text}
-                                </Badge>
-                              </div>
-                            )}
-                            {payload.detected_objects && payload.detected_objects.length > 0 && (
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Detected Objects</span>
-                                <div className="flex flex-wrap gap-1">
-                                  {payload.detected_objects.map((obj: any, oIdx: number) => (
-                                    <Badge key={oIdx} variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs py-0.5 px-2">
-                                      {obj.label} ({obj.conf.toFixed(2)})
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <CardFooter className="px-5 pb-5 pt-0 flex justify-between gap-3 border-t border-slate-100 mt-4 pt-3">
-                      <button
-                        onClick={() => setExpandedIndex(isExpanded ? null : idx)}
-                        className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors"
-                      >
-                        {isExpanded ? <>Hide Metadata<ChevronUp className="h-4 w-4" /></> : <>Inspect Metadata<ChevronDown className="h-4 w-4" /></>}
-                      </button>
-                      <button
-                        onClick={() => setSelectedVideo({ name: videoName, time: timestamp })}
-                        className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-indigo-750 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
-                      >
-                        <Play className="h-3.5 w-3.5 fill-indigo-600 text-indigo-600" />
-                        Play Clip
-                      </button>
-                    </CardFooter>
-                  </Card>
-                )
-              })}
+              {results.map((hit, idx) => (
+                <ResultCard
+                  key={hit.id || idx}
+                  hit={hit}
+                  idx={idx}
+                  isExpanded={expandedIndex === idx}
+                  onToggleExpand={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
+                  onPlay={(name, time) => setSelectedVideo({ name, time })}
+                  onFeedback={handleFeedback}
+                  onUseAsQuery={handleUseAsQuery}
+                  onInVideoSearch={handleInVideoSearch}
+                  onBrowseVideo={handleBrowseVideo}
+                  onSubmitToDres={handleSubmitToDres}
+                />
+              ))}
             </div>
           )}
 
@@ -771,6 +833,15 @@ function SearchView() {
           </DialogContent>
         </Dialog>
       )}
+
+      <BrowseVideoDialog
+        videoName={browsingVideo}
+        onClose={() => setBrowsingVideo(null)}
+        onPlayFrame={(name, time) => {
+          setBrowsingVideo(null)
+          setSelectedVideo({ name, time })
+        }}
+      />
     </div>
   )
 }
