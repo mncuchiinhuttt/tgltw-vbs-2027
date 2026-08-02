@@ -2,6 +2,21 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.13.0] - 2026-08-03
+
+### Added - Novelty research pass 2 (4 parallel research agents + citation verification)
+Ran 4 parallel research passes deliberately scoped to NOT repeat the 12-team VBS2026 method survey already done: (1) academic moment retrieval/temporal grounding literature, (2) agentic/adaptive retrieval planning patterns, (3) VBS 2027-specific announcements + lightweight hierarchical indexing, (4) ANN search recall/latency optimization. **Every citation was independently re-verified via WebFetch against the actual arXiv/doc page before being trusted** - research agents can fabricate plausible-sounding citations; all 6 spot-checked papers, the Qdrant `SearchParams.hnsw_ef` API, and the MMM2027 conference dates confirmed real and accurate, none fabricated. Full reports: `plans/reports/researcher-260803-*.md` (4 files).
+
+- **`HybridSearcher.temporal_coherence_boost()`** (TAG-inspired, arXiv:2508.07925, verified real) - boosts a candidate's `rrf_score` using the combined score of other same-video candidates within a frame window, fixing "event fragmentation" where a real event's several nearby independent hits each score too low on their own to compete with an unrelated isolated frame. Pure Python, no new model, sub-millisecond. Wired into `/api/search` right after `merge_rrf`. PR #10.
+- **Graduated `hnsw_ef` escalation** alongside the existing binary `exact` toggle (Phase I) - `HybridSearcher.dense_search*`/`search()` gain an optional `hnsw_ef` override (Qdrant's own documented search-time HNSW candidate-list-size param, verified via live WebSearch against `qdrant-client`'s actual API) for a middle ground between fast-approximate and full-brute-force. API-only for now, no frontend control added. PR #9.
+- **KIS-C ambiguity detection + clarification question** - `HybridSearcher.compute_ambiguity_score()` (CAR-inspired, arXiv:2511.14769, verified real; no-VLM-call heuristic: ratio of distinct videos among top candidates) and `QueryProcessor.generate_clarification_question()` (only called when ambiguity crosses `AMBIGUITY_THRESHOLD`, default 0.7, so the common unambiguous case pays zero extra VLM-call cost) - directly serves VBS's KIS-C task type (progressive detail elicitation), complementing the existing passive CQR with a system-initiated clarifying question. Frontend shows it as an amber banner. PR #11.
+
+### Documented but not implemented (team decision needed, not made unilaterally)
+- **Qwen3-VL-Embedding with Matryoshka Representation Learning (MRL)** - verified real (arXiv:2601.04720, "supports Matryoshka Representation Learning, enabling flexible embedding dimensions", 2B/8B variants, 77.8 on MMEB-V2). Would let a 2-stage search truncate to 256-512d for a fast first pass (10-50x speedup claimed), then refine at full 4096d - zero retraining needed since MRL is a train-time property of the model itself. **Not implemented**: swapping embedders requires re-embedding the entire dataset (same class of decision as the existing opt-in SigLIP ensemble), which is a real cost/scheduling decision for the team to make deliberately, not something to flip while the user is away. See Notion "Our method (VBS)" for the full recommendation and a scoped follow-up plan if the team decides to proceed.
+- Also researched and explicitly deprioritized: moment-retrieval techniques requiring training on labeled data (R²-Tuning, TempRet, Foresee-to-Ground, Moment Quantization - none are zero-shot), DMQR-RAG multi-query rewriting (extra VLM calls per search conflict with Phase A's latency-first philosophy), and full MC-Search-style reasoning chains (complexity not justified at single-session scale).
+
+Source: 4 parallel research-agent reports (moment retrieval, agentic retrieval, VBS2027+hierarchical indexing, ANN search) - see Notion "Our method (VBS)" for the synthesized writeup.
+
 ## [1.12.0] - 2026-08-03
 
 ### Added
