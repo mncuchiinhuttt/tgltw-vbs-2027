@@ -125,6 +125,11 @@ class SearchRequest(BaseModel):
     query: str
     dataset_dir: Optional[str] = None
 
+class InVideoSearchRequest(BaseModel):
+    query: str
+    video_name: str
+    dataset_dir: Optional[str] = None
+
 # 4. Helper to Get DB Stats
 def get_qdrant_stats():
     try:
@@ -257,11 +262,12 @@ async def run_search(request: SearchRequest):
             decomp = query_proc.decompose_query(request.query)
             sub_queries = decomp.get("sub_queries", [request.query])
 
-            # In-Video Retrieval: surface frames from the top candidate
-            # videos that scored too low to make the initial pool at all
-            # (see HybridSearcher.in_video_refine).
-            candidates = searcher.in_video_refine(request.query, candidates)
-
+            # In-Video Retrieval used to run automatically here on every
+            # search (see HybridSearcher.in_video_refine) - fine for AIC's
+            # 4-hour batch window, too slow as a default per-query cost for
+            # VBS's live 5-7 minute task clock. Now a manual action the
+            # operator triggers explicitly via /api/in-video-search once
+            # they've spotted a promising video in the initial results.
             top_candidates = reranker.rerank_type2_vqa(
                 request.query, sub_queries, candidates[:10], dataset_dir
             )
@@ -335,6 +341,53 @@ async def run_search(request: SearchRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@app.post("/api/in-video-search")
+async def run_in_video_search(request: InVideoSearchRequest):
+    """
+    In-Video Retrieval (NII-UIT-inspired, VBS2026), as a manual operator
+    action instead of an automatic step in /api/search's Type 2 flow (see
+    the comment removed from there). Call this once the operator has
+    spotted a promising video in the initial results and wants to search
+    its full frame timeline directly (HybridSearcher.in_video_refine) rather
+    than only whatever made the original candidate pool.
+    """
+    try:
+        query_proc, searcher, reranker = init_services(query_type=2)
+        dataset_dir = request.dataset_dir or str(DATASETS_DIR)
+
+        # Seed in_video_refine with a single synthetic candidate for the
+        # requested video (top_videos=1 scopes it to exactly that video,
+        # rather than re-deriving "top videos" from a full search pool).
+        seed = [{"id": "seed", "rrf_score": 1.0, "payload": {"source_file": request.video_name}}]
+        candidates = searcher.in_video_refine(request.query, seed, top_videos=1, top_frames_per_video=20)
+        # Drop the synthetic seed placeholder (no real timestamp/payload) -
+        # if it's the only thing left, the video has no indexed frames at all.
+        candidates = [c for c in candidates if c["id"] != "seed"]
+        if not candidates:
+            return {"query": request.query, "video_name": request.video_name, "results": [],
+                    "message": f"No indexed frames found for video '{request.video_name}'."}
+
+        decomp = query_proc.decompose_query(request.query)
+        sub_queries = decomp.get("sub_queries", [request.query])
+        top_candidates = reranker.rerank_type2_vqa(request.query, sub_queries, candidates[:10], dataset_dir)
+
+        results = [
+            {
+                "rank": idx + 1,
+                "score": c.get("final_score", 0.0),
+                "vqa_score": c.get("vqa_score", 0.0),
+                "rrf_score": c.get("rrf_score", 0.0),
+                "id": c["id"],
+                "payload": c["payload"],
+            }
+            for idx, c in enumerate(top_candidates)
+        ]
+        return {"query": request.query, "video_name": request.video_name, "results": results}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"In-video search failed: {str(e)}")
 
 @app.get("/api/media/frame")
 def get_frame(video_name: str, timestamp: float):
