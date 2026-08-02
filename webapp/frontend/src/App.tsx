@@ -116,7 +116,15 @@ function SearchView() {
   // and DRES login/current-task so "Nộp câu trả lời" has a task_id to
   // submit against.
   const [temporalMode, setTemporalMode] = useState(false)
-  const [queryB, setQueryB] = useState("")
+  // Steps after the first ("query" itself is step 1) - generalizes the old
+  // fixed 2-query temporal search into an N-step chain (Exquisitor-inspired
+  // sequence-chain matching, see HybridSearcher.temporal_chain_match).
+  const [extraQueries, setExtraQueries] = useState<string[]>([""])
+  const addTemporalStep = () => setExtraQueries((prev) => (prev.length < 4 ? [...prev, ""] : prev))
+  const removeTemporalStep = (idx: number) =>
+    setExtraQueries((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev))
+  const updateTemporalStep = (idx: number, value: string) =>
+    setExtraQueries((prev) => prev.map((v, i) => (i === idx ? value : v)))
   const [browsingVideo, setBrowsingVideo] = useState<string | null>(null)
   const [dresLoggedIn, setDresLoggedIn] = useState(false)
   const [currentTask, setCurrentTask] = useState<any>(null)
@@ -128,7 +136,7 @@ function SearchView() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
-    if (temporalMode && !queryB.trim()) return
+    if (temporalMode && extraQueries.some((q) => !q.trim())) return
 
     setLoading(true)
     setError(null)
@@ -138,7 +146,7 @@ function SearchView() {
     try {
       const endpoint = temporalMode ? "/api/temporal-search" : "/api/search"
       const body = temporalMode
-        ? { query_a: query, query_b: queryB }
+        ? { queries: [query, ...extraQueries] }
         : { type: queryType, query: query }
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: "POST",
@@ -152,19 +160,22 @@ function SearchView() {
       }
 
       const data = await response.json()
-      // /api/temporal-search returns {video_name, frame_a, frame_b,
-      // payload_a, payload_b} per match instead of the usual
+      // /api/temporal-search returns {video_name, frames, payloads} per
+      // match (one entry per chain step) instead of the usual
       // {id, score, payload} shape - normalize into the same ResultHit
-      // shape ResultCard expects (using payload_a as the displayed frame,
-      // noting frame_b's timing in the caption) rather than building a
-      // second rendering path just for this one mode.
+      // shape ResultCard expects (using the first step's payload as the
+      // displayed frame, joining every step's caption to show the whole
+      // chain) rather than building a second rendering path just for this
+      // one mode.
       const normalized = temporalMode
         ? (data.results || []).map((m: any) => ({
-            id: `${m.video_name}:${m.frame_a}-${m.frame_b}`,
+            id: `${m.video_name}:${(m.frames || []).join("-")}`,
             score: m.score,
             payload: {
-              ...m.payload_a,
-              caption: `${m.payload_a?.caption || ""} → (event 2 tại frame ${m.frame_b})`.trim(),
+              ...(m.payloads?.[0] || {}),
+              caption: (m.payloads || [])
+                .map((p: any, i: number) => p?.caption || `(sự kiện ${i + 1})`)
+                .join(" → "),
             },
           }))
         : (data.results || [])
@@ -432,7 +443,7 @@ function SearchView() {
                   className="h-4 w-4"
                 />
                 <label htmlFor="temporal-mode" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Temporal search (2 mô tả nối tiếp)
+                  Temporal search (chuỗi nhiều mô tả nối tiếp)
                 </label>
               </div>
               <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
@@ -481,21 +492,42 @@ function SearchView() {
                   </div>
                 </div>
 
-                {temporalMode && (
-                  <div className="flex-1 text-left">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                      Sự kiện thứ 2 (xảy ra sau)
+                {temporalMode && extraQueries.map((q, idx) => (
+                  <div key={idx} className="flex-1 text-left">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      <span>Sự kiện thứ {idx + 2} (xảy ra sau)</span>
+                      {extraQueries.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTemporalStep(idx)}
+                          className="text-slate-400 hover:text-red-500 normal-case font-semibold"
+                        >
+                          Bớt bước
+                        </button>
+                      )}
                     </label>
                     <div className="relative">
                       <input
                         type="text"
-                        value={queryB}
-                        onChange={(e) => setQueryB(e.target.value)}
+                        value={q}
+                        onChange={(e) => updateTemporalStep(idx, e.target.value)}
                         placeholder="e.g. ô tô màu đỏ đi qua"
                         className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                       <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                     </div>
+                  </div>
+                ))}
+
+                {temporalMode && extraQueries.length < 4 && (
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={addTemporalStep}
+                      className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-3 py-2.5 rounded-lg transition-colors h-[40px]"
+                    >
+                      + Thêm bước
+                    </button>
                   </div>
                 )}
 

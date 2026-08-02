@@ -296,18 +296,24 @@ class HybridSearcher:
         norm = float(np.linalg.norm(result))
         return result / norm if norm > 0 else result
 
-    def temporal_window_match(self, hits_a: list, hits_b: list, window_frames: int = 150) -> list:
+    def temporal_chain_match(self, hit_lists: list, window_frames: int = 150) -> list:
         """
-        VBS-style temporal query (2 sequential text descriptions, distinct
-        from AIC's TRAKE which auto-aligns N events via DP - see
-        Reranker.rerank_type3_temporal): given two independently-searched
-        hit lists, finds videos where some frame from hits_a occurs before
-        (by frame_idx) and within window_frames of some frame from hits_b.
-        Picks the best-scoring valid (a, b) frame pair per video and ranks
-        videos by combined RRF score. A lighter 2-query variant of
-        PraK/Exquisitor's more general N-query sequence-chain matching -
-        covers the common VBS temporal-query case; extend to N later if a
-        3+-step temporal task actually needs it.
+        VBS-style temporal query, generalized to a chain of N>=2 sequential
+        text descriptions ("a bicycle passes, then a red car, then a dog
+        runs by") searched independently - distinct from AIC's TRAKE which
+        takes ONE sentence and auto-decomposes it via DP alignment (see
+        Reranker.rerank_type3_temporal). Exquisitor-inspired sequence-chain
+        matching: for each video present in every hit list, finds the
+        highest-combined-RRF-score chain of frames frame_0 < frame_1 < ... <
+        frame_{N-1} where each consecutive pair is within window_frames.
+
+        Implemented as a step-wise DP (same style as
+        Reranker._align_events_dp): dp[i][frame] = best cumulative score of
+        a valid chain ending with step i assigned to `frame`, built from
+        dp[i-1][prev_frame] for every prev_frame within the window
+        constraint. Backpointers reconstruct the actual frame sequence.
+        With exactly 2 hit lists this reduces to the same best-pair-per-video
+        result the old temporal_window_match produced.
         """
         def _group_by_video(hits):
             grouped = {}
@@ -319,30 +325,60 @@ class HybridSearcher:
                 grouped.setdefault(video, []).append(hit)
             return grouped
 
-        by_video_a = _group_by_video(hits_a)
-        by_video_b = _group_by_video(hits_b)
+        by_video_per_step = [_group_by_video(hits) for hits in hit_lists]
+        if not by_video_per_step:
+            return []
+        common_videos = set(by_video_per_step[0])
+        for by_video in by_video_per_step[1:]:
+            common_videos &= set(by_video)
 
         matches = []
-        for video in set(by_video_a) & set(by_video_b):
-            best_pair, best_score = None, -1.0
-            for ha in by_video_a[video]:
-                frame_a = ha["payload"]["frame_idx"]
-                for hb in by_video_b[video]:
-                    frame_b = hb["payload"]["frame_idx"]
-                    if frame_a < frame_b and (frame_b - frame_a) <= window_frames:
-                        combined = ha.get("rrf_score", 0.0) + hb.get("rrf_score", 0.0)
-                        if combined > best_score:
-                            best_score, best_pair = combined, (ha, hb)
-            if best_pair is not None:
-                ha, hb = best_pair
-                matches.append({
-                    "video_name": video,
-                    "score": best_score,
-                    "frame_a": ha["payload"]["frame_idx"],
-                    "frame_b": hb["payload"]["frame_idx"],
-                    "payload_a": ha["payload"],
-                    "payload_b": hb["payload"],
-                })
+        for video in common_videos:
+            step_hits = [by_video[video] for by_video in by_video_per_step]
+
+            # dp[i] maps frame_idx -> (cumulative_score, hit, backpointer_frame)
+            dp = [
+                {h["payload"]["frame_idx"]: (h.get("rrf_score", 0.0), h, None) for h in step_hits[0]}
+            ]
+            for i in range(1, len(step_hits)):
+                prev_dp = dp[i - 1]
+                step_dp = {}
+                for h in step_hits[i]:
+                    frame = h["payload"]["frame_idx"]
+                    best_prev_frame, best_total = None, -1.0
+                    for prev_frame, (prev_score, _, _) in prev_dp.items():
+                        if prev_frame < frame and (frame - prev_frame) <= window_frames:
+                            total = prev_score + h.get("rrf_score", 0.0)
+                            if total > best_total:
+                                best_total, best_prev_frame = total, prev_frame
+                    if best_prev_frame is not None:
+                        # Keep the best-scoring hit reaching this frame if
+                        # multiple prior chains land on the same frame.
+                        existing = step_dp.get(frame)
+                        if existing is None or best_total > existing[0]:
+                            step_dp[frame] = (best_total, h, best_prev_frame)
+                dp.append(step_dp)
+
+            if not dp[-1]:
+                continue  # no valid chain reaches the last step for this video
+
+            last_frame, (best_score, _, _) = max(dp[-1].items(), key=lambda kv: kv[1][0])
+
+            # Reconstruct the chain by walking backpointers.
+            chain_hits = []
+            frame = last_frame
+            for i in range(len(dp) - 1, -1, -1):
+                _, hit, prev_frame = dp[i][frame]
+                chain_hits.append(hit)
+                frame = prev_frame
+            chain_hits.reverse()
+
+            matches.append({
+                "video_name": video,
+                "score": best_score,
+                "frames": [h["payload"]["frame_idx"] for h in chain_hits],
+                "payloads": [h["payload"] for h in chain_hits],
+            })
 
         return sorted(matches, key=lambda m: m["score"], reverse=True)
 
