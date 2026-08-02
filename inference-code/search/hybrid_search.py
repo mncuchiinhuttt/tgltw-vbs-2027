@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from pathlib import Path
+from typing import Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchText, SearchParams
 
@@ -29,7 +30,7 @@ class HybridSearcher:
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
 
-    def _dense_search_vector(self, vector, top_k: int) -> list:
+    def _dense_search_vector(self, vector, top_k: int, exact: Optional[bool] = None) -> list:
         """
         Shared primary-vector search core: query_points against the
         "default" named vector (or the collection's sole unnamed vector
@@ -38,9 +39,15 @@ class HybridSearcher:
         (pre-computed, e.g. relevance feedback or query-by-example) both
         funnel through this so the actual Qdrant call logic lives in one
         place.
+
+        `exact`, when not None, overrides the QDRANT_EXACT_SEARCH config
+        default for just this call - lets an operator escalate precision
+        on-demand for one stuck query (U-Cker/PraK-inspired, VBS2026)
+        without editing .env/restarting the backend.
         """
         vector_list = vector.tolist() if hasattr(vector, "tolist") else list(vector)
         search_kwargs = {"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}
+        use_exact = exact if exact is not None else QDRANT_EXACT_SEARCH
         search_result = self.client.query_points(
             collection_name="visual_index",
             query=vector_list,
@@ -50,7 +57,7 @@ class HybridSearcher:
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
             ),
-            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
+            search_params=SearchParams(exact=use_exact),
             **search_kwargs,
         ).points
         return [
@@ -61,7 +68,7 @@ class HybridSearcher:
             } for hit in search_result
         ]
 
-    def dense_search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
+    def dense_search(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
         """
         Search visual index using QwenVL8BEmbedder text encoder.
 
@@ -76,11 +83,12 @@ class HybridSearcher:
         so QDRANT_EXACT_SEARCH defaults to a full brute-force scan instead
         of Qdrant's default approximate HNSW search - see config.py for the
         rationale/citation. Falls back to approximate search (default
-        Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled.
+        Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled. Pass `exact`
+        to override the default for just this call.
         """
-        return self._dense_search_vector(self.embedder.embed_text(query), top_k)
+        return self._dense_search_vector(self.embedder.embed_text(query), top_k, exact=exact)
 
-    def dense_search_by_vector(self, vector, top_k: int = TOP_K_RETRIEVAL) -> list:
+    def dense_search_by_vector(self, vector, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
         """
         Same as dense_search, but takes an already-computed dense vector
         instead of embedding text - used for VBS interactive session
@@ -89,7 +97,7 @@ class HybridSearcher:
         retrieved directly from an existing Qdrant point (no re-embedding
         needed).
         """
-        return self._dense_search_vector(vector, top_k)
+        return self._dense_search_vector(vector, top_k, exact=exact)
 
     def get_point_vector(self, point_id):
         """
@@ -105,17 +113,19 @@ class HybridSearcher:
         vector = points[0].vector
         return vector.get("default") if isinstance(vector, dict) else vector
 
-    def dense_search_secondary(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
+    def dense_search_secondary(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
         """
         Second embedding model's (SigLIP) dense search against the
         "visual_index" collection's named "siglip" vector - see
         models/siglip_embedder.py for the ensemble rationale. Returns []
         when no secondary_embedder was provided (disabled), so callers can
         unconditionally include it in a merge_rrf(...) call without an
-        extra branch.
+        extra branch. `exact` overrides QDRANT_EXACT_SEARCH for this call,
+        same as dense_search.
         """
         if self.secondary_embedder is None:
             return []
+        use_exact = exact if exact is not None else QDRANT_EXACT_SEARCH
         query_vector = self.secondary_embedder.embed_text(query)
         search_result = self.client.query_points(
             collection_name="visual_index",
@@ -127,7 +137,7 @@ class HybridSearcher:
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
             ),
-            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
+            search_params=SearchParams(exact=use_exact),
         ).points
         return [
             {
@@ -244,11 +254,14 @@ class HybridSearcher:
                 break
         return diversified
 
-    def search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
+    def search(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
         """
-        Perform hybrid search query and return fused rankings.
+        Perform hybrid search query and return fused rankings. `exact`
+        overrides QDRANT_EXACT_SEARCH for the dense branch only - sparse_search
+        is a payload text filter, not a vector search, so it has no exact/HNSW
+        setting to override.
         """
-        dense_hits = self.dense_search(query, top_k)
+        dense_hits = self.dense_search(query, top_k, exact=exact)
         sparse_hits = self.sparse_search(query, top_k)
         return self.merge_rrf(dense_hits, sparse_hits)
 

@@ -180,6 +180,14 @@ class SearchRequest(BaseModel):
     type: int
     query: str
     dataset_dir: Optional[str] = None
+    # Escalate-precision-on-demand (U-Cker/PraK-inspired, VBS2026): when
+    # None (default, unchecked in the UI), server config defaults
+    # (QDRANT_EXACT_SEARCH / VERIFICATION_RERANK_ENABLED) apply unchanged.
+    # Set explicitly to override for just this search, e.g. when an
+    # operator is stuck on a hard KIS-T task and wants to trade latency for
+    # precision without editing .env/restarting the backend.
+    exact: Optional[bool] = None
+    verify: Optional[bool] = None
 
 class FeedbackRequest(BaseModel):
     positive_ids: List[str] = []
@@ -315,9 +323,9 @@ async def run_search(request: SearchRequest):
         hyde_query = query_proc.generate_hyde(resolved_query)
 
         # 2. Candidate Retrieval
-        query_hits = searcher.search(resolved_query, top_k=15)
-        hyde_hits = searcher.search(hyde_query, top_k=15)
-        secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15)
+        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact)
+        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact)
+        secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15, exact=request.exact)
         # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
         # VBS2026): tags each fused hit with which source(s) it came from
         # ("query" = original text, "hyde" = HyDE hypothetical description,
@@ -347,7 +355,7 @@ async def run_search(request: SearchRequest):
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
-            top_candidates = reranker.rerank_type1(resolved_query, candidates[:10])
+            top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
                 c for c in top_candidates
                 if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
@@ -373,7 +381,7 @@ async def run_search(request: SearchRequest):
             # operator triggers explicitly via /api/in-video-search once
             # they've spotted a promising video in the initial results.
             top_candidates = reranker.rerank_type2_vqa(
-                resolved_query, sub_queries, candidates[:10], dataset_dir
+                resolved_query, sub_queries, candidates[:10], dataset_dir, verify=request.verify
             )
             
             for idx, c in enumerate(top_candidates):
