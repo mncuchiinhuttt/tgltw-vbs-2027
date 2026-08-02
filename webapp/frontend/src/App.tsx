@@ -16,7 +16,8 @@ import {
   Eye,
   Settings,
   Layers,
-  PlayCircle
+  PlayCircle,
+  HelpCircle
 } from "lucide-react"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -98,6 +99,9 @@ function SearchView() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
+  // KIS-C clarification question (Phase L) - set when /api/search's Type 1
+  // flow detects an ambiguous result set and asks a narrowing question.
+  const [clarification, setClarification] = useState<string | null>(null)
   
   // Batch Query states
   const [batchFiles, setBatchFiles] = useState<any[]>([])
@@ -148,6 +152,7 @@ function SearchView() {
     setError(null)
     setResults([])
     setExpandedIndex(null)
+    setClarification(null)
 
     try {
       const endpoint = temporalMode ? "/api/temporal-search" : "/api/search"
@@ -191,6 +196,7 @@ function SearchView() {
           }))
         : (data.results || [])
       setResults(normalized)
+      if (!temporalMode && data.clarification) setClarification(data.clarification)
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.")
     } finally {
@@ -614,6 +620,16 @@ function SearchView() {
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-8 flex items-center gap-3 text-left">
               <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
               <div className="text-sm font-semibold">{error}</div>
+            </div>
+          )}
+
+          {/* KIS-C clarification question (Phase L) - shown when the
+              backend detected an ambiguous result set spread across many
+              unrelated videos with no clear winner. */}
+          {clarification && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-8 flex items-center gap-3 text-left">
+              <HelpCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              <div className="text-sm font-semibold">{clarification}</div>
             </div>
           )}
 

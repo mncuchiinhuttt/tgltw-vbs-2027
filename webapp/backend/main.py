@@ -94,6 +94,13 @@ _dres_session_id = None
 # task_id starts with an empty set via .get(task_id, set())) - no explicit
 # reset needed when DRES moves to the next task.
 _avs_submitted_by_task: dict = {}
+# KIS-C clarification-question trigger (see HybridSearcher.compute_ambiguity_score):
+# 0.0-1.0 ratio of distinct videos among the top candidates; above this,
+# /api/search generates a clarifying question instead of just returning
+# results the operator has to disambiguate unaided. Webapp-only knob (not
+# used by CLI/batch_query.py/evaluation), so it lives here rather than
+# inference-code/config.py.
+AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.7"))
 
 
 def _check_avs_duplicate(task_id: str, video_name: Optional[str], force: bool, submitted_by_task: dict) -> Optional[dict]:
@@ -367,9 +374,31 @@ async def run_search(request: SearchRequest):
 
         # 3. Type-specific Reranking
         results = []
+        clarification_question = None
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
+
+            # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
+            # fused candidate pool is spread across many unrelated videos
+            # with no clear winner, ask the operator a clarifying question
+            # instead of silently returning an under-specified result set.
+            # Gated behind AMBIGUITY_THRESHOLD so the common (unambiguous)
+            # case pays zero extra VLM-call cost.
+            ambiguity_score = searcher.compute_ambiguity_score(candidates)
+            if ambiguity_score >= AMBIGUITY_THRESHOLD:
+                seen_videos = set()
+                summaries = []
+                for c in candidates:
+                    video = c["payload"].get("source_file")
+                    if video in seen_videos:
+                        continue
+                    seen_videos.add(video)
+                    summaries.append(c["payload"].get("caption") or video or "")
+                    if len(summaries) >= 5:
+                        break
+                clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
+
             top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
                 c for c in top_candidates
@@ -473,7 +502,8 @@ async def run_search(request: SearchRequest):
         return {
             "query": request.query,
             "type": request.type,
-            "results": results
+            "results": results,
+            "clarification": clarification_question
         }
     except Exception as e:
         import traceback

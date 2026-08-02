@@ -78,6 +78,30 @@ JSON:"""
                 "constraints": []
             }
 
+    def generate_clarification_question(self, query: str, candidate_summaries: list) -> str:
+        """
+        KIS-C-inspired (VBS_GUIDE.md §4.1: "chat/conversational" task
+        variant models a searcher progressively eliciting detail from a
+        person who remembers a clip vaguely). When the initial result set
+        looks ambiguous (see HybridSearcher.compute_ambiguity_score), this
+        generates ONE short clarifying question the operator can put to
+        the moderator/participant to narrow down which candidate is
+        actually meant - a system-initiated complement to the existing
+        passive CQR (which only resolves references already given, rather
+        than proactively asking for missing detail).
+        """
+        summaries_str = "\n".join(f"- {s}" for s in candidate_summaries)
+        prompt = f"""
+You are helping refine an ambiguous video search query. The current top results span several different, seemingly unrelated candidates:
+{summaries_str}
+Original query: "{query}"
+Write ONE short, specific clarifying question (in the same language as the query) that would help narrow down which of these the user actually means. Output ONLY the question, nothing else.
+Question:"""
+
+        question = self.vlm.generate(None, prompt).strip()
+        print(f"Clarification question: '{question}'")
+        return question
+
     def decompose_temporal_events(self, query: str) -> list:
         """
         Decompose a TRAKE (Type 3, temporal-alignment) query into an ORDERED

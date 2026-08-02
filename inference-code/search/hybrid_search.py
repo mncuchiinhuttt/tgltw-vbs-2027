@@ -292,6 +292,28 @@ class HybridSearcher:
         boosted = [c for group in by_video.values() for c in group] + unboosted
         return sorted(boosted, key=lambda c: c.get("rrf_score", 0.0), reverse=True)
 
+    def compute_ambiguity_score(self, candidates: list, top_n: int = 10) -> float:
+        """
+        Cheap, no-VLM-call ambiguity signal (CAR-inspired, arXiv:2511.14769
+        "Cluster-based Adaptive Retrieval"; ACL TrustNLP 2025 ambiguity
+        detection for QA) for VBS's KIS-C ("chat/conversational") task
+        type, which explicitly models a searcher progressively eliciting
+        detail from a vague initial query. A confident, well-specified
+        query tends to concentrate its top hits on a small number of
+        videos/events; a vague query spreads hits across many unrelated
+        videos with no clear winner. Returns the ratio of DISTINCT videos
+        among the top `top_n` candidates to `top_n` (or fewer if there
+        aren't that many candidates) - 0.0 (all one video, confident) to
+        1.0 (every candidate a different video, maximally ambiguous).
+        Caller (webapp/backend/main.py) decides the threshold at which to
+        act on this (e.g. trigger a clarification question).
+        """
+        top = candidates[:top_n]
+        if not top:
+            return 0.0
+        distinct_videos = {c["payload"].get("source_file") for c in top}
+        return len(distinct_videos) / len(top)
+
     def diversify_by_scene(self, candidates: list, top_k: int) -> list:
         """
         Result Diversification: collapses candidates down to the
