@@ -268,3 +268,9 @@ python evaluation/run_eval.py --query_file evaluation/my_eval_set.json --dataset
 - **Output Metrics**: Evaluates **Recall@1**, **Recall@5**, **MRR**, **Latency Breakdown** (HyDE, Search, Rerank), and **QPS Throughput** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries. Ragas-based generation metrics report `N/A` if `ragas` isn't installed, rather than a fabricated score.
 - Accuracy metrics require a `ground_truth`-annotated query file — do not point `--query_file` at `queries/queries.json`, which is the production query registry and has no ground truth.
 - Detailed results are printed to stdout and saved to `evaluation/eval_results.json`. See `evaluation/README.md` for complete documentation.
+
+---
+
+## License
+
+This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (PhoWhisper, YOLOE-26, SAM3, Vintern-1B-v3.5, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).
