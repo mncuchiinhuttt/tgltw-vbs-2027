@@ -1,17 +1,21 @@
-# HCMC AI Challenge 2026 - Multimedia Retrieval Pipeline
+# VBS 2027 - Multimedia Retrieval System
 
-This repository contains the complete preprocessing, indexing, and inference system for HCMC AI Challenge 2026 (Group A) – Multimedia Retrieval.
+This repository is a full-history clone of our HCMC AI Challenge 2026 pipeline, adapted for the **Video Browser Showdown (VBS) 2027** competition. See [`VBS_GUIDE.md`](VBS_GUIDE.md) for the full competition reference (task types, scoring, DRES, datasets).
 
-The system processes raw datasets (video, images, and audio), generates multimodal embeddings, indexes them to a Qdrant database, and retrieves matching frames/sequences for three types of queries: Textual-KIS (Type 1), VQA (Type 2), and Temporal-Alignment (Type 3).
+VBS is **live/interactive**: an operator drives searches by hand under a 5-7 minute per-task clock, so the system prioritizes low-latency, iterative refinement (relevance feedback, query-by-example, temporal window search) over the batch/offline, ranked-list-of-100 style used for AIC's Sơ tuyển. The underlying preprocessing/indexing pipeline (multimodal embeddings, Qdrant index, VLM/OCR/ASR models) is shared and reused as-is; the retrieval/webapp layer has been reworked for interactive use — see the [WebApp Dashboard](#5-webapp-dashboard--interactive-session) section below.
+
+The system processes raw datasets (video, images, and audio), generates multimodal embeddings, indexes them to a Qdrant database, and retrieves matching frames/sequences for three query types: Textual-KIS (Type 1), VQA (Type 2), and Temporal-Alignment (Type 3).
 
 ---
 
 ## Directory Structure
 
 ```
-Method/
+tgltw-vbs-2027/
 ├── README.md              # Global workspace documentation
-├── .gitignore             # Root git ignore (excludes /weights/ and /datasets/)
+├── VBS_GUIDE.md           # VBS 2027 competition reference (tasks, scoring, DRES, datasets)
+├── .env.template          # Root-level secrets template (HF_TOKEN, DRES_* credentials)
+├── .gitignore             # Root git ignore (excludes /weights/, /datasets/, webapp/backend/logs/)
 ├── download_assets.py     # Script to automate downloading weights from Hugging Face
 ├── host_vllm.sh           # Self-hosts the local VLM via vLLM for batch inference (GPU only) - shared by preprocessing/ and inference-code/
 ├── evaluation/            # Standalone evaluation & benchmarking module
@@ -31,7 +35,7 @@ Method/
 │   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
 │   ├── vintern_ocr.py      # Vintern-1B-v3.5 OCR recognition ensemble member
 │   └── fallback_vlm.py     # Lightweight SmolVLM2 fallback for low-confidence OCR crops
-├── preprocessing/         # Dataset indexing pipeline
+├── preprocessing/         # Dataset indexing pipeline (shared as-is with AIC)
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
 │   ├── .env               # API Keys and model configurations (ignored)
 │   ├── main.py            # Orchestrator to scan data, extract captions/embeddings
@@ -40,10 +44,21 @@ Method/
 │   ├── host_qdrant.sh     # Starts Qdrant (via Docker or standalone binary download)
 │   └── docker-compose.yml # Docker Compose config for Qdrant
 ├── inference-code/        # Retrieval and query engine
-│   ├── config.py          # Search parameters, thresholds, and Qdrant settings
+│   ├── config.py          # Search parameters, thresholds, and Qdrant settings (defaults tuned for VBS live latency)
 │   ├── .env               # API Keys and model configurations (ignored)
 │   ├── main.py            # CLI query parser for Type 1, 2, 3 retrieval
+│   ├── search/hybrid_search.py # HybridSearcher - dense/sparse fusion, Rocchio feedback, temporal window match
 │   └── requirements.txt   # Dependencies for inference
+├── webapp/                # Interactive operator dashboard (VBS session UI + DRES integration)
+│   ├── backend/           # FastAPI backend - see "WebApp Dashboard" section for endpoint list
+│   │   ├── main.py            # API endpoints (search, feedback, DRES proxy, logging)
+│   │   ├── dres_client.py     # Thin REST wrapper for the DRES evaluation server
+│   │   ├── interaction_log.py # Local JSONL + best-effort DRES interaction/query logging
+│   │   └── requirements.txt   # Backend dependencies (fastapi, requests, etc.)
+│   └── frontend/          # React + Vite operator UI
+│       └── src/components/
+│           ├── ResultCard.tsx        # Result card: feedback, query-by-example, in-video search, DRES submit
+│           └── BrowseVideoDialog.tsx # Full-video keyframe browser dialog
 ├── weights/               # [IGNORED] Downloaded model weights (.pth, .bin)
 └── datasets/              # [IGNORED] Place raw videos, images, and audios here
 ```
@@ -158,9 +173,9 @@ python main.py --type 3 --query "đầu tiên có người chạy bộ qua đư�
 
 ---
 
-## 5. WebApp Dashboard
+## 5. WebApp Dashboard & Interactive Session
 
-We provide a futuristic Light Mode dashboard for running single queries, batch queries, checking database statistics, and tracking logs.
+The webapp is the operator's live console during a VBS task: single/batch queries, database stats, and the interactive session tools described below. Each operator runs their own backend instance (no multi-tenant session store) — this matches VBS's one-workstation-per-operator setup.
 
 ### Start the WebApp Dev Servers
 
@@ -176,6 +191,34 @@ python3 run_webapp.py
 
 - Open **Dashboard (Vite)**: [http://localhost:5173](http://localhost:5173)
 - Open **API Docs (FastAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Interactive Session Endpoints
+
+Beyond the base `/api/search`, `/api/status`, and media endpoints, the backend exposes the interactive tools an operator uses mid-task:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/feedback` | Rocchio-style relevance feedback (👍/👎 on results) — re-searches with an adjusted query vector |
+| `POST /api/query-by-example` | Re-search using an already-indexed result's own stored vector, no re-embedding |
+| `POST /api/temporal-search` | Two-query temporal window search (query A must precede query B within N frames) |
+| `GET /api/browse-video/{video_name}` | Full keyframe listing for a single video, for manual scrubbing |
+| `POST /api/in-video-search` | Manually-triggered deep search restricted to one candidate video |
+| `POST /api/dres/login` / `GET /api/dres/current-task` / `POST /api/dres/submit` | Backend-proxied DRES integration (credentials never reach the frontend) — see `webapp/backend/dres_client.py` |
+
+Every search/feedback/query-by-example/temporal-search call is logged locally to `webapp/backend/logs/interaction_log.jsonl` first, then best-effort pushed to DRES if `DRES_*` env vars are configured — a DRES outage never blocks the operator's response (`webapp/backend/interaction_log.py`).
+
+### DRES Configuration
+
+Copy `.env.template` to `.env` at the repo root (or into `webapp/backend/`) and fill in the competition's DRES details once known:
+
+```bash
+DRES_BASE_URL=
+DRES_USERNAME=
+DRES_PASSWORD=
+DRES_EVALUATION_ID=
+```
+
+These are unverified against a live DRES instance — confirm against the actual VBS 2027 DRES deployment before competition day.
 
 ---
 
