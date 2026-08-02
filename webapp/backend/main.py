@@ -245,7 +245,12 @@ async def run_search(request: SearchRequest):
             # Type 2: VQA
             decomp = query_proc.decompose_query(request.query)
             sub_queries = decomp.get("sub_queries", [request.query])
-            
+
+            # In-Video Retrieval: surface frames from the top candidate
+            # videos that scored too low to make the initial pool at all
+            # (see HybridSearcher.in_video_refine).
+            candidates = searcher.in_video_refine(request.query, candidates)
+
             top_candidates = reranker.rerank_type2_vqa(
                 request.query, sub_queries, candidates[:10], dataset_dir
             )

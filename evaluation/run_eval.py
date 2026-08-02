@@ -244,6 +244,10 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
         elif q_type == 2:
             decomp = query_proc.decompose_query(q_text)
             sub_queries = decomp.get("sub_queries", [q_text])
+            # In-Video Retrieval: surface frames from the top candidate
+            # videos that scored too low to make the initial pool at all
+            # (see HybridSearcher.in_video_refine).
+            candidates = searcher.in_video_refine(q_text, candidates)
             top_candidates = rerank_with_tail(
                 lambda c: reranker.rerank_type2_vqa(q_text, sub_queries, c, dataset_dir),
                 candidates, RERANK_TOP_K, SUBMISSION_TOP_K,

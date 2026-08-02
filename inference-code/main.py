@@ -116,6 +116,11 @@ def main():
         sub_queries = decomp.get("sub_queries", [args.query])
         print(f"Decomposed query into objects: {sub_queries}")
 
+        # In-Video Retrieval: surface frames from the top candidate videos
+        # that scored too low on the initial pass to make the pool at all
+        # (see HybridSearcher.in_video_refine).
+        candidates = searcher.in_video_refine(args.query, candidates)
+
         # Crop-rerank candidates (same head/tail split as Type 1)
         ranked = rerank_with_tail(
             lambda c: reranker.rerank_type2_vqa(args.query, sub_queries, c, args.dataset_dir),
