@@ -15,7 +15,7 @@ import {
 import { Card, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
-const BACKEND_URL = "http://localhost:8000"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
 export interface ResultHit {
   id: string

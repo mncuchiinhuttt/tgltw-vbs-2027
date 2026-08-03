@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -57,7 +58,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Fira Sans", "Avenir Next", system-ui, sans-serif;
   margin: 0;
   min-height: 100vh;
   
@@ -67,6 +68,445 @@ body {
     radial-gradient(rgba(79, 70, 229, 0.05) 1.5px, transparent 1.5px);
   background-size: 24px 24px;
   background-position: 0 0, 12px 12px;
+  background-attachment: fixed;
+}
+
+/* VBS application shell -------------------------------------------------- */
+.vbs-nav {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.vbs-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  color: #fff;
+  background: #0f172a;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 13px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
+.vbs-mark-dot {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #f97316;
+  box-shadow: 0 0 0 3px #0f172a;
+}
+
+.vbs-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.vbs-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 13px;
+  color: #64748b;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.vbs-nav-link:hover {
+  color: #0f172a;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.vbs-nav-link-active {
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, 0.2);
+}
+
+.vbs-nav-link-active:hover {
+  color: #fff;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.vbs-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+}
+
+.vbs-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 28px;
+  overflow: hidden;
+  padding: clamp(26px, 4vw, 42px);
+  color: #fff;
+  background: linear-gradient(118deg, #0f172a 0%, #172554 58%, #1d4ed8 100%);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 22px;
+  box-shadow: 0 20px 42px rgba(15, 23, 42, 0.2);
+}
+
+.vbs-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.26;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(147, 197, 253, 0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(147, 197, 253, 0.16) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(120deg, black, transparent 72%);
+}
+
+.vbs-eyebrow,
+.vbs-hero-meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #fed7aa;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.vbs-hero-title {
+  max-width: 720px;
+  margin: 13px 0 11px;
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.vbs-hero-copy {
+  max-width: 650px;
+  margin: 0;
+  color: #bfdbfe;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.vbs-hero-meta {
+  align-self: end;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.42);
+  border: 1px solid rgba(191, 219, 254, 0.2);
+  border-radius: 16px;
+}
+
+.vbs-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 9px;
+  color: #dbeafe;
+  background: rgba(30, 64, 175, 0.55);
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.vbs-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #dbe4ef;
+}
+
+.vbs-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 0 15px;
+  color: #64748b;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+
+.vbs-tab:hover {
+  color: #1e3a8a;
+}
+
+.vbs-tab-active {
+  color: #1d4ed8;
+  border-bottom-color: #2563eb;
+}
+
+.vbs-session-card {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: #dbeafe;
+}
+
+.vbs-session-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.vbs-session-icon-live {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.vbs-dark-button {
+  min-height: 36px;
+  padding: 0 13px;
+  color: #fff;
+  background: #0f172a;
+  border: 1px solid #0f172a;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.vbs-dark-button:hover {
+  background: #1e293b;
+}
+
+.vbs-dark-button:focus-visible,
+.vbs-tab:focus-visible,
+.vbs-nav-link:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.36);
+  outline-offset: 2px;
+}
+
+.vbs-video-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+  min-height: 42px;
+  padding: 4px 9px;
+  background: #f8fafc;
+  border: 1.5px dashed #bfd2ea;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.vbs-video-dropzone:hover,
+.vbs-video-dropzone-active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.vbs-video-dropzone-ready {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.vbs-video-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  color: #2563eb;
+  background: #dbeafe;
+  border-radius: 10px;
+}
+
+.vbs-video-dropzone-ready .vbs-video-drop-icon {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.vbs-clear-file {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.vbs-clear-file:hover {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff;
+}
+
+.vbs-conversation-card {
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dbeafe;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.vbs-conversation-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-radius: 9px;
+}
+
+.vbs-chat-bubble {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vbs-chat-bubble-operator {
+  color: #1e3a8a;
+  background: #eff6ff;
+}
+
+.vbs-chat-bubble-system {
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.vbs-chat-label {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vbs-clarification-form {
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.vbs-clarification-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  color: #1e293b;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-size: 13px;
+  outline: none;
+}
+
+.vbs-clarification-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.vbs-clarification-button {
+  min-height: 40px;
+  padding: 0 14px;
+  color: #fff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.vbs-clarification-button:hover {
+  background: #1d4ed8;
+}
+
+.vbs-clarification-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+@media (max-width: 800px) {
+  .vbs-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .vbs-hero-meta {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 520px) {
+  .vbs-hero {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+
+  .vbs-hero-title {
+    font-size: 2.25rem;
+  }
+
+  .vbs-tab {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Futuristic card with subtle borders and shadow effects */

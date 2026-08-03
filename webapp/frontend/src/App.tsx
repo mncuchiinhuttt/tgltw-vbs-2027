@@ -15,7 +15,16 @@ import {
   Layers,
   PlayCircle,
   HelpCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Video,
+  Radio,
+  Timer,
+  Target,
+  BookOpen,
+  UploadCloud,
+  Film,
+  MessageCircle,
+  X,
 } from "lucide-react"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -32,7 +41,7 @@ import {
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 
-const BACKEND_URL = "http://localhost:8000"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
 // -------------------------------------------------------------
 // NAVIGATION COMPONENT
@@ -41,44 +50,52 @@ function Navbar() {
   const location = useLocation()
   
   const navItems = [
-    { path: "/", label: "Query Console", icon: SearchIcon },
-    { path: "/preprocess", label: "Pipeline & Indexing", icon: Cpu },
-    { path: "/database", label: "DB Statistics", icon: Database }
+    { path: "/", label: "Live Search", icon: SearchIcon },
+    { path: "/preprocess", label: "Indexing Lab", icon: Cpu },
+    { path: "/database", label: "Vector Store", icon: Database }
   ]
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-indigo-100/60 sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="bg-indigo-600/10 p-2 rounded-lg border border-indigo-500/20">
-          <Sparkles className="h-6 w-6 text-indigo-600 animate-pulse" />
+    <nav className="vbs-nav sticky top-0 z-40">
+      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between gap-6">
+        <Link to="/" className="flex items-center gap-3 min-w-0 group">
+          <div className="vbs-mark">
+            <Video className="h-5 w-5" />
+            <span className="vbs-mark-dot" />
+          </div>
+          <div className="min-w-0 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 m-0">
+                The Gays Lead The World
+              </h1>
+              <span className="vbs-badge">VBS 2027</span>
+            </div>
+            <p className="hidden sm:block text-[11px] text-slate-500 font-semibold tracking-wide uppercase mt-0.5">
+              Interactive video retrieval console
+            </p>
+          </div>
+        </Link>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`vbs-nav-link ${isActive ? "vbs-nav-link-active" : ""}`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">{item.label}</span>
+              </Link>
+            )
+          })}
         </div>
-        <div>
-          <h1 className="text-lg font-bold text-slate-800 tracking-tight m-0 p-0 text-left">
-            The Gays Lead The World
-            <span className="text-indigo-600 font-semibold text-[10px] border border-indigo-500/20 bg-indigo-50 px-1.5 py-0.5 rounded ml-1">RMIT UNIVERSITY VIETNAM</span>
-          </h1>
+
+        <div className="hidden xl:flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] font-bold text-slate-500 shrink-0">
+          <span className="vbs-live-dot" /> Live system
         </div>
-      </div>
-      
-      <div className="flex gap-1.5">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                isActive 
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" 
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          )
-        })}
       </div>
     </nav>
   )
@@ -87,12 +104,14 @@ function Navbar() {
 // -------------------------------------------------------------
 // VIEW 1: SEARCH PAGE & BATCH QUERIES
 // -------------------------------------------------------------
+type TaskMode = "kis-t" | "kis-c" | "kis-v" | "avs" | "vqa"
+
 function SearchView() {
   const [activeTab, setActiveTab] = useState<"single" | "batch">("single")
   
   // Single Query states
   const [query, setQuery] = useState("")
-  const [queryType, setQueryType] = useState<number>(1)
+  const [taskMode, setTaskMode] = useState<TaskMode>("kis-t")
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,6 +119,8 @@ function SearchView() {
   // KIS-C clarification question (Phase L) - set when /api/search's Type 1
   // flow detects an ambiguous result set and asks a narrowing question.
   const [clarification, setClarification] = useState<string | null>(null)
+  const [clarificationAnswer, setClarificationAnswer] = useState("")
+  const [kisCMessages, setKisCMessages] = useState<Array<{ role: "operator" | "system"; text: string }>>([])
   
   // Batch Query states
   const [batchFiles, setBatchFiles] = useState<any[]>([])
@@ -113,8 +134,10 @@ function SearchView() {
   const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number} | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // KIS-V image-upload search
-  const imageUploadRef = useRef<HTMLInputElement>(null)
+  // KIS-V clip upload
+  const videoUploadRef = useRef<HTMLInputElement>(null)
+  const [kisVideoFile, setKisVideoFile] = useState<File | null>(null)
+  const [videoDropActive, setVideoDropActive] = useState(false)
 
   // VBS interactive-session states (Phase C backend / Phase D UI of the
   // batch-to-interactive plan): temporal query mode, video-browse dialog,
@@ -141,13 +164,76 @@ function SearchView() {
   const [currentTask, setCurrentTask] = useState<any>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
 
+  const queryType = taskMode === "vqa" ? 2 : 1
+  const isVisualTask = taskMode === "kis-v"
+  const isConversationalTask = taskMode === "kis-c"
+  const isAvsTask = taskMode === "avs"
+
+  const handleTaskModeChange = (mode: TaskMode) => {
+    setTaskMode(mode)
+    setTemporalMode(false)
+    setResults([])
+    setError(null)
+    setClarification(null)
+    setClarificationAnswer("")
+    setKisCMessages([])
+    if (mode !== "kis-v") setKisVideoFile(null)
+  }
+
+  const acceptKisVideo = (file: File | undefined) => {
+    if (!file) return
+    const looksLikeVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)
+    if (!looksLikeVideo) {
+      setError("KIS-V cần một file video (MP4, MOV, WebM hoặc định dạng video tương tự).")
+      return
+    }
+    setError(null)
+    setKisVideoFile(file)
+    setResults([])
+  }
+
   // -----------------------------------------------------------
   // SINGLE QUERY INFERENCE
   // -----------------------------------------------------------
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSearchByVideo = async () => {
+    if (!kisVideoFile) return
+    setLoading(true)
+    setError(null)
+    setResults([])
+    setExpandedIndex(null)
+    try {
+      const formData = new FormData()
+      formData.append("file", kisVideoFile)
+      const response = await fetch(`${BACKEND_URL}/api/search-by-video`, {
+        method: "POST",
+        body: formData,
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Visual clip search failed")
+      }
+      const data = await response.json()
+      setResults(data.results || [])
+    } catch (err: any) {
+      setError(err.message || "Visual clip search failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (isVisualTask) {
+      await handleSearchByVideo()
+      return
+    }
     if (!query.trim()) return
     if (temporalMode && extraQueries.some((q) => !q.trim())) return
+    if (isConversationalTask && clarification && !clarificationAnswer.trim()) return
+
+    const requestQuery = isConversationalTask && clarificationAnswer.trim()
+      ? `${query}\nAdditional detail from operator: ${clarificationAnswer.trim()}`
+      : query
 
     setLoading(true)
     setError(null)
@@ -161,7 +247,7 @@ function SearchView() {
         ? { queries: [query, ...extraQueries] }
         : {
             type: queryType,
-            query: query,
+            query: requestQuery,
             ...(exactSearch ? { exact: true } : {}),
             ...(verifyResults ? { verify: true } : {}),
           }
@@ -177,6 +263,14 @@ function SearchView() {
       }
 
       const data = await response.json()
+      if (isConversationalTask) {
+        setKisCMessages((messages) => [
+          ...messages,
+          { role: "operator", text: requestQuery },
+          ...(data.clarification ? [{ role: "system" as const, text: data.clarification }] : []),
+        ])
+        setClarificationAnswer("")
+      }
       // /api/temporal-search returns {video_name, frames, payloads} per
       // match (one entry per chain step) instead of the usual
       // {id, score, payload} shape - normalize into the same ResultHit
@@ -247,37 +341,6 @@ function SearchView() {
   }
 
   const handleBrowseVideo = (videoName: string) => setBrowsingVideo(videoName)
-
-  // KIS-V (Visual KIS, VBS_GUIDE.md §4.1): the operator is shown a short
-  // clip on the projector, not text - so the query here is an uploaded
-  // photo/screenshot of that moment, not the text box above. Separate
-  // handler from runSessionSearch since this POSTs multipart form data,
-  // not JSON.
-  const handleSearchByImage = async (file: File) => {
-    setLoading(true)
-    setError(null)
-    setResults([])
-    setExpandedIndex(null)
-    setClarification(null)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      const response = await fetch(`${BACKEND_URL}/api/search-by-image`, {
-        method: "POST",
-        body: formData,
-      })
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Search-by-image request failed")
-      }
-      const data = await response.json()
-      setResults(data.results || [])
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleDresLogin = async () => {
     try {
@@ -436,31 +499,49 @@ function SearchView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 relative">
+    <main className="max-w-[1440px] mx-auto px-5 sm:px-8 py-8 relative">
+      <section className="vbs-hero mb-7">
+        <div className="relative z-10 max-w-3xl text-left">
+          <div className="vbs-eyebrow"><Radio className="h-3.5 w-3.5" /> VBS 2027 · live retrieval session</div>
+          <h2 className="vbs-hero-title">Find the right shot<br className="hidden sm:block" /> before the clock runs out.</h2>
+          <p className="vbs-hero-copy">
+            Search, inspect, refine, and submit video moments with a human-in-the-loop workflow built for the Video Browser Showdown.
+          </p>
+        </div>
+        <div className="vbs-hero-meta relative z-10">
+          <div className="vbs-hero-meta-label"><Timer className="h-4 w-4" /> Competition mindset</div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <span className="vbs-task-chip"><Target className="h-3.5 w-3.5" /> KIS-T</span>
+            <span className="vbs-task-chip"><Target className="h-3.5 w-3.5" /> KIS-C</span>
+            <span className="vbs-task-chip"><ImageIcon className="h-3.5 w-3.5" /> KIS-V</span>
+            <span className="vbs-task-chip"><BookOpen className="h-3.5 w-3.5" /> VQA</span>
+            <span className="vbs-task-chip"><Layers className="h-3.5 w-3.5" /> AVS</span>
+          </div>
+          <p className="text-xs text-slate-500 font-medium mt-3 max-w-xs leading-relaxed">
+            Every result is a candidate shot. Verify it visually before sending a DRES submission.
+          </p>
+        </div>
+      </section>
       
       {/* Subnavigation Tabs */}
-      <div className="flex justify-start gap-2 mb-6 border-b border-slate-200 pb-2">
+      <div className="vbs-tabs mb-6" role="tablist" aria-label="Search workspace">
         <button
           onClick={() => setActiveTab("single")}
-          className={`px-4 py-2 text-sm font-bold border-b-2 transition-all duration-200 flex items-center gap-2 ${
-            activeTab === "single"
-              ? "border-indigo-600 text-indigo-650"
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          }`}
+          className={`vbs-tab ${activeTab === "single" ? "vbs-tab-active" : ""}`}
+          role="tab"
+          aria-selected={activeTab === "single"}
         >
           <SearchIcon className="h-4 w-4" />
-          Single Query Search
+          Live Search
         </button>
         <button
           onClick={() => setActiveTab("batch")}
-          className={`px-4 py-2 text-sm font-bold border-b-2 transition-all duration-200 flex items-center gap-2 ${
-            activeTab === "batch"
-              ? "border-indigo-600 text-indigo-650"
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          }`}
+          className={`vbs-tab ${activeTab === "batch" ? "vbs-tab-active" : ""}`}
+          role="tab"
+          aria-selected={activeTab === "batch"}
         >
           <Layers className="h-4 w-4" />
-          Process Multiple Queries
+          Batch Evaluation
         </button>
       </div>
 
@@ -471,25 +552,30 @@ function SearchView() {
         <>
           {/* DRES panel: login + current task display so "Nộp câu trả lời"
               on each result card has a task_id to submit against. */}
-          <Card className="tech-card border-indigo-100/60 mb-4 bg-white">
+          <Card className="vbs-session-card tech-card mb-4">
             <CardContent className="pt-4 pb-4 flex items-center justify-between gap-4 flex-wrap">
-              <div className="text-left">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-0.5">DRES</span>
+              <div className="flex items-center gap-3 text-left">
+                <div className={`vbs-session-icon ${dresLoggedIn ? "vbs-session-icon-live" : ""}`}>
+                  <Radio className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.16em] block mb-0.5">DRES session</span>
                 {currentTask ? (
-                  <span className="text-sm font-semibold text-slate-700">
-                    Task: {currentTask.task_id || currentTask.type || JSON.stringify(currentTask)}
+                  <span className="text-sm font-bold text-slate-800">
+                    Task loaded · {currentTask.task_id || currentTask.type || JSON.stringify(currentTask)}
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-400">{dresLoggedIn ? "Logged in - no current task" : "Not logged in"}</span>
+                  <span className="text-sm text-slate-500 font-semibold">{dresLoggedIn ? "Connected · no current task" : "Not connected"}</span>
                 )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                {actionMessage && <span className="text-xs text-slate-500 max-w-xs truncate">{actionMessage}</span>}
+                {actionMessage && <span className="text-xs text-slate-500 max-w-xs truncate" title={actionMessage}>{actionMessage}</span>}
                 <button
                   onClick={handleDresLogin}
-                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                  className="vbs-dark-button"
                 >
-                  {dresLoggedIn ? "Refresh task" : "Login to DRES"}
+                  {dresLoggedIn ? "Refresh task" : "Connect DRES"}
                 </button>
               </div>
             </CardContent>
@@ -506,8 +592,8 @@ function SearchView() {
                   onChange={(e) => setTemporalMode(e.target.checked)}
                   className="h-4 w-4"
                 />
-                <label htmlFor="temporal-mode" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Temporal search (chuỗi nhiều mô tả nối tiếp)
+                  <label htmlFor="temporal-mode" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Temporal chain · nhiều sự kiện nối tiếp
                 </label>
               </div>
 
@@ -521,8 +607,8 @@ function SearchView() {
                       onChange={(e) => setExactSearch(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <label htmlFor="exact-search" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Tìm chính xác (chậm hơn)
+                    <label htmlFor="exact-search" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      High precision · chậm hơn
                     </label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -533,8 +619,8 @@ function SearchView() {
                       onChange={(e) => setVerifyResults(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <label htmlFor="verify-results" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Xác thực kỹ (chậm hơn)
+                    <label htmlFor="verify-results" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      Verify candidates · chậm hơn
                     </label>
                   </div>
                 </div>
@@ -543,29 +629,31 @@ function SearchView() {
 
                 {/* Shadcn Select Component */}
                 {!temporalMode && (
-                <div className="w-full md:w-56 text-left">
+                <div className="w-full md:w-72 text-left">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Retrieval Method
+                    Task mode
                   </label>
                   <Select
-                    value={String(queryType)}
-                    onValueChange={(val) => setQueryType(Number(val))}
+                    value={taskMode}
+                    onValueChange={(val) => handleTaskModeChange(val as TaskMode)}
                   >
                     <SelectTrigger className="w-full bg-white border border-slate-200 rounded-lg text-slate-800">
                       <SelectValue placeholder="Select method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Type 1: Textual-KIS</SelectItem>
-                      <SelectItem value="2">Type 2: VQA Reasoning</SelectItem>
-                      <SelectItem value="3">Type 3: Temporal Alignment</SelectItem>
+                      <SelectItem value="kis-t">KIS-T · Textual known-item</SelectItem>
+                      <SelectItem value="kis-c">KIS-C · Conversational known-item</SelectItem>
+                      <SelectItem value="kis-v">KIS-V · Visual known-item</SelectItem>
+                      <SelectItem value="avs">AVS · Ad-hoc video search</SelectItem>
+                      <SelectItem value="vqa">VQA · Visual question</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 )}
 
-                <div className="flex-1 text-left">
+                {!isVisualTask && <div className="flex-1 text-left">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    {temporalMode ? "Sự kiện thứ 1" : "Natural Text Description"}
+                    {temporalMode ? "Sự kiện thứ 1" : queryType === 2 ? "Question / answer prompt" : isConversationalTask ? "What do you remember?" : isAvsTask ? "AVS search description" : "Task description"}
                   </label>
                   <div className="relative">
                     <input
@@ -574,16 +662,80 @@ function SearchView() {
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder={
                         queryType === 1
-                          ? "Search details (e.g. một người đang lái xe máy dưới mưa...)"
+                          ? isConversationalTask
+                            ? "Start with a rough memory; the system can ask for more detail..."
+                            : isAvsTask
+                            ? "Describe a visual concept (e.g. cars in front of trees...)"
+                            : "Describe the target shot (e.g. a motorbike riding through rain...)"
                           : queryType === 2
-                          ? "Visual Question (e.g. người mặc áo đỏ đang dắt xe đạp ở giây thứ mấy?)"
-                          : "Chronological actions (e.g. đầu tiên xe máy đi qua, sau đó ô tô đi qua...)"
+                          ? "Ask about the video (e.g. how many people cross the road?)"
+                          : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
                       }
                       className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     />
                     <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   </div>
-                </div>
+                </div>}
+
+                {isVisualTask && (
+                  <div className="w-full md:flex-1 min-w-0 text-left">
+                    <input
+                      ref={videoUploadRef}
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={(event) => acceptKisVideo(event.target.files?.[0])}
+                    />
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      KIS-V clip
+                    </label>
+                    <div
+                      className={`vbs-video-dropzone ${videoDropActive ? "vbs-video-dropzone-active" : ""} ${kisVideoFile ? "vbs-video-dropzone-ready" : ""}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => videoUploadRef.current?.click()}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") videoUploadRef.current?.click()
+                      }}
+                      onDragEnter={(event) => {
+                        event.preventDefault()
+                        setVideoDropActive(true)
+                      }}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDragLeave={() => setVideoDropActive(false)}
+                      onDrop={(event) => {
+                        event.preventDefault()
+                        setVideoDropActive(false)
+                        acceptKisVideo(event.dataTransfer.files?.[0])
+                      }}
+                    >
+                      <div className="vbs-video-drop-icon">
+                        {kisVideoFile ? <Film className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
+                      </div>
+                      <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                        <p className="text-sm font-extrabold text-slate-800 truncate m-0">
+                          {kisVideoFile ? kisVideoFile.name : "Drop the KIS-V clip here"}
+                        </p>
+                        <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                          {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB · ready to search` : "or click to browse · MP4, MOV, WebM"}
+                        </span>
+                      </div>
+                      {kisVideoFile && (
+                        <button
+                          type="button"
+                          className="vbs-clear-file"
+                          aria-label="Remove selected KIS-V clip"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            setKisVideoFile(null)
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {temporalMode && extraQueries.map((q, idx) => (
                   <div key={idx} className="flex-1 text-left">
@@ -627,7 +779,7 @@ function SearchView() {
                 <div className="flex items-end">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (isVisualTask && !kisVideoFile)}
                     className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-300 shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-[40px] tech-glow-button"
                   >
                     {loading ? (
@@ -638,37 +790,12 @@ function SearchView() {
                     ) : (
                       <>
                         <SearchIcon className="h-4 w-4" />
-                        Query DB
+                        {isVisualTask ? "Search visual clip" : isAvsTask ? "Find diverse shots" : "Search candidates"}
                       </>
                     )}
                   </button>
                 </div>
 
-                {!temporalMode && (
-                  <div className="flex items-end">
-                    <input
-                      ref={imageUploadRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleSearchByImage(file)
-                        e.target.value = ""
-                      }}
-                    />
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => imageUploadRef.current?.click()}
-                      title="KIS-V: tải ảnh/chụp màn hình đoạn clip vừa xem để tìm bằng hình ảnh"
-                      className="w-full md:w-auto bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-[40px]"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                      Tìm bằng ảnh (KIS-V)
-                    </button>
-                  </div>
-                )}
               </form>
             </CardContent>
           </Card>
@@ -681,10 +808,56 @@ function SearchView() {
             </div>
           )}
 
-          {/* KIS-C clarification question (Phase L) - shown when the
-              backend detected an ambiguous result set spread across many
-              unrelated videos with no clear winner. */}
-          {clarification && (
+          {isConversationalTask && (kisCMessages.length > 0 || clarification) && (
+            <div className="vbs-conversation-card mb-8 text-left">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="vbs-conversation-icon"><MessageCircle className="h-4 w-4" /></div>
+                <div>
+                  <p className="text-xs font-extrabold text-slate-800 uppercase tracking-[0.14em] m-0">KIS-C conversation</p>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5 m-0">Add one detail at a time when the candidate set is ambiguous.</p>
+                </div>
+              </div>
+              <div className="space-y-2 mb-4">
+                {kisCMessages.map((message, index) => (
+                  <div key={`${message.role}-${index}`} className={`vbs-chat-bubble ${message.role === "operator" ? "vbs-chat-bubble-operator" : "vbs-chat-bubble-system"}`}>
+                    <span className="vbs-chat-label">{message.role === "operator" ? "You" : "System"}</span>
+                    <span>{message.text}</span>
+                  </div>
+                ))}
+              </div>
+              {clarification && (
+                <div className="vbs-clarification-form">
+                  <label htmlFor="clarification-answer" className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                    Narrow the search
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <input
+                      id="clarification-answer"
+                      type="text"
+                      value={clarificationAnswer}
+                      onChange={(event) => setClarificationAnswer(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && clarificationAnswer.trim()) handleSearch()
+                      }}
+                      placeholder="Add the missing detail..."
+                      className="vbs-clarification-input"
+                    />
+                    <button
+                      type="button"
+                      disabled={loading || !clarificationAnswer.trim()}
+                      onClick={() => handleSearch()}
+                      className="vbs-clarification-button"
+                    >
+                      Refine search
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* KIS-C clarification fallback for non-conversational task modes. */}
+          {clarification && !isConversationalTask && (
             <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-8 flex items-center gap-3 text-left">
               <HelpCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
               <div className="text-sm font-semibold">{clarification}</div>
@@ -711,7 +884,7 @@ function SearchView() {
           {!loading && results.length > 0 && (
             <div className="mb-6 text-left flex justify-between items-center bg-white/60 border border-slate-200/60 px-4 py-2 rounded-lg">
               <p className="text-sm text-slate-500 font-semibold m-0">
-                Retrieved <span className="text-indigo-600 font-bold">{results.length}</span> matches for: "{query}"
+                <span className="text-indigo-600 font-bold">{results.length}</span> candidate shots for: "{query}"
               </p>
               <Badge variant="outline" className="border-indigo-100 text-indigo-600 bg-indigo-50/50">
                 FusedDenseSparse
@@ -746,9 +919,9 @@ function SearchView() {
                 <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto border border-slate-200">
                   <SearchIcon className="h-6 w-6 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">No matches found</h3>
+                <h3 className="text-lg font-bold text-slate-800">No candidate shots found</h3>
                 <p className="text-slate-500 text-sm">
-                  We couldn't retrieve any candidate frames. Check descriptors or try another query.
+                  Try a more concrete description, a different task mode, or use visual search for KIS-V.
                 </p>
               </CardContent>
             </Card>
@@ -760,10 +933,10 @@ function SearchView() {
                 <Sparkles className="h-10 w-10 text-indigo-600 animate-pulse" />
               </div>
               <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-                Perform Multimodal Search
+                Ready for the next VBS task
               </h2>
               <p className="text-slate-500 text-sm leading-relaxed font-semibold">
-                Search visual frames, spoken speech, and sound environments. Switch between Textual-KIS, VQA (Visual Question Answering), or Temporal alignment.
+                Search visual frames, spoken speech, and sound environments. Refine the query, inspect the evidence, then submit only when the shot is convincing.
               </p>
             </div>
           )}
@@ -783,7 +956,7 @@ function SearchView() {
                 <CardHeader>
                   <CardTitle className="text-slate-800 flex items-center gap-2 text-base">
                     <FolderOpen className="h-5 w-5 text-indigo-500" />
-                    Query Registry
+                    Query Registry · batch evaluation
                   </CardTitle>
                   <CardDescription className="text-xs font-semibold">
                     Directory storing batch query files inside the <code className="text-indigo-600 font-mono font-bold">queries/</code> folder.
@@ -817,7 +990,7 @@ function SearchView() {
                       Usage Instruction
                     </h5>
                     <p className="text-xs text-indigo-900 leading-relaxed font-semibold">
-                      To run a custom batch search: place your list of queries in <code className="text-indigo-600 bg-indigo-100/50 px-1 rounded">queries/queries.json</code> following the query dictionary structure, then click "Process Multiple Queries".
+                      To run a custom batch evaluation: place your list of queries in <code className="text-indigo-600 bg-indigo-100/50 px-1 rounded">queries/queries.json</code>, then start the evaluation run.
                     </p>
                   </div>
                 </CardContent>
@@ -837,7 +1010,7 @@ function SearchView() {
                   ) : (
                     <>
                       <Cpu className="h-4 w-4" />
-                      Process Multiple Queries
+                      Run batch evaluation
                     </>
                   )}
                 </button>
@@ -1008,7 +1181,7 @@ function SearchView() {
           setSelectedVideo({ name, time })
         }}
       />
-    </div>
+    </main>
   )
 }
 
@@ -1124,7 +1297,7 @@ function PreprocessView() {
 
         <Card className="tech-card text-left bg-white/90">
           <CardHeader className="pb-2">
-            <CardDescription className="text-slate-500 font-semibold">Scanned datasets</CardDescription>
+            <CardDescription className="text-slate-500 font-semibold">Indexed media</CardDescription>
             <CardTitle className="text-slate-800 text-lg font-bold mt-1 flex items-center gap-2">
               <FolderOpen className="h-5 w-5 text-indigo-500" />
               {datasetFiles.length} files detected
@@ -1310,7 +1483,7 @@ function DatabaseView() {
           <div>
             <CardTitle className="text-slate-800 text-lg font-bold">Vector Collection Statistics</CardTitle>
             <CardDescription className="text-xs font-medium">
-              Detailed breakdown of ingested multimedia vectors in Qdrant DB.
+              Detailed breakdown of the multimedia vectors available to the VBS search console.
             </CardDescription>
           </div>
           <Badge variant={isConnected ? "success" : "destructive"} className="text-xs uppercase font-bold px-3 py-1">
@@ -1392,7 +1565,8 @@ function App() {
         </div>
         
         <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-200 bg-white/60 mt-12">
-          <p className="font-semibold">HCMC AI Challenge 2026 &bull; The Gays Lead The World &bull; RMIT University Vietnam</p>
+          <p className="font-semibold">Video Browser Showdown 2027 &bull; The Gays Lead The World &bull; RMIT University Vietnam</p>
+          <p className="mt-1 text-[11px] text-slate-400">Interactive video retrieval &bull; DRES-enabled research system</p>
         </footer>
       </div>
     </Router>

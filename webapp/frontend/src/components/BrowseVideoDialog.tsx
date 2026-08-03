@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
-const BACKEND_URL = "http://localhost:8000"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
 interface BrowseFrame {
   id: string
