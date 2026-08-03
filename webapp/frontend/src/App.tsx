@@ -712,13 +712,13 @@ function SearchView() {
                       <div className="vbs-video-drop-icon">
                         {kisVideoFile ? <Film className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-slate-800 truncate">
+                      <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                        <p className="text-sm font-extrabold text-slate-800 truncate m-0">
                           {kisVideoFile ? kisVideoFile.name : "Drop the KIS-V clip here"}
                         </p>
-                        <p className="text-xs text-slate-500 font-medium mt-1">
+                        <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
                           {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB · ready to search` : "or click to browse · MP4, MOV, WebM"}
-                        </p>
+                        </span>
                       </div>
                       {kisVideoFile && (
                         <button
