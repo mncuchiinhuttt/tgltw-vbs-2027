@@ -274,7 +274,7 @@ def main():
     # Load model configuration from .env files
     env_vars = load_env_values()
     qwen_vlm_id = env_vars.get("QWEN_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Thinking")
-    qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-8B")
+    qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-2B")
     phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
     yoloe_id = env_vars.get("YOLOE_MODEL_ID", "yoloe-26x-seg.pt")
     sam3_id = env_vars.get("SAM3_MODEL_ID", "facebook/sam3")

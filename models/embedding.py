@@ -4,12 +4,30 @@ import numpy as np
 from PIL import Image
 from typing import Union
 from config import (
-    QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID, OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME
+    QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID, OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME,
+    EMBEDDING_MRL_DIM,
 )
+
+
+def _apply_mrl_truncation(vector: np.ndarray, dim) -> np.ndarray:
+    """
+    Matryoshka Representation Learning (arXiv:2601.04720): a Qwen3-VL-Embedding
+    vector's leading `dim` dimensions are themselves a valid, meaningful
+    embedding - truncate and re-normalize instead of using the full vector,
+    trading a small recall drop for a smaller/faster Qdrant index. No-op
+    when dim is falsy or already >= the vector's length.
+    """
+    if not dim or dim >= len(vector):
+        return vector
+    truncated = vector[:dim]
+    norm = np.linalg.norm(truncated)
+    return truncated / norm if norm > 0 else truncated
+
 
 class QwenVL8BEmbedder:
     """
-    Qwen3-VL-Embedding-8B wrapper to generate visual and text embeddings.
+    Qwen3-VL-Embedding wrapper (2B by default, 8B via QWEN_EMBEDDING_MODEL_ID
+    override - see config.py) to generate visual and text embeddings.
 
     This checkpoint is not a CLIP-style model with separate get_image_features/
     get_text_features projections into a shared space - it's a Qwen3-VL LM whose
@@ -17,14 +35,16 @@ class QwenVL8BEmbedder:
     (see the model's own bundled scripts/qwen3_vl_embedding.py). Both modalities
     must go through that same pooling path or their vectors won't be comparable.
     """
-    def __init__(self, model_id: str = QWEN_EMBEDDING_MODEL_ID):
+    def __init__(self, model_id: str = QWEN_EMBEDDING_MODEL_ID, mrl_dim: int = EMBEDDING_MRL_DIM):
         # Check if local weights path exists under global weights/
         local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", model_id.split("/")[-1])
         if os.path.exists(local_path):
             model_id = local_path
 
+        self.mrl_dim = mrl_dim
         self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-        print(f"Loading visual embedding model: {model_id} on {self.device}...")
+        print(f"Loading visual embedding model: {model_id} on {self.device}..."
+              + (f" (MRL-truncated to {mrl_dim}d)" if mrl_dim else ""))
 
         import importlib.util
         script_path = os.path.join(model_id, "scripts", "qwen3_vl_embedding.py")
@@ -44,11 +64,11 @@ class QwenVL8BEmbedder:
         image = image.convert("RGB")
 
         embeddings = self._embedder.process([{"image": image}])
-        return embeddings[0].float().cpu().numpy()
+        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
 
     def embed_text(self, text: str) -> np.ndarray:
         embeddings = self._embedder.process([{"text": text}])
-        return embeddings[0].float().cpu().numpy()
+        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
 
 
 class DashScopeCloudEmbedder:
