@@ -188,6 +188,11 @@ class SearchRequest(BaseModel):
     # precision without editing .env/restarting the backend.
     exact: Optional[bool] = None
     verify: Optional[bool] = None
+    # Graduated middle ground between exact=False (fast/default) and
+    # exact=True (full brute-force) - raises Qdrant's HNSW search-time
+    # candidate-list size for higher recall at a smaller latency cost than
+    # exact search. None (default) leaves Qdrant's own index default in effect.
+    hnsw_ef: Optional[int] = None
 
 class FeedbackRequest(BaseModel):
     positive_ids: List[str] = []
@@ -323,9 +328,11 @@ async def run_search(request: SearchRequest):
         hyde_query = query_proc.generate_hyde(resolved_query)
 
         # 2. Candidate Retrieval
-        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact)
-        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact)
-        secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15, exact=request.exact)
+        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        secondary_hits = searcher.dense_search_secondary(
+            resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef
+        )
         # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
         # VBS2026): tags each fused hit with which source(s) it came from
         # ("query" = original text, "hyde" = HyDE hypothetical description,
