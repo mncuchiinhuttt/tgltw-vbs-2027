@@ -34,6 +34,7 @@ webapp/backend/logs/
 # Exclude database storage directory (Qdrant)
 /preprocessing/qdrant_storage/
 /preprocessing/qdrant_bin/
+/preprocessing/.qdrant-initialized
 
 # OS files
 .DS_Store

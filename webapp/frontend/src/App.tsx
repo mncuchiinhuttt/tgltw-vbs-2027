@@ -6,15 +6,12 @@ import {
   Cpu,
   RefreshCw,
   Sliders,
-  FileText,
   Sparkles,
   AlertCircle,
   CheckCircle2,
   Terminal,
   FileCode,
   FolderOpen,
-  Eye,
-  Settings,
   Layers,
   PlayCircle,
   HelpCircle,
@@ -864,6 +861,11 @@ function SearchView() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
+                {batchError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                    {batchError}
+                  </div>
+                )}
                 <div 
                   ref={batchLogContainerRef}
                   className="bg-slate-900 border border-slate-950 rounded-lg p-4 font-mono text-xs text-slate-200 h-64 overflow-y-auto space-y-1 select-text shadow-inner"

@@ -83,6 +83,30 @@ The scripts dynamically append the workspace root to `sys.path` to import `model
 
 ## Getting Started
 
+### 0. Install the Python environment with uv (recommended)
+
+The project uses one shared Python 3.12 environment at the repository root.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) once, then sync only the dependencies needed for the workflow:
+
+```bash
+# Dashboard/backend only (fastest first run)
+uv sync
+
+# Retrieval/inference dependencies
+uv sync --group inference
+
+# Full indexing + OCR/SAM3 environment
+uv sync --group preprocessing
+
+# Optional upload/evaluation tools
+uv sync --group upload
+uv sync --group evaluation
+```
+
+Use `uv run ...` for every Python command; it automatically uses the locked
+`.venv` and does not require manual activation. `uv.lock` is committed so
+machines running the same project resolve the same dependency versions.
+
 ### 1. Download Model Checkpoints
 
 Before running the download script, accept the SAM3 license at https://huggingface.co/facebook/sam3 (it's a gated repo) and set `HF_TOKEN` in your `.env` - the SAM3 download will fail without it.
@@ -90,7 +114,7 @@ Before running the download script, accept the SAM3 license at https://huggingfa
 Run the download script from the root folder to download weights for PhoWhisper, CLAP, the YOLOE-26 detector, SAM3, Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
 
 ```bash
-python download_assets.py
+uv run python download_assets.py
 ```
 
 ### 2. Host the Database (Qdrant)
@@ -127,18 +151,15 @@ VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batchi
 
 ## 3. Preprocessing & Indexing
 
-1. Setup the environment and activate it:
+1. Sync the preprocessing environment:
    ```bash
-   cd preprocessing
-   chmod +x setup.sh
-   ./setup.sh
-   source venv/bin/activate
+   uv sync --group preprocessing
    ```
 2. Configure `.env` in `preprocessing/` (add API keys and choose model configurations).
 3. Place your raw files in the global `datasets/` folder.
 4. Run the pipeline:
    ```bash
-   python main.py --data_dir ../datasets
+   uv run --group preprocessing python preprocessing/main.py --data_dir datasets
    ```
 
 ---
@@ -148,7 +169,7 @@ VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batchi
 1. Setup the environment:
    ```bash
    cd ../inference-code
-   pip install -r requirements.txt
+   uv sync --group inference
    ```
 2. Configure `.env` in `inference-code/` (point to Qdrant host and define query models).
 3. Run search queries from CLI:
@@ -156,19 +177,19 @@ VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batchi
 #### Type 1: Textual-KIS (Retrieves matching video name and timestamp)
 
 ```bash
-python main.py --type 1 --query "một người đang lái xe máy đi qua ngã tư dưới trời mưa"
+uv run --group inference python inference-code/main.py --type 1 --query "một người đang lái xe máy đi qua ngã tư dưới trời mưa"
 ```
 
 #### Type 2: VQA (Detects targets, crops local bounding boxes, scores via VLM, and answers)
 
 ```bash
-python main.py --type 2 --query "người mặc áo đỏ đang dắt xe đạp màu xanh ở giây thứ mấy?"
+uv run --group inference python inference-code/main.py --type 2 --query "người mặc áo đỏ đang dắt xe đạp màu xanh ở giây thứ mấy?"
 ```
 
 #### Type 3: Temporal-Alignment (Reranks sequence of events chronologically)
 
 ```bash
-python main.py --type 3 --query "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
+uv run --group inference python inference-code/main.py --type 3 --query "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
 ```
 
 ---
@@ -183,7 +204,7 @@ Concurrently run both the React frontend and the FastAPI backend dev servers wit
 
 ```bash
 # Python Runner (Resolves port conflicts & detects venv automatically)
-python3 run_webapp.py
+uv run python run_webapp.py
 
 # Bash Runner
 ./run_webapp.sh
@@ -266,13 +287,13 @@ Run the evaluation script from the `method/` directory:
 
 ```bash
 # (Optional) install Ragas to compute real generation-quality metrics
-pip install -r evaluation/requirements.txt
+    uv sync --group evaluation
 
 # Run benchmark against the annotated evaluation query set (evaluation/eval_queries.json)
-python evaluation/run_eval.py
+uv run --group evaluation python evaluation/run_eval.py
 
 # Run benchmark with a custom, annotated query file and dataset path
-python evaluation/run_eval.py --query_file evaluation/my_eval_set.json --dataset_dir datasets --output_file evaluation/eval_results.json
+uv run --group evaluation python evaluation/run_eval.py --query_file evaluation/my_eval_set.json --dataset_dir datasets --output_file evaluation/eval_results.json
 ```
 
 - **Output Metrics**: Evaluates **Recall@1**, **Recall@5**, **MRR**, **Latency Breakdown** (HyDE, Search, Rerank), and **QPS Throughput** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries. Ragas-based generation metrics report `N/A` if `ragas` isn't installed, rather than a fabricated score.

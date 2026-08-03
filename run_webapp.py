@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "webapp" / "backend"
 FRONTEND_DIR = ROOT_DIR / "webapp" / "frontend"
+VENV_PYTHON = ROOT_DIR / ".venv" / "bin" / "python"
 
 processes = []
 
@@ -42,25 +43,32 @@ def run_npm_install():
         subprocess.run(["npm", "install"], cwd=str(FRONTEND_DIR), check=True)
         print("Frontend dependencies installed successfully.")
 
-def ensure_backend_dependencies(py_executable: str):
-    """Install backend Python dependencies into the selected environment when needed."""
-    try:
-        subprocess.run(
-            [py_executable, "-c", "import fastapi"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return
-    except subprocess.CalledProcessError:
-        pass
+def ensure_backend_environment() -> str:
+    """Ensure the root uv inference environment exists and return its Python executable."""
+    if VENV_PYTHON.exists():
+        try:
+            subprocess.run(
+                [str(VENV_PYTHON), "-c", "import qdrant_client, torch, transformers"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return str(VENV_PYTHON)
+        except subprocess.CalledProcessError:
+            print("uv environment is missing inference dependencies; syncing them...")
 
-    print("Backend dependencies missing. Installing webapp/backend requirements...")
-    subprocess.run(
-        [py_executable, "-m", "pip", "install", "-r", str(BACKEND_DIR / "requirements.txt")],
-        check=True,
-    )
-    print("Backend dependencies installed successfully.")
+    uv = shutil.which("uv")
+    if uv is None:
+        raise RuntimeError(
+            "uv is required. Install it from "
+            "https://docs.astral.sh/uv/getting-started/installation/"
+        )
+
+    print("uv environment not found. Syncing dashboard + inference dependencies...")
+    subprocess.run([uv, "sync", "--group", "inference"], cwd=str(ROOT_DIR), check=True)
+    if not VENV_PYTHON.exists():
+        raise RuntimeError(f"uv sync completed but {VENV_PYTHON} was not created")
+    return str(VENV_PYTHON)
 
 def ensure_qdrant_running():
     """Start the local Qdrant vector database if it isn't already reachable."""
@@ -110,21 +118,9 @@ def main():
     datasets_dir.mkdir(parents=True, exist_ok=True)
     print(f"Dataset files location verified: {datasets_dir}")
 
-    # 4. Resolve Python executable (prioritize preprocessing virtual environment)
-    venv_dir = ROOT_DIR / "preprocessing" / "venv"
-    venv_python = venv_dir / "bin" / "python"
-    if not venv_python.exists():
-        # Fallback for Windows if run in Git Bash/etc.
-        venv_python = venv_dir / "Scripts" / "python.exe"
-
-    if venv_python.exists():
-        py_executable = str(venv_python)
-        print(f"Virtual environment python found and loaded: {py_executable}")
-    else:
-        print(f"Warning: Virtual environment not found at {venv_dir}. Using system python.")
-        py_executable = sys.executable
-
-    ensure_backend_dependencies(py_executable)
+    # 4. Resolve the shared root uv environment.
+    py_executable = ensure_backend_environment()
+    print(f"Using uv environment Python: {py_executable}")
 
     # 5. Start local Qdrant vector database if not already running
     ensure_qdrant_running()

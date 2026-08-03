@@ -1,13 +1,16 @@
-#!/bin/bash
-# Setup script for AIC2026 Preprocessing Pipeline
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "=== Creating virtual environment ==="
-python3 -m venv venv
-source venv/bin/activate
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "=== Installing dependencies ==="
-pip install --upgrade pip
-pip install -r requirements.txt
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Error: uv is not installed. Install it from https://docs.astral.sh/uv/getting-started/installation/" >&2
+  exit 1
+fi
+
+echo "=== Syncing the shared uv environment (preprocessing group) ==="
+cd "${ROOT_DIR}"
+uv sync --group preprocessing
 
 echo "=== Setup complete ==="
-echo "To activate environment run: source venv/bin/activate"
+echo "Run preprocessing with: uv run --group preprocessing python preprocessing/main.py --data_dir datasets"
