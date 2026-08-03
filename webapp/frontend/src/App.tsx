@@ -678,7 +678,7 @@ function SearchView() {
                 </div>}
 
                 {isVisualTask && (
-                  <div className="w-full md:w-[360px] md:flex-none min-w-0 text-left">
+                  <div className="w-full md:flex-1 min-w-0 text-left">
                     <input
                       ref={videoUploadRef}
                       type="file"
