@@ -30,7 +30,9 @@ class HybridSearcher:
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
 
-    def _dense_search_vector(self, vector, top_k: int, exact: Optional[bool] = None) -> list:
+    def _dense_search_vector(
+        self, vector, top_k: int, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+    ) -> list:
         """
         Shared primary-vector search core: query_points against the
         "default" named vector (or the collection's sole unnamed vector
@@ -44,6 +46,15 @@ class HybridSearcher:
         default for just this call - lets an operator escalate precision
         on-demand for one stuck query (U-Cker/PraK-inspired, VBS2026)
         without editing .env/restarting the backend.
+
+        `hnsw_ef` (Qdrant's own documented search-time HNSW candidate-list
+        size param, `qdrant_client.models.SearchParams(hnsw_ef=...)`) is a
+        graduated middle ground between the binary approximate/exact
+        toggle above - raising it trades some latency for higher recall
+        without paying exact search's full brute-force cost. Ignored by
+        Qdrant when `exact=True` (exact search doesn't traverse the HNSW
+        graph at all). None (default) leaves Qdrant's own index-build-time
+        default in effect.
         """
         vector_list = vector.tolist() if hasattr(vector, "tolist") else list(vector)
         search_kwargs = {"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}
@@ -57,7 +68,7 @@ class HybridSearcher:
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
             ),
-            search_params=SearchParams(exact=use_exact),
+            search_params=SearchParams(exact=use_exact, hnsw_ef=hnsw_ef),
             **search_kwargs,
         ).points
         return [
@@ -68,7 +79,9 @@ class HybridSearcher:
             } for hit in search_result
         ]
 
-    def dense_search(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
+    def dense_search(
+        self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+    ) -> list:
         """
         Search visual index using QwenVL8BEmbedder text encoder.
 
@@ -83,12 +96,14 @@ class HybridSearcher:
         so QDRANT_EXACT_SEARCH defaults to a full brute-force scan instead
         of Qdrant's default approximate HNSW search - see config.py for the
         rationale/citation. Falls back to approximate search (default
-        Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled. Pass `exact`
-        to override the default for just this call.
+        Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled. Pass `exact`/
+        `hnsw_ef` to override the default for just this call.
         """
-        return self._dense_search_vector(self.embedder.embed_text(query), top_k, exact=exact)
+        return self._dense_search_vector(self.embedder.embed_text(query), top_k, exact=exact, hnsw_ef=hnsw_ef)
 
-    def dense_search_by_vector(self, vector, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
+    def dense_search_by_vector(
+        self, vector, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+    ) -> list:
         """
         Same as dense_search, but takes an already-computed dense vector
         instead of embedding text - used for VBS interactive session
@@ -97,7 +112,7 @@ class HybridSearcher:
         retrieved directly from an existing Qdrant point (no re-embedding
         needed).
         """
-        return self._dense_search_vector(vector, top_k, exact=exact)
+        return self._dense_search_vector(vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
 
     def get_point_vector(self, point_id):
         """
@@ -113,15 +128,17 @@ class HybridSearcher:
         vector = points[0].vector
         return vector.get("default") if isinstance(vector, dict) else vector
 
-    def dense_search_secondary(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
+    def dense_search_secondary(
+        self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+    ) -> list:
         """
         Second embedding model's (SigLIP) dense search against the
         "visual_index" collection's named "siglip" vector - see
         models/siglip_embedder.py for the ensemble rationale. Returns []
         when no secondary_embedder was provided (disabled), so callers can
         unconditionally include it in a merge_rrf(...) call without an
-        extra branch. `exact` overrides QDRANT_EXACT_SEARCH for this call,
-        same as dense_search.
+        extra branch. `exact`/`hnsw_ef` override QDRANT_EXACT_SEARCH/the
+        HNSW default for this call, same as dense_search.
         """
         if self.secondary_embedder is None:
             return []
@@ -137,7 +154,7 @@ class HybridSearcher:
                     FieldCondition(key="modality", match=MatchValue(value="visual"))
                 ]
             ),
-            search_params=SearchParams(exact=use_exact),
+            search_params=SearchParams(exact=use_exact, hnsw_ef=hnsw_ef),
         ).points
         return [
             {
@@ -231,6 +248,72 @@ class HybridSearcher:
 
         return merged_results
 
+    def temporal_coherence_boost(
+        self, candidates: list, window: int = 10, boost_weight: float = 0.3
+    ) -> list:
+        """
+        TAG-inspired (arXiv:2508.07925, "temporal coherence clustering")
+        re-scoring: a real event is usually represented by SEVERAL
+        temporally-close keyframes, each independently retrieved by
+        merge_rrf with its own moderate rrf_score - but per-frame RRF
+        fusion treats every candidate as unrelated, so a true event can end
+        up "fragmented" across several marginal individual scores instead
+        of standing out. This boosts each candidate's rrf_score using the
+        combined rrf_score of every OTHER same-video candidate within
+        `window` frames of it - several nearby independent hits become a
+        stronger combined signal instead of staying fragmented.
+
+        Run right after merge_rrf, BEFORE diversify_by_scene - diversify_by_
+        scene then collapses the now-correctly-boosted cluster down to its
+        single best representative, so the two steps compose (this one
+        fixes ranking within a cluster; diversify_by_scene then dedupes
+        across it) rather than duplicating each other's job.
+        """
+        by_video = {}
+        unboosted = []
+        for c in candidates:
+            video = c["payload"].get("source_file")
+            frame_idx = c["payload"].get("frame_idx")
+            if video is None or frame_idx is None:
+                unboosted.append(c)
+                continue
+            by_video.setdefault(video, []).append(c)
+
+        for group in by_video.values():
+            for c in group:
+                frame_idx = c["payload"]["frame_idx"]
+                neighbor_score_sum = sum(
+                    other.get("rrf_score", 0.0)
+                    for other in group
+                    if other is not c and abs(other["payload"]["frame_idx"] - frame_idx) <= window
+                )
+                c["rrf_score"] = c.get("rrf_score", 0.0) + boost_weight * neighbor_score_sum
+
+        boosted = [c for group in by_video.values() for c in group] + unboosted
+        return sorted(boosted, key=lambda c: c.get("rrf_score", 0.0), reverse=True)
+
+    def compute_ambiguity_score(self, candidates: list, top_n: int = 10) -> float:
+        """
+        Cheap, no-VLM-call ambiguity signal (CAR-inspired, arXiv:2511.14769
+        "Cluster-based Adaptive Retrieval"; ACL TrustNLP 2025 ambiguity
+        detection for QA) for VBS's KIS-C ("chat/conversational") task
+        type, which explicitly models a searcher progressively eliciting
+        detail from a vague initial query. A confident, well-specified
+        query tends to concentrate its top hits on a small number of
+        videos/events; a vague query spreads hits across many unrelated
+        videos with no clear winner. Returns the ratio of DISTINCT videos
+        among the top `top_n` candidates to `top_n` (or fewer if there
+        aren't that many candidates) - 0.0 (all one video, confident) to
+        1.0 (every candidate a different video, maximally ambiguous).
+        Caller (webapp/backend/main.py) decides the threshold at which to
+        act on this (e.g. trigger a clarification question).
+        """
+        top = candidates[:top_n]
+        if not top:
+            return 0.0
+        distinct_videos = {c["payload"].get("source_file") for c in top}
+        return len(distinct_videos) / len(top)
+
     def diversify_by_scene(self, candidates: list, top_k: int) -> list:
         """
         Result Diversification: collapses candidates down to the
@@ -254,14 +337,16 @@ class HybridSearcher:
                 break
         return diversified
 
-    def search(self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None) -> list:
+    def search(
+        self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+    ) -> list:
         """
-        Perform hybrid search query and return fused rankings. `exact`
-        overrides QDRANT_EXACT_SEARCH for the dense branch only - sparse_search
-        is a payload text filter, not a vector search, so it has no exact/HNSW
-        setting to override.
+        Perform hybrid search query and return fused rankings. `exact`/
+        `hnsw_ef` override QDRANT_EXACT_SEARCH/the HNSW default for the
+        dense branch only - sparse_search is a payload text filter, not a
+        vector search, so it has no exact/HNSW setting to override.
         """
-        dense_hits = self.dense_search(query, top_k, exact=exact)
+        dense_hits = self.dense_search(query, top_k, exact=exact, hnsw_ef=hnsw_ef)
         sparse_hits = self.sparse_search(query, top_k)
         return self.merge_rrf(dense_hits, sparse_hits)
 

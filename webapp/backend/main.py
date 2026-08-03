@@ -94,6 +94,13 @@ _dres_session_id = None
 # task_id starts with an empty set via .get(task_id, set())) - no explicit
 # reset needed when DRES moves to the next task.
 _avs_submitted_by_task: dict = {}
+# KIS-C clarification-question trigger (see HybridSearcher.compute_ambiguity_score):
+# 0.0-1.0 ratio of distinct videos among the top candidates; above this,
+# /api/search generates a clarifying question instead of just returning
+# results the operator has to disambiguate unaided. Webapp-only knob (not
+# used by CLI/batch_query.py/evaluation), so it lives here rather than
+# inference-code/config.py.
+AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.7"))
 
 
 def _check_avs_duplicate(task_id: str, video_name: Optional[str], force: bool, submitted_by_task: dict) -> Optional[dict]:
@@ -188,6 +195,11 @@ class SearchRequest(BaseModel):
     # precision without editing .env/restarting the backend.
     exact: Optional[bool] = None
     verify: Optional[bool] = None
+    # Graduated middle ground between exact=False (fast/default) and
+    # exact=True (full brute-force) - raises Qdrant's HNSW search-time
+    # candidate-list size for higher recall at a smaller latency cost than
+    # exact search. None (default) leaves Qdrant's own index default in effect.
+    hnsw_ef: Optional[int] = None
 
 class FeedbackRequest(BaseModel):
     positive_ids: List[str] = []
@@ -323,9 +335,11 @@ async def run_search(request: SearchRequest):
         hyde_query = query_proc.generate_hyde(resolved_query)
 
         # 2. Candidate Retrieval
-        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact)
-        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact)
-        secondary_hits = searcher.dense_search_secondary(resolved_query, top_k=15, exact=request.exact)
+        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        secondary_hits = searcher.dense_search_secondary(
+            resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef
+        )
         # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
         # VBS2026): tags each fused hit with which source(s) it came from
         # ("query" = original text, "hyde" = HyDE hypothetical description,
@@ -334,6 +348,14 @@ async def run_search(request: SearchRequest):
         candidates = searcher.merge_rrf(
             query_hits, hyde_hits, secondary_hits, labels=["query", "hyde", "secondary"]
         )
+        # TAG-inspired (arXiv:2508.07925) temporal coherence re-scoring:
+        # boost candidates that have other same-video candidates nearby in
+        # frame_idx, so a real event isn't left fragmented across several
+        # marginal individual scores. Run right after merge_rrf, before the
+        # type-specific reranking below (CLI/batch_query.py/evaluation also
+        # call diversify_by_scene after their own merge_rrf - this webapp
+        # flow doesn't, so no equivalent composition step exists here yet).
+        candidates = searcher.temporal_coherence_boost(candidates)
 
         # Remember this turn's resolved query + dense vector for later
         # session actions: /api/feedback Rocchio-adjusts from
@@ -352,9 +374,31 @@ async def run_search(request: SearchRequest):
 
         # 3. Type-specific Reranking
         results = []
+        clarification_question = None
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
+
+            # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
+            # fused candidate pool is spread across many unrelated videos
+            # with no clear winner, ask the operator a clarifying question
+            # instead of silently returning an under-specified result set.
+            # Gated behind AMBIGUITY_THRESHOLD so the common (unambiguous)
+            # case pays zero extra VLM-call cost.
+            ambiguity_score = searcher.compute_ambiguity_score(candidates)
+            if ambiguity_score >= AMBIGUITY_THRESHOLD:
+                seen_videos = set()
+                summaries = []
+                for c in candidates:
+                    video = c["payload"].get("source_file")
+                    if video in seen_videos:
+                        continue
+                    seen_videos.add(video)
+                    summaries.append(c["payload"].get("caption") or video or "")
+                    if len(summaries) >= 5:
+                        break
+                clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
+
             top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
                 c for c in top_candidates
@@ -458,7 +502,8 @@ async def run_search(request: SearchRequest):
         return {
             "query": request.query,
             "type": request.type,
-            "results": results
+            "results": results,
+            "clarification": clarification_question
         }
     except Exception as e:
         import traceback
