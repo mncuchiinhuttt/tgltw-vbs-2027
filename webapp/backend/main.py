@@ -6,6 +6,7 @@ import uuid
 import asyncio
 import subprocess
 import threading
+import tempfile
 from pathlib import Path
 from typing import Optional, List
 from pydantic import BaseModel
@@ -621,6 +622,91 @@ async def run_search_by_image(file: UploadFile = File(...), top_k: int = Form(20
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Search-by-image failed: {str(e)}")
+
+@app.post("/api/search-by-video")
+async def run_search_by_video(file: UploadFile = File(...), top_k: int = Form(20)):
+    """
+    KIS-V clip search: sample representative frames from the uploaded visual
+    prompt, embed each frame, and merge the strongest indexed matches. The
+    upload is temporary and is never added to the dataset or served back.
+    """
+    temp_path = None
+    try:
+        suffix = Path(file.filename or "prompt.mp4").suffix or ".mp4"
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
+            temp_file.write(await file.read())
+            temp_path = temp_file.name
+
+        cap = cv2.VideoCapture(temp_path)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        if frame_count <= 0 or fps <= 0:
+            cap.release()
+            raise HTTPException(status_code=400, detail="Unable to read frames from the uploaded video")
+
+        sample_count = min(8, frame_count)
+        frame_positions = [
+            int(index * (frame_count - 1) / max(sample_count - 1, 1))
+            for index in range(sample_count)
+        ]
+        sampled_frames = []
+        for frame_idx in frame_positions:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+            success, frame = cap.read()
+            if success:
+                sampled_frames.append((frame_idx / fps, Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))))
+        cap.release()
+
+        if not sampled_frames:
+            raise HTTPException(status_code=400, detail="No readable frames found in the uploaded video")
+
+        _, searcher, _ = init_services(query_type=1)
+        merged_hits = {}
+        last_visual_vector = None
+        per_frame_top_k = max(5, min(int(top_k), 20))
+        for clip_timestamp, frame_image in sampled_frames:
+            vector = searcher.embedder.embed_image(frame_image)
+            last_visual_vector = vector
+            for hit in searcher.dense_search_by_vector(vector, top_k=per_frame_top_k):
+                existing = merged_hits.get(hit["id"])
+                if existing is None or hit["score"] > existing["score"]:
+                    merged_hits[hit["id"]] = {
+                        **hit,
+                        "matched_clip_timestamp": round(clip_timestamp, 3),
+                    }
+
+        ranked_hits = sorted(merged_hits.values(), key=lambda hit: hit["score"], reverse=True)[:int(top_k)]
+        results = [
+            {
+                "rank": index + 1,
+                "score": hit["score"],
+                "id": hit["id"],
+                "payload": hit["payload"],
+                "matched_clip_timestamp": hit["matched_clip_timestamp"],
+            }
+            for index, hit in enumerate(ranked_hits)
+        ]
+        _session_state["last_query_vector"] = last_visual_vector
+        interaction_log.log_query(
+            "search_by_video",
+            f"uploaded_video:{file.filename}",
+            [result["id"] for result in results],
+            dres_config=_dres_config(),
+            session_id=_dres_session_id,
+        )
+        return {"results": results, "sampled_frames": len(sampled_frames)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Search-by-video failed: {str(e)}")
+    finally:
+        if temp_path:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
 
 @app.post("/api/temporal-search")
 def run_temporal_search(request: TemporalSearchRequest):
