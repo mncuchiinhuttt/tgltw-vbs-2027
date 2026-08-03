@@ -2,6 +2,15 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.15.0] - 2026-08-03
+
+### Added
+- **KIS-V support (`/api/search-by-image`)** - VBS_GUIDE.md §4.1's visual KIS variant shows the operator a short clip on the projector instead of text, so the natural query is an uploaded photo/screenshot rather than the text box. New endpoint embeds the upload with the same visual embedder used at indexing time (`HybridSearcher.embed_image` via `dense_search_by_vector`) and returns ranked matches - no RRF fusion needed since there's only one ranked list. Frontend: new "Tìm bằng ảnh (KIS-V)" button next to the text search form triggers a hidden file input.
+- **AVS result diversification wired into the webapp** - `HybridSearcher.diversify_by_scene()` (collapses to the single highest-scoring hit per video+scene) was already called by `batch_query.py`/`evaluation/run_eval.py` but not by `/api/search`, so live interactive search results could be flooded by near-duplicate keyframes of the same event. Now called right after `temporal_coherence_boost` for all three query types, directly serving AVS's diversity-across-videos scoring (VBS_GUIDE.md §4.2/§5.2) in addition to giving KIS-T/KIS-C/VQA operators a more varied result set.
+
+### Fixed
+- Query-type coverage gap: the system previously had no path for KIS-V and only a submission-time guard (not a search-time diversification step) for AVS - both addressed above.
+
 ## [1.14.0] - 2026-08-03
 
 ### Changed

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from PIL import Image
 import io
 
-from fastapi import FastAPI, HTTPException, Header, Response, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Header, Response, BackgroundTasks, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
@@ -352,10 +352,19 @@ async def run_search(request: SearchRequest):
         # boost candidates that have other same-video candidates nearby in
         # frame_idx, so a real event isn't left fragmented across several
         # marginal individual scores. Run right after merge_rrf, before the
-        # type-specific reranking below (CLI/batch_query.py/evaluation also
-        # call diversify_by_scene after their own merge_rrf - this webapp
-        # flow doesn't, so no equivalent composition step exists here yet).
+        # type-specific reranking below.
         candidates = searcher.temporal_coherence_boost(candidates)
+
+        # Result Diversification (Khoa: Adaptive Sampling & Retrieval
+        # Accuracy) - collapses to the single highest-scoring hit per
+        # (video, scene) so the pool isn't flooded by several near-duplicate
+        # keyframes of the same event. CLI/batch_query.py/evaluation already
+        # call this after their own merge_rrf; the webapp flow now does too,
+        # directly serving AVS's diversity-across-videos scoring
+        # (VBS_GUIDE.md §4.2/§5.2) as well as giving KIS-T/KIS-C/VQA
+        # operators a more varied result set to scan.
+        import config
+        candidates = searcher.diversify_by_scene(candidates, top_k=config.SUBMISSION_TOP_K)
 
         # Remember this turn's resolved query + dense vector for later
         # session actions: /api/feedback Rocchio-adjusts from
@@ -579,6 +588,39 @@ def run_query_by_example(request: QueryByExampleRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Query-by-example failed: {str(e)}")
+
+@app.post("/api/search-by-image")
+async def run_search_by_image(file: UploadFile = File(...), top_k: int = Form(20)):
+    """
+    KIS-V (Visual KIS, VBS_GUIDE.md §4.1): the operator is shown a short
+    clip on the projector - not a text description - so the natural query
+    is "search by what I just saw", not text. Embeds an uploaded photo/
+    screenshot of the target moment with the same visual embedder used at
+    indexing time and searches directly by that vector. No RRF fusion
+    here (unlike /api/search) - there's only one ranked list, no text/
+    HyDE/secondary-embedder branches to fuse an uploaded image against.
+    """
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        vector = searcher.embedder.embed_image(image)
+
+        _session_state["last_query_vector"] = vector
+        hits = searcher.dense_search_by_vector(vector, top_k=top_k)
+        results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
+                   for idx, hit in enumerate(hits)]
+        interaction_log.log_query(
+            "search_by_image", f"uploaded_image:{file.filename}", [r["id"] for r in results],
+            dres_config=_dres_config(), session_id=_dres_session_id,
+        )
+        return {"results": results}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Search-by-image failed: {str(e)}")
 
 @app.post("/api/temporal-search")
 def run_temporal_search(request: TemporalSearchRequest):
