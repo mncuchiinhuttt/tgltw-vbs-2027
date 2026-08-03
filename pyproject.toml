@@ -41,6 +41,9 @@ preprocessing = [
     # which only supports Python <3.10.
     "numba>=0.60.0",
     "soundfile>=0.12.0",
+    # ASR (Whisper large-v3-turbo via CTranslate2) - CUDA-or-CPU only, no
+    # Apple Silicon MPS backend.
+    "faster-whisper>=1.1.0",
     "sentencepiece>=0.1.99",
     "protobuf>=3.20.0",
     "paddlepaddle>=3.0.0",

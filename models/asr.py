@@ -1,61 +1,68 @@
 import os
-import shutil
-import torch
 from typing import List, Dict, Any
-from config import PHOWHISPER_MODEL_ID
+from config import (
+    ASR_MODEL_ID, ASR_LANGUAGE, ASR_COMPUTE_TYPE,
+    ASR_VAD_FILTER_ENABLED, ASR_WORD_TIMESTAMPS_ENABLED,
+)
 
-# transformers' ASR pipeline shells out to a bare "ffmpeg" command to decode
-# audio files, with no way to point it at a specific binary. If ffmpeg isn't
-# on PATH, fall back to the workspace's bundled bin/ffmpeg by prepending its
-# directory to PATH so that internal call can still resolve it.
-if shutil.which("ffmpeg") is None:
-    _bin_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bin")
-    if os.path.exists(os.path.join(_bin_dir, "ffmpeg")):
-        os.environ["PATH"] = _bin_dir + os.pathsep + os.environ.get("PATH", "")
 
-class PhoWhisperASR:
+def _cuda_available() -> bool:
+    try:
+        import ctranslate2
+        return ctranslate2.get_cuda_device_count() > 0
+    except Exception:
+        return False
+
+
+class WhisperASR:
     """
-    ASR (Speech-to-Text) module wrapping PhoWhisper.
+    ASR (Speech-to-Text) module wrapping faster-whisper (CTranslate2),
+    running Whisper large-v3-turbo by default.
     """
-    def __init__(self, model_id: str = PHOWHISPER_MODEL_ID):
+    def __init__(self, model_id: str = ASR_MODEL_ID):
         # Check if local weights path exists under global weights/
         local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", model_id.split("/")[-1])
         if os.path.exists(local_path):
             model_id = local_path
 
-        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+        # CTranslate2 supports cuda/cpu only - no Apple Silicon MPS backend.
+        self.device = "cuda" if _cuda_available() else "cpu"
         print(f"Loading ASR model: {model_id} on {self.device}...")
 
-        from transformers import pipeline
-        self.transcriber = pipeline(
-            "automatic-speech-recognition",
-            model=model_id,
-            chunk_length_s=30,
-            device=self.device
-        )
+        try:
+            from faster_whisper import WhisperModel
+            self.model = WhisperModel(model_id, device=self.device, compute_type=ASR_COMPUTE_TYPE)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load ASR model '{model_id}': {e}") from e
         print("ASR model loaded successfully.")
 
     def transcribe(self, audio_path: str) -> List[Dict[str, Any]]:
-        result = self.transcriber(audio_path, return_timestamps=True)
-        
         segments = []
-        if "chunks" in result:
-            for chunk in result["chunks"]:
-                timestamp = chunk["timestamp"] or (0.0, None)
-                start = timestamp[0] if timestamp[0] is not None else 0.0
-                # Whisper sometimes can't predict an end timestamp (e.g. audio
-                # cut off mid-word) - fall back to start rather than leaving
-                # None, which breaks any downstream arithmetic on "end"
-                end = timestamp[1] if timestamp[1] is not None else start
+        try:
+            segment_iter, info = self.model.transcribe(
+                audio_path,
+                language=ASR_LANGUAGE,
+                beam_size=5,
+                vad_filter=ASR_VAD_FILTER_ENABLED,
+                word_timestamps=ASR_WORD_TIMESTAMPS_ENABLED,
+            )
+            # The segment iterator is lazy - decode/inference errors surface
+            # here during iteration, not at the transcribe() call above.
+            for seg in segment_iter:
                 segments.append({
-                    "text": chunk["text"],
-                    "start": start,
-                    "end": end
+                    "text": seg.text.strip(),
+                    "start": float(seg.start),
+                    "end": float(seg.end),
+                    "avg_logprob": float(seg.avg_logprob),
+                    "no_speech_prob": float(seg.no_speech_prob),
+                    "compression_ratio": float(seg.compression_ratio),
+                    "words": [
+                        {"word": w.word, "start": round(w.start, 2), "end": round(w.end, 2)}
+                        for w in (seg.words or [])
+                    ],
+                    "language": info.language,
                 })
-        else:
-            segments.append({
-                "text": result.get("text", ""),
-                "start": 0.0,
-                "end": 30.0
-            })
+        except Exception as e:
+            print(f"ASR transcription failed for {audio_path}: {e}")
+            return []
         return segments

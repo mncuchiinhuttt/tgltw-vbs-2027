@@ -29,7 +29,7 @@ tgltw-vbs-2027/
 │   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro API vision-language handler
 │   ├── embedding.py       # QwenVL8BEmbedder, M2DClapEmbedder & DashScopeCloudEmbedder
 │   ├── clip_embedder.py   # Lightweight CLIP embedder for keyframe scene-variance estimation
-│   ├── asr.py             # PhoWhisper speech-to-text transcriber
+│   ├── asr.py             # faster-whisper (Whisper large-v3-turbo) speech-to-text transcriber
 │   ├── object_detector.py # YOLOE-26 open-vocabulary object detector
 │   ├── region_proposer.py  # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
 │   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
@@ -75,7 +75,7 @@ To avoid duplicate codebase wrappers, all model configurations and execution log
 - **SAM3-gated Detection & OCR pre-filter**: `RegionProposer` (`models/region_proposer.py`) wraps `facebook/sam3` (Promptable Concept Segmentation, zero-shot, **gated on Hugging Face** - accept the license at https://huggingface.co/facebook/sam3 and set `HF_TOKEN` before downloading/running it) to propose candidate regions from general concept prompts ("human"/"vehicle"/"small distinct object" for Object Detection, "text or sign region" for OCR) before SAHI-style tiling (512x512, 0.2 overlap) and the actual detector/recognizer run - a keyframe's detection/OCR step is skipped entirely if SAM3 finds no matching region.
 - **OCR recognition ensemble**: `preprocessing/video/ocr.py`'s `TextDetectorOCR` recognizes each text-box crop with both PP-OCRv6 and `VinternRecognizer` (`models/vintern_ocr.py`, Vintern-1B-v3.5), keeping whichever is more confident; crops shorter than 16px are upscaled first via `SuperResolutionUpscaler` (`models/super_resolution.py`, Real-ESRGAN x4), and crops where the ensemble's best confidence is still low fall back to a dedicated lightweight VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`) rather than the main captioning VLM.
 - **Adaptive Keyframe Sampling**: `models/clip_embedder.py`'s lightweight CLIP model estimates how visually static/dynamic a scene is, sizing a per-scene keyframe budget (1-8) before the real embedding model runs farthest-point sampling within it - see `preprocessing/video/scene_detector.py`.
-- **ASR**: `PhoWhisperASR` for transcribing speech with timestamps.
+- **ASR**: `WhisperASR` (`models/asr.py`, faster-whisper/CTranslate2 running Whisper large-v3-turbo, 99-language multilingual - VBS's V3C dataset isn't Vietnamese-centric like AIC's, so a general multilingual model replaces the AIC pipeline's Vietnamese-specialized PhoWhisper) transcribes speech with word-level timestamps; silero VAD skips non-speech regions, and `preprocessing/audio/asr_segment_filter.py` drops any remaining low-confidence/hallucinated segments (OpenAI Whisper's own reference thresholds on `avg_logprob`/`no_speech_prob`/`compression_ratio`) before they reach embedding + indexing.
 
 The scripts dynamically append the workspace root to `sys.path` to import `models.*` from anywhere.
 
@@ -111,7 +111,7 @@ machines running the same project resolve the same dependency versions.
 
 Before running the download script, accept the SAM3 license at https://huggingface.co/facebook/sam3 (it's a gated repo) and set `HF_TOKEN` in your `.env` - the SAM3 download will fail without it.
 
-Run the download script from the root folder to download weights for PhoWhisper, CLAP, the YOLOE-26 detector, SAM3, Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
+Run the download script from the root folder to download weights for Whisper large-v3-turbo (faster-whisper/CTranslate2 format), CLAP, the YOLOE-26 detector, SAM3, Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
 
 ```bash
 uv run python download_assets.py
@@ -304,4 +304,4 @@ uv run --group evaluation python evaluation/run_eval.py --query_file evaluation/
 
 ## License
 
-This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (PhoWhisper, YOLOE-26, SAM3, Vintern-1B-v3.5, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).
+This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (Whisper large-v3-turbo, YOLOE-26, SAM3, Vintern-1B-v3.5, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).

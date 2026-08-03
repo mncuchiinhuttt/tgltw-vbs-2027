@@ -275,7 +275,7 @@ def main():
     env_vars = load_env_values()
     qwen_vlm_id = env_vars.get("QWEN_VLM_MODEL_ID", "Qwen/Qwen3-VL-8B-Thinking")
     qwen_embed_id = env_vars.get("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-2B")
-    phowhisper_id = env_vars.get("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
+    asr_model_id = env_vars.get("ASR_MODEL_ID", "deepdml/faster-whisper-large-v3-turbo-ct2")
     yoloe_id = env_vars.get("YOLOE_MODEL_ID", "yoloe-26x-seg.pt")
     sam3_id = env_vars.get("SAM3_MODEL_ID", "facebook/sam3")
     vintern_id = env_vars.get("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
@@ -286,8 +286,8 @@ def main():
     hf_token = env_vars.get("HF_TOKEN")
 
     # Download weights
-    # 1. PhoWhisper
-    download_model(phowhisper_id, phowhisper_id.split("/")[-1], token=hf_token)
+    # 1. Whisper large-v3-turbo (CTranslate2 format, for faster-whisper)
+    download_model(asr_model_id, asr_model_id.split("/")[-1], token=hf_token)
 
     # 2. M2D-CLAP Environmental model (unzipped from URL)
     download_and_unzip_m2d_clap()

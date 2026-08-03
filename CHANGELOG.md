@@ -2,6 +2,20 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.16.0] - 2026-08-04
+
+### Changed
+- **ASR: PhoWhisper (`vinai/PhoWhisper-large`, Vietnamese-specialized) replaced with Whisper large-v3-turbo via faster-whisper (CTranslate2)** - VBS's V3C dataset isn't Vietnamese-centric like AIC's, so a Vietnamese-specialized model was the wrong fit; Whisper large-v3-turbo covers 99 languages (MIT license). Also matches what other VBS-2026 teams used (`vbs-2026-paper-methods-and-team-analysis.md` L108/L195/L778: Fusionista2.0/VIREO-style/synthesis all use faster-whisper or Whisper-Turbo, not the plain `transformers` pipeline). `models/asr.py`'s `PhoWhisperASR` becomes `WhisperASR`; CTranslate2 has no Apple Silicon MPS backend, so device selection now checks `ctranslate2.get_cuda_device_count()` (cuda/cpu only) instead of `torch.cuda.is_available()`/`mps`.
+- **ASR hardening (3 techniques, grounded in `vbs-2026-paper-methods-and-team-analysis.md`'s "Ưu tiên 3" and general Whisper failure modes):**
+  1. **Hallucination/silence filtering** - every ASR segment previously got embedded and indexed regardless of confidence, including segments where Whisper hallucinates repeated text over silence/music (a well-known failure mode). New `preprocessing/audio/asr_segment_filter.py`'s `filter_asr_segments()` drops segments by `avg_logprob`/`no_speech_prob`/`compression_ratio` (OpenAI Whisper's own reference thresholds) before they reach `embed_text()` + indexing, applied once inside `AudioProcessor.transcribe_audio()` so it covers both `preprocessing/main.py` call sites.
+  2. **VAD pre-filtering** - `vad_filter=True` (silero VAD, bundled with faster-whisper) skips non-speech regions before transcription runs.
+  3. **Word-level timestamps** - `word_timestamps=True` adds a `{word, start, end}` array to each segment, replacing the previous coarse 30s-chunk-level timestamp; feeds the speech payload's new `words`/`timestamp_end`/`asr_avg_logprob` fields for finer VQA hotspot localization.
+- All thresholds/flags are env-tunable (`preprocessing/config.py`: `ASR_MODEL_ID`, `ASR_LANGUAGE`, `ASR_COMPUTE_TYPE`, `ASR_VAD_FILTER_ENABLED`, `ASR_WORD_TIMESTAMPS_ENABLED`, `ASR_MIN_AVG_LOGPROB`, `ASR_MAX_NO_SPEECH_PROB`, `ASR_MAX_COMPRESSION_RATIO`).
+
+### Added
+- `tests/test_asr_segment_filter.py` (first test file in this repo) - unit tests for the confidence/hallucination filter using stub segment dicts, runnable via pytest or as a plain script.
+- `faster-whisper>=1.1.0` dependency (`preprocessing/requirements.txt`, `pyproject.toml`'s `preprocessing` group) - pulls in `ctranslate2`, `av` (bundles FFmpeg libraries, no `ffmpeg` binary needed), and `onnxruntime` (bundled silero VAD).
+
 ## [1.15.0] - 2026-08-03
 
 ### Added

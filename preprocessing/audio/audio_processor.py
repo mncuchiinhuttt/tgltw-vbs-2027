@@ -7,8 +7,9 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from models.asr import PhoWhisperASR
+from models.asr import WhisperASR
 from models.embedding import M2DClapEmbedder
+from preprocessing.audio.asr_segment_filter import filter_asr_segments
 
 class AudioProcessor:
     """
@@ -16,7 +17,7 @@ class AudioProcessor:
     and environmental CLAP embedding extraction.
     """
     def __init__(self):
-        self.asr_model = PhoWhisperASR()
+        self.asr_model = WhisperASR()
         self.clap_embedder = M2DClapEmbedder()
 
     def extract_audio(self, video_path: str, output_audio_path: str) -> str:
@@ -54,11 +55,17 @@ class AudioProcessor:
 
     def transcribe_audio(self, audio_path: str) -> List[Dict[str, Any]]:
         """
-        Transcribe the audio using PhoWhisper model wrapper.
+        Transcribe the audio using the faster-whisper model wrapper, then
+        drop low-confidence/silence/hallucinated segments before they reach
+        embedding + indexing (see asr_segment_filter.filter_asr_segments).
         """
         if not os.path.exists(audio_path):
             return []
-        return self.asr_model.transcribe(audio_path)
+        raw = self.asr_model.transcribe(audio_path)
+        kept = filter_asr_segments(raw)
+        if len(kept) != len(raw):
+            print(f"ASR filter: dropped {len(raw) - len(kept)}/{len(raw)} low-confidence/silent segments.")
+        return kept
 
     def extract_clap_embedding(self, audio_path: str, start_sec: float, end_sec: float) -> np.ndarray:
         """
