@@ -248,6 +248,50 @@ class HybridSearcher:
 
         return merged_results
 
+    def temporal_coherence_boost(
+        self, candidates: list, window: int = 10, boost_weight: float = 0.3
+    ) -> list:
+        """
+        TAG-inspired (arXiv:2508.07925, "temporal coherence clustering")
+        re-scoring: a real event is usually represented by SEVERAL
+        temporally-close keyframes, each independently retrieved by
+        merge_rrf with its own moderate rrf_score - but per-frame RRF
+        fusion treats every candidate as unrelated, so a true event can end
+        up "fragmented" across several marginal individual scores instead
+        of standing out. This boosts each candidate's rrf_score using the
+        combined rrf_score of every OTHER same-video candidate within
+        `window` frames of it - several nearby independent hits become a
+        stronger combined signal instead of staying fragmented.
+
+        Run right after merge_rrf, BEFORE diversify_by_scene - diversify_by_
+        scene then collapses the now-correctly-boosted cluster down to its
+        single best representative, so the two steps compose (this one
+        fixes ranking within a cluster; diversify_by_scene then dedupes
+        across it) rather than duplicating each other's job.
+        """
+        by_video = {}
+        unboosted = []
+        for c in candidates:
+            video = c["payload"].get("source_file")
+            frame_idx = c["payload"].get("frame_idx")
+            if video is None or frame_idx is None:
+                unboosted.append(c)
+                continue
+            by_video.setdefault(video, []).append(c)
+
+        for group in by_video.values():
+            for c in group:
+                frame_idx = c["payload"]["frame_idx"]
+                neighbor_score_sum = sum(
+                    other.get("rrf_score", 0.0)
+                    for other in group
+                    if other is not c and abs(other["payload"]["frame_idx"] - frame_idx) <= window
+                )
+                c["rrf_score"] = c.get("rrf_score", 0.0) + boost_weight * neighbor_score_sum
+
+        boosted = [c for group in by_video.values() for c in group] + unboosted
+        return sorted(boosted, key=lambda c: c.get("rrf_score", 0.0), reverse=True)
+
     def diversify_by_scene(self, candidates: list, top_k: int) -> list:
         """
         Result Diversification: collapses candidates down to the

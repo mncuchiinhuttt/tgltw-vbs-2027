@@ -341,6 +341,14 @@ async def run_search(request: SearchRequest):
         candidates = searcher.merge_rrf(
             query_hits, hyde_hits, secondary_hits, labels=["query", "hyde", "secondary"]
         )
+        # TAG-inspired (arXiv:2508.07925) temporal coherence re-scoring:
+        # boost candidates that have other same-video candidates nearby in
+        # frame_idx, so a real event isn't left fragmented across several
+        # marginal individual scores. Run right after merge_rrf, before the
+        # type-specific reranking below (CLI/batch_query.py/evaluation also
+        # call diversify_by_scene after their own merge_rrf - this webapp
+        # flow doesn't, so no equivalent composition step exists here yet).
+        candidates = searcher.temporal_coherence_boost(candidates)
 
         # Remember this turn's resolved query + dense vector for later
         # session actions: /api/feedback Rocchio-adjusts from
