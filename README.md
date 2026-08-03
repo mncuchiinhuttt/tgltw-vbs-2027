@@ -147,6 +147,47 @@ OPENAI_VLM_MODEL_NAME=<same model served by host_vllm.sh>
 VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batching
 ```
 
+### 2c. Migrating Indexed Data to a New Server
+
+Everything Qdrant indexes (embeddings + payloads from `preprocessing/main.py`) lives on disk under `preprocessing/qdrant_storage/` - both `host_qdrant.sh`'s Docker path (`docker-compose.yml`'s `./qdrant_storage:/qdrant/storage` volume) and its standalone-binary fallback (`QDRANT__STORAGE__STORAGE_PATH=./qdrant_storage`) write there. Model weights (`weights/`) are **not** part of this - they're just re-downloaded via `download_assets.py` on the new server, no need to copy them.
+
+**Option A - copy the storage directory directly (simplest, same Qdrant version only):**
+
+```bash
+# On the old server: stop Qdrant first so files aren't mid-write
+cd preprocessing
+docker compose down   # or: pkill qdrant   (if running the standalone binary)
+
+# Copy the whole storage dir to the new server (any transfer tool works)
+rsync -avz qdrant_storage/ new-server:/path/to/tgltw-vbs-2027/preprocessing/qdrant_storage/
+
+# On the new server: start Qdrant as usual - it picks the copied data up automatically
+cd preprocessing && ./host_qdrant.sh
+```
+
+Only safe when both servers run the **same Qdrant version** - `docker-compose.yml` pins `qdrant/qdrant:latest`, which can drift between two `docker compose up` runs on different machines/dates and silently change the on-disk storage format. Pin an explicit version tag (e.g. `qdrant/qdrant:v1.10.1`, matching `host_qdrant.sh`'s standalone-binary `QDRANT_VERSION`) in `docker-compose.yml` on both servers before relying on this option.
+
+**Option B - Qdrant's snapshot API (recommended, version-tolerant, per-collection, no downtime on the source):**
+
+```bash
+# On the old server: snapshot each collection (visual_index, audio_env_index)
+curl -X POST http://localhost:6333/collections/visual_index/snapshots
+
+# List snapshots to get the exact filename just created
+curl http://localhost:6333/collections/visual_index/snapshots
+
+# Download it
+curl -o visual_index.snapshot \
+  http://localhost:6333/collections/visual_index/snapshots/<snapshot_name>
+
+# Copy visual_index.snapshot to the new server, then restore it there
+# (new server's Qdrant must be running first)
+curl -X POST http://localhost:6333/collections/visual_index/snapshots/upload \
+  -F "snapshot=@visual_index.snapshot"
+```
+
+Repeat per collection - this project uses two (`preprocessing/indexing/indexer.py`): `visual_index` (embeddings + all payloads: keyframes, OCR, objects, speech transcripts) and `audio_env_index` (CLAP ambient-audio embeddings). This is the officially supported migration path across Qdrant versions and doesn't require stopping the source server. See [Qdrant's snapshot docs](https://qdrant.tech/documentation/concepts/snapshots/) for restoring into a fresh collection name or a multi-node cluster instead.
+
 ---
 
 ## 3. Preprocessing & Indexing
