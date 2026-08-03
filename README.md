@@ -203,6 +203,37 @@ Repeat per collection - this project uses two (`preprocessing/indexing/indexer.p
    uv run --group preprocessing python preprocessing/main.py --data_dir datasets
    ```
 
+### 3a. Reducing Index Size with Matryoshka (MRL) Truncation
+
+`QwenVL8BEmbedder` (visual/text embeddings, default 4096-dim) is trained with Matryoshka
+Representation Learning (arXiv:2601.04720): the leading N dimensions of its output vector are
+themselves a valid, independently-meaningful embedding, not an arbitrary slice. Setting
+`EMBEDDING_MRL_DIM` in `preprocessing/.env` (e.g. `EMBEDDING_MRL_DIM=1024`) truncates every
+new vector to that many leading dims and re-normalizes it before indexing — shrinking Qdrant
+storage and speeding up search roughly in proportion to the size reduction, at zero extra
+inference cost (same model forward pass, just a shorter output kept). Does **not** apply to
+`M2DClapEmbedder` (ambient-audio, 768-dim) — that model wasn't trained with MRL, so truncating
+its output would break its meaning; `EMBEDDING_MRL_DIM` only affects the Qwen embedder.
+
+**How much to cut:** general MRL results (and Qwen3's own embedding docs) suggest cutting to
+1/4-1/8 of the full dimension (i.e. 1024-512 out of 4096) usually keeps accuracy close to the
+untruncated vector, with degradation growing quickly below that. This is a starting point to
+test, not a guarantee for this specific model/dataset — **validate empirically** before
+committing to a value for a real competition index:
+
+```bash
+# Re-index a small sample (or re-embed the evaluation set) at a few candidate dims, then
+# compare Recall@1/Recall@5/MRR for each against the untruncated baseline:
+EMBEDDING_MRL_DIM=1024 uv run --group evaluation python evaluation/run_eval.py --output_file evaluation/eval_results_mrl1024.json
+EMBEDDING_MRL_DIM=512  uv run --group evaluation python evaluation/run_eval.py --output_file evaluation/eval_results_mrl512.json
+```
+
+Pick the smallest dim whose Recall@K/MRR drop vs. the full 4096-dim baseline is negligible for
+your query set — see `evaluation/README.md` for the eval runner's full docs, and
+[`## 2c. Migrating Indexed Data to a New Server`](#2c-migrating-indexed-data-to-a-new-server)
+if you change `EMBEDDING_MRL_DIM` after already indexing (existing vectors keep their old
+dimension; changing this setting requires re-indexing, not just a config flip).
+
 ---
 
 ## 4. Query Retrieval (Inference)

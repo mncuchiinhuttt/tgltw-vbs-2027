@@ -1,0 +1,2 @@
+- [Import convention: bare `from config import`](import-convention-bare-config.md) — why it works, how to verify before flagging as a bug
+- [ASR migration: PhoWhisper to faster-whisper](asr-migration-context.md) — v1.16.0/v1.5.0, why, key files
