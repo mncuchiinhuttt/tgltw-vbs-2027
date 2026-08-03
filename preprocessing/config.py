@@ -43,7 +43,22 @@ QWEN_EMBEDDING_MODEL_ID = os.getenv("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Em
 # second model. Leave unset to keep the full embedding dimension (no-op,
 # same behavior as before this option existed).
 EMBEDDING_MRL_DIM = int(os.getenv("EMBEDDING_MRL_DIM")) if os.getenv("EMBEDDING_MRL_DIM") else None
-PHOWHISPER_MODEL_ID = os.getenv("PHOWHISPER_MODEL_ID", "vinai/PhoWhisper-large")
+# ASR (faster-whisper / CTranslate2). Whisper large-v3-turbo: 99-language,
+# MIT. Must be a CT2-converted repo id (download_assets.py runs `hf download`
+# on it, so faster-whisper's "turbo" shorthand is not usable here).
+ASR_MODEL_ID = os.getenv("ASR_MODEL_ID", "deepdml/faster-whisper-large-v3-turbo-ct2")
+# Blank = auto-detect per file (V3C is multilingual). Set e.g. "en" to force.
+ASR_LANGUAGE = os.getenv("ASR_LANGUAGE", "") or None
+# CTranslate2 compute type: "auto" picks float16 on CUDA / int8 on CPU.
+ASR_COMPUTE_TYPE = os.getenv("ASR_COMPUTE_TYPE", "auto")
+ASR_VAD_FILTER_ENABLED = os.getenv("ASR_VAD_FILTER_ENABLED", "true").lower() == "true"
+ASR_WORD_TIMESTAMPS_ENABLED = os.getenv("ASR_WORD_TIMESTAMPS_ENABLED", "true").lower() == "true"
+# Hallucination/silence filter thresholds - OpenAI Whisper's own reference
+# values. faster-whisper reports these per segment but does NOT drop the
+# segment for us, so we filter before embedding+indexing.
+ASR_MIN_AVG_LOGPROB = float(os.getenv("ASR_MIN_AVG_LOGPROB", -1.0))
+ASR_MAX_NO_SPEECH_PROB = float(os.getenv("ASR_MAX_NO_SPEECH_PROB", 0.6))
+ASR_MAX_COMPRESSION_RATIO = float(os.getenv("ASR_MAX_COMPRESSION_RATIO", 2.4))
 M2D_CLAP_MODEL_ID = os.getenv("M2D_CLAP_MODEL_ID", "weights/m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025/checkpoint-30.pth")
 
 # Zero-shot Object Detector Checkpoint (YOLOE-26, open-vocabulary text-prompt detection)

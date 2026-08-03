@@ -183,9 +183,12 @@ def main():
                     "modality": "speech",
                     "source_file": video_name,
                     "timestamp": start_t,
+                    "timestamp_end": end_t,
                     "caption": f"Speech transcript: {seg_text}",
                     "transcript": seg_text,
-                    "text_blob": seg_text
+                    "text_blob": seg_text,
+                    "words": seg.get("words", []),
+                    "asr_avg_logprob": seg.get("avg_logprob"),
                 }
                 point_id = str(uuid.uuid4())
                 indexer.index_visual_point(point_id, speech_vector, payload)
@@ -435,9 +438,12 @@ def main():
                 "modality": "speech",
                 "source_file": audio_name,
                 "timestamp": start_t,
+                "timestamp_end": end_t,
                 "caption": f"Speech transcript: {seg_text}",
                 "transcript": seg_text,
-                "text_blob": seg_text
+                "text_blob": seg_text,
+                "words": seg.get("words", []),
+                "asr_avg_logprob": seg.get("avg_logprob"),
             }
             indexer.index_visual_point(str(uuid.uuid4()), speech_vector, payload)
             

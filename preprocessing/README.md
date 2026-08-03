@@ -34,7 +34,7 @@ preprocessing/
    - Object Detection: YOLOE-26 (open-vocabulary, text-prompted, NMS-free) to locate objects zero-shot based on label lists, with a supplementary tiled detection pass for small objects (e.g. license plates) and optional example-crop visual prompting for categories that are awkward to phrase in text.
 3. **OCR via PP-OCRv6**: Detection + recognition run directly through PP-OCRv6 instead of the VLM; only crops recognized below `OCR_REC_SCORE_THRESHOLD` get escalated to the VLM for a re-read. Custom Vietnamese normalizations (Unicode NFC) index both accented and unaccented terms for robust BM25 search. Optional overlapping-tile pass (`OCR_USE_TILING`, off by default) for small/corner text.
 4. **Unified Per-Frame VLM Analysis**: One JSON call per keyframe (caption + objects/colors/count/scene_type/attributes) instead of two separate calls, batched across a scene's keyframes via `generate_batch()`.
-5. **Speech & Audio Feature Extractors**: Speech transcription via PhoWhisper, environment audio indexing via M2D-CLAP.
+5. **Speech & Audio Feature Extractors**: Speech transcription via faster-whisper (Whisper large-v3-turbo, with VAD + confidence filtering), environment audio indexing via M2D-CLAP.
 6. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections and loads detailed metadata payload alongside vectors.
 
 ## Installation

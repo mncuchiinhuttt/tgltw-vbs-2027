@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-08-04
+
+### Changed
+- Replaced `models/asr.py`'s `PhoWhisperASR` (`transformers.pipeline`, `vinai/PhoWhisper-large`) with `WhisperASR` (`faster-whisper`/CTranslate2, `deepdml/faster-whisper-large-v3-turbo-ct2` = Whisper large-v3-turbo) - VBS's V3C dataset isn't Vietnamese-centric, so the Vietnamese-specialized PhoWhisper model no longer fits; the 99-language multilingual Whisper large-v3-turbo replaces it. CTranslate2 has no Apple Silicon MPS backend, so device selection now uses `ctranslate2.get_cuda_device_count()` (cuda/cpu only).
+- **Removed the ffmpeg-PATH workaround** added in an earlier round (see the note this superseded, below) - it existed only because `transformers`' ASR pipeline shells out to a bare `ffmpeg` binary. faster-whisper decodes audio via PyAV, which bundles the FFmpeg *libraries* directly in its wheel, so no `ffmpeg` binary on `PATH` is needed for ASR anymore. `AudioProcessor.extract_audio`'s own independent `bin/ffmpeg` fallback (unrelated, used for the initial video→WAV extraction) is unaffected.
+- `AudioProcessor.transcribe_audio()` now drops low-confidence/silent/hallucinated segments (new `preprocessing/audio/asr_segment_filter.py`) before returning, and `preprocessing/main.py`'s speech payload gains `timestamp_end`, `words` (word-level timestamps), and `asr_avg_logprob`.
+
+### Added
+- `faster-whisper>=1.1.0` to `requirements.txt` (pulls `ctranslate2`, `av`, `onnxruntime`/bundled silero VAD).
+- Config: `ASR_MODEL_ID`, `ASR_LANGUAGE`, `ASR_COMPUTE_TYPE`, `ASR_VAD_FILTER_ENABLED`, `ASR_WORD_TIMESTAMPS_ENABLED`, `ASR_MIN_AVG_LOGPROB`, `ASR_MAX_NO_SPEECH_PROB`, `ASR_MAX_COMPRESSION_RATIO` (replacing `PHOWHISPER_MODEL_ID`).
+
 ## [1.4.0] - 2026-07-16
 
 ### Changed
