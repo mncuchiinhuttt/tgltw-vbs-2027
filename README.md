@@ -200,12 +200,20 @@ Beyond the base `/api/search`, `/api/status`, and media endpoints, the backend e
 | --- | --- |
 | `POST /api/feedback` | Rocchio-style relevance feedback (👍/👎 on results) — re-searches with an adjusted query vector |
 | `POST /api/query-by-example` | Re-search using an already-indexed result's own stored vector, no re-embedding |
-| `POST /api/temporal-search` | Two-query temporal window search (query A must precede query B within N frames) |
+| `POST /api/temporal-search` | **N-query temporal chain** search (`queries: string[]`, N≥2) — finds the best chronologically-ordered frame chain per video, one step per query, each within a frame window of the previous step (Exquisitor-inspired sequence-chain matching) |
 | `GET /api/browse-video/{video_name}` | Full keyframe listing for a single video, for manual scrubbing |
 | `POST /api/in-video-search` | Manually-triggered deep search restricted to one candidate video |
-| `POST /api/dres/login` / `GET /api/dres/current-task` / `POST /api/dres/submit` | Backend-proxied DRES integration (credentials never reach the frontend) — see `webapp/backend/dres_client.py` |
+| `POST /api/dres/login` / `GET /api/dres/current-task` | DRES session login and current-task lookup (backend-proxied, credentials never reach the frontend) |
+| `POST /api/dres/submit` | Submit an answer to DRES. Accepts optional `video_name`/`force` — resubmitting a video already submitted for the same `task_id` returns a 409 warning (not a hard block, overridable with `force: true`), since VBS's AVS scoring gives no extra credit for a duplicate video and penalizes wrong resubmissions |
 
 Every search/feedback/query-by-example/temporal-search call is logged locally to `webapp/backend/logs/interaction_log.jsonl` first, then best-effort pushed to DRES if `DRES_*` env vars are configured — a DRES outage never blocks the operator's response (`webapp/backend/interaction_log.py`).
+
+### Result Quality & Precision Controls
+
+- **Explainability**: `/api/search` results include a `matched_via` field (e.g. `["query", "hyde"]`) showing which fusion source(s) surfaced each hit, plus OCR/scene-narrative evidence shown unconditionally on VQA answer cards — so the operator can judge trust before acting instead of seeing one opaque score.
+- **Temporal coherence re-scoring**: candidates from the same video within a small frame window boost each other's score, so a real event isn't left fragmented across several marginal individually-scored frames.
+- **KIS-C clarification**: when the top results spread across many unrelated videos with no clear winner (ambiguous query), the response includes a `clarification` field with one system-generated narrowing question — shown as an amber banner in the UI. Gated behind `AMBIGUITY_THRESHOLD` (default `0.7`) so the common unambiguous case pays no extra cost.
+- **Escalate precision on-demand**: `/api/search` accepts optional `exact` (force exact/brute-force Qdrant search), `verify` (force verification reranking), and `hnsw_ef` (graduated HNSW search-time recall/latency tradeoff, a middle ground between the default and `exact`) — all `None`/unset by default, so behavior only changes when an operator explicitly opts in per-search (the frontend exposes `exact`/`verify` as two checkboxes; `hnsw_ef` is API-only for now).
 
 ### DRES Configuration
 
