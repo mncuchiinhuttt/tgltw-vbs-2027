@@ -200,6 +200,7 @@ Beyond the base `/api/search`, `/api/status`, and media endpoints, the backend e
 | --- | --- |
 | `POST /api/feedback` | Rocchio-style relevance feedback (👍/👎 on results) — re-searches with an adjusted query vector |
 | `POST /api/query-by-example` | Re-search using an already-indexed result's own stored vector, no re-embedding |
+| `POST /api/search-by-image` | **KIS-V** — search by an uploaded photo/screenshot instead of text (embeds the upload, searches by that vector directly, no RRF fusion) |
 | `POST /api/temporal-search` | **N-query temporal chain** search (`queries: string[]`, N≥2) — finds the best chronologically-ordered frame chain per video, one step per query, each within a frame window of the previous step (Exquisitor-inspired sequence-chain matching) |
 | `GET /api/browse-video/{video_name}` | Full keyframe listing for a single video, for manual scrubbing |
 | `POST /api/in-video-search` | Manually-triggered deep search restricted to one candidate video |
@@ -214,6 +215,7 @@ Every search/feedback/query-by-example/temporal-search call is logged locally to
 - **Temporal coherence re-scoring**: candidates from the same video within a small frame window boost each other's score, so a real event isn't left fragmented across several marginal individually-scored frames.
 - **KIS-C clarification**: when the top results spread across many unrelated videos with no clear winner (ambiguous query), the response includes a `clarification` field with one system-generated narrowing question — shown as an amber banner in the UI. Gated behind `AMBIGUITY_THRESHOLD` (default `0.7`) so the common unambiguous case pays no extra cost.
 - **Escalate precision on-demand**: `/api/search` accepts optional `exact` (force exact/brute-force Qdrant search), `verify` (force verification reranking), and `hnsw_ef` (graduated HNSW search-time recall/latency tradeoff, a middle ground between the default and `exact`) — all `None`/unset by default, so behavior only changes when an operator explicitly opts in per-search (the frontend exposes `exact`/`verify` as two checkboxes; `hnsw_ef` is API-only for now).
+- **AVS diversification**: `/api/search` collapses candidates to the single highest-scoring hit per video+scene (`diversify_by_scene`) right after temporal coherence re-scoring, so results aren't flooded by near-duplicate keyframes of the same event — directly serving AVS's diversity-across-videos scoring.
 
 ### DRES Configuration
 

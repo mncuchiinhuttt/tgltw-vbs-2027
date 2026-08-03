@@ -17,7 +17,8 @@ import {
   Settings,
   Layers,
   PlayCircle,
-  HelpCircle
+  HelpCircle,
+  Image as ImageIcon
 } from "lucide-react"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -114,6 +115,9 @@ function SearchView() {
   // Video player modal state
   const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number} | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  // KIS-V image-upload search
+  const imageUploadRef = useRef<HTMLInputElement>(null)
 
   // VBS interactive-session states (Phase C backend / Phase D UI of the
   // batch-to-interactive plan): temporal query mode, video-browse dialog,
@@ -246,6 +250,37 @@ function SearchView() {
   }
 
   const handleBrowseVideo = (videoName: string) => setBrowsingVideo(videoName)
+
+  // KIS-V (Visual KIS, VBS_GUIDE.md §4.1): the operator is shown a short
+  // clip on the projector, not text - so the query here is an uploaded
+  // photo/screenshot of that moment, not the text box above. Separate
+  // handler from runSessionSearch since this POSTs multipart form data,
+  // not JSON.
+  const handleSearchByImage = async (file: File) => {
+    setLoading(true)
+    setError(null)
+    setResults([])
+    setExpandedIndex(null)
+    setClarification(null)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const response = await fetch(`${BACKEND_URL}/api/search-by-image`, {
+        method: "POST",
+        body: formData,
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Search-by-image request failed")
+      }
+      const data = await response.json()
+      setResults(data.results || [])
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDresLogin = async () => {
     try {
@@ -611,6 +646,32 @@ function SearchView() {
                     )}
                   </button>
                 </div>
+
+                {!temporalMode && (
+                  <div className="flex items-end">
+                    <input
+                      ref={imageUploadRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleSearchByImage(file)
+                        e.target.value = ""
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => imageUploadRef.current?.click()}
+                      title="KIS-V: tải ảnh/chụp màn hình đoạn clip vừa xem để tìm bằng hình ảnh"
+                      className="w-full md:w-auto bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-[40px]"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      Tìm bằng ảnh (KIS-V)
+                    </button>
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>
