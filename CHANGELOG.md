@@ -2,6 +2,15 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.14.0] - 2026-08-03
+
+### Changed
+- **Default VLM API provider switched to GPT-5.6-Luna** (vision-capable, lower cost than the prior `gpt-5.5-pro` placeholder) - config-only change, zero code changes needed since `models/openai_vlm.py` (`OpenAIVLM`) was already a generic OpenAI-compatible client (`VLM_OPTION=openai` was already the default). Updated `inference-code/.env.template` and `preprocessing/.env.template`'s `OPENAI_VLM_MODEL_NAME` default and comments to reflect this; `OPENAI_API_KEY`/`OPENAI_BASE_URL` still left blank for each teammate to fill in with their own Luna credentials/endpoint.
+- Covers the VLM tasks that read keyframe images directly (`Reranker.rerank_type1`/`rerank_type2_vqa`) as well as the text-only ones (`QueryProcessor`'s CQR/HyDE/decompose/clarification) - confirmed Luna supports vision input, so no split provider setup needed.
+
+### Investigated, deferred pending team decision
+- **Qwen3-VL-Embedding-2B for the visual embedder** - found `models/embedding.py`'s `QwenVL8BEmbedder` already expects the real `Qwen3-VL-Embedding` checkpoint format, but both config files' `QWEN_EMBEDDING_MODEL_ID` default is wrong (points to `Qwen/Qwen2.5-VL-8B-Instruct`, a chat model without the required bundled `scripts/qwen3_vl_embedding.py`) - a pre-existing bug, unrelated to this VLM change. 2B (2.13B params) recommended over 8B (8.14B params) for resource-constrained hardware; MRL support is identical between sizes so 2B loses no flexibility. Recommended keeping the embedder local (not API) since index/query must share one embedding space, and calling an API per-query during a live timed VBS round is a reliability risk API-based VLM text calls don't have. **Not yet implemented** - fixing the config default + re-embedding the ~3800h dataset affects the whole team's shared Qdrant collection, needs their go-ahead before running.
+
 ## [1.13.0] - 2026-08-03
 
 ### Added - Novelty research pass 2 (4 parallel research agents + citation verification)
