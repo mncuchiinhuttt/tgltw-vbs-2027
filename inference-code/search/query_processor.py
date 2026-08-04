@@ -1,6 +1,8 @@
 import json
 import re
 
+from search.conversational_context import build_cqr_prompt, build_clarification_prompt
+
 class QueryProcessor:
     """
     Handles CQR (Conversational Query Rewriting), HyDE (Hypothetical Document Embeddings),
@@ -11,19 +13,19 @@ class QueryProcessor:
 
     def rewrite_query_cqr(self, query: str, context_history: list = None) -> str:
         """
-        Rewrite conversational queries to include full context.
+        Rewrite conversational queries to include full context. Few-shot
+        prompt (PG-ICL, arXiv:2502.15009) built by
+        search.conversational_context.build_cqr_prompt - same single VLM
+        call as before, just a richer/better-structured prompt. `history`
+        turns may now also carry `accepted`/`rejected` feedback descriptions
+        (Exquisitor VBS 2024/2025-inspired, prompt-only - see
+        record_feedback_in_history), rendered into the prompt by
+        format_history.
         """
         if not context_history:
             return query
-            
-        history_str = "\n".join([f"User: {turn['query']}\nSystem: {turn.get('answer', '')}" for turn in context_history])
-        prompt = f"""
-You are a Query Rewriter. Given the conversation history and the latest user query, rewrite the latest query to be fully self-contained and descriptive, resolving any pronouns or implicit references. Keep it concise.
-History:
-{history_str}
-Latest Query: {query}
-Rewritten Query:"""
-        
+
+        prompt = build_cqr_prompt(query, context_history)
         rewritten = self.vlm.generate(None, prompt).strip()
         print(f"CQR Rewrite: '{query}' -> '{rewritten}'")
         return rewritten
@@ -89,15 +91,15 @@ JSON:"""
         actually meant - a system-initiated complement to the existing
         passive CQR (which only resolves references already given, rather
         than proactively asking for missing detail).
-        """
-        summaries_str = "\n".join(f"- {s}" for s in candidate_summaries)
-        prompt = f"""
-You are helping refine an ambiguous video search query. The current top results span several different, seemingly unrelated candidates:
-{summaries_str}
-Original query: "{query}"
-Write ONE short, specific clarifying question (in the same language as the query) that would help narrow down which of these the user actually means. Output ONLY the question, nothing else.
-Question:"""
 
+        Facet-driven prompt (Sekulic et al. zero-shot variant + referring-
+        expression-generation disambiguation, see
+        search.conversational_context.build_clarification_prompt): the LLM
+        first identifies which attribute actually differs across the given
+        candidates, then asks about exactly that, instead of a generic
+        question - still one VLM call.
+        """
+        prompt = build_clarification_prompt(query, candidate_summaries)
         question = self.vlm.generate(None, prompt).strip()
         print(f"Clarification question: '{question}'")
         return question
