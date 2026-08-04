@@ -86,7 +86,20 @@ _preprocess_logs = []
 # holds past {query, answer} turns for QueryProcessor.rewrite_query_cqr;
 # "last_query_vector" holds the most recent dense query vector so
 # /api/feedback has a base vector to Rocchio-adjust from.
-_session_state = {"history": [], "last_query_vector": None}
+_session_state = {
+    "history": [],
+    "last_query_vector": None,
+    # KIS-C clarification round-trip: set when the previous turn asked a
+    # clarifying question; holds that question plus the candidate ids it was
+    # generated from, so the next turn's answer can boost exactly those
+    # candidates (Sekulic et al. arXiv:2008.03717). Consumed (reset to None)
+    # by every /api/search.
+    "pending_clarification": None,
+    # {point_id: {"source_file", "caption"}} for the last search's fused pool,
+    # so /api/feedback can describe the operator's accepted/rejected picks in
+    # words for the next CQR rewrite without a Qdrant payload fetch.
+    "last_candidate_info": {},
+}
 # DRES session - single global value, matching the "one operator per
 # backend instance" model (see plan) rather than a per-user session store.
 _dres_session_id = None
@@ -201,6 +214,11 @@ class SearchRequest(BaseModel):
     # candidate-list size for higher recall at a smaller latency cost than
     # exact search. None (default) leaves Qdrant's own index default in effect.
     hnsw_ef: Optional[int] = None
+    # KIS-C: the operator's answer to the clarifying question asked last
+    # turn, sent separately from `query` (which still carries it appended,
+    # for retrieval) so the backend can boost the exact candidates the
+    # question was about without string-parsing the composed query.
+    clarification_answer: Optional[str] = None
 
 class FeedbackRequest(BaseModel):
     positive_ids: List[str] = []
@@ -374,6 +392,26 @@ async def run_search(request: SearchRequest):
         _session_state["last_query_vector"] = searcher.embedder.embed_text(resolved_query)
         _session_state["history"].append({"query": resolved_query})
 
+        # Cache {id: {source_file, caption}} for this turn's fused pool so
+        # /api/feedback can describe the operator's accepted/rejected picks
+        # in words for the next CQR rewrite, without an extra Qdrant payload
+        # fetch. Rebuilt (not appended) every search - naturally bounded.
+        _session_state["last_candidate_info"] = {
+            c["id"]: {
+                "source_file": (c.get("payload") or {}).get("source_file"),
+                "caption": ((c.get("payload") or {}).get("caption") or "")[:200],
+            }
+            for c in candidates
+        }
+
+        # Consume the KIS-C clarification flag once per search, regardless of
+        # query type, so a stale flag can never boost a much later unrelated
+        # turn (see kis_c_scoring.boost_by_clarification_answer, applied only
+        # in the Type 1 branch below).
+        pending_clarification = _session_state["pending_clarification"]
+        _session_state["pending_clarification"] = None
+        clarification_boost_applied = False
+
         if not candidates:
             return {
                 "query": request.query,
@@ -388,6 +426,23 @@ async def run_search(request: SearchRequest):
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
+            from search.kis_c_scoring import boost_by_clarification_answer
+
+            # KIS-C clarification-answer boost (Sekulic et al. arXiv:2008.03717):
+            # additive re-rank of the CURRENT turn's normal RRF-fused pool
+            # using whichever of last turn's clarification candidates now
+            # overlap with the operator's answer - not a fast path that
+            # skips search, the full pipeline above still ran. Run before
+            # the ambiguity check: a discriminating answer sharpens the
+            # top-1/top-2 margin, which lowers the new ambiguity score and
+            # stops the system asking a redundant second question.
+            if pending_clarification and (request.clarification_answer or "").strip():
+                candidates = boost_by_clarification_answer(
+                    candidates,
+                    pending_clarification.get("candidate_ids") or [],
+                    request.clarification_answer,
+                )
+                clarification_boost_applied = True
 
             # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
             # fused candidate pool is spread across many unrelated videos
@@ -399,15 +454,21 @@ async def run_search(request: SearchRequest):
             if ambiguity_score >= AMBIGUITY_THRESHOLD:
                 seen_videos = set()
                 summaries = []
+                summary_ids = []
                 for c in candidates:
                     video = c["payload"].get("source_file")
                     if video in seen_videos:
                         continue
                     seen_videos.add(video)
                     summaries.append(c["payload"].get("caption") or video or "")
+                    summary_ids.append(c["id"])
                     if len(summaries) >= 5:
                         break
                 clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
+                _session_state["pending_clarification"] = {
+                    "question": clarification_question,
+                    "candidate_ids": summary_ids,
+                }
 
             top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
@@ -513,7 +574,10 @@ async def run_search(request: SearchRequest):
             "query": request.query,
             "type": request.type,
             "results": results,
-            "clarification": clarification_question
+            "clarification": clarification_question,
+            # Explainability (mirrors `matched_via`): whether this turn's
+            # ranking was adjusted by kis_c_scoring.boost_by_clarification_answer.
+            "clarification_boost_applied": clarification_boost_applied,
         }
     except Exception as e:
         import traceback
@@ -544,6 +608,19 @@ def run_feedback(request: FeedbackRequest):
             _session_state["last_query_vector"], positive_vectors, negative_vectors
         )
         _session_state["last_query_vector"] = adjusted_vector
+
+        # Exquisitor-inspired (VBS 2024/2025 unified conversational +
+        # relevance-feedback loop, lightest prompt-only form): the
+        # operator's accept/reject signal was previously isolated in the
+        # Rocchio vector and never reached CQR. Recording it on the current
+        # history turn means the NEXT rewrite_query_cqr prompt knows which
+        # readings were already rejected/confirmed. Same single CQR call as
+        # before - prompt context only, no new call.
+        from search.conversational_context import record_feedback_in_history
+        record_feedback_in_history(
+            _session_state["history"], _session_state["last_candidate_info"],
+            request.positive_ids, request.negative_ids,
+        )
 
         hits = searcher.dense_search_by_vector(adjusted_vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}

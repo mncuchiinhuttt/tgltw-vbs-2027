@@ -2,6 +2,24 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [1.17.0] - 2026-08-04
+
+### Changed - KIS-C pipeline improvements (zero extra LLM/VLM calls)
+Five scoped upgrades to the conversational (KIS-C) search path, following a deep-research pass across VBS competitor techniques and general conversational-IR literature (`plans/260804-0415-kis-c-conversational-retrieval-research/research/researcher-{a,b,c}-*.md`). **Hard constraint: per-turn LLM/VLM call count is unchanged** (CQR 1 + HyDE 1 + clarification 0-or-1 + rerank) - every item below is prompt engineering or pure Python. Consequence: DMQR-RAG-style multi-query rewriting, multi-hypothesis/beam-search rewriting, ConvGQR rewrite+expansion, and information-gain question selection (generate-then-score N candidate questions) all remain **out of scope**, same reasoning as the prior "Không áp dụng" DMQR-RAG rejection: each adds a call, and KIS-C is multi-turn, so the cost compounds across a session (VBS_GUIDE.md's `score = 50 + (300-t)/6 - 10×|WS|` means every 6s of added latency costs 1 point, on top of eating into the operator's real 7-minute decision budget).
+
+1. **Few-shot CQR prompt** (PG-ICL, arXiv:2502.15009) - `rewrite_query_cqr` upgraded from zero-shot to 3 static examples (EN pronoun resolution, VI implicit reference, feedback-carrying rewrite). Same single VLM call, richer prompt.
+2. **Facet-driven clarifying question** (Sekulic et al. facet-driven clarification, zero-shot variant arXiv:2301.12660; referring-expression-generation disambiguation) - `generate_clarification_question` now folds two steps into the same single call: identify which attribute actually differs across the ambiguous candidates' captions, then ask ONE question about exactly that, instead of a generic question that may burn ~10s of the clock asking about something all candidates share.
+3. **Clarification-answer boost** (Sekulic et al., arXiv:2008.03717, "clarification answer -> direct re-rank"; +18% recall/+12% nDCG@3 in that paper's setting - indicative, not a guarantee here) - new `search.kis_c_scoring.boost_by_clarification_answer()`: when the operator answers last turn's clarifying question, the answer's keywords additively boost whichever of the retained ambiguous candidates it overlaps with, on the current turn's normal RRF-fused pool. Deliberately **not** a fast path that skips search - the full per-turn pipeline still runs.
+4. **Score-margin ambiguity augmentation** - `HybridSearcher.compute_ambiguity_score` combined the old distinct-video-count ratio with a new top-1/top-2 score-margin signal (`search.kis_c_scoring.score_margin_ambiguity` + `combine_ambiguity_signals`), since count-only ambiguity treats "10 distinct videos, runaway winner" and "10 distinct videos, all tied" identically. Same float return, same `AMBIGUITY_THRESHOLD` call site. **Intentional side-fix**: a single-candidate pool used to score 1.0 (1 distinct / 1) and always triggered a clarification question; it now falls below the 0.7 threshold.
+5. **Rocchio feedback threaded into CQR context** (Exquisitor VBS 2024/2025 unified conversational + relevance-feedback loop, lightest prompt-only form) - `/api/feedback`'s accepted/rejected candidates are now recorded onto the session history (`search.conversational_context.record_feedback_in_history`) and rendered as `Operator rejected:`/`Operator confirmed:` lines in the next `rewrite_query_cqr` prompt, so the rewrite avoids re-suggesting an already-rejected reading. Same single CQR call, richer context only.
+
+New pure/dependency-free modules (both stdlib-only, no LLM/VLM/Qdrant import, factored out for unit-testability - same rationale as `_check_avs_duplicate`/`filter_asr_segments`): `inference-code/search/kis_c_scoring.py`, `inference-code/search/conversational_context.py`.
+
+### Added
+- `tests/test_kis_c_scoring.py` (22 tests) - ambiguity signals + clarification-answer boost, including a Vietnamese diacritic-token case and the single-candidate false-trigger regression guard.
+- `tests/test_conversational_context.py` (17 tests) - prompt-builder structure, history formatting, feedback recording. What is **not** covered (documented limitation, not silently skipped): whether the LLM actually produces a better rewrite/question from these prompts - that requires a manual live-VLM verification pass (facet-driven question quality, Vietnamese output-language, no leaked reasoning, multi-turn pronoun resolution, per-turn latency), not yet run in this session since no live backend/VLM was available. Run via `uv run --group dev python3 -m pytest tests/ -q` (46/46 pass, `pytest` lives in the `dev` group, not `preprocessing`) or as plain scripts (`python3 tests/test_kis_c_scoring.py`).
+- `SearchRequest.clarification_answer` (optional) and response field `clarification_boost_applied` (webapp only, mirrors the `matched_via` explainability pattern).
+
 ## [1.16.0] - 2026-08-04
 
 ### Changed

@@ -10,6 +10,7 @@ from config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT,
     SECONDARY_EMBEDDER_ENABLED, QDRANT_EXACT_SEARCH,
 )
+from search.kis_c_scoring import distinct_video_ratio, score_margin_ambiguity, combine_ambiguity_signals
 
 class HybridSearcher:
     """
@@ -301,18 +302,34 @@ class HybridSearcher:
         detail from a vague initial query. A confident, well-specified
         query tends to concentrate its top hits on a small number of
         videos/events; a vague query spreads hits across many unrelated
-        videos with no clear winner. Returns the ratio of DISTINCT videos
-        among the top `top_n` candidates to `top_n` (or fewer if there
-        aren't that many candidates) - 0.0 (all one video, confident) to
-        1.0 (every candidate a different video, maximally ambiguous).
-        Caller (webapp/backend/main.py) decides the threshold at which to
-        act on this (e.g. trigger a clarification question).
+        videos with no clear winner. Caller (webapp/backend/main.py)
+        decides the threshold at which to act on this (e.g. trigger a
+        clarification question).
+
+        Combines two signals (search.kis_c_scoring, pure/testable):
+        - distinct_video_ratio: ratio of DISTINCT videos among the top
+          `top_n` candidates - 0.0 (all one video) to 1.0 (every candidate
+          a different video).
+        - score_margin_ambiguity: normalized top-1 vs top-2 score margin -
+          catches the case the count-only ratio misses (a 10-distinct-video
+          pool with a runaway winner vs. one where all 10 are tied both
+          score 1.0 under distinct_video_ratio alone). Margin was chosen
+          over entropy for simplicity (one subtraction, two numbers) - it
+          is only meaningful here because this method runs AFTER
+          temporal_coherence_boost, which spreads out an otherwise
+          near-flat RRF score distribution.
+        Still returns a single float in [0.0, 1.0] on the same scale the
+        AMBIGUITY_THRESHOLD env knob is tuned against - no caller change.
+        Side effect (intentional): a single-candidate pool used to score
+        1.0 (1 distinct / 1) and always triggered a clarification; the
+        margin term is undefined for <2 candidates and returns 0.0, so the
+        combined score now falls below the default 0.7 threshold.
         """
-        top = candidates[:top_n]
-        if not top:
-            return 0.0
-        distinct_videos = {c["payload"].get("source_file") for c in top}
-        return len(distinct_videos) / len(top)
+        distinct_ratio = distinct_video_ratio(candidates, top_n)
+        margin_ambiguity = score_margin_ambiguity(candidates, top_n)
+        combined = combine_ambiguity_signals(distinct_ratio, margin_ambiguity)
+        print(f"Ambiguity signals: distinct_ratio={distinct_ratio:.2f}, margin_ambiguity={margin_ambiguity:.2f}, combined={combined:.2f}")
+        return combined
 
     def diversify_by_scene(self, candidates: list, top_k: int) -> list:
         """

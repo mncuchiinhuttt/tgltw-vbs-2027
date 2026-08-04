@@ -250,6 +250,12 @@ function SearchView() {
             query: requestQuery,
             ...(exactSearch ? { exact: true } : {}),
             ...(verifyResults ? { verify: true } : {}),
+            // KIS-C: sent separately from `query` (which still carries it
+            // appended, for retrieval) so the backend can boost the exact
+            // candidates the clarifying question was about.
+            ...(isConversationalTask && clarificationAnswer.trim()
+              ? { clarification_answer: clarificationAnswer.trim() }
+              : {}),
           }
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: "POST",
