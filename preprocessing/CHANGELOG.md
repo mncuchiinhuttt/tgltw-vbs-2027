@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - OCR is now language-neutral by default: removed the Vietnamese-specialized Vintern ensemble and Vietnamese accent mapping. PP-OCRv6 preserves NFC-normalized recognized text, with `OCR_LANG=en` as the default and the fallback VLM reserved for low-confidence crops.
+- Preprocessing can now consume optional V3C assets (`msb/`, `keyframes/`, `metadata/`, `asr/`) through `V3CAssetStore`, while preserving local PySceneDetect/faster-whisper/raw-frame fallbacks for missing or malformed files.
+- Qdrant visual and ambient-audio points are buffered and uploaded in batches controlled by `QDRANT_UPSERT_BATCH_SIZE`, with explicit flushes at video and process boundaries.
+- Adaptive keyframe sampling now records a normalized Laplacian-sharpness signal and applies a conservative configurable quality bonus via `KEYFRAME_SHARPNESS_WEIGHT`.
+
+### Deferred
+- TransNetV2 replacement, H-EAGLE hierarchical indexing, PraK localized-region embeddings, emotion indexing, and full learned saliency remain deferred until a real V3C sample and retrieval benchmark are available; none is added to the default runtime.
 
 ## [1.5.0] - 2026-08-04
 
