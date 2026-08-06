@@ -2,6 +2,12 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Removed the Vietnamese-specialized Vintern OCR ensemble member and its model download. VBS OCR now uses PP-OCRv6 with the lightweight fallback VLM only for low-confidence crops.
+- Removed Vietnamese-specific accent stripping from OCR payloads and sparse text blobs. OCR keeps Unicode NFC-normalized text as recognized, and `OCR_LANG` now defaults to `en` while remaining configurable.
+
 ## [1.17.0] - 2026-08-04
 
 ### Changed - KIS-C pipeline improvements (zero extra LLM/VLM calls)

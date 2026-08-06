@@ -126,13 +126,11 @@ SCENE_MERGE_SAMPLES_PER_SIDE = int(os.getenv("SCENE_MERGE_SAMPLES_PER_SIDE", 3))
 # each side already varies internally.
 SCENE_MERGE_THRESHOLD_RATIO = float(os.getenv("SCENE_MERGE_THRESHOLD_RATIO", 0.9))
 
-# OCR settings (PP-OCRv6 detection + ensemble recognition, gated by SAM3
+# OCR settings (PP-OCRv6 detection + recognition, gated by SAM3
 # region proposal - see SAM3/SAHI settings below)
-OCR_LANG = os.getenv("OCR_LANG", "vi")
-# Also doubles as the OCR recognition-ensemble -> fallback-VLM escalation
-# threshold (see FALLBACK_VLM_MODEL_ID below): if the best of PP-OCRv6 /
-# Vintern-1B-v3.5's rec confidence is below this, the fallback VLM re-reads
-# the crop.
+OCR_LANG = os.getenv("OCR_LANG", "en")
+# If PP-OCRv6's recognition confidence is below this threshold, the
+# lightweight fallback VLM re-reads the crop.
 OCR_REC_SCORE_THRESHOLD = float(os.getenv("OCR_REC_SCORE_THRESHOLD", 0.5))
 
 # Object Detection classes to search for in video frames. Labels are Vietnamese
@@ -172,12 +170,8 @@ OCR_REGION_CONCEPTS_EN = ["text or sign region"]
 OCR_SR_MIN_HEIGHT_PX = int(os.getenv("OCR_SR_MIN_HEIGHT_PX", 16))
 REAL_ESRGAN_MODEL_ID = os.getenv("REAL_ESRGAN_MODEL_ID", "RealESRGAN_x4plus.pth")
 
-# OCR Recognition ensemble: PP-OCRv6 (already loaded above) + Vintern-1B-v3.5
-# (VLM OCR reader) race on every text-box crop, highest-confidence result wins.
-VINTERN_MODEL_ID = os.getenv("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
-
 # Dedicated lightweight fallback VLM for crops where the recognition
-# ensemble's best confidence is still below OCR_REC_SCORE_THRESHOLD -
+# confidence is still below OCR_REC_SCORE_THRESHOLD -
 # deliberately NOT the main captioning VLM (QwenVLM/OpenAIVLM), which is far
 # more expensive to run per-crop.
 FALLBACK_VLM_MODEL_ID = os.getenv("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")

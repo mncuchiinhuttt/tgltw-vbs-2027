@@ -15,7 +15,7 @@ preprocessing/
 ├── docker-compose.yml     # Docker Compose configuration for hosting Qdrant
 ├── video/
 │   ├── scene_detector.py  # Scene boundary detection and adaptive keyframe sampling
-│   ├── ocr.py             # OCR text extraction and Vietnamese normalizations
+│   ├── ocr.py             # OCR text extraction and Unicode normalization
 │   └── captioner.py       # Temporal/Scene narrative captions & structured attributes
 ├── audio/
 │   └── audio_processor.py # Audio transcription and CLAP ambient features pipeline
@@ -32,7 +32,7 @@ preprocessing/
    - VLM options (`VLM_OPTION`): local offline HuggingFace models (`generate_batch()` runs one true batched `model.generate()` call) or any OpenAI-compatible API (`OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` - OpenAI itself, an alternative provider such as QwenCloud, or a self-hosted vLLM server for batch inference via the root `host_vllm.sh`). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit.
    - Embedding options (`EMBEDDING_OPTION`): local `QwenVL8BEmbedder` or `DashScopeCloudEmbedder` (cloud, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful to cut memory pressure when running several large local models at once).
    - Object Detection: YOLOE-26 (open-vocabulary, text-prompted, NMS-free) to locate objects zero-shot based on label lists, with a supplementary tiled detection pass for small objects (e.g. license plates) and optional example-crop visual prompting for categories that are awkward to phrase in text.
-3. **OCR via PP-OCRv6**: Detection + recognition run directly through PP-OCRv6 instead of the VLM; only crops recognized below `OCR_REC_SCORE_THRESHOLD` get escalated to the VLM for a re-read. Custom Vietnamese normalizations (Unicode NFC) index both accented and unaccented terms for robust BM25 search. Optional overlapping-tile pass (`OCR_USE_TILING`, off by default) for small/corner text.
+3. **OCR via PP-OCRv6**: Detection + recognition run directly through PP-OCRv6; only low-confidence crops below `OCR_REC_SCORE_THRESHOLD` get escalated to the lightweight fallback VLM for a re-read. OCR text is preserved after generic Unicode NFC normalization without language-specific accent mapping. Optional overlapping-tile pass (`OCR_USE_TILING`, off by default) handles small/corner text.
 4. **Unified Per-Frame VLM Analysis**: One JSON call per keyframe (caption + objects/colors/count/scene_type/attributes) instead of two separate calls, batched across a scene's keyframes via `generate_batch()`.
 5. **Speech & Audio Feature Extractors**: Speech transcription via faster-whisper (Whisper large-v3-turbo, with VAD + confidence filtering), environment audio indexing via M2D-CLAP.
 6. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections and loads detailed metadata payload alongside vectors.

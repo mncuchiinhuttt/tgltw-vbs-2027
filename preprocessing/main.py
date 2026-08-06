@@ -28,7 +28,6 @@ from models.openai_vlm import OpenAIVLM
 from models.object_detector import ObjectDetector
 from models.region_proposer import RegionProposer
 from models.super_resolution import SuperResolutionUpscaler
-from models.vintern_ocr import VinternRecognizer
 from models.fallback_vlm import SmolVLM2FallbackVLM
 from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
 from models.clip_embedder import LightweightCLIPEmbedder
@@ -107,13 +106,12 @@ def main():
     detector = ObjectDetector(option=DETECTOR_OPTION)
     region_proposer = RegionProposer()
     sr_model = SuperResolutionUpscaler()
-    vintern = VinternRecognizer()
     fallback_vlm = SmolVLM2FallbackVLM()
     embedder = load_embedder()
     clip_embedder = LightweightCLIPEmbedder()
     secondary_embedder = load_secondary_embedder()
     ocr_engine = TextDetectorOCR(
-        region_proposer=region_proposer, vintern=vintern, fallback_vlm=fallback_vlm, sr_model=sr_model,
+        region_proposer=region_proposer, fallback_vlm=fallback_vlm, sr_model=sr_model,
     )
     captioner = ImageCaptioner(vlm_client=vlm)
     audio_engine = AudioProcessor()
@@ -310,8 +308,8 @@ def main():
                             obj["bbox"] = [x1 * width, y1 * height, x2 * width, y2 * height]
                         detected = detector._dedup_by_iou(detected + official_objects, iou_thresh=0.5)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6 + Vintern ensemble)...")
-                # SAM3-gated OCR extraction, recognition ensemble & normalization
+                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6)...")
+                # SAM3-gated OCR extraction and normalization
                 ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
                 ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
 
@@ -381,7 +379,7 @@ def main():
         frame_vector = embedder.embed_image(np.array(img))
         secondary_vector = secondary_embedder.embed_image(img) if secondary_embedder else None
         
-        # SAM3-gated OCR (PP-OCRv6 + Vintern ensemble)
+        # SAM3-gated PP-OCRv6 OCR
         ocr_results = ocr_engine.extract_ocr_detailed(img)
         ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
 

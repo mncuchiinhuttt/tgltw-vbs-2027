@@ -9,47 +9,8 @@ from preprocessing.config import (
 )
 
 # Nominal confidence attached to fallback-VLM reads (see _recognize_crop) -
-# the fallback VLM has no calibrated score of its own, unlike PP-OCRv6/Vintern.
+# the fallback VLM has no calibrated score of its own, unlike PP-OCRv6.
 FALLBACK_VLM_CONFIDENCE = 0.6
-
-# Simple dictionary mapping for removing Vietnamese accents
-ACCENT_MAP = {
-    'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-    'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-    'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
-    'đ': 'd',
-    'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-    'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-    'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-    'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'ã': 'o', 'ọ': 'o',
-    'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-    'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-    'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-    'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-    'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
-    'À': 'A', 'Á': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
-    'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
-    'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
-    'Đ': 'D',
-    'È': 'E', 'É': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
-    'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
-    'Ì': 'I', 'Í': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
-    'Ò': 'O', 'Ó': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
-    'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
-    'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
-    'Ù': 'U', 'Ú': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
-    'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
-    'Ỳ': 'Y', 'Ý': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
-}
-
-def remove_vietnamese_accents(text: str) -> str:
-    """
-    Remove accents from Vietnamese text.
-    """
-    res = []
-    for c in text:
-        res.append(ACCENT_MAP.get(c, c))
-    return "".join(res)
 
 class TextDetectorOCR:
     """
@@ -57,22 +18,19 @@ class TextDetectorOCR:
     segmentation) proposes candidate text/sign regions first - PP-OCRv6
     detection + SAHI-style tiling only run inside those regions, and OCR is
     skipped entirely for a keyframe where SAM3 finds no candidate region.
-    Recognition on each surviving text-box crop is an ensemble of PP-OCRv6 +
-    Vintern-1B-v3.5 (highest confidence wins), with small crops (< 16px tall)
-    passed through Real-ESRGAN x4 first and a dedicated lightweight fallback
-    VLM re-reading crops where the ensemble's best confidence is still below
-    OCR_REC_SCORE_THRESHOLD.
+    Recognition on each surviving text-box crop uses PP-OCRv6, with small
+    crops (< 16px tall) passed through Real-ESRGAN x4 first and a dedicated
+    lightweight fallback VLM re-reading crops where PP-OCRv6's confidence is
+    still below OCR_REC_SCORE_THRESHOLD.
     """
     def __init__(
         self,
         region_proposer,
-        vintern,
         fallback_vlm,
         sr_model,
         lang: str = OCR_LANG,
     ):
         self.region_proposer = region_proposer
-        self.vintern = vintern
         self.fallback_vlm = fallback_vlm
         self.sr_model = sr_model
         print(f"Loading PP-OCRv6 OCR model (lang={lang})...")
@@ -195,8 +153,8 @@ class TextDetectorOCR:
 
     def _recognize_crop(self, crop: Image.Image) -> Tuple[str, float, str]:
         """
-        Conditional Super-Resolution + PP-OCRv6/Vintern-1B-v3.5 recognition
-        ensemble + fallback-VLM escalation for a single text-box crop.
+        Conditional Super-Resolution + PP-OCRv6 recognition + fallback-VLM
+        escalation for a single text-box crop.
         Returns: (text, rec_conf, source)
         """
         if min(crop.size) == 0:
@@ -214,17 +172,7 @@ class TextDetectorOCR:
             best_pp = max(pp_candidates, key=lambda b: b["confidence"])
             pp_text, pp_conf = best_pp["text"], best_pp["confidence"]
 
-        vintern_text, vintern_conf = "", 0.0
-        if self.vintern is not None:
-            try:
-                vintern_text, vintern_conf = self.vintern.recognize(crop)
-            except Exception as e:
-                print(f"Warning: Vintern-1B-v3.5 recognition failed for an OCR crop: {e}")
-
-        if vintern_conf > pp_conf:
-            text, confidence, source = vintern_text, vintern_conf, "vintern-1b-v3.5"
-        else:
-            text, confidence, source = pp_text, pp_conf, "pp-ocrv6"
+        text, confidence, source = pp_text, pp_conf, "pp-ocrv6"
 
         if confidence < OCR_REC_SCORE_THRESHOLD and self.fallback_vlm is not None:
             try:
@@ -233,8 +181,8 @@ class TextDetectorOCR:
                 ).strip()
                 if escalated:
                     # The fallback VLM doesn't emit a calibrated confidence the
-                    # way PP-OCRv6/Vintern do - leaving the old (low) ensemble
-                    # score attached to this replacement text would make the
+                    # way PP-OCRv6 does - leaving the old (low) score attached
+                    # to this replacement text would make the
                     # returned tuple self-contradictory (a "confident" crop
                     # whose conf still reads as low-confidence), so it's
                     # bumped to a fixed nominal value instead.
@@ -247,8 +195,8 @@ class TextDetectorOCR:
     def extract_ocr_detailed(self, image: Image.Image) -> List[Dict[str, Any]]:
         """
         Full SAM3-gated OCR pipeline for one keyframe. Returns a structured
-        per-box list: [{"bbox", "text" (NFC-normalized), "conf",
-        "accentless_text", "source"}], or [] if SAM3 found no candidate
+        per-box list: [{"bbox", "text" (NFC-normalized), "conf", "source"}],
+        or [] if SAM3 found no candidate
         text/sign region (OCR is skipped entirely in that case).
         """
         region_bboxes = self._propose_text_regions(image)
@@ -275,7 +223,6 @@ class TextDetectorOCR:
                 "bbox": box["bbox"],
                 "text": normalized,
                 "conf": confidence,
-                "accentless_text": remove_vietnamese_accents(normalized),
                 "source": source,
             })
 
@@ -284,17 +231,15 @@ class TextDetectorOCR:
     @staticmethod
     def flatten_ocr_text(detailed_results: List[Dict[str, Any]]) -> str:
         """
-        Pure helper (no model calls) - joins every box's accented + accentless
-        text into one blob for BM25 dual-indexing. Call this on an
+        Pure helper (no model calls) - joins every OCR box's normalized text
+        into one blob for sparse retrieval. Call this on an
         extract_ocr_detailed() result instead of extract_ocr() when both the
         structured and flattened forms are needed, so the (expensive)
         pipeline only runs once per keyframe.
         """
         if not detailed_results:
             return ""
-        accented = " ".join(r["text"] for r in detailed_results if r["text"])
-        accentless = " ".join(r["accentless_text"] for r in detailed_results if r["accentless_text"])
-        return f"{accented} {accentless}".strip()
+        return " ".join(r["text"] for r in detailed_results if r["text"])
 
     def extract_ocr(self, image: Image.Image) -> str:
         """Convenience single-call wrapper around extract_ocr_detailed() + flatten_ocr_text()."""

@@ -278,7 +278,6 @@ def main():
     asr_model_id = env_vars.get("ASR_MODEL_ID", "deepdml/faster-whisper-large-v3-turbo-ct2")
     yoloe_id = env_vars.get("YOLOE_MODEL_ID", "yoloe-26x-seg.pt")
     sam3_id = env_vars.get("SAM3_MODEL_ID", "facebook/sam3")
-    vintern_id = env_vars.get("VINTERN_MODEL_ID", "5CD-AI/Vintern-1B-v3_5")
     fallback_vlm_id = env_vars.get("FALLBACK_VLM_MODEL_ID", "HuggingFaceTB/SmolVLM2-500M-Video-Instruct")
     real_esrgan_id = env_vars.get("REAL_ESRGAN_MODEL_ID", "RealESRGAN_x4plus.pth")
     vlm_option = env_vars.get("VLM_OPTION", "openai")
@@ -324,13 +323,10 @@ def main():
               "download will likely fail until you accept its license and set HF_TOKEN.")
     download_model(sam3_id, "sam3", token=hf_token)
 
-    # 7. Vintern-1B-v3.5 - OCR recognition ensemble member alongside PP-OCRv6
-    download_model(vintern_id, "Vintern-1B-v3_5", token=hf_token)
-
-    # 8. Fallback VLM for low-confidence OCR crops (SmolVLM2 by default)
+    # 7. Fallback VLM for low-confidence OCR crops (SmolVLM2 by default)
     download_model(fallback_vlm_id, fallback_vlm_id.split("/")[-1], token=hf_token)
 
-    # 9. Real-ESRGAN x4 weights - conditional Super-Resolution for small OCR crops
+    # 8. Real-ESRGAN x4 weights - conditional Super-Resolution for small OCR crops
     download_real_esrgan(real_esrgan_id)
 
     # Ensure ffmpeg is installed

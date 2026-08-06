@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- OCR is now language-neutral by default: removed the Vietnamese-specialized Vintern ensemble and Vietnamese accent mapping. PP-OCRv6 preserves NFC-normalized recognized text, with `OCR_LANG=en` as the default and the fallback VLM reserved for low-confidence crops.
+
 ## [1.5.0] - 2026-08-04
 
 ### Changed

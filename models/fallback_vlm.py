@@ -9,8 +9,8 @@ from config import FALLBACK_VLM_MODEL_ID
 class SmolVLM2FallbackVLM(BaseVLM):
     """
     Dedicated lightweight VLM (SmolVLM2-500M-Video-Instruct by default) used
-    only to re-read OCR crops where the PP-OCRv6 / Vintern-1B-v3.5
-    recognition ensemble's best confidence is still below
+    only to re-read OCR crops where PP-OCRv6 recognition's confidence is still
+    below
     OCR_REC_SCORE_THRESHOLD (see preprocessing/video/ocr.py). Deliberately
     separate from the main captioning VLM (QwenVLM/OpenAIVLM) so this
     per-crop escalation path never competes with scene captioning for a much

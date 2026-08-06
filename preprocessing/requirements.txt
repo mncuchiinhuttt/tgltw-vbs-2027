@@ -44,9 +44,6 @@ paddleocr>=3.0.0
 basicsr
 realesrgan
 
-# Vintern-1B-v3.5 (InternVL-family Vietnamese OCR/VLM) - OCR recognition
-# ensemble member alongside PP-OCRv6. Uses trust_remote_code=True; loads via
-# the transformers/timm/einops already required above.
 
 # Lightweight CLIP, used only for scene-variance estimation in Adaptive
 # Keyframe Sampling (not the indexing embedding space)
