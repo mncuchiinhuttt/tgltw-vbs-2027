@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Tuple
 from scenedetect import detect, ContentDetector
 from preprocessing.config import (
     SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET,
+    KEYFRAME_SHARPNESS_WEIGHT,
     FAST_PATHWAY_DENSE_SAMPLING_FPS, FAST_PATHWAY_FPS_TARGET,
     FAST_PATHWAY_MIN_FRAMES, FAST_PATHWAY_MAX_FRAMES,
     SCENE_MERGE_WINDOW_SEC, SCENE_MERGE_SAMPLES_PER_SIDE, SCENE_MERGE_THRESHOLD_RATIO,
@@ -79,6 +80,22 @@ def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, 
 
 def cosine_sim(v1: np.ndarray, v2: np.ndarray) -> float:
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+
+def compute_laplacian_sharpness(frame_img: np.ndarray) -> float:
+    """Return a cheap focus/readability signal for one RGB frame."""
+    gray = cv2.cvtColor(np.asarray(frame_img), cv2.COLOR_RGB2GRAY)
+    return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+
+
+def _normalized_sharpness(candidate_frames: List[Dict[str, Any]]) -> List[float]:
+    values = np.asarray([compute_laplacian_sharpness(frame["frame_img"]) for frame in candidate_frames], dtype=np.float32)
+    if len(values) == 0:
+        return []
+    low, high = np.percentile(values, 10), np.percentile(values, 90)
+    if high <= low:
+        return [0.5] * len(values)
+    return np.clip((values - low) / (high - low), 0.0, 1.0).tolist()
 
 def _avg_pairwise_sim(embeds: List[np.ndarray]) -> float:
     """Average cosine similarity across all pairs in embeds; 1.0 if fewer than 2 (nothing to compare)."""
@@ -217,6 +234,10 @@ def select_diverse_keyframes(
         print(f"  Embedding frame {i}/{len(candidate_frames)} (t={frame['timestamp']:.2f}s)...")
         frame["embed"] = embedder.embed_image(frame["frame_img"])
 
+    sharpness = _normalized_sharpness(candidate_frames) if KEYFRAME_SHARPNESS_WEIGHT > 0 else [0.0] * len(candidate_frames)
+    for frame, score in zip(candidate_frames, sharpness):
+        frame["sharpness"] = score
+
     if len(candidate_frames) <= budget:
         return candidate_frames
 
@@ -228,8 +249,9 @@ def select_diverse_keyframes(
         for i, frame in enumerate(remaining):
             sims = [cosine_sim(frame["embed"], s["embed"]) for s in selected]
             dist = 1 - max(sims)
-            if dist > best_dist:
-                best_dist, best_idx = dist, i
+            utility = dist + KEYFRAME_SHARPNESS_WEIGHT * frame["sharpness"]
+            if utility > best_dist:
+                best_dist, best_idx = utility, i
         # Remove by index rather than list.remove(): remaining holds dicts
         # with numpy-array "embed" values, and list.remove() uses == equality,
         # which raises on dicts containing arrays ("truth value of an array

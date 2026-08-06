@@ -4,7 +4,10 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance, VectorParams, PointStruct, TextIndexParams, TextIndexType, TokenizerType
 )
-from preprocessing.config import QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, SECONDARY_EMBEDDER_ENABLED
+from preprocessing.config import (
+    QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, QDRANT_UPSERT_BATCH_SIZE,
+    SECONDARY_EMBEDDER_ENABLED,
+)
 
 # Name of the secondary (SigLIP) named vector inside "visual_index" - queried
 # via Qdrant's `using="siglip"` param in HybridSearcher.dense_search_secondary.
@@ -21,6 +24,9 @@ class QdrantIndexer:
             port=QDRANT_PORT,
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
+        self.batch_size = QDRANT_UPSERT_BATCH_SIZE
+        self._visual_buffer = []
+        self._audio_buffer = []
         self.secondary_enabled = SECONDARY_EMBEDDER_ENABLED and secondary_dim is not None
         self._init_collections(visual_dim, audio_dim, secondary_dim if self.secondary_enabled else None)
 
@@ -132,10 +138,9 @@ class QdrantIndexer:
             vector=vector_payload,
             payload=payload
         )
-        self.client.upsert(
-            collection_name="visual_index",
-            points=[point]
-        )
+        self._visual_buffer.append(point)
+        if len(self._visual_buffer) >= self.batch_size:
+            self.flush_visual()
 
     def index_audio_point(self, point_id: str, vector: np.ndarray, payload: Dict[str, Any]):
         """
@@ -146,7 +151,27 @@ class QdrantIndexer:
             vector=vector.tolist(),
             payload=payload
         )
-        self.client.upsert(
-            collection_name="audio_env_index",
-            points=[point]
-        )
+        self._audio_buffer.append(point)
+        if len(self._audio_buffer) >= self.batch_size:
+            self.flush_audio()
+
+    def flush_visual(self):
+        """Upload all buffered visual/speech points in one Qdrant request."""
+        if not self._visual_buffer:
+            return
+        points, self._visual_buffer = self._visual_buffer, []
+        self.client.upsert(collection_name="visual_index", points=points)
+        print(f"  Flushed {len(points)} visual points to Qdrant.")
+
+    def flush_audio(self):
+        """Upload all buffered ambient-audio points in one Qdrant request."""
+        if not self._audio_buffer:
+            return
+        points, self._audio_buffer = self._audio_buffer, []
+        self.client.upsert(collection_name="audio_env_index", points=points)
+        print(f"  Flushed {len(points)} audio points to Qdrant.")
+
+    def flush(self):
+        """Flush every pending collection; call at video and process boundaries."""
+        self.flush_visual()
+        self.flush_audio()
