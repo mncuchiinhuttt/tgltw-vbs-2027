@@ -71,6 +71,10 @@ DETECTION_CONF_THRESHOLD = float(os.getenv("DETECTION_CONF_THRESHOLD", 0.15))
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
+# Uploading one point per HTTP request is needlessly expensive for a large
+# offline index.  The indexer buffers both visual and ambient-audio points and
+# flushes this many at a time; the final flush is explicit in main.py.
+QDRANT_UPSERT_BATCH_SIZE = max(1, int(os.getenv("QDRANT_UPSERT_BATCH_SIZE", 128)))
 
 # Pipeline Parameters
 SCENE_DETECTION_THRESHOLD = float(os.getenv("SCENE_DETECTION_THRESHOLD", 27.0))
@@ -84,6 +88,10 @@ SCENE_DETECTION_THRESHOLD = float(os.getenv("SCENE_DETECTION_THRESHOLD", 27.0))
 KEYFRAME_VARIANCE_LOW = float(os.getenv("KEYFRAME_VARIANCE_LOW", 0.01))
 KEYFRAME_VARIANCE_MID = float(os.getenv("KEYFRAME_VARIANCE_MID", 0.05))
 KEYFRAME_MAX_BUDGET = int(os.getenv("KEYFRAME_MAX_BUDGET", 8))
+# Cheap CPU-only quality bonus used by farthest-point sampling.  It favors
+# sharp, readable frames without replacing semantic diversity or adding a
+# learned saliency model.  Set to 0 to reproduce the old selector exactly.
+KEYFRAME_SHARPNESS_WEIGHT = max(0.0, float(os.getenv("KEYFRAME_SHARPNESS_WEIGHT", 0.15)))
 
 # DAKE (Dynamic-Aware Keyframe Extraction, U-CESE arXiv:2605.23274) - a
 # training-free pre-filter run before Adaptive Keyframe Sampling's CLIP pass
@@ -125,6 +133,13 @@ SCENE_MERGE_SAMPLES_PER_SIDE = int(os.getenv("SCENE_MERGE_SAMPLES_PER_SIDE", 3))
 # neighbors - i.e. the cut barely separates anything relative to how much
 # each side already varies internally.
 SCENE_MERGE_THRESHOLD_RATIO = float(os.getenv("SCENE_MERGE_THRESHOLD_RATIO", 0.9))
+
+# Optional V3C/VBS official assets.  When V3C_ASSETS_DIR is empty, main.py
+# probes --data_dir itself for msb/, keyframes/, metadata/, and asr/.  Every
+# asset family is independently optional and falls back to local processing.
+V3C_ASSETS_ENABLED = os.getenv("V3C_ASSETS_ENABLED", "true").lower() == "true"
+V3C_ASSETS_DIR = os.getenv("V3C_ASSETS_DIR", "")
+V3C_OFFICIAL_KEYFRAMES_ENABLED = os.getenv("V3C_OFFICIAL_KEYFRAMES_ENABLED", "true").lower() == "true"
 
 # OCR settings (PP-OCRv6 detection + recognition, gated by SAM3
 # region proposal - see SAM3/SAHI settings below)

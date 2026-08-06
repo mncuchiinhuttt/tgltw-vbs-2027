@@ -1,4 +1,4 @@
-# Preprocessing & Indexing Pipeline (HCMC AI Challenge 2026)
+# Preprocessing & Indexing Pipeline (VBS 2027)
 
 This module handles the extraction, description, embedding generation, and Qdrant indexing of video, image, and audio files.
 
@@ -8,6 +8,7 @@ This module handles the extraction, description, embedding generation, and Qdran
 preprocessing/
 ├── config.py              # Configuration settings and model selection switches
 ├── main.py                # Main orchestrator script to run the preprocessing pipeline
+├── v3c_assets.py          # Optional V3C shot/keyframe/metadata/ASR asset adapter
 ├── requirements.txt       # Python dependencies
 ├── setup.sh               # Environment configuration script
 ├── CHANGELOG.md           # Log of project changes
@@ -27,7 +28,7 @@ preprocessing/
 
 ## Features
 
-1. **Scene Boundary Detection & Adaptive Keyframe Sampling**: Cuts video using `PySceneDetect`, then for each scene estimates visual variance with a lightweight CLIP pass to size a per-scene keyframe budget (1 frame for static scenes, up to `KEYFRAME_MAX_BUDGET`=8 for dynamic ones), and selects that many via farthest-point sampling in the Qwen3-Embedding-VL-8B space.
+1. **Scene Boundary Detection & Adaptive Keyframe Sampling**: Uses official V3C shot boundaries and representative keyframes when they are mounted; otherwise it falls back to `PySceneDetect` and raw-video extraction. Local candidates use CLIP variance to size a per-scene budget and Qwen3-Embedding-VL farthest-point sampling, with a small configurable Laplacian-sharpness bonus (`KEYFRAME_SHARPNESS_WEIGHT`) to prefer readable frames.
 2. **Flexible VLM, Embedding & Object Detection Engines**:
    - VLM options (`VLM_OPTION`): local offline HuggingFace models (`generate_batch()` runs one true batched `model.generate()` call) or any OpenAI-compatible API (`OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` - OpenAI itself, an alternative provider such as QwenCloud, or a self-hosted vLLM server for batch inference via the root `host_vllm.sh`). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit.
    - Embedding options (`EMBEDDING_OPTION`): local `QwenVL8BEmbedder` or `DashScopeCloudEmbedder` (cloud, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful to cut memory pressure when running several large local models at once).
@@ -35,7 +36,33 @@ preprocessing/
 3. **OCR via PP-OCRv6**: Detection + recognition run directly through PP-OCRv6; only low-confidence crops below `OCR_REC_SCORE_THRESHOLD` get escalated to the lightweight fallback VLM for a re-read. OCR text is preserved after generic Unicode NFC normalization without language-specific accent mapping. Optional overlapping-tile pass (`OCR_USE_TILING`, off by default) handles small/corner text.
 4. **Unified Per-Frame VLM Analysis**: One JSON call per keyframe (caption + objects/colors/count/scene_type/attributes) instead of two separate calls, batched across a scene's keyframes via `generate_batch()`.
 5. **Speech & Audio Feature Extractors**: Speech transcription via faster-whisper (Whisper large-v3-turbo, with VAD + confidence filtering), environment audio indexing via M2D-CLAP.
-6. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections and loads detailed metadata payload alongside vectors.
+6. **Qdrant Vector Database Integration**: Creates unified `visual_index` and `audio_env_index` collections, loads detailed metadata payload alongside vectors, and uploads points in configurable batches (`QDRANT_UPSERT_BATCH_SIZE`) with a flush at each video/process boundary.
+
+## Optional V3C official assets
+
+V3C/VBS distributions can be mounted beside the raw videos with these
+directories:
+
+```text
+assets/
+├── msb/<video-stem>.txt       # shot rows: shot id, start, end
+├── keyframes/<video-stem>/*   # one representative image per shot
+├── metadata/<video-stem>.json  # title/description/category metadata
+└── asr/<video-stem>.csv        # start,end,transcript
+```
+
+Set `V3C_ASSETS_DIR=/path/to/assets` in `preprocessing/.env`, or leave it
+blank to probe the `--data_dir` itself. `V3C_ASSETS_ENABLED=true` enables the
+adapter. Each asset family is independent: malformed/missing shot files use
+PySceneDetect, missing ASR uses local faster-whisper, and an ambiguous
+keyframe mapping uses raw-video extraction. Official keyframe timestamps are
+the shot midpoint unless the dataset provides a more precise mapping, so the
+payload also stores `shot_id` and `asset_source` for auditability.
+
+The note's H-EAGLE, PraK localized-region embedding, emotion analysis, and a
+default TransNetV2 replacement are intentionally not enabled here. They would
+change the retrieval/index contract or need a corpus-level benchmark before
+being safe for the VBS runtime.
 
 ## Installation
 
