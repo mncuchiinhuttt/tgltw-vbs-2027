@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT,
     SECONDARY_EMBEDDER_ENABLED, QDRANT_EXACT_SEARCH,
+    HEAGLE_LITE_ENABLED, HEAGLE_SHOT_TOP_K, HEAGLE_FRAME_MULTIPLIER,
 )
 from search.kis_c_scoring import distinct_video_ratio, score_margin_ambiguity, combine_ambiguity_signals
 
@@ -32,7 +33,8 @@ class HybridSearcher:
         )
 
     def _dense_search_vector(
-        self, vector, top_k: int, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
+        self, vector, top_k: int, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None,
+        shot_ids: Optional[list[str]] = None,
     ) -> list:
         """
         Shared primary-vector search core: query_points against the
@@ -60,15 +62,24 @@ class HybridSearcher:
         vector_list = vector.tolist() if hasattr(vector, "tolist") else list(vector)
         search_kwargs = {"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}
         use_exact = exact if exact is not None else QDRANT_EXACT_SEARCH
+        filter_must = [FieldCondition(key="modality", match=MatchValue(value="visual"))]
+        shot_filter = None
+        if shot_ids:
+            # Use a portable OR-of-MatchValue filter instead of relying on a
+            # newer qdrant-client MatchAny model.
+            shot_filter = [FieldCondition(key="shot_id", match=MatchValue(value=shot_id)) for shot_id in shot_ids]
+        if shot_filter:
+            # Qdrant's top-level `should` is optional when `must` already
+            # matches. Nest the OR as a required condition so coarse routing
+            # genuinely restricts the frame search to selected shots.
+            search_filter = Filter(must=filter_must + [Filter(should=shot_filter)])
+        else:
+            search_filter = Filter(must=filter_must)
         search_result = self.client.query_points(
             collection_name="visual_index",
             query=vector_list,
             limit=top_k,
-            query_filter=Filter(
-                must=[
-                    FieldCondition(key="modality", match=MatchValue(value="visual"))
-                ]
-            ),
+            query_filter=search_filter,
             search_params=SearchParams(exact=use_exact, hnsw_ef=hnsw_ef),
             **search_kwargs,
         ).points
@@ -100,7 +111,61 @@ class HybridSearcher:
         Qdrant behavior) if QDRANT_EXACT_SEARCH is disabled. Pass `exact`/
         `hnsw_ef` to override the default for just this call.
         """
-        return self._dense_search_vector(self.embedder.embed_text(query), top_k, exact=exact, hnsw_ef=hnsw_ef)
+        vector = self.embedder.embed_text(query)
+        if HEAGLE_LITE_ENABLED:
+            return self.coarse_to_fine_dense_search(query, vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
+        return self._dense_search_vector(vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
+
+    def shot_search(self, query: str, top_k: int = HEAGLE_SHOT_TOP_K) -> list:
+        """Retrieve H-EAGLE-lite shot parents for coarse routing."""
+        try:
+            return self._shot_search_vector(self.embedder.embed_text(query), top_k)
+        except Exception as exc:
+            print(f"Warning: H-EAGLE-lite shot search unavailable ({exc}); returning no shot hits.")
+            return []
+
+    def _shot_search_vector(self, query_vector, top_k: int = HEAGLE_SHOT_TOP_K) -> list:
+        search_result = self.client.query_points(
+            collection_name="vbs_shot_index",
+            query=query_vector.tolist() if hasattr(query_vector, "tolist") else list(query_vector),
+            limit=top_k,
+            search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
+        ).points
+        return [
+            {"id": hit.id, "score": hit.score, "payload": hit.payload}
+            for hit in search_result
+        ]
+
+    def coarse_to_fine_dense_search(
+        self,
+        query: str,
+        query_vector,
+        top_k: int = TOP_K_RETRIEVAL,
+        exact: Optional[bool] = None,
+        hnsw_ef: Optional[int] = None,
+    ) -> list:
+        """Search likely shot groups, then search their frame children."""
+        del query  # the already-computed vector is the source of truth here
+        try:
+            shot_result = self._shot_search_vector(query_vector, HEAGLE_SHOT_TOP_K)
+        except Exception as exc:
+            # A pre-existing deployment may not have run the new shot-index
+            # job yet.  H-EAGLE-lite must degrade to the proven frame route,
+            # not turn the query endpoint into an outage.
+            print(f"Warning: H-EAGLE-lite shot search unavailable ({exc}); using frame search.")
+            return self._dense_search_vector(query_vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
+        shot_ids = list(dict.fromkeys(
+            hit["payload"].get("shot_id") for hit in shot_result if hit.get("payload") and hit["payload"].get("shot_id")
+        ))
+        if not shot_ids:
+            return self._dense_search_vector(query_vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
+        return self._dense_search_vector(
+            query_vector,
+            max(top_k, top_k * HEAGLE_FRAME_MULTIPLIER),
+            exact=exact,
+            hnsw_ef=hnsw_ef,
+            shot_ids=shot_ids,
+        )[:top_k]
 
     def dense_search_by_vector(
         self, vector, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
@@ -113,6 +178,8 @@ class HybridSearcher:
         retrieved directly from an existing Qdrant point (no re-embedding
         needed).
         """
+        if HEAGLE_LITE_ENABLED:
+            return self.coarse_to_fine_dense_search("<precomputed-vector>", vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
         return self._dense_search_vector(vector, top_k, exact=exact, hnsw_ef=hnsw_ef)
 
     def get_point_vector(self, point_id):

@@ -57,6 +57,14 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
 
+# H-EAGLE-lite coarse-to-fine retrieval.  The shot collection is populated by
+# preprocessing but the route stays off until a corpus benchmark confirms no
+# recall regression.  Turning it on only narrows the dense frame branch;
+# sparse text matching continues to provide a global OCR/metadata path.
+HEAGLE_LITE_ENABLED = os.getenv("HEAGLE_LITE_ENABLED", "false").lower() == "true"
+HEAGLE_SHOT_TOP_K = int(os.getenv("HEAGLE_SHOT_TOP_K", 64))
+HEAGLE_FRAME_MULTIPLIER = max(1, int(os.getenv("HEAGLE_FRAME_MULTIPLIER", 4)))
+
 # VBS is a LIVE/interactive competition, not AIC's batch Sơ tuyển round - an
 # operator issues queries live and every second counts toward the task's
 # KIS score (score = 50 + (300-t)/6 - 10*|wrong submissions|). Qdrant's

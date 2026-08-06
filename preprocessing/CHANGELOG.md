@@ -5,13 +5,19 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Raw-video shot detection now uses a streaming TransNetV2 PyTorch adapter by default. Official V3C shot maps still take precedence, and PySceneDetect remains an explicit fallback controlled by `SHOT_DETECTOR_FALLBACK`.
+- Added `preprocessing/download_assets.py --transnetv2` for the uncommitted TransNetV2 checkpoint and config knobs for model path, device, threshold and inference batch size.
+- Added H-EAGLE-lite shot parent indexing in a separate `vbs_shot_index` collection. Each shot aggregate links to its representative frame point IDs; rebuilding a video removes only that video's shot parents.
+- Video frame and shot point IDs are now deterministic and official shot IDs are namespaced by video, so rerunning a video updates the same new-format points instead of creating another set of H-EAGLE children.
+- Qdrant schema recreation is now opt-in via `QDRANT_ALLOW_RECREATE`; per-video destructive rebuild is separately opt-in via `QDRANT_REBUILD_VIDEO_ON_START`.
+- Added optional inference-side H-EAGLE-lite coarse-to-fine routing (`HEAGLE_LITE_ENABLED`), disabled by default until corpus recall/latency benchmarking is complete.
 - OCR is now language-neutral by default: removed the Vietnamese-specialized Vintern ensemble and Vietnamese accent mapping. PP-OCRv6 preserves NFC-normalized recognized text, with `OCR_LANG=en` as the default and the fallback VLM reserved for low-confidence crops.
 - Preprocessing can now consume optional V3C assets (`msb/`, `keyframes/`, `metadata/`, `asr/`) through `V3CAssetStore`, while preserving local PySceneDetect/faster-whisper/raw-frame fallbacks for missing or malformed files.
 - Qdrant visual and ambient-audio points are buffered and uploaded in batches controlled by `QDRANT_UPSERT_BATCH_SIZE`, with explicit flushes at video and process boundaries.
 - Adaptive keyframe sampling now records a normalized Laplacian-sharpness signal and applies a conservative configurable quality bonus via `KEYFRAME_SHARPNESS_WEIGHT`.
 
 ### Deferred
-- TransNetV2 replacement, H-EAGLE hierarchical indexing, PraK localized-region embeddings, emotion indexing, and full learned saliency remain deferred until a real V3C sample and retrieval benchmark are available; none is added to the default runtime.
+- Full H-EAGLE Level 3 narrative-action/VLM/video-encoder indexing, PraK localized-region embeddings, emotion indexing, and learned saliency remain deferred until a real V3C sample and retrieval benchmark are available.
 
 ## [1.5.0] - 2026-08-04
 

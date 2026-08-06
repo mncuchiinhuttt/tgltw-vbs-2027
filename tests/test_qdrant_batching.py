@@ -20,6 +20,7 @@ def _indexer(batch_size=2):
     indexer.secondary_enabled = False
     indexer._visual_buffer = []
     indexer._audio_buffer = []
+    indexer._shot_buffer = []
     return indexer
 
 
@@ -42,3 +43,11 @@ def test_audio_points_use_their_own_collection_and_buffer():
     assert indexer.client.calls[0][0] == "audio_env_index"
     assert len(indexer.client.calls[0][1]) == 1
 
+
+def test_shot_points_use_a_separate_collection_and_flush_tail():
+    indexer = _indexer(batch_size=8)
+    indexer.index_shot_point("shot", np.ones(3), {"modality": "shot", "source_file": "video.mp4"})
+    indexer.flush()
+
+    assert indexer.client.calls[0][0] == "vbs_shot_index"
+    assert len(indexer.client.calls[0][1]) == 1
