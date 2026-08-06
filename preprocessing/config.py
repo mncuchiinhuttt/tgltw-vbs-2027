@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load env variables from .env file if it exists
@@ -71,6 +72,11 @@ DETECTION_CONF_THRESHOLD = float(os.getenv("DETECTION_CONF_THRESHOLD", 0.15))
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
+QDRANT_ALLOW_RECREATE = os.getenv("QDRANT_ALLOW_RECREATE", "false").lower() == "true"
+# Set this only when intentionally rebuilding one video's old points after a
+# detector/model change.  It is off by default because deleting a video before
+# a crash would leave that video temporarily unindexed.
+QDRANT_REBUILD_VIDEO_ON_START = os.getenv("QDRANT_REBUILD_VIDEO_ON_START", "false").lower() == "true"
 # Uploading one point per HTTP request is needlessly expensive for a large
 # offline index.  The indexer buffers both visual and ambient-audio points and
 # flushes this many at a time; the final flush is explicit in main.py.
@@ -78,6 +84,21 @@ QDRANT_UPSERT_BATCH_SIZE = max(1, int(os.getenv("QDRANT_UPSERT_BATCH_SIZE", 128)
 
 # Pipeline Parameters
 SCENE_DETECTION_THRESHOLD = float(os.getenv("SCENE_DETECTION_THRESHOLD", 27.0))
+
+# Shot boundary detection.  Official V3C shot maps always take precedence in
+# main.py.  For raw videos, TransNetV2 is the default and PySceneDetect stays
+# as a deliberate runtime fallback until the detector has been benchmarked on
+# the mounted corpus.
+SHOT_DETECTOR = os.getenv("SHOT_DETECTOR", "transnetv2").lower()
+SHOT_DETECTOR_FALLBACK = os.getenv("SHOT_DETECTOR_FALLBACK", "pyscenedetect").lower()
+SHOT_BENCHMARK_MODE = os.getenv("SHOT_BENCHMARK_MODE", "false").lower() == "true"
+TRANSNETV2_MODEL_PATH = os.getenv(
+    "TRANSNETV2_MODEL_PATH",
+    str(Path(__file__).resolve().parent.parent / "weights" / "transnetv2-pytorch-weights.pth"),
+)
+TRANSNETV2_DEVICE = os.getenv("TRANSNETV2_DEVICE", "auto")
+TRANSNETV2_BATCH_SIZE = max(1, int(os.getenv("TRANSNETV2_BATCH_SIZE", 1)))
+TRANSNETV2_THRESHOLD = float(os.getenv("TRANSNETV2_THRESHOLD", 0.5))
 
 # Adaptive Keyframe Sampling: a lightweight CLIP pass estimates how "static"
 # vs "dynamic" a scene is (variance of per-frame embeddings across the

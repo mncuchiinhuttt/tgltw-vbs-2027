@@ -20,6 +20,7 @@ from preprocessing.config import (
     OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP,
     KEYFRAME_DAKE_ENABLED, KEYFRAME_DAKE_RATIO, KEYFRAME_DAKE_WINDOW, KEYFRAME_DAKE_MAX_GAP,
     SCENE_MERGE_ENABLED, SECONDARY_EMBEDDER_ENABLED,
+    QDRANT_REBUILD_VIDEO_ON_START,
     V3C_ASSETS_ENABLED, V3C_ASSETS_DIR, V3C_OFFICIAL_KEYFRAMES_ENABLED,
 )
 
@@ -44,6 +45,13 @@ from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
 from preprocessing.audio.audio_processor import AudioProcessor
 from preprocessing.indexing.indexer import QdrantIndexer
+from preprocessing.indexing.heagle import (
+    aggregate_shot_embedding,
+    shot_payload,
+    stable_frame_point_id,
+    stable_shot_id,
+    stable_shot_point_id,
+)
 from preprocessing.v3c_assets import V3CAssetStore
 from preprocessing.video.dake_prefilter import dake_prefilter_candidates
 
@@ -155,6 +163,11 @@ def main():
     for video_path in video_files:
         video_name = os.path.basename(video_path)
         print(f"\n--- Processing Video: {video_name} ---")
+        # H-EAGLE-lite has its own collection.  Rebuilding one video should
+        # replace its shot parents without touching the frame index.
+        if QDRANT_REBUILD_VIDEO_ON_START:
+            indexer.delete_visual_for_video(video_name)
+        indexer.delete_shots_for_video(video_name)
 
         # V3C assets are optional and independently fall back below.  The
         # official shot map is also used to attach an auditable shot_id to
@@ -227,6 +240,7 @@ def main():
         for scene_idx, (start_sec, end_sec) in enumerate(scenes):
             print(f"Processing Scene {scene_idx}: {start_sec:.2f}s - {end_sec:.2f}s")
             official_shot = official_shots[scene_idx] if scene_idx < len(official_shots) else None
+            shot_id = stable_shot_id(video_name, scene_idx, official_shot.shot_id if official_shot else None)
             
             # Extract candidates
             candidates = []
@@ -314,6 +328,11 @@ def main():
             scene_events = captioner.generate_scene_events(scene_frame_captions)
 
             # Process each keyframe in the scene
+            shot_frame_vectors = []
+            shot_quality_scores = []
+            shot_frame_point_ids = []
+            shot_frame_timestamps = []
+            shot_text_parts = []
             for kf_idx, kf in enumerate(diverse_keyframes):
                 frame_img = pil_keyframes[kf_idx]
                 timestamp = kf["timestamp"]
@@ -377,7 +396,8 @@ def main():
                     "ordered_events": scene_events.get("ordered_events", []),
                     "actions": scene_events.get("actions", []),
                     "video_metadata": official_metadata,
-                    "shot_id": official_shot.shot_id if official_shot else None,
+                    "shot_id": shot_id,
+                    "official_shot_id": official_shot.shot_id if official_shot else None,
                     "asset_source": (
                         "v3c_keyframe" if kf.get("asset_source") == "v3c_keyframe"
                         else ("v3c_shot_boundary" if official_shot else "local_sampling")
@@ -386,8 +406,38 @@ def main():
                     "text_blob": text_blob
                 }
 
-                point_id = str(uuid.uuid4())
+                frame_key = (
+                    str(kf["frame_idx"])
+                    if kf.get("frame_idx") is not None
+                    else f"{timestamp:.6f}:{kf_idx}"
+                )
+                point_id = stable_frame_point_id(video_name, frame_key)
                 indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
+                shot_frame_vectors.append(frame_vector)
+                shot_quality_scores.append(kf.get("sharpness"))
+                shot_frame_point_ids.append(point_id)
+                shot_frame_timestamps.append(timestamp)
+                shot_text_parts.append(text_blob)
+
+            if shot_frame_vectors:
+                shot_vector = aggregate_shot_embedding(shot_frame_vectors, shot_quality_scores)
+                shot_payload_data = shot_payload(
+                    video_name=video_name,
+                    shot_id=shot_id,
+                    scene_idx=scene_idx,
+                    start_sec=start_sec,
+                    end_sec=end_sec,
+                    frame_point_ids=shot_frame_point_ids,
+                    frame_timestamps=shot_frame_timestamps,
+                    frame_count=len(shot_frame_vectors),
+                    text_blob=" . ".join(shot_text_parts)[:8000],
+                )
+                indexer.index_shot_point(
+                    stable_shot_point_id(video_name, shot_id),
+                    shot_vector,
+                    shot_payload_data,
+                )
+                print(f"  Indexed H-EAGLE-lite shot parent {shot_id} ({len(shot_frame_vectors)} frame children).")
 
         # Clean up temp WAV file
         if extracted_wav and os.path.exists(extracted_wav):

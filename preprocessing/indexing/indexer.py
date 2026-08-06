@@ -2,16 +2,18 @@ import numpy as np
 from typing import Dict, Any, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
-    Distance, VectorParams, PointStruct, TextIndexParams, TextIndexType, TokenizerType
+    Distance, VectorParams, PointStruct, TextIndexParams, TextIndexType, TokenizerType,
+    Filter, FieldCondition, MatchValue,
 )
 from preprocessing.config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, QDRANT_UPSERT_BATCH_SIZE,
-    SECONDARY_EMBEDDER_ENABLED,
+    SECONDARY_EMBEDDER_ENABLED, QDRANT_ALLOW_RECREATE,
 )
 
 # Name of the secondary (SigLIP) named vector inside "visual_index" - queried
 # via Qdrant's `using="siglip"` param in HybridSearcher.dense_search_secondary.
 SECONDARY_VECTOR_NAME = "siglip"
+SHOT_COLLECTION_NAME = "vbs_shot_index"
 
 class QdrantIndexer:
     """
@@ -27,6 +29,7 @@ class QdrantIndexer:
         self.batch_size = QDRANT_UPSERT_BATCH_SIZE
         self._visual_buffer = []
         self._audio_buffer = []
+        self._shot_buffer = []
         self.secondary_enabled = SECONDARY_EMBEDDER_ENABLED and secondary_dim is not None
         self._init_collections(visual_dim, audio_dim, secondary_dim if self.secondary_enabled else None)
 
@@ -41,7 +44,8 @@ class QdrantIndexer:
         SECONDARY_EMBEDDER_ENABLED).
         """
         recreate = False
-        if self.client.collection_exists(name):
+        collection_exists = self.client.collection_exists(name)
+        if collection_exists:
             try:
                 info = self.client.get_collection(name)
                 vectors_config = info.config.params.vectors
@@ -66,16 +70,24 @@ class QdrantIndexer:
                     if current_size is not None and current_size != dim:
                         print(f"Collection '{name}' exists but has size {current_size} instead of {dim}. Recreating...")
                         recreate = True
-                if recreate:
-                    self.client.delete_collection(name)
             except Exception as e:
-                print(f"Warning: Failed to verify collection dimension: {e}. Recreating...")
-                self.client.delete_collection(name)
-                recreate = True
+                # A timeout/permission error is not evidence of a schema
+                # mismatch.  Never destroy an existing collection merely
+                # because its metadata could not be read.
+                raise RuntimeError(
+                    f"Could not verify Qdrant collection '{name}'; refusing to delete it: {e}"
+                ) from e
         else:
             recreate = True
 
         if recreate:
+            if collection_exists and not QDRANT_ALLOW_RECREATE:
+                raise RuntimeError(
+                    f"Qdrant collection '{name}' has an incompatible schema. "
+                    "Set QDRANT_ALLOW_RECREATE=true only for an intentional full rebuild."
+                )
+            if collection_exists:
+                self.client.delete_collection(name)
             if secondary_dim is not None:
                 print(f"Creating collection '{name}' with named vectors (default={dim}, "
                       f"{SECONDARY_VECTOR_NAME}={secondary_dim})...")
@@ -108,7 +120,11 @@ class QdrantIndexer:
     def _init_collections(self, visual_dim: int = 4096, audio_dim: int = 768, secondary_dim: Optional[int] = None):
         self._ensure_collection("visual_index", visual_dim, secondary_dim)
         self._ensure_collection("audio_env_index", audio_dim)
+        # H-EAGLE-lite uses a separate collection so enabling/disabling the
+        # optional coarse stage never changes the live frame-index schema.
+        self._ensure_collection(SHOT_COLLECTION_NAME, visual_dim)
         self._ensure_text_index("visual_index", "text_blob")
+        self._ensure_text_index(SHOT_COLLECTION_NAME, "text_blob")
 
     def index_visual_point(
         self,
@@ -155,6 +171,33 @@ class QdrantIndexer:
         if len(self._audio_buffer) >= self.batch_size:
             self.flush_audio()
 
+    def index_shot_point(self, point_id: str, vector: np.ndarray, payload: Dict[str, Any]):
+        """Buffer one H-EAGLE-lite shot aggregate vector."""
+        point = PointStruct(id=point_id, vector=vector.tolist(), payload=payload)
+        self._shot_buffer.append(point)
+        if len(self._shot_buffer) >= self.batch_size:
+            self.flush_shots()
+
+    def delete_shots_for_video(self, video_name: str) -> None:
+        """Make a shot rebuild idempotent without touching frame points."""
+        self.client.delete(
+            collection_name=SHOT_COLLECTION_NAME,
+            points_selector=Filter(
+                must=[FieldCondition(key="source_file", match=MatchValue(value=video_name))]
+            ),
+            wait=True,
+        )
+
+    def delete_visual_for_video(self, video_name: str) -> None:
+        """Explicit opt-in cleanup for a full video reindex."""
+        self.client.delete(
+            collection_name="visual_index",
+            points_selector=Filter(
+                must=[FieldCondition(key="source_file", match=MatchValue(value=video_name))]
+            ),
+            wait=True,
+        )
+
     def flush_visual(self):
         """Upload all buffered visual/speech points in one Qdrant request."""
         if not self._visual_buffer:
@@ -171,7 +214,16 @@ class QdrantIndexer:
         self.client.upsert(collection_name="audio_env_index", points=points)
         print(f"  Flushed {len(points)} audio points to Qdrant.")
 
+    def flush_shots(self):
+        """Upload buffered H-EAGLE-lite shot aggregates."""
+        points, self._shot_buffer = getattr(self, "_shot_buffer", []), []
+        if not points:
+            return
+        self.client.upsert(collection_name=SHOT_COLLECTION_NAME, points=points)
+        print(f"  Flushed {len(points)} shot points to Qdrant.")
+
     def flush(self):
         """Flush every pending collection; call at video and process boundaries."""
         self.flush_visual()
         self.flush_audio()
+        self.flush_shots()

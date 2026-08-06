@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import numpy as np
 from typing import List, Dict, Any, Tuple
@@ -5,42 +7,82 @@ from scenedetect import detect, ContentDetector
 from preprocessing.config import (
     SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET,
     KEYFRAME_SHARPNESS_WEIGHT,
+    SHOT_DETECTOR, SHOT_DETECTOR_FALLBACK, SHOT_BENCHMARK_MODE,
     FAST_PATHWAY_DENSE_SAMPLING_FPS, FAST_PATHWAY_FPS_TARGET,
     FAST_PATHWAY_MIN_FRAMES, FAST_PATHWAY_MAX_FRAMES,
     SCENE_MERGE_WINDOW_SEC, SCENE_MERGE_SAMPLES_PER_SIDE, SCENE_MERGE_THRESHOLD_RATIO,
 )
 from preprocessing.video.motion_sampling import select_fast_pathway_frames
 
-def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD) -> List[Tuple[float, float]]:
-    """
-    Detect scene boundaries in a video using PySceneDetect.
-    Returns:
-        List of tuples representing (start_time_seconds, end_time_seconds) for each scene.
-    """
+
+_TRANSNET_DETECTOR = None
+
+
+def _detect_scenes_pyscenedetect(video_path: str, threshold: float) -> List[Tuple[float, float]]:
+    """Legacy detector kept as an explicit fallback and benchmark baseline."""
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     cap.release()
     duration = frame_count / fps if fps > 0 else 0.0
-    print(f"Detecting scenes in video: {video_path} ({frame_count:.0f} frames, {duration:.1f}s @ {fps:.1f}fps)...")
+    print(f"Detecting scenes in video with PySceneDetect: {video_path} ({frame_count:.0f} frames, {duration:.1f}s @ {fps:.1f}fps)...")
     scene_list = detect(video_path, ContentDetector(threshold=threshold), show_progress=True)
-    scenes = []
-    for scene in scene_list:
-        start_sec = scene[0].get_seconds()
-        end_sec = scene[1].get_seconds()
-        scenes.append((start_sec, end_sec))
-        
+    scenes = [(scene[0].get_seconds(), scene[1].get_seconds()) for scene in scene_list]
     if not scenes:
-        # Fallback: treat the entire video as a single scene
         if duration <= 0:
             duration = 10.0
-
-        scenes.append((0.0, duration))
+        scenes = [(0.0, duration)]
         print(f"No scene cuts detected. Treating entire video as a single scene (0.0s - {duration:.2f}s).")
     else:
-        print(f"Detected {len(scenes)} scenes.")
-        
+        print(f"PySceneDetect detected {len(scenes)} scenes.")
     return scenes
+
+
+def _detect_scenes_transnet(video_path: str) -> List[Tuple[float, float]]:
+    global _TRANSNET_DETECTOR
+    if _TRANSNET_DETECTOR is None:
+        from preprocessing.video.transnet_detector import TransNetV2ShotDetector
+
+        _TRANSNET_DETECTOR = TransNetV2ShotDetector()
+    return _TRANSNET_DETECTOR.detect_scenes(video_path)
+
+def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD) -> List[Tuple[float, float]]:
+    """
+    Detect scene boundaries according to SHOT_DETECTOR.
+
+    The order is intentionally explicit: official V3C shot maps are handled
+    by main.py before this function, TransNetV2 is the default for raw video,
+    and PySceneDetect remains the safe fallback when optional weights or the
+    runtime decoder are unavailable.
+
+    Returns:
+        List of tuples representing (start_time_seconds, end_time_seconds) for each scene.
+    """
+    detector = SHOT_DETECTOR
+    if detector == "transnetv2":
+        try:
+            started = time.perf_counter()
+            scenes = _detect_scenes_transnet(video_path)
+            transnet_elapsed = time.perf_counter() - started
+            if SHOT_BENCHMARK_MODE:
+                baseline_started = time.perf_counter()
+                baseline = _detect_scenes_pyscenedetect(video_path, threshold)
+                baseline_elapsed = time.perf_counter() - baseline_started
+                print(
+                    "Shot detector benchmark: "
+                    f"TransNetV2={len(scenes)} scenes/{transnet_elapsed:.2f}s, "
+                    f"PySceneDetect={len(baseline)} scenes/{baseline_elapsed:.2f}s"
+                )
+            return scenes
+        except Exception as exc:
+            print(f"Warning: TransNetV2 failed for {video_path}: {exc}")
+            if SHOT_DETECTOR_FALLBACK != "pyscenedetect":
+                raise
+            print("Falling back to PySceneDetect.")
+    elif detector not in {"pyscenedetect", "scenedetect"}:
+        raise ValueError(f"Unknown SHOT_DETECTOR={detector!r}")
+
+    return _detect_scenes_pyscenedetect(video_path, threshold)
 
 def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, sampling_rate_fps: float = 1.0) -> List[Dict[str, Any]]:
     """
