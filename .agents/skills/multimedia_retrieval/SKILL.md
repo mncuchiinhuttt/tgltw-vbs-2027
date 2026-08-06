@@ -60,5 +60,5 @@ python main.py --type 3 --query "chronological event descriptions"
   from pathlib import Path
   sys.path.append(str(Path(__file__).resolve().parent.parent))
   ```
-- **Vietnamese Text Processing**: Vietnamese OCR text must always be normalized to Unicode **NFC** form, and a shadow copy without accents should be appended to the indexing `text_blob` to support BM25 search.
+- **OCR Text Processing**: OCR output must be normalized to Unicode **NFC** form while preserving the recognized text. Do not apply language-specific accent stripping or transliteration before indexing.
 - **VQA Cropping**: For Type 2 queries, always check if sub-query objects are detected by `ObjectDetector` (YOLOE-26). If so, crop the bounding box region (`xmin, ymin, xmax, ymax`) and pass the cropped image to the VLM rather than the full image.

@@ -33,7 +33,6 @@ tgltw-vbs-2027/
 │   ├── object_detector.py # YOLOE-26 open-vocabulary object detector
 │   ├── region_proposer.py  # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
 │   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
-│   ├── vintern_ocr.py      # Vintern-1B-v3.5 OCR recognition ensemble member
 │   └── fallback_vlm.py     # Lightweight SmolVLM2 fallback for low-confidence OCR crops
 ├── preprocessing/         # Dataset indexing pipeline (shared as-is with AIC)
 │   ├── config.py          # Preprocessing settings, API URLs, and thresholds
@@ -73,7 +72,7 @@ To avoid duplicate codebase wrappers, all model configurations and execution log
 - **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
 - **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with tiled inference for small objects (`detect_tiled`), example-crop-based visual prompting (`detect_visual_prompt`), and SAM3-gated region-restricted tiling (`detect_in_regions`) used by the preprocessing pipeline (see below).
 - **SAM3-gated Detection & OCR pre-filter**: `RegionProposer` (`models/region_proposer.py`) wraps `facebook/sam3` (Promptable Concept Segmentation, zero-shot, **gated on Hugging Face** - accept the license at https://huggingface.co/facebook/sam3 and set `HF_TOKEN` before downloading/running it) to propose candidate regions from general concept prompts ("human"/"vehicle"/"small distinct object" for Object Detection, "text or sign region" for OCR) before SAHI-style tiling (512x512, 0.2 overlap) and the actual detector/recognizer run - a keyframe's detection/OCR step is skipped entirely if SAM3 finds no matching region.
-- **OCR recognition ensemble**: `preprocessing/video/ocr.py`'s `TextDetectorOCR` recognizes each text-box crop with both PP-OCRv6 and `VinternRecognizer` (`models/vintern_ocr.py`, Vintern-1B-v3.5), keeping whichever is more confident; crops shorter than 16px are upscaled first via `SuperResolutionUpscaler` (`models/super_resolution.py`, Real-ESRGAN x4), and crops where the ensemble's best confidence is still low fall back to a dedicated lightweight VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`) rather than the main captioning VLM.
+- **OCR**: `preprocessing/video/ocr.py` uses PP-OCRv6 for each detected text-box crop; crops shorter than 16px are upscaled first via `SuperResolutionUpscaler` (`models/super_resolution.py`, Real-ESRGAN x4), and low-confidence crops fall back to a dedicated lightweight VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`) rather than the main captioning VLM.
 - **Adaptive Keyframe Sampling**: `models/clip_embedder.py`'s lightweight CLIP model estimates how visually static/dynamic a scene is, sizing a per-scene keyframe budget (1-8) before the real embedding model runs farthest-point sampling within it - see `preprocessing/video/scene_detector.py`.
 - **ASR**: `WhisperASR` (`models/asr.py`, faster-whisper/CTranslate2 running Whisper large-v3-turbo, 99-language multilingual - VBS's V3C dataset isn't Vietnamese-centric like AIC's, so a general multilingual model replaces the AIC pipeline's Vietnamese-specialized PhoWhisper) transcribes speech with word-level timestamps; silero VAD skips non-speech regions, and `preprocessing/audio/asr_segment_filter.py` drops any remaining low-confidence/hallucinated segments (OpenAI Whisper's own reference thresholds on `avg_logprob`/`no_speech_prob`/`compression_ratio`) before they reach embedding + indexing.
 
@@ -111,7 +110,7 @@ machines running the same project resolve the same dependency versions.
 
 Before running the download script, accept the SAM3 license at https://huggingface.co/facebook/sam3 (it's a gated repo) and set `HF_TOKEN` in your `.env` - the SAM3 download will fail without it.
 
-Run the download script from the root folder to download weights for Whisper large-v3-turbo (faster-whisper/CTranslate2 format), CLAP, the YOLOE-26 detector, SAM3, Vintern-1B-v3.5, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
+Run the download script from the root folder to download weights for Whisper large-v3-turbo (faster-whisper/CTranslate2 format), CLAP, the YOLOE-26 detector, SAM3, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
 
 ```bash
 uv run python download_assets.py
@@ -376,4 +375,4 @@ uv run --group evaluation python evaluation/run_eval.py --query_file evaluation/
 
 ## License
 
-This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (Whisper large-v3-turbo, YOLOE-26, SAM3, Vintern-1B-v3.5, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).
+This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (Whisper large-v3-turbo, YOLOE-26, SAM3, SmolVLM2, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).
