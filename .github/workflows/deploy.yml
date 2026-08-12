@@ -24,7 +24,7 @@ jobs:
           host: 66.172.10.142
           username: riftuser
           key: ${{ secrets.SERVER_SSH_KEY }}
-          fingerprint: SHA256:i9DI6uml6dGdjd+4mFXTNs7f2bnPzPPqiiOObmmZ6sI
+          fingerprint: SHA256:YssTc//ruTYctHjvqsW/V1lgAoNiLTd+e4hDAspqCIo
           command_timeout: 10m
           script: |
             set -eu
