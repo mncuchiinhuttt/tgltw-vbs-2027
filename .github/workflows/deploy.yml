@@ -21,7 +21,7 @@ jobs:
       - name: Deploy to server
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
-          host: ${{ secrets.SERVER_HOST }}
+          host: 66.172.10.142
           username: riftuser
           key: ${{ secrets.SERVER_SSH_KEY }}
           fingerprint: SHA256:i9DI6uml6dGdjd+4mFXTNs7f2bnPzPPqiiOObmmZ6sI
