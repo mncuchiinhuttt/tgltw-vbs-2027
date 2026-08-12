@@ -1,21 +1,53 @@
-name: Auto Deploy to Server
+name: Deploy VBS to Server
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
+concurrency:
+  group: deploy-vbs-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
 
     steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy to server
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          fingerprint: ${{ secrets.SERVER_FINGERPRINT }}
+          command_timeout: 10m
           script: |
-            cd /home/gay/tgltw-vbs-2027
-            git pull origin main
+            set -eu
+
+            repo_dir="$HOME/tgltw-vbs-2027"
+            test -d "$repo_dir/.git" || {
+              echo "VBS repository not found at $repo_dir" >&2
+              exit 1
+            }
+
+            cd "$repo_dir"
+            test "$(git branch --show-current)" = "main" || {
+              echo "Expected $repo_dir to be on main" >&2
+              exit 1
+            }
+            test -z "$(git status --porcelain)" || {
+              echo "Refusing to deploy over a dirty VBS checkout" >&2
+              git status --short >&2
+              exit 1
+            }
+
+            git fetch --prune origin main
+            git merge --ff-only origin/main
+            test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+            test -z "$(git status --porcelain)"
+            echo "Deployed VBS $(git rev-parse --short HEAD)"
