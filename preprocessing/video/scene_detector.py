@@ -2,16 +2,17 @@ import time
 
 import cv2
 import numpy as np
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from scenedetect import detect, ContentDetector
 from preprocessing.config import (
     SCENE_DETECTION_THRESHOLD, KEYFRAME_VARIANCE_LOW, KEYFRAME_VARIANCE_MID, KEYFRAME_MAX_BUDGET,
-    KEYFRAME_SHARPNESS_WEIGHT,
+    KEYFRAME_SHARPNESS_WEIGHT, KEYFRAME_INDEX_MAX_BUDGET, KEYFRAME_COVERAGE_TAU,
     SHOT_DETECTOR, SHOT_DETECTOR_FALLBACK, SHOT_BENCHMARK_MODE,
     FAST_PATHWAY_DENSE_SAMPLING_FPS, FAST_PATHWAY_FPS_TARGET,
     FAST_PATHWAY_MIN_FRAMES, FAST_PATHWAY_MAX_FRAMES,
     SCENE_MERGE_WINDOW_SEC, SCENE_MERGE_SAMPLES_PER_SIDE, SCENE_MERGE_THRESHOLD_RATIO,
 )
+from preprocessing.video.keyframe_selection import select_by_coverage, select_by_facility_location
 from preprocessing.video.motion_sampling import select_fast_pathway_frames
 
 
@@ -256,51 +257,148 @@ def get_adaptive_budget(variance: float) -> int:
         return 2
     return min(KEYFRAME_MAX_BUDGET, max(1, int(variance * 100)))
 
+def embed_and_score_candidates(candidate_frames: List[Dict[str, Any]], embedder) -> None:
+    """Attach the retrieval embedding and a sharpness score to each candidate.
+
+    Every candidate is embedded because every candidate is a potential index
+    point; the two selection passes below only decide which of them are kept
+    and which additionally deserve the expensive VLM/OCR/detection work.
+    """
+    if not candidate_frames:
+        return
+    print(f"  Embedding {len(candidate_frames)} candidate frames...")
+    for frame in candidate_frames:
+        frame["embed"] = embedder.embed_image(frame["frame_img"])
+
+    sharpness = (
+        _normalized_sharpness(candidate_frames)
+        if KEYFRAME_SHARPNESS_WEIGHT > 0
+        else [0.0] * len(candidate_frames)
+    )
+    for frame, score in zip(candidate_frames, sharpness):
+        frame["sharpness"] = score
+
+
+def select_index_and_vlm_keyframes(
+    candidate_frames: List[Dict[str, Any]],
+    embedder,
+    vlm_budget: int,
+    forced_indices: Optional[List[int]] = None,
+    index_max_budget: int = KEYFRAME_INDEX_MAX_BUDGET,
+    coverage_tau: float = KEYFRAME_COVERAGE_TAU,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Split a scene's candidates into the frames that get indexed and the
+    (smaller) subset that additionally gets the expensive per-frame passes.
+
+    Returns (index_frames, vlm_frames); vlm_frames is a subset of
+    index_frames, and both preserve chronological order.  `forced_indices`
+    point at candidates that must survive both passes - in practice the shot's
+    official keyframe, whose identifier is what the competition scores.
+    """
+    if not candidate_frames:
+        return [], []
+    if "embed" not in candidate_frames[0]:
+        embed_and_score_candidates(candidate_frames, embedder)
+
+    vectors = [frame["embed"] for frame in candidate_frames]
+    index_positions = select_by_coverage(
+        vectors, tau=coverage_tau, max_budget=index_max_budget, forced_indices=forced_indices
+    )
+    index_frames = [candidate_frames[position] for position in index_positions]
+
+    forced_in_index = [
+        index_positions.index(position)
+        for position in (forced_indices or [])
+        if position in index_positions
+    ]
+    vlm_positions = select_by_facility_location(
+        [frame["embed"] for frame in index_frames],
+        budget=vlm_budget,
+        quality=[frame.get("sharpness") for frame in index_frames],
+        quality_weight=KEYFRAME_SHARPNESS_WEIGHT,
+        forced_indices=forced_in_index,
+    )
+    return index_frames, [index_frames[position] for position in vlm_positions]
+
+
 def select_diverse_keyframes(
     candidate_frames: List[Dict[str, Any]],
     embedder,
     budget: int
 ) -> List[Dict[str, Any]]:
     """
-    Adaptive Keyframe Sampling, step 3: farthest-point sampling down to
-    `budget` frames, using Qwen3-Embedding-VL-8B (passed as `embedder`) as
-    the distance space - at each step, keep whichever remaining candidate is
-    least similar to everything already selected, maximizing coverage of
-    the scene's content within the budget.
+    Pick `budget` frames that best represent the scene, in the retrieval
+    embedding space.
+
+    This used to be farthest-point sampling, which maximises dispersion and so
+    systematically prefers whatever sits furthest from everything else -
+    dissolves, motion blur, near-black frames.  Facility location maximises
+    coverage of the candidate pool instead, which is the property that matters
+    when the selected frame has to stand in for the ones that were dropped.
     """
     if not candidate_frames:
         return []
+    embed_and_score_candidates(candidate_frames, embedder)
+    positions = select_by_facility_location(
+        [frame["embed"] for frame in candidate_frames],
+        budget=budget,
+        quality=[frame.get("sharpness") for frame in candidate_frames],
+        quality_weight=KEYFRAME_SHARPNESS_WEIGHT,
+    )
+    return [candidate_frames[position] for position in positions]
 
-    print(f"  Embedding {len(candidate_frames)} candidate frames for diversity sampling...")
-    for i, frame in enumerate(candidate_frames, start=1):
-        print(f"  Embedding frame {i}/{len(candidate_frames)} (t={frame['timestamp']:.2f}s)...")
-        frame["embed"] = embedder.embed_image(frame["frame_img"])
+def decode_scene_frames(
+    video_path: str,
+    start_sec: float,
+    end_sec: float,
+    dense_sampling_fps: float = FAST_PATHWAY_DENSE_SAMPLING_FPS,
+) -> List[Dict[str, Any]]:
+    """
+    Decode a scene once at the Fast pathway's dense rate.
 
-    sharpness = _normalized_sharpness(candidate_frames) if KEYFRAME_SHARPNESS_WEIGHT > 0 else [0.0] * len(candidate_frames)
-    for frame, score in zip(candidate_frames, sharpness):
-        frame["sharpness"] = score
+    Both the index candidates and the Fast pathway's motion frames are drawn
+    from this single decode.  Previously each scene was decoded twice - once
+    at 1fps for keyframe candidates and again at 8fps for optical flow - and
+    the dense pass then threw away everything it had not motion-sampled.
+    """
+    return extract_candidate_frames(video_path, start_sec, end_sec, sampling_rate_fps=dense_sampling_fps)
 
-    if len(candidate_frames) <= budget:
-        return candidate_frames
 
-    selected = [candidate_frames[0]]
-    remaining = candidate_frames[1:]
+def subsample_candidates(
+    dense_frames: List[Dict[str, Any]],
+    dense_sampling_fps: float,
+    candidate_fps: float,
+) -> List[Dict[str, Any]]:
+    """Thin an already-decoded dense frame list down to `candidate_fps`."""
+    if not dense_frames or candidate_fps <= 0 or candidate_fps >= dense_sampling_fps:
+        return list(dense_frames)
+    step = max(1, int(round(dense_sampling_fps / candidate_fps)))
+    return dense_frames[::step]
 
-    while len(selected) < budget and remaining:
-        best_idx, best_dist = -1, -1.0
-        for i, frame in enumerate(remaining):
-            sims = [cosine_sim(frame["embed"], s["embed"]) for s in selected]
-            dist = 1 - max(sims)
-            utility = dist + KEYFRAME_SHARPNESS_WEIGHT * frame["sharpness"]
-            if utility > best_dist:
-                best_dist, best_idx = utility, i
-        # Remove by index rather than list.remove(): remaining holds dicts
-        # with numpy-array "embed" values, and list.remove() uses == equality,
-        # which raises on dicts containing arrays ("truth value of an array
-        # with more than one element is ambiguous").
-        selected.append(remaining.pop(best_idx))
 
-    return selected
+def select_fast_pathway_frames_from_decoded(
+    dense_frames: List[Dict[str, Any]],
+    scene_duration_sec: float,
+    fps_target: float = FAST_PATHWAY_FPS_TARGET,
+    min_frames: int = FAST_PATHWAY_MIN_FRAMES,
+    max_frames: int = FAST_PATHWAY_MAX_FRAMES,
+) -> List[Dict[str, Any]]:
+    """Motion-weighted Fast-pathway subset of frames decoded by the caller."""
+    if not dense_frames:
+        return []
+    sampled = select_fast_pathway_frames(
+        [f["frame_img"] for f in dense_frames],
+        [f["timestamp"] for f in dense_frames],
+        scene_duration_sec=scene_duration_sec,
+        fps_target=fps_target, min_frames=min_frames, max_frames=max_frames,
+    )
+    by_timestamp = {f["timestamp"]: f for f in dense_frames}
+    return [
+        by_timestamp.get(ts, {"frame_img": frame, "timestamp": ts, "frame_idx": None})
+        for ts, frame in sampled
+    ]
+
 
 def select_fast_pathway_frames_for_scene(
     video_path: str,
