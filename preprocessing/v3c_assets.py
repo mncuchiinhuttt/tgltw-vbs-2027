@@ -95,7 +95,42 @@ def _row_shot_id(fields: List[str], row_number: int) -> str:
     return next((value for value in fields if _number(value) is None), "") or f"shot{row_number:06d}"
 
 
+def _frame_end_offset(rows: List[List[str]], frame_columns: tuple[int, int]) -> int:
+    """
+    Whether a shot's end frame is inclusive (1) or exclusive (0).
+
+    Both conventions occur, and guessing costs correctness in one direction
+    that matters: assuming inclusive on an exclusive file makes every shot
+    overlap its successor by a frame, so that frame is decoded and indexed
+    twice under two different shot ids. Two index points then share one
+    native frame index, which is precisely what makes temporal coherence
+    boosting inflate a moment against itself and what puts duplicates on
+    TRAKE's timeline.
+
+    The file says which it is: under the exclusive convention shot i's end
+    frame equals shot i+1's start frame, under the inclusive one it is a
+    frame short of it.
+    """
+    start_column, end_column = frame_columns
+    inclusive = exclusive = 0
+    for current, following in zip(rows, rows[1:]):
+        if max(frame_columns) >= min(len(current), len(following)):
+            continue
+        end_value = _number(current[end_column])
+        next_start = _number(following[start_column])
+        if end_value is None or next_start is None:
+            continue
+        if abs(next_start - end_value) < 1e-9:
+            exclusive += 1
+        elif abs(next_start - end_value - 1.0) < 1e-9:
+            inclusive += 1
+    return 1 if inclusive > exclusive else 0
+
+
 def _build_shots(rows: List[List[str]], layout: MsbLayout, fps: Optional[float]) -> List[V3CShot]:
+    # Only consulted when timestamps are absent and the frame columns have to
+    # carry the time axis on their own.
+    end_offset = _frame_end_offset(rows, layout.frames) if layout.frames is not None else 0
     shots: List[V3CShot] = []
     for row_number, fields in enumerate(rows):
         start_frame = end_frame = None
@@ -107,7 +142,7 @@ def _build_shots(rows: List[List[str]], layout: MsbLayout, fps: Optional[float])
         if layout.seconds is not None and max(layout.seconds) < len(fields):
             start, end = (_number(fields[index]) for index in layout.seconds)
         elif start_frame is not None and fps:
-            start, end = start_frame / fps, (end_frame + 1) / fps
+            start, end = start_frame / fps, (end_frame + end_offset) / fps
         else:
             continue
 

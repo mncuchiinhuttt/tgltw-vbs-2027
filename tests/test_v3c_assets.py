@@ -9,7 +9,7 @@ from preprocessing.v3c_assets import V3CAssetStore, V3CShot
 
 
 def _store_with_msb(tmp_path, content: str) -> V3CAssetStore:
-    (tmp_path / "msb").mkdir(exist_ok=True)
+    (tmp_path / "msb").mkdir(exist_ok=True, parents=True)
     (tmp_path / "msb" / "video-001.txt").write_text(content, encoding="utf-8")
     return V3CAssetStore(str(tmp_path))
 
@@ -55,6 +55,21 @@ def test_frame_only_msb_is_converted_with_the_frame_rate(tmp_path):
 
     assert [shot.start for shot in shots] == [0.0, 2.0]
     assert shots[0].start_frame == 0 and shots[0].end_frame == 50
+
+
+def test_frame_only_shots_do_not_overlap_under_either_end_convention(tmp_path):
+    # Assuming an inclusive end frame on an exclusive file makes every shot
+    # overlap its successor by a frame, so that frame is decoded and indexed
+    # twice under two shot ids - two points sharing one native frame index,
+    # which inflates temporal coherence and duplicates TRAKE's timeline.
+    exclusive = _store_with_msb(tmp_path / "a", "s1\t0\t50\ns2\t50\t100\ns3\t100\t150\n")
+    inclusive = _store_with_msb(tmp_path / "b", "s1\t0\t49\ns2\t50\t99\ns3\t100\t149\n")
+
+    for store in (exclusive, inclusive):
+        shots = store.load_shots("video-001.mp4", fps=25.0)
+        assert len(shots) == 3
+        gaps = [shots[i + 1].start - shots[i].end for i in range(len(shots) - 1)]
+        assert all(abs(gap) < 1e-9 for gap in gaps), gaps
 
 
 def test_frame_only_msb_is_refused_when_the_frame_rate_is_unknown(tmp_path):

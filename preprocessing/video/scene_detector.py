@@ -88,36 +88,52 @@ def detect_scenes(video_path: str, threshold: float = SCENE_DETECTION_THRESHOLD)
 def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, sampling_rate_fps: float = 1.0) -> List[Dict[str, Any]]:
     """
     Extract candidate frames from a scene for diversity sampling.
+
+    The frame index is read back from the decoder rather than counted from
+    the requested seek position. Seeking by frame number is approximate for
+    most compressed formats - OpenCV lands on a nearby keyframe and decodes
+    forward - so a counted index silently drifts from the true one. That
+    index is what the submission format's <frame_id> carries and what
+    temporal chain matching aligns on, so it has to be the decoder's own
+    answer, not an assumption about where the seek landed.
     """
     cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 0.0
+    if fps <= 0:
+        cap.release()
+        return []
     start_frame = int(start_sec * fps)
     end_frame = int(end_sec * fps)
-    
+
     # Calculate step size based on sampling rate
     step = max(1, int(fps / sampling_rate_fps))
-    
+
     candidate_frames = []
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-    
-    current_frame_idx = start_frame
-    while current_frame_idx < end_frame:
+
+    # Bounded by the number of frames the scene can hold, so the loop
+    # terminates even if the backend does not report a position at all.
+    frames_read = 0
+    frame_budget = max(0, end_frame - start_frame)
+    while frames_read < frame_budget:
         ret, frame = cap.read()
         if not ret:
             break
-            
-        if (current_frame_idx - start_frame) % step == 0:
-            timestamp = current_frame_idx / fps
+        # After read(), POS_FRAMES is the index of the NEXT frame.
+        reported = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+        frame_idx = reported if reported >= 0 else start_frame + frames_read
+        if frame_idx >= end_frame:
+            break
+
+        if frames_read % step == 0:
             # Convert BGR (OpenCV) to RGB (standard PIL/numpy format)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             candidate_frames.append({
-                "frame_img": frame_rgb,
-                "timestamp": timestamp,
-                "frame_idx": current_frame_idx
+                "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
+                "timestamp": frame_idx / fps,
+                "frame_idx": frame_idx,
             })
-            
-        current_frame_idx += 1
-    
+        frames_read += 1
+
     cap.release()
     return candidate_frames
 

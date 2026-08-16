@@ -36,7 +36,16 @@ def resolve_video_path(video_source_dir: str, video_name: str) -> Optional[str]:
 
 
 def decode_frames(video_path: str, sampling_fps: float, max_frames: int) -> List[Dict[str, Any]]:
-    """Sample a whole video at `sampling_fps`, capped at `max_frames`."""
+    """
+    Sample a video at `sampling_fps`, capped at `max_frames`.
+
+    Seeks to each wanted position instead of decoding the whole file and
+    discarding most of it. This runs at query time, where an eight-minute
+    video would otherwise mean decoding ~12000 frames to keep 60 - repeated
+    across every candidate video, while the clock is running.  When the
+    length is unknown, seeking cannot be planned and it falls back to a
+    sequential pass.
+    """
     import cv2
 
     capture = cv2.VideoCapture(video_path)
@@ -44,24 +53,42 @@ def decode_frames(video_path: str, sampling_fps: float, max_frames: int) -> List
         fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0) or 25.0
         total = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         step = max(1, int(round(fps / sampling_fps))) if sampling_fps > 0 else 1
-        if total > 0 and max_frames > 0:
-            # Spread the budget across the whole video rather than exhausting
-            # it on the opening seconds.
-            step = max(step, total // max_frames or 1)
+        if max_frames <= 0:
+            return []
+
+        def described(frame, index):
+            return {
+                "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
+                "frame_idx": index,
+                "timestamp": index / fps,
+            }
 
         frames: List[Dict[str, Any]] = []
-        index = 0
-        while len(frames) < max_frames:
+        if total <= 0:
+            index = 0
+            while len(frames) < max_frames:
+                ok, frame = capture.read()
+                if not ok:
+                    break
+                if index % step == 0:
+                    frames.append(described(frame, index))
+                index += 1
+            return frames
+
+        # Spread the budget over the whole video rather than exhausting it on
+        # the opening seconds.
+        stride = max(step, -(-total // max_frames))
+        for target in range(0, total, stride):
+            capture.set(cv2.CAP_PROP_POS_FRAMES, target)
             ok, frame = capture.read()
             if not ok:
                 break
-            if index % step == 0:
-                frames.append({
-                    "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
-                    "frame_idx": index,
-                    "timestamp": index / fps,
-                })
-            index += 1
+            # Seeking by frame number is approximate; take the decoder's own
+            # answer so the index names the frame that was actually returned.
+            reported = int(capture.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+            frames.append(described(frame, reported if reported >= 0 else target))
+            if len(frames) >= max_frames:
+                break
         return frames
     finally:
         capture.release()

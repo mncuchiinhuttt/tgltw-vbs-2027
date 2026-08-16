@@ -12,11 +12,13 @@ import os
 import sys
 import types
 
+import pytest
+
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(REPO_ROOT, "inference-code"))
 
 from search.hybrid_search import HybridSearcher, cap_hits_per_scene
-from search.query_time_frames import resolve_video_path
+from search.query_time_frames import decode_frames, resolve_video_path
 
 
 def hit(point_id, video, scene, score=1.0):
@@ -179,3 +181,47 @@ def test_video_path_resolution_finds_nested_files(tmp_path):
 def test_video_path_resolution_returns_none_when_unconfigured(tmp_path):
     assert resolve_video_path("", "v.mp4") is None
     assert resolve_video_path(str(tmp_path), "missing.mp4") is None
+
+
+@pytest.fixture(scope="module")
+def long_numbered_video(tmp_path_factory):
+    """3000 frames at 25fps (two minutes), frame N holding the value N % 256."""
+    cv2 = pytest.importorskip("cv2")
+    import numpy as np
+
+    path = str(tmp_path_factory.mktemp("qt") / "long.avi")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"FFV1"), 25.0, (64, 64))
+    if not writer.isOpened():
+        pytest.skip("no lossless codec available to build the fixture")
+    for number in range(3000):
+        writer.write(np.full((64, 64, 3), number % 256, dtype=np.uint8))
+    writer.release()
+    return path
+
+
+def test_query_time_sampling_spreads_over_the_whole_video(long_numbered_video):
+    # Not just the opening seconds - the moment offline selection missed is
+    # as likely to be at the end.
+    frames = decode_frames(long_numbered_video, sampling_fps=2.0, max_frames=60)
+
+    assert len(frames) == 60
+    assert frames[0]["frame_idx"] < 100
+    assert frames[-1]["frame_idx"] > 2800
+
+
+def test_query_time_sampling_reports_the_frame_it_actually_decoded(long_numbered_video):
+    frames = decode_frames(long_numbered_video, sampling_fps=2.0, max_frames=20)
+
+    assert [f["frame_idx"] % 256 for f in frames] == [
+        int(f["frame_img"][0, 0, 0]) for f in frames
+    ]
+
+
+def test_query_time_sampling_returns_increasing_distinct_frames(long_numbered_video):
+    indices = [f["frame_idx"] for f in decode_frames(long_numbered_video, 2.0, 40)]
+
+    assert indices == sorted(set(indices))
+
+
+def test_query_time_sampling_honours_a_zero_budget(long_numbered_video):
+    assert decode_frames(long_numbered_video, sampling_fps=2.0, max_frames=0) == []
