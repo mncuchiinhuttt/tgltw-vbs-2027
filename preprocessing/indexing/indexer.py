@@ -7,13 +7,50 @@ from qdrant_client.models import (
 )
 from preprocessing.config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, QDRANT_UPSERT_BATCH_SIZE,
-    SECONDARY_EMBEDDER_ENABLED, QDRANT_ALLOW_RECREATE,
+    SECONDARY_EMBEDDER_ENABLED, QDRANT_ALLOW_RECREATE, INDEX_SCHEMA_VERSION,
 )
 
 # Name of the secondary (SigLIP) named vector inside "visual_index" - queried
 # via Qdrant's `using="siglip"` param in HybridSearcher.dense_search_secondary.
 SECONDARY_VECTOR_NAME = "siglip"
 SHOT_COLLECTION_NAME = "vbs_shot_index"
+
+def guard_index_schema(client, rebuild_enabled: bool, schema_version: str = INDEX_SCHEMA_VERSION) -> None:
+    """
+    Refuse to append a new-schema index on top of an older one.
+
+    Point IDs derive from the schema version plus the video and frame key, so
+    once the set of indexed frames or the way a frame is keyed changes, a
+    re-run writes new points and leaves the previous ones in place rather than
+    replacing them.  The collection then holds two generations of the same
+    moments at once, which does not raise anything but quietly corrupts every
+    recall figure measured from it.
+
+    Points written at the current schema carry it in their payload, so a
+    re-run that changes nothing is never blocked.
+    """
+    if rebuild_enabled:
+        return
+    try:
+        stale = client.count(
+            collection_name="visual_index",
+            count_filter=Filter(
+                must_not=[FieldCondition(key="index_schema", match=MatchValue(value=schema_version))]
+            ),
+            exact=False,
+        ).count
+    except Exception:
+        return  # a fresh or unreachable collection is not evidence of a conflict
+    if stale:
+        raise RuntimeError(
+            f"'visual_index' holds {stale} points from an earlier index schema, and "
+            f"INDEX_SCHEMA_VERSION={schema_version} derives different point IDs for the same "
+            "frames, so a re-run would add a second generation of points alongside the first "
+            "instead of replacing it - which silently corrupts any recall measured from it. "
+            "Set QDRANT_REBUILD_VIDEO_ON_START=true to replace each video's points as it is "
+            "reprocessed, or drop the collection for a clean rebuild."
+        )
+
 
 class QdrantIndexer:
     """
@@ -141,13 +178,24 @@ class QdrantIndexer:
         pass None (or omit) to leave that named vector empty for this
         point, e.g. if secondary embedding failed for a single frame.
         """
-        if self.secondary_enabled and secondary_vector is not None:
-            vector_payload = {
-                "default": vector.tolist(),
-                SECONDARY_VECTOR_NAME: secondary_vector.tolist(),
-            }
+        if self.secondary_enabled:
+            # A named-vector collection rejects a bare list, so the dict form
+            # is used whenever the collection has named vectors - including
+            # when this particular point has no secondary vector (a failed
+            # SigLIP pass, or a region crop, which only ever has a primary
+            # one). Omitting the key leaves that named vector unset for the
+            # point; sending a bare list instead would fail the whole upsert.
+            vector_payload = {"default": vector.tolist()}
+            if secondary_vector is not None:
+                vector_payload[SECONDARY_VECTOR_NAME] = secondary_vector.tolist()
         else:
             vector_payload = vector.tolist()
+
+        # Stamped here rather than at each call site so no kind of point -
+        # frame, region, speech, standalone image - can be written without it.
+        # main.py's guard_index_schema relies on its absence meaning "written
+        # by an older schema", which only holds if every writer stamps it.
+        payload.setdefault("index_schema", INDEX_SCHEMA_VERSION)
 
         point = PointStruct(
             id=point_id,
