@@ -18,6 +18,11 @@ from preprocessing.video.motion_sampling import select_fast_pathway_frames
 
 _TRANSNET_DETECTOR = None
 
+# How many frames a seek is allowed to undershoot by before extraction gives
+# up on reaching the scene. Generous enough to cover a long GOP; bounded so a
+# backend that ignores seeking entirely cannot walk the whole video.
+_SEEK_UNDERSHOOT_ALLOWANCE = 300
+
 
 def _detect_scenes_pyscenedetect(video_path: str, threshold: float) -> List[Tuple[float, float]]:
     """Legacy detector kept as an explicit fallback and benchmark baseline."""
@@ -111,28 +116,38 @@ def extract_candidate_frames(video_path: str, start_sec: float, end_sec: float, 
     candidate_frames = []
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
-    # Bounded by the number of frames the scene can hold, so the loop
-    # terminates even if the backend does not report a position at all.
-    frames_read = 0
     frame_budget = max(0, end_frame - start_frame)
-    while frames_read < frame_budget:
+    # Iterations are bounded independently of the in-range count so the loop
+    # terminates even if the backend reports no position at all, while still
+    # allowing a seek that undershot to catch up to the scene.
+    in_range = 0
+    iterations = 0
+    iteration_limit = frame_budget + _SEEK_UNDERSHOOT_ALLOWANCE
+    while iterations < iteration_limit:
+        iterations += 1
         ret, frame = cap.read()
         if not ret:
             break
         # After read(), POS_FRAMES is the index of the NEXT frame.
         reported = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
-        frame_idx = reported if reported >= 0 else start_frame + frames_read
+        frame_idx = reported if reported >= 0 else start_frame + in_range
+        if frame_idx < start_frame:
+            # Seeking by frame number can undershoot. Frames before the scene
+            # belong to the previous shot, and indexing them here would give
+            # two shots a point with the same native frame index - which is
+            # what makes temporal coherence inflate a moment against itself.
+            continue
         if frame_idx >= end_frame:
             break
 
-        if frames_read % step == 0:
+        if in_range % step == 0:
             # Convert BGR (OpenCV) to RGB (standard PIL/numpy format)
             candidate_frames.append({
                 "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
                 "timestamp": frame_idx / fps,
                 "frame_idx": frame_idx,
             })
-        frames_read += 1
+        in_range += 1
 
     cap.release()
     return candidate_frames

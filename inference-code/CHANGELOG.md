@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Query-time extraction sampled only the opening quarter of a video whose length the container did not report.** Without a frame count the sampling could not be planned, and the fallback read forward until the budget filled - for a two-minute video that reached frame 708 of 3000. Query-time extraction exists to reach a moment offline selection missed, and that moment is as likely to be at the end, so partial coverage defeated the feature. The length is now established from the container's count, failing that its end position, and failing that by walking the stream with `grab()` (which demuxes without paying for pixel conversion); all three paths then use the same seek-based sampling and cover the whole video. Repeated frames from an inexact seek are dropped rather than embedded twice.
+
 ### Changed - candidate pooling for a wider index
 Preprocessing now indexes several frames per shot rather than one, which changes what a fixed-size candidate pool contains. `diversify_by_scene` collapses each scene to a single hit, so a pool of near-duplicate frames of one strongly-matching moment would leave the reranker with fewer distinct events than before the index grew.
 

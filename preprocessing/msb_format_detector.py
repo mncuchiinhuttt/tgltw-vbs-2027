@@ -41,6 +41,16 @@ from typing import List, Optional, Sequence
 _FRAME_CONTIGUITY_SLACK = 1.0
 _SECONDS_CONTIGUITY_SLACK = 1e-6
 
+# Most consecutive rows must meet, not all of them. A master shot reference is
+# a partition of the video in principle, but a re-packaging that dropped a few
+# very short shots leaves gaps, and demanding perfection there would throw the
+# whole file away - losing the official shot identifiers the competition is
+# scored on and falling back to local detection. The margin is wide enough to
+# stay decisive: an unrelated column pair, such as a middle-frame timestamp
+# posing as an end column, meets its successor on essentially no rows at all,
+# not on four out of five.
+_MIN_CONTIGUITY_RATIO = 0.8
+
 
 @dataclass(frozen=True)
 class MsbLayout:
@@ -80,12 +90,50 @@ def _looks_integral(values: Sequence[float]) -> bool:
     return all(abs(value - round(value)) < 1e-9 for value in values)
 
 
-def _is_contiguous(starts: Sequence[float], ends: Sequence[float], slack: float) -> bool:
-    """Shot i's end must coincide with shot i+1's start, within `slack`."""
-    return all(
-        abs(next_start - previous_end) <= slack
-        for previous_end, next_start in zip(ends[:-1], starts[1:])
-    )
+def _contiguity_ratio(starts: Sequence[float], ends: Sequence[float], slack: float) -> float:
+    """Fraction of consecutive rows where shot i's end meets shot i+1's start."""
+    pairs = list(zip(ends[:-1], starts[1:]))
+    if not pairs:
+        return 1.0
+    met = sum(1 for previous_end, next_start in pairs if abs(next_start - previous_end) <= slack)
+    return met / len(pairs)
+
+
+def _keep_outermost(
+    columns: dict[int, List[float]], pairs: list[tuple[tuple[int, int], bool]]
+) -> list[tuple[tuple[int, int], bool]]:
+    """
+    Drop pairs that a middle column formed, keeping only the outermost.
+
+    A middle-frame or middle-timestamp column lies strictly inside its own
+    row's segment, so it pairs with the start column just as an end column
+    does, and with the end column just as a start column does. Contiguity
+    cannot always separate them: a file whose shots run two whole seconds each
+    has its middle timestamp exactly one unit before the next start, which is
+    indistinguishable from the inclusive frame-end convention.
+
+    Extent settles it, applied on both sides. Among pairs sharing a start
+    column the real end is the one furthest out on every row; among pairs
+    sharing an end column the real start is the one furthest back. A middle
+    column loses both comparisons because it is, by construction, inside.
+    """
+    def survives(pair: tuple[int, int]) -> bool:
+        start_index, end_index = pair
+        for other, _ in pairs:
+            if other == pair:
+                continue
+            other_start, other_end = other
+            if other_start == start_index and all(
+                theirs >= ours for ours, theirs in zip(columns[end_index], columns[other_end])
+            ):
+                return False
+            if other_end == end_index and all(
+                theirs <= ours for ours, theirs in zip(columns[start_index], columns[other_start])
+            ):
+                return False
+        return True
+
+    return [(pair, integral) for pair, integral in pairs if survives(pair)]
 
 
 def _segment_pairs(columns: dict[int, List[float]], row_count: int) -> list[tuple[tuple[int, int], bool]]:
@@ -99,10 +147,10 @@ def _segment_pairs(columns: dict[int, List[float]], row_count: int) -> list[tupl
                 continue
             integral = _looks_integral(starts) and _looks_integral(ends)
             slack = _FRAME_CONTIGUITY_SLACK if integral else _SECONDS_CONTIGUITY_SLACK
-            if row_count > 1 and not _is_contiguous(starts, ends, slack):
+            if row_count > 1 and _contiguity_ratio(starts, ends, slack) < _MIN_CONTIGUITY_RATIO:
                 continue
             pairs.append(((start_index, end_index), integral))
-    return pairs
+    return _keep_outermost(columns, pairs)
 
 
 def detect_layout(rows: Sequence[Sequence[str]]) -> MsbLayout:

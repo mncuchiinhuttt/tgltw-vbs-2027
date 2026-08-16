@@ -225,3 +225,59 @@ def test_query_time_sampling_returns_increasing_distinct_frames(long_numbered_vi
 
 def test_query_time_sampling_honours_a_zero_budget(long_numbered_video):
     assert decode_frames(long_numbered_video, sampling_fps=2.0, max_frames=0) == []
+
+
+def _hide_property(monkeypatch, name):
+    """Make one CAP_PROP_* unreadable, as some containers genuinely are."""
+    cv2 = pytest.importorskip("cv2")
+    monkeypatch.setattr(cv2, name, 99990 + len(name), raising=False)
+
+
+@pytest.mark.parametrize(
+    "hidden",
+    [
+        pytest.param(["CAP_PROP_FRAME_COUNT"], id="falls-back-to-end-position"),
+        pytest.param(["CAP_PROP_FRAME_COUNT", "CAP_PROP_POS_AVI_RATIO"], id="falls-back-to-grab-walk"),
+    ],
+)
+def test_sampling_still_spans_the_video_when_the_length_is_hidden(
+    long_numbered_video, monkeypatch, hidden
+):
+    # Without a length, sampling cannot be planned, and simply reading until
+    # the budget fills covers only the opening quarter of the video - which
+    # defeats query-time extraction, whose whole purpose is reaching a moment
+    # that offline selection missed, wherever it sits.
+    for name in hidden:
+        _hide_property(monkeypatch, name)
+
+    frames = decode_frames(long_numbered_video, sampling_fps=2.0, max_frames=60)
+    indices = [frame["frame_idx"] for frame in frames]
+
+    assert len(frames) == 60
+    assert indices[-1] > 2800
+    assert indices == sorted(set(indices))
+
+
+def test_a_video_shorter_than_the_budget_returns_every_sampled_frame(tmp_path):
+    cv2 = pytest.importorskip("cv2")
+    import numpy as np
+
+    path = str(tmp_path / "short.mp4")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), 25.0, (64, 64))
+    if not writer.isOpened():
+        pytest.skip("no usable codec")
+    for number in range(17):
+        writer.write(np.full((64, 64, 3), number, dtype=np.uint8))
+    writer.release()
+
+    frames = decode_frames(path, sampling_fps=25.0, max_frames=60)
+
+    assert len(frames) == 17
+    assert [f["frame_idx"] for f in frames] == list(range(17))
+
+
+def test_an_unreadable_video_yields_no_query_time_frames(tmp_path):
+    broken = tmp_path / "broken.mp4"
+    broken.write_bytes(b"nonsense")
+
+    assert decode_frames(str(broken), sampling_fps=2.0, max_frames=10) == []

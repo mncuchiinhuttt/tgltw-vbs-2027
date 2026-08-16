@@ -87,6 +87,82 @@ def test_returns_nothing_for_unparseable_rows():
     assert not detect_layout([]).resolved
 
 
+def six_column_rows(count=10, gap_at=None, shot_seconds=2.0, fps=25):
+    """A full-layout file, optionally with one shot missing in the middle."""
+    rows = []
+    second = 0.0
+    frame = 0
+    for index in range(count):
+        if index == gap_at:  # a dropped short shot leaves a hole
+            second += shot_seconds * 1.5
+            frame += int(fps * shot_seconds * 1.5)
+        rows.append([
+            f"{second:.3f}", str(frame),
+            f"{second + shot_seconds:.3f}", str(frame + int(fps * shot_seconds)),
+            f"{second + shot_seconds / 2:.3f}", f"shot{index}",
+        ])
+        second += shot_seconds
+        frame += int(fps * shot_seconds)
+    return rows
+
+
+def test_a_single_gap_does_not_discard_the_whole_file():
+    # A master shot reference is a partition in principle, but a re-packaging
+    # that dropped a few very short shots leaves holes. Rejecting the file
+    # outright would lose the official shot identifiers and fall back to local
+    # detection - a large loss for a small irregularity.
+    layout = detect_layout(six_column_rows(gap_at=5))
+
+    assert layout.seconds == (0, 2)
+    assert layout.frames == (1, 3)
+
+
+def test_a_file_that_is_gaps_throughout_is_still_rejected():
+    rows = [
+        ["0.0", "0", "2.0", "50", "1.0", "s0"],
+        ["5.0", "125", "7.0", "175", "6.0", "s1"],
+        ["11.0", "275", "13.0", "325", "12.0", "s2"],
+        ["18.0", "450", "20.0", "500", "19.0", "s3"],
+    ]
+
+    assert not detect_layout(rows).resolved
+
+
+def test_middle_column_is_eliminated_when_timestamps_are_whole_numbers():
+    # Whole-second shot times make the timestamp columns look integral, which
+    # grants them the frame convention's one-unit slack - and a middle
+    # timestamp sits exactly one unit before the next start on a two-second
+    # shot, so contiguity alone cannot rule it out. Extent has to.
+    layout = detect_layout(six_column_rows(shot_seconds=2.0))
+
+    assert layout.seconds == (0, 2)
+    assert layout.frames == (1, 3)
+
+
+def test_a_middle_column_placed_before_the_end_column_is_eliminated():
+    rows = [["0.0", "1.0", "2.0", "s1"], ["2.0", "3.0", "4.0", "s2"], ["4.0", "5.0", "6.0", "s3"]]
+
+    layout = detect_layout(rows)
+
+    # The mid column loses on both sides, leaving (0, 2). All three values are
+    # whole numbers with nothing to contrast against, so the surviving pair is
+    # reported as ambiguous rather than assumed to be seconds.
+    assert layout.ambiguous == (0, 2)
+
+
+def test_a_middle_frame_column_is_eliminated_too():
+    rows = [
+        ["0.0", "0", "2.502", "62", "1.251", "31", "s1"],
+        ["2.502", "62", "5.004", "125", "3.753", "93", "s2"],
+        ["5.004", "125", "7.506", "187", "6.255", "156", "s3"],
+    ]
+
+    layout = detect_layout(rows)
+
+    assert layout.seconds == (0, 2)
+    assert layout.frames == (1, 3)
+
+
 def test_ignores_overlapping_or_decreasing_columns():
     # An end column that is not always greater than its start is not a
     # segmentation, whatever else it may be - column 2 here must be ignored.

@@ -35,6 +35,41 @@ def resolve_video_path(video_source_dir: str, video_name: str) -> Optional[str]:
     return str(matches[0]) if matches else None
 
 
+def _probe_frame_count(capture) -> int:
+    """
+    How many frames the video holds, however grudgingly the container says so.
+
+    Sampling has to be planned against the full length: without it the budget
+    is spent on the opening seconds, which for a two-minute video covers about
+    a quarter of it. Query-time extraction exists to reach a moment offline
+    selection missed, and that moment is as likely to be at the end, so
+    partial coverage defeats the point.
+
+    Three sources, cheapest first: the container's own count, its end
+    position, and - only if both stay silent - walking the stream with
+    `grab()`, which demuxes without paying for pixel conversion. Leaves the
+    capture rewound to the start.
+    """
+    import cv2
+
+    total = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    if total > 0:
+        return total
+
+    if capture.set(cv2.CAP_PROP_POS_AVI_RATIO, 1.0):
+        total = int(capture.get(cv2.CAP_PROP_POS_FRAMES) or 0)
+        capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        if total > 0:
+            return total
+
+    capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    total = 0
+    while capture.grab():
+        total += 1
+    capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    return total
+
+
 def decode_frames(video_path: str, sampling_fps: float, max_frames: int) -> List[Dict[str, Any]]:
     """
     Sample a video at `sampling_fps`, capped at `max_frames`.
@@ -50,31 +85,16 @@ def decode_frames(video_path: str, sampling_fps: float, max_frames: int) -> List
 
     capture = cv2.VideoCapture(video_path)
     try:
-        fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0) or 25.0
-        total = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-        step = max(1, int(round(fps / sampling_fps))) if sampling_fps > 0 else 1
         if max_frames <= 0:
             return []
-
-        def described(frame, index):
-            return {
-                "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
-                "frame_idx": index,
-                "timestamp": index / fps,
-            }
+        fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0) or 25.0
+        step = max(1, int(round(fps / sampling_fps))) if sampling_fps > 0 else 1
+        total = _probe_frame_count(capture)
+        if total <= 0:
+            return []
 
         frames: List[Dict[str, Any]] = []
-        if total <= 0:
-            index = 0
-            while len(frames) < max_frames:
-                ok, frame = capture.read()
-                if not ok:
-                    break
-                if index % step == 0:
-                    frames.append(described(frame, index))
-                index += 1
-            return frames
-
+        seen: set = set()
         # Spread the budget over the whole video rather than exhausting it on
         # the opening seconds.
         stride = max(step, -(-total // max_frames))
@@ -83,10 +103,19 @@ def decode_frames(video_path: str, sampling_fps: float, max_frames: int) -> List
             ok, frame = capture.read()
             if not ok:
                 break
-            # Seeking by frame number is approximate; take the decoder's own
-            # answer so the index names the frame that was actually returned.
+            # Seeking by frame number is approximate on some backends; take
+            # the decoder's own answer so the index names the frame actually
+            # returned, and drop a repeat rather than embedding it twice.
             reported = int(capture.get(cv2.CAP_PROP_POS_FRAMES)) - 1
-            frames.append(described(frame, reported if reported >= 0 else target))
+            index = reported if reported >= 0 else target
+            if index in seen:
+                continue
+            seen.add(index)
+            frames.append({
+                "frame_img": cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
+                "frame_idx": index,
+                "timestamp": index / fps,
+            })
             if len(frames) >= max_frames:
                 break
         return frames
