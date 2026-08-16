@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed - candidate pooling for a wider index
+Preprocessing now indexes several frames per shot rather than one, which changes what a fixed-size candidate pool contains. `diversify_by_scene` collapses each scene to a single hit, so a pool of near-duplicate frames of one strongly-matching moment would leave the reranker with fewer distinct events than before the index grew.
+
+- `TOP_K_RETRIEVAL` raised to 200, and dense hits are capped at `DENSE_MAX_PER_SCENE` per (video, scene) so no single moment can monopolise the pool.
+- `sparse_search` has its own `SPARSE_TOP_K_RETRIEVAL` depth. It reads payload matches through Qdrant `scroll`, which returns points in ID order rather than by relevance, so its rank signal is arbitrary beyond "matched the filter" - deepening it in step with the dense branch would only pour more noise into the RRF fusion.
+- `get_all_points_for_video` is paginated. It previously assumed a video held "at most a few hundred" keyframes and truncated at a single scroll call, which would now silently hide the tail of a long video from TRAKE's alignment and from in-video refinement.
+
+### Added
+- `dense_search_regions`: searches the region crops indexed under `modality="region"`, collapsing several crops of one frame to its best-scoring crop and returning the **parent frame's** payload under the parent's point id. Regions never appear as results in their own right, so they cannot evict their own parent from the diversified grid or add duplicate frame indices to TRAKE's timeline. Returns `[]` when region indexing was never run.
+- Query-time keyframe extraction inside `in_video_refine` (`QUERY_TIME_EXTRACTION_ENABLED`, off by default; needs `VIDEO_SOURCE_DIR` readable from the query host). Every other step here reorders frames that are already indexed and so cannot recover a moment offline selection dropped; this decodes the video and scores frames that have no index point at all. Extracted frames carry a synthetic `query-time:` id and are never fed back to Qdrant.
+
 ## [1.3.0] - 2026-07-16
 
 ### Changed

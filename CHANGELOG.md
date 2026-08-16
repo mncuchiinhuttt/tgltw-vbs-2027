@@ -4,6 +4,18 @@ All notable changes to the Multimedia Retrieval project will be documented in th
 
 ## [Unreleased]
 
+### Changed - keyframe extraction and candidate pooling
+A pass over the retrieval pipeline's *extraction* stage - which frames reach the index at all - rather than over ranking. Ranking can only reorder what was indexed; a moment with no indexed frame is unreachable regardless. See `preprocessing/CHANGELOG.md` for the full detail.
+
+Four defects were found and fixed, all silent: master shot boundary files were parsed by assuming a column layout that does not match the public V3C distribution (producing shot segments tens of seconds long, or dropping shots entirely); official keyframes were indexed with `frame_idx=None`, which disabled temporal coherence boosting and temporal chain matching for them and made TRAKE emit null frame IDs into submissions; keyframe filename matching collided on shared identifier prefixes, losing the single-digit shots of any video with ten or more; and named-vector collections rejected points that had no secondary vector.
+
+The selection stack itself was unreachable on the corpus it mattered for: an official keyframe became the sole candidate for its shot, after which the pre-filter, the variance budget and the diversity sampler all degenerated, capping the index at one frame per master shot. Index budget and VLM budget are now separate - the index keeps as many frames as coverage requires, while the expensive per-frame passes stay on a small described tier.
+
+### Added
+- Region-level index points from SAM3 crops, searchable through `dense_search_regions` and remapped onto their parent frame before fusion.
+- Query-time keyframe extraction in `in_video_refine` (`QUERY_TIME_EXTRACTION_ENABLED`, off by default): decodes frames that were never indexed for the top candidate videos. Unlike re-ranking, this can recover a moment offline selection missed.
+- Sub-shot splitting of long shots, so result diversification can surface more than one moment from an uncut sequence.
+
 ### Changed
 - Removed the Vietnamese-specialized Vintern OCR ensemble member and its model download. VBS OCR now uses PP-OCRv6 with the lightweight fallback VLM only for low-confidence crops.
 - Removed Vietnamese-specific accent stripping from OCR payloads and sparse text blobs. OCR keeps Unicode NFC-normalized text as recognized, and `OCR_LANG` now defaults to `en` while remaining configurable.
