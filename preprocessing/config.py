@@ -100,6 +100,22 @@ TRANSNETV2_DEVICE = os.getenv("TRANSNETV2_DEVICE", "auto")
 TRANSNETV2_BATCH_SIZE = max(1, int(os.getenv("TRANSNETV2_BATCH_SIZE", 1)))
 TRANSNETV2_THRESHOLD = float(os.getenv("TRANSNETV2_THRESHOLD", 0.5))
 
+# How to read a master-shot-boundary file whose only numeric pair is all
+# integers, where seconds and frame numbers are indistinguishable from the
+# file alone. "auto" reads it as frame numbers when the video's frame rate is
+# known (real V3C timestamps carry decimals, so an all-integer pair is far
+# more likely to be frames) and refuses the file otherwise rather than
+# guessing. Set "seconds" or "frames" to decide explicitly.
+V3C_MSB_UNITS = os.getenv("V3C_MSB_UNITS", "auto").lower()
+
+# Bumped whenever the identity of an indexed frame changes (which frames get
+# indexed, or how their point IDs are derived). Point IDs are a uuid5 of this
+# version plus the video and frame key, so an older index's points are NOT
+# overwritten by a re-run at a newer version - they linger alongside the new
+# ones. main.py refuses to start in that situation unless the operator opts
+# into a rebuild; see QDRANT_REBUILD_VIDEO_ON_START.
+INDEX_SCHEMA_VERSION = os.getenv("INDEX_SCHEMA_VERSION", "v2")
+
 # Adaptive Keyframe Sampling: a lightweight CLIP pass estimates how "static"
 # vs "dynamic" a scene is (variance of per-frame embeddings across the
 # scene's candidates), which sets a per-scene keyframe budget - static scenes
@@ -126,11 +142,68 @@ KEYFRAME_SHARPNESS_WEIGHT = max(0.0, float(os.getenv("KEYFRAME_SHARPNESS_WEIGHT"
 KEYFRAME_DAKE_ENABLED = os.getenv("KEYFRAME_DAKE_ENABLED", "true").lower() == "true"
 KEYFRAME_DAKE_RATIO = float(os.getenv("KEYFRAME_DAKE_RATIO", 0.5))
 KEYFRAME_DAKE_WINDOW = int(os.getenv("KEYFRAME_DAKE_WINDOW", 3))
+# DAKE was designed to thin out hundreds of candidates from a long video. A
+# V3C master shot averages ~3.3s, so its candidate list is a handful of
+# frames, and halving that discards real coverage to save an amount of
+# compute that does not matter. Only run the pre-filter once there is enough
+# to actually thin.
+KEYFRAME_DAKE_MIN_CANDIDATES = int(os.getenv("KEYFRAME_DAKE_MIN_CANDIDATES", 8))
 # DAKE's own safeguard ("at least one keyframe every 2x fps frames") adapted
 # to our already-~1fps-downsampled candidate stream (extract_candidate_frames'
 # default sampling_rate_fps) - expressed directly as a candidate-list index
 # gap rather than a native-video-fps multiple.
 KEYFRAME_DAKE_MAX_GAP = int(os.getenv("KEYFRAME_DAKE_MAX_GAP", 4))
+
+# --- Index budget vs VLM budget -------------------------------------------
+# The keyframe selection stack was inherited from video-LLM papers (AKS
+# arXiv:2502.21271, SlowFast-LLaVA) whose constraint is an LLM context window.
+# Retrieval has a different constraint: a frame that was never indexed can
+# never be found, no matter how good the ranking is, while disk and ANN
+# latency are comparatively cheap. So the two budgets are separated.
+#
+# INDEX budget: how many frames of a shot get an embedding + a Qdrant point.
+# Selection is coverage-based (see KEYFRAME_COVERAGE_TAU).
+KEYFRAME_INDEX_MAX_BUDGET = int(os.getenv("KEYFRAME_INDEX_MAX_BUDGET", 12))
+# VLM budget: how many of those frames additionally get the expensive
+# per-frame work - VLM analysis, SAM3-gated detection and OCR. Keeping this at
+# the old adaptive budget means the costly passes do NOT scale up with the
+# index; only embedding does.
+KEYFRAME_VLM_MAX_BUDGET = int(os.getenv("KEYFRAME_VLM_MAX_BUDGET", KEYFRAME_MAX_BUDGET))
+# Rate at which a scene is sampled for index candidates. Frames come from the
+# dense decode the Fast pathway already performs (see
+# FAST_PATHWAY_DENSE_SAMPLING_FPS), so raising this costs embedding time, not
+# extra video decoding.
+KEYFRAME_CANDIDATE_FPS = float(os.getenv("KEYFRAME_CANDIDATE_FPS", 2.0))
+
+# Coverage-based index selection (greedy k-center; Gonzalez 1985's
+# 2-approximation, the same construction Core-Set active learning uses -
+# Sener & Savarese, ICLR 2018, arXiv:1708.00489). Frames are kept until every
+# candidate lies within TAU cosine distance of a kept frame, which bounds how
+# far a dropped frame can be from its nearest indexed representative instead
+# of relying on two hand-tuned variance thresholds whose scale is tied to one
+# particular CLIP checkpoint's un-normalized output.
+KEYFRAME_COVERAGE_TAU = float(os.getenv("KEYFRAME_COVERAGE_TAU", 0.12))
+
+# Sub-shot splitting for long shots. diversify_by_scene collapses results to
+# one per (video, scene), so a single 30-second shot can only ever contribute
+# one entry to the result grid however many distinct things happen inside it.
+# Splitting long shots gives each part its own scene id.
+SUBSHOT_SPLIT_ENABLED = os.getenv("SUBSHOT_SPLIT_ENABLED", "true").lower() == "true"
+SUBSHOT_MAX_DURATION_SEC = float(os.getenv("SUBSHOT_MAX_DURATION_SEC", 12.0))
+SUBSHOT_MIN_DURATION_SEC = float(os.getenv("SUBSHOT_MIN_DURATION_SEC", 3.0))
+
+# Region-level indexing: embed the crops SAM3 already proposes for each VLM
+# keyframe and index them as their own points. A single pooled frame embedding
+# averages a small object away; a crop of it does not. The regions are already
+# computed for detection/OCR gating, so this adds embedding calls, not a new
+# model. Region points use modality="region" - never "visual" - because the
+# retrieval side keys temporal coherence, scene diversification and TRAKE
+# alignment off frame identity, and crops sharing their parent's frame index
+# would corrupt all three.
+REGION_INDEXING_ENABLED = os.getenv("REGION_INDEXING_ENABLED", "true").lower() == "true"
+REGION_INDEX_MAX_PER_FRAME = int(os.getenv("REGION_INDEX_MAX_PER_FRAME", 4))
+REGION_INDEX_MIN_AREA_RATIO = float(os.getenv("REGION_INDEX_MIN_AREA_RATIO", 0.005))
+REGION_INDEX_MAX_AREA_RATIO = float(os.getenv("REGION_INDEX_MAX_AREA_RATIO", 0.6))
 
 # SSM-inspired scene boundary refinement (VIREO at VBS2026, MMM 2026 LNCS
 # 16415 ch.19 - "Merging weak boundaries"): PySceneDetect's ContentDetector
