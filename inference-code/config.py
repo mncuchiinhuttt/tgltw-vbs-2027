@@ -54,8 +54,39 @@ QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 
 # Search settings
-TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
+# Preprocessing now indexes several frames per shot rather than one (see
+# KEYFRAME_INDEX_MAX_BUDGET), so a fixed-size dense pool holds fewer DISTINCT
+# scenes than it used to - diversify_by_scene collapses each scene to one hit,
+# and a pool of 20 near-duplicate frames of the same moment would leave the
+# reranker with almost nothing to choose between. The dense pool is therefore
+# deeper, and capped per scene so no single moment can monopolise it.
+TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 200))
+DENSE_MAX_PER_SCENE = int(os.getenv("DENSE_MAX_PER_SCENE", 3))
+# sparse_search reads Qdrant payload matches through `scroll`, which returns
+# points in ID order rather than by relevance, so its rank signal is arbitrary
+# beyond "matched the text filter at all". Deepening it in step with the dense
+# branch would just pour more noise into the RRF fusion, so it has its own
+# depth.
+SPARSE_TOP_K_RETRIEVAL = int(os.getenv("SPARSE_TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
+
+# Region-level search over the SAM3 crops preprocessing indexed with
+# modality="region" (see preprocessing/video/region_indexing.py). Region hits
+# are remapped onto their parent frame before fusion, so a crop can only ever
+# promote the frame it came from - it never appears as a result in its own
+# right, and never competes with its own parent.
+REGION_SEARCH_ENABLED = os.getenv("REGION_SEARCH_ENABLED", "true").lower() == "true"
+REGION_SEARCH_TOP_K = int(os.getenv("REGION_SEARCH_TOP_K", 100))
+
+# Query-time keyframe extraction (in_video_refine). Unlike re-ranking, this
+# decodes frames that were never indexed, so it can surface a moment the
+# offline selection missed entirely. It needs the raw videos readable from the
+# query host, which is not true of every deployment, so it stays off until
+# VIDEO_SOURCE_DIR is set and this is switched on.
+QUERY_TIME_EXTRACTION_ENABLED = os.getenv("QUERY_TIME_EXTRACTION_ENABLED", "false").lower() == "true"
+VIDEO_SOURCE_DIR = os.getenv("VIDEO_SOURCE_DIR", "")
+QUERY_TIME_EXTRACTION_FPS = float(os.getenv("QUERY_TIME_EXTRACTION_FPS", 2.0))
+QUERY_TIME_EXTRACTION_MAX_FRAMES = int(os.getenv("QUERY_TIME_EXTRACTION_MAX_FRAMES", 60))
 
 # H-EAGLE-lite coarse-to-fine retrieval.  The shot collection is populated by
 # preprocessing but the route stays off until a corpus benchmark confirms no
