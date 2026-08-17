@@ -30,6 +30,12 @@ LOG_FILE_PATH = BACKEND_DIR / "preprocessing.log"
 sys.path.append(str(WORKSPACE_ROOT))
 sys.path.append(str(WORKSPACE_ROOT / "inference-code"))
 
+# Safe to import at module level (unlike config/models/search.hybrid_search,
+# which the endpoints import lazily): search/ is a namespace package and
+# session_history.py has no imports of its own at all, so this pulls in no
+# torch/qdrant/config side effects.
+from search.session_history import trim_history
+
 app = FastAPI(title="Multimedia Retrieval API", version="1.0.0")
 
 # Enable CORS for frontend development
@@ -327,6 +333,41 @@ def get_status():
         "preprocessing_active": is_preprocessing
     }
 
+def _reset_session_state():
+    """
+    Clears every per-task field of the single global interactive session.
+    Pure dict mutation, factored out of the endpoint so the reset semantics
+    stay in one place - `_session_state` is rebound field-by-field rather
+    than replaced, so any module holding a reference to the same dict (or to
+    _session_state["history"], which record_feedback_in_history/trim_history
+    mutate in place) observes the reset.
+    """
+    _session_state["history"].clear()
+    _session_state["last_query_vector"] = None
+    _session_state["pending_clarification"] = None
+    _session_state["last_candidate_info"] = {}
+
+
+@app.post("/api/session/reset")
+def reset_session():
+    """
+    Drops the conversational session (CQR history, Rocchio base vector,
+    pending clarification, candidate cache) so the NEXT search starts clean.
+
+    Required because one backend process serves a whole VBS session of many
+    consecutive tasks: without this, turn 1 of a new task is CQR-rewritten
+    against the previous task's queries, which corrupts exactly the mode
+    (KIS-C) that depends on history most. Deliberately operator-triggered
+    rather than driven off DRES task changes - dres_client.get_current_task's
+    response fields are still unverified against a live instance, so keying
+    an automatic reset on `task_id` would make correctness depend on a field
+    that may not exist.
+    """
+    turns = len(_session_state["history"])
+    _reset_session_state()
+    return {"status": "ok", "cleared_turns": turns}
+
+
 @app.post("/api/search")
 async def run_search(request: SearchRequest):
     """
@@ -391,6 +432,11 @@ async def run_search(request: SearchRequest):
         # rewrite resolve references back to this one.
         _session_state["last_query_vector"] = searcher.embedder.embed_text(resolved_query)
         _session_state["history"].append({"query": resolved_query})
+        # Cap the history the NEXT rewrite_query_cqr call has to read. Every
+        # turn is rendered verbatim into the few-shot prompt, so an untrimmed
+        # session grows both the prompt and the rewrite latency without bound
+        # on a 7-minute clock. Keeps turn 1 (the task's opening description).
+        trim_history(_session_state["history"])
 
         # Cache {id: {source_file, caption}} for this turn's fused pool so
         # /api/feedback can describe the operator's accepted/rejected picks
