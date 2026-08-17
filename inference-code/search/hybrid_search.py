@@ -476,24 +476,26 @@ class HybridSearcher:
         decides the threshold at which to act on this (e.g. trigger a
         clarification question).
 
-        Combines two signals (search.kis_c_scoring, pure/testable):
-        - distinct_video_ratio: ratio of DISTINCT videos among the top
-          `top_n` candidates - 0.0 (all one video) to 1.0 (every candidate
-          a different video).
-        - score_margin_ambiguity: normalized top-1 vs top-2 score margin -
-          catches the case the count-only ratio misses (a 10-distinct-video
-          pool with a runaway winner vs. one where all 10 are tied both
-          score 1.0 under distinct_video_ratio alone). Margin was chosen
-          over entropy for simplicity (one subtraction, two numbers) - it
-          is only meaningful here because this method runs AFTER
-          temporal_coherence_boost, which spreads out an otherwise
-          near-flat RRF score distribution.
-        Still returns a single float in [0.0, 1.0] on the same scale the
-        AMBIGUITY_THRESHOLD env knob is tuned against - no caller change.
-        Side effect (intentional): a single-candidate pool used to score
-        1.0 (1 distinct / 1) and always triggered a clarification; the
-        margin term is undefined for <2 candidates and returns 0.0, so the
-        combined score now falls below the default 0.7 threshold.
+        Blends two signals (search.kis_c_scoring, pure/testable), but at the
+        current kis_c_scoring.MARGIN_WEIGHT of 1.0 only the second one has
+        any weight:
+        - score_margin_ambiguity (weight 1.0): the top-1 vs top-2 score
+          margin, which simplifies exactly to top2/top1. Meaningful here
+          because this method runs AFTER temporal_coherence_boost, which
+          spreads out an otherwise near-flat RRF score distribution. Margin
+          was chosen over entropy for simplicity, and entropy was later
+          measured to be strictly worse anyway.
+        - distinct_video_ratio (weight 0.0): ratio of DISTINCT videos among
+          the top `top_n` candidates. Retained for tunability but currently
+          inert, because this method also runs AFTER diversify_by_scene -
+          which collapses the pool to one candidate per (source_file,
+          scene_id), so the ratio sits at a constant ~1.0 and carried a
+          fixed offset instead of information. See kis_c_scoring.
+          MARGIN_WEIGHT for the measurements.
+        Still returns a single float in [0.0, 1.0] on the scale the
+        AMBIGUITY_THRESHOLD env knob is compared against - no caller change.
+        A pool of fewer than 2 candidates scores 0.0 (the margin is
+        undefined) and so never triggers a clarification.
         """
         distinct_ratio = distinct_video_ratio(candidates, top_n)
         margin_ambiguity = score_margin_ambiguity(candidates, top_n)

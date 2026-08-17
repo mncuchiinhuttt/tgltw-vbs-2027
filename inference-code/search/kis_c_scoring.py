@@ -11,10 +11,17 @@ unit-testable without a QdrantClient, same rationale as
 """
 import re
 
-# Weight of the score-margin signal inside the combined ambiguity score
-# (see combine_ambiguity_signals). 0.5 = equal weight with the pre-existing
-# distinct-video ratio.
-MARGIN_WEIGHT = 0.5
+# Weight of the score-margin signal in the combined ambiguity score (see
+# combine_ambiguity_signals). 1.0 = margin only, distinct-video ratio ignored.
+# Why: compute_ambiguity_score runs AFTER diversify_by_scene (one candidate per
+# source_file+scene_id), so its top-10 is almost always 10 distinct videos and
+# distinct_video_ratio sat at a constant 1.0 - a fixed offset, not information.
+# Separation between an ambiguous pool and the worst unambiguous one, replaying
+# the real pipeline: margin only +0.275; old 0.5/0.5 blend +0.138 (the constant
+# term halved it); top-1 share +0.037; per-video mass +0.037; entropy +0.004
+# (saturates - RRF scores are near-flat). Every replacement measured WORSE than
+# dropping the term; the blend is kept so it can be weighed back in later.
+MARGIN_WEIGHT = 1.0
 
 # Max fraction of the pool's top score a fully-matching candidate can gain
 # from boost_by_clarification_answer.
@@ -74,9 +81,17 @@ def score_margin_ambiguity(candidates: list, top_n: int = 10, score_key: str = "
 def combine_ambiguity_signals(distinct_ratio: float, margin_ambiguity: float, margin_weight: float = MARGIN_WEIGHT) -> float:
     """
     Weighted average of the two ambiguity signals into a single float on the
-    same 0-1 scale the existing AMBIGUITY_THRESHOLD env knob is tuned
-    against (weighted average, not OR-of-thresholds, so callers keep a single
-    interpretable number).
+    0-1 scale the AMBIGUITY_THRESHOLD env knob is compared against (weighted
+    average, not OR-of-thresholds, so callers keep a single interpretable
+    number).
+
+    At the default MARGIN_WEIGHT of 1.0 this returns `margin_ambiguity`
+    unchanged and ignores `distinct_ratio` (see MARGIN_WEIGHT). That makes the
+    number directly interpretable, since score_margin_ambiguity simplifies to
+    top2/top1: AMBIGUITY_THRESHOLD = X asks exactly when the runner-up scores
+    at least X times the winner. The whole 0-1 range is usable, unlike the old
+    0.5/0.5 blend where distinct_ratio's constant 1.0 pinned the score into
+    [0.5, 1.0] and made every threshold at or below 0.5 fire unconditionally.
     """
     combined = (1 - margin_weight) * distinct_ratio + margin_weight * margin_ambiguity
     return max(0.0, min(1.0, combined))

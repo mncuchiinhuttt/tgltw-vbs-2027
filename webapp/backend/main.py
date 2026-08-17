@@ -115,12 +115,20 @@ _dres_session_id = None
 # reset needed when DRES moves to the next task.
 _avs_submitted_by_task: dict = {}
 # KIS-C clarification-question trigger (see HybridSearcher.compute_ambiguity_score):
-# 0.0-1.0 ratio of distinct videos among the top candidates; above this,
-# /api/search generates a clarifying question instead of just returning
-# results the operator has to disambiguate unaided. Webapp-only knob (not
-# used by CLI/batch_query.py/evaluation), so it lives here rather than
-# inference-code/config.py.
-AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.7"))
+# at or above this, /api/search generates a clarifying question instead of
+# just returning results the operator has to disambiguate unaided. Webapp-only
+# knob (not used by CLI/batch_query.py/evaluation), so it lives here rather
+# than inference-code/config.py.
+#
+# Since kis_c_scoring.MARGIN_WEIGHT became 1.0 the score is exactly top2/top1
+# over the diversified pool, so this reads directly as "ask when the runner-up
+# scores at least half the winner". Retuned from 0.7 to 0.5 because the old
+# value was calibrated against the previous 0.5/0.5 blend, whose constant
+# distinct-video term pinned the score into [0.5, 1.0] - carrying 0.7 over
+# unchanged would have silently made the gate far stricter. Measured on a
+# replay of the real pipeline: a clear winner scores 0.05-0.33, a target with
+# one strong rival 0.71, and a pool of unrelated videos 0.98.
+AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.5"))
 
 
 def _check_avs_duplicate(task_id: str, video_name: Optional[str], force: bool, submitted_by_task: dict) -> Optional[dict]:

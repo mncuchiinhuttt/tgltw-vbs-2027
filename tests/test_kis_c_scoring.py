@@ -18,6 +18,7 @@ from search.kis_c_scoring import (
     score_margin_ambiguity,
     combine_ambiguity_signals,
     boost_by_clarification_answer,
+    MARGIN_WEIGHT,
 )
 
 
@@ -96,6 +97,36 @@ def test_combined_score_single_candidate_does_not_trigger():
     distinct_ratio = distinct_video_ratio(candidates)
     margin_ambiguity = score_margin_ambiguity(candidates)
     assert combine_ambiguity_signals(distinct_ratio, margin_ambiguity) < 0.7
+
+
+def test_margin_weight_is_one_so_distinct_ratio_is_inert():
+    # The pool reaching compute_ambiguity_score has already been through
+    # diversify_by_scene, so distinct_video_ratio is a near-constant 1.0 and
+    # was measured to HALVE the ambiguous/unambiguous separation. It must no
+    # longer move the combined score at all.
+    assert MARGIN_WEIGHT == 1.0
+    scores = {combine_ambiguity_signals(d / 10.0, 0.42) for d in range(11)}
+    assert scores == {0.42}
+
+
+def test_score_margin_ambiguity_equals_top2_over_top1():
+    # The property that makes AMBIGUITY_THRESHOLD directly interpretable:
+    # a threshold of X means "ask when the runner-up scores >= X x the winner".
+    for top1, top2 in ((1.0, 0.5), (0.8, 0.2), (0.25, 0.2), (1.0, 1.0)):
+        candidates = [_cand(cid="p1", score=top1), _cand(cid="p2", score=top2)]
+        assert math.isclose(score_margin_ambiguity(candidates), top2 / top1, abs_tol=1e-9)
+
+
+def test_combined_score_uses_the_full_unit_range():
+    # The old 0.5/0.5 blend pinned the score into [0.5, 1.0], which made every
+    # AMBIGUITY_THRESHOLD at or below 0.5 fire unconditionally - half the dial
+    # was dead. A runaway winner must now be able to score below 0.5.
+    runaway = [_cand(cid="p1", video="V001.mp4", score=1.0),
+               _cand(cid="p2", video="V002.mp4", score=0.05)]
+    combined = combine_ambiguity_signals(
+        distinct_video_ratio(runaway), score_margin_ambiguity(runaway)
+    )
+    assert combined < 0.5
 
 
 # --- boost_by_clarification_answer ---
