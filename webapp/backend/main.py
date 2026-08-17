@@ -486,13 +486,14 @@ async def run_search(request: SearchRequest):
             # the ambiguity check: a discriminating answer sharpens the
             # top-1/top-2 margin, which lowers the new ambiguity score and
             # stops the system asking a redundant second question.
-            if pending_clarification and (request.clarification_answer or "").strip():
+            clarification_ids = (pending_clarification or {}).get("candidate_ids") or []
+            answering_clarification = bool(
+                pending_clarification and (request.clarification_answer or "").strip()
+            )
+            if answering_clarification:
                 candidates = boost_by_clarification_answer(
-                    candidates,
-                    pending_clarification.get("candidate_ids") or [],
-                    request.clarification_answer,
+                    candidates, clarification_ids, request.clarification_answer,
                 )
-                clarification_boost_applied = True
 
             # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
             # fused candidate pool is spread across many unrelated videos
@@ -533,12 +534,32 @@ async def run_search(request: SearchRequest):
                 c for c in top_candidates
                 if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
             ]
+            # Re-apply the boost to `rerank_score`, the key that actually
+            # orders what the operator sees. The pass above only moves
+            # `rrf_score`, and rerank_type1 sorts SOLELY by rerank_score - so
+            # on its own that pass can change which candidates reach the
+            # reranker but never the order they come back in, which is almost
+            # always a no-op since the clarification candidates were already
+            # top-ranked. Deliberately AFTER the RERANK_SCORE_THRESHOLD
+            # filter: the operator's answer should re-order the surviving
+            # candidates, not push a candidate the VLM scored below the
+            # quality floor back into the results.
+            if answering_clarification:
+                top_candidates = boost_by_clarification_answer(
+                    top_candidates, clarification_ids, request.clarification_answer,
+                    score_key="rerank_score",
+                )
+                clarification_boost_applied = any(
+                    c.get("clarification_overlap") for c in top_candidates
+                )
+
             for idx, c in enumerate(top_candidates):
                 results.append({
                     "rank": idx + 1,
                     "score": c.get("rerank_score", 0.0),
                     "id": c["id"],
                     "payload": c["payload"],
+                    "clarification_overlap": c.get("clarification_overlap"),
                     "matched_via": c.get("matched_via", [])
                 })
                 
@@ -633,8 +654,12 @@ async def run_search(request: SearchRequest):
             "type": request.type,
             "results": results,
             "clarification": clarification_question,
-            # Explainability (mirrors `matched_via`): whether this turn's
-            # ranking was adjusted by kis_c_scoring.boost_by_clarification_answer.
+            # Explainability (mirrors `matched_via`): true only when the
+            # clarification answer actually moved a DISPLAYED result's score,
+            # not merely when an answer was supplied - it used to be set the
+            # moment a boost was attempted, reporting a ranking change the
+            # operator could not see. Per-result `clarification_overlap` shows
+            # which hits it moved and by how much.
             "clarification_boost_applied": clarification_boost_applied,
         }
     except Exception as e:
