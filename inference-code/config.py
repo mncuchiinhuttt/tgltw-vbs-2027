@@ -160,3 +160,13 @@ SIGLIP_MODEL_ID = os.getenv("SIGLIP_MODEL_ID", "google/siglip-so400m-patch14-384
 
 VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
 VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
+
+# Fast-pathway budget cho generate_multi_image(): các motion frame phụ được
+# resize xuống budget này trước khi gửi, để thêm nhiều frame cho motion
+# coverage mà không kéo tổng token của lệnh gọi lên cao (xem
+# models/base_vlm.py::generate_multi_image và models/qwen_vlm.py). Phải nằm
+# HẲN dưới VLM_MIN_PIXELS, nếu không việc tách 2 budget là vô nghĩa.
+# models/qwen_vlm.py và models/openai_vlm.py đã import 2 hằng số này từ trước
+# nhưng chúng chưa từng được định nghĩa ở đây, nên load_vlm() luôn ImportError.
+FAST_PATHWAY_MIN_PIXELS = int(os.getenv("FAST_PATHWAY_MIN_PIXELS", 64 * 28 * 28))   # ~64 token/ảnh (sàn)
+FAST_PATHWAY_MAX_PIXELS = int(os.getenv("FAST_PATHWAY_MAX_PIXELS", 128 * 28 * 28))  # ~128 token/ảnh (trần)
