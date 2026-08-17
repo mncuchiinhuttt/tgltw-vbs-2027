@@ -32,9 +32,11 @@ sys.path.append(str(WORKSPACE_ROOT / "inference-code"))
 
 # Safe to import at module level (unlike config/models/search.hybrid_search,
 # which the endpoints import lazily): search/ is a namespace package and
-# session_history.py has no imports of its own at all, so this pulls in no
-# torch/qdrant/config side effects.
-from search.session_history import trim_history
+# neither session_history.py nor conversational_context.py has any imports of
+# its own, so this pulls in no torch/qdrant/config side effects. Module level
+# rather than repeated per endpoint because six of them now refresh the cache.
+from search.conversational_context import record_feedback_in_history
+from search.session_history import build_candidate_info, trim_history
 
 app = FastAPI(title="Multimedia Retrieval API", version="1.0.0")
 
@@ -450,13 +452,7 @@ async def run_search(request: SearchRequest):
         # /api/feedback can describe the operator's accepted/rejected picks
         # in words for the next CQR rewrite, without an extra Qdrant payload
         # fetch. Rebuilt (not appended) every search - naturally bounded.
-        _session_state["last_candidate_info"] = {
-            c["id"]: {
-                "source_file": (c.get("payload") or {}).get("source_file"),
-                "caption": ((c.get("payload") or {}).get("caption") or "")[:200],
-            }
-            for c in candidates
-        }
+        _session_state["last_candidate_info"] = build_candidate_info(candidates)
 
         # Consume the KIS-C clarification flag once per search, regardless of
         # query type, so a stale flag can never boost a much later unrelated
@@ -670,7 +666,6 @@ def run_feedback(request: FeedbackRequest):
         # history turn means the NEXT rewrite_query_cqr prompt knows which
         # readings were already rejected/confirmed. Same single CQR call as
         # before - prompt context only, no new call.
-        from search.conversational_context import record_feedback_in_history
         record_feedback_in_history(
             _session_state["history"], _session_state["last_candidate_info"],
             request.positive_ids, request.negative_ids,
@@ -679,6 +674,10 @@ def run_feedback(request: FeedbackRequest):
         hits = searcher.dense_search_by_vector(adjusted_vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        # These results REPLACE what the operator sees, so the next round of
+        # accept/reject will name ids from this list - refresh the cache or
+        # record_feedback_in_history will describe them as raw UUIDs.
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "feedback",
             f"positive={request.positive_ids} negative={request.negative_ids}",
@@ -709,6 +708,7 @@ def run_query_by_example(request: QueryByExampleRequest):
         hits = searcher.dense_search_by_vector(vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "query_by_example", f"point_id={request.point_id}", [r["id"] for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
@@ -742,6 +742,7 @@ async def run_search_by_image(file: UploadFile = File(...), top_k: int = Form(20
         hits = searcher.dense_search_by_vector(vector, top_k=top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "search_by_image", f"uploaded_image:{file.filename}", [r["id"] for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
@@ -818,6 +819,7 @@ async def run_search_by_video(file: UploadFile = File(...), top_k: int = Form(20
             for index, hit in enumerate(ranked_hits)
         ]
         _session_state["last_query_vector"] = last_visual_vector
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "search_by_video",
             f"uploaded_video:{file.filename}",
@@ -938,6 +940,7 @@ async def run_in_video_search(request: InVideoSearchRequest):
             }
             for idx, c in enumerate(top_candidates)
         ]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         return {"query": request.query, "video_name": request.video_name, "results": results}
     except Exception as e:
         import traceback
