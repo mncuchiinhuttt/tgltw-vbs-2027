@@ -210,6 +210,63 @@ def test_boost_handles_missing_payload_and_missing_scores():
     assert result == [a]
 
 
+def test_boost_negated_answer_picks_the_affirmed_candidate_english():
+    # The exact failure this was written for: flat bag-of-words matching gave
+    # BOTH candidates the same overlap (the negated word "red" is still
+    # lexically present in the red candidate), so the prior ranking won and the
+    # ruled-out candidate stayed on top.
+    red = _cand(cid="red", video="V1.mp4", score=0.90,
+                text_blob="a man in a red jacket walking a dog in a park")
+    blue = _cand(cid="blue", video="V2.mp4", score=0.80,
+                 text_blob="a man in a blue jacket walking a dog in a park")
+    result = boost_by_clarification_answer(
+        [red, blue], ["red", "blue"], "no, not red, the jacket is blue")
+    assert result[0]["id"] == "blue"
+
+
+def test_boost_negated_answer_picks_the_affirmed_candidate_vietnamese():
+    do = _cand(cid="do", video="V1.mp4", score=0.90,
+               text_blob="một người đàn ông mặc áo đỏ dắt chó trong công viên")
+    xanh = _cand(cid="xanh", video="V2.mp4", score=0.80,
+                 text_blob="một người đàn ông mặc áo xanh dắt chó trong công viên")
+    result = boost_by_clarification_answer(
+        [do, xanh], ["do", "xanh"], "không phải màu đỏ, áo màu xanh")
+    assert result[0]["id"] == "xanh"
+
+
+def test_boost_penalises_a_purely_negated_answer():
+    a = _cand(cid="a", score=1.0, text_blob="a red car on a street")
+    result = boost_by_clarification_answer([a], ["a"], "it is not red")
+    assert result[0]["rrf_score"] < 1.0
+    assert result[0]["clarification_overlap"] < 0
+
+
+def test_boost_never_drives_a_score_below_zero():
+    a = _cand(cid="a", score=0.01, text_blob="a red car on a street")
+    result = boost_by_clarification_answer([a], ["a"], "not red")
+    assert result[0]["rrf_score"] >= 0.0
+
+
+def test_boost_affirmative_answer_is_unaffected_by_the_negation_split():
+    # Regression guard: the common case must behave exactly as before.
+    a = _cand(cid="a", video="V1.mp4", score=1.0, text_blob="a blue bicycle in a park")
+    b = _cand(cid="b", video="V2.mp4", score=0.6, text_blob="a red car on a street")
+    result = boost_by_clarification_answer([a, b], ["a", "b"], "the car was red")
+    assert result[0]["id"] == "b"
+    assert result[0]["clarification_overlap"] > 0
+
+
+def test_boost_token_on_both_sides_carries_no_signal():
+    # "màu" appears in both the negated ("không phải màu đỏ") and the affirmed
+    # ("áo màu xanh") half, so it cannot discriminate and must contribute
+    # nothing. This candidate shares ONLY "màu" with the answer - if the shared
+    # token still counted, it would be boosted here.
+    a = _cand(cid="a", score=1.0, text_blob="xe màu tím")
+    result = boost_by_clarification_answer([a], ["a"], "không phải màu đỏ, áo màu xanh")
+    assert result[0]["rrf_score"] == 1.0
+    assert result[0].get("clarification_overlap") is None
+
+
 def test_boost_stopwords_alone_do_not_boost():
     a = _cand(cid="a", score=1.0, text_blob="a red car on a street")
     result = boost_by_clarification_answer([a], ["a"], "it is in the")

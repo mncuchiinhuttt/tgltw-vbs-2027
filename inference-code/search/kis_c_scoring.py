@@ -1,15 +1,16 @@
 """
 Pure-Python KIS-C (VBS conversational Known-Item-Search) scoring helpers.
 
-Everything here is stdlib-only (just `re`) - no numpy, no qdrant_client, no
-config import, no LLM/VLM call. Factored out of HybridSearcher so it stays
-unit-testable without a QdrantClient, same rationale as
-`webapp/backend/main.py`'s `_check_avs_duplicate` and
-`preprocessing/audio/asr_segment_filter.py`. Imported by
+Stdlib-only (`re` plus the sibling `negation_scope`) - no numpy, no
+qdrant_client, no config import, no LLM/VLM call. Factored out of
+HybridSearcher so it stays unit-testable without a QdrantClient, same
+rationale as `preprocessing/audio/asr_segment_filter.py`. Imported by
 `hybrid_search.py` (ambiguity scoring) and `webapp/backend/main.py`
 (clarification-answer boost wiring).
 """
 import re
+
+from search.negation_scope import split_negation_scope
 
 # Weight of the score-margin signal in the combined ambiguity score (see
 # combine_ambiguity_signals). 1.0 = margin only, distinct-video ratio ignored.
@@ -23,12 +24,11 @@ import re
 # dropping the term; the blend is kept so it can be weighed back in later.
 MARGIN_WEIGHT = 1.0
 
-# Max fraction of the pool's top score a fully-matching candidate can gain
-# from boost_by_clarification_answer.
+# Max fraction of the pool's top score boost_by_clarification_answer can add
+# to a fully-matching candidate (or subtract from a fully-contradicted one).
 CLARIFICATION_BOOST_WEIGHT = 0.5
 
-# Vietnamese content words are frequently 2 characters ("áo", "xe") - do not
-# raise this to 3, it would silently drop real signal.
+# Vietnamese content words are often 2 chars ("áo", "xe") - never raise to 3.
 MIN_TOKEN_LEN = 2
 
 # Function words only (EN + VI). Do NOT add content words like
@@ -151,6 +151,14 @@ def boost_by_clarification_answer(
     search - the full per-turn pipeline still runs; this only sharpens its
     final ranking.
 
+    `negation_scope.split_negation_scope` splits the answer into what it
+    affirms and what it rules out, and a candidate scores on (affirmed_overlap
+    - negated_overlap): "không phải màu đỏ, áo màu xanh" must PENALISE the red
+    candidate, not boost it for containing "đỏ". Purely affirmative answers
+    yield an empty negated set and behave exactly as before; tokens on both
+    sides carry no discriminating signal and are dropped from both.
+    `clarification_overlap` is therefore signed, and scores floor at 0.0.
+
     True no-op (returns the exact same `candidates` object, untouched) when
     there is no answer text, no prior ids, or no candidates. When tokens and
     prior ids exist but nothing actually overlaps, a new list is returned
@@ -160,8 +168,13 @@ def boost_by_clarification_answer(
     """
     if not candidates:
         return candidates
-    tokens = tokenize_answer(answer_text)
-    if not tokens:
+    affirmed_text, negated_text = split_negation_scope(answer_text)
+    affirmed = tokenize_answer(affirmed_text)
+    negated = tokenize_answer(negated_text)
+    shared = affirmed & negated
+    affirmed -= shared
+    negated -= shared
+    if not affirmed and not negated:
         return candidates
     prior = set(prior_candidate_ids or ())
     if not prior:
@@ -176,10 +189,12 @@ def boost_by_clarification_answer(
         candidate_tokens = tokenize_answer(candidate_match_text(c.get("payload")))
         if not candidate_tokens:
             continue
-        overlap = len(tokens & candidate_tokens) / len(tokens)
-        if overlap <= 0:
+        hit = len(affirmed & candidate_tokens) / len(affirmed) if affirmed else 0.0
+        miss = len(negated & candidate_tokens) / len(negated) if negated else 0.0
+        delta = hit - miss
+        if delta == 0:
             continue
-        c[score_key] = c.get(score_key, 0.0) + boost_weight * overlap * top_score
-        c["clarification_overlap"] = round(overlap, 3)
+        c[score_key] = max(0.0, c.get(score_key, 0.0) + boost_weight * delta * top_score)
+        c["clarification_overlap"] = round(delta, 3)
 
     return sorted(candidates, key=lambda c: c.get(score_key, 0.0), reverse=True)

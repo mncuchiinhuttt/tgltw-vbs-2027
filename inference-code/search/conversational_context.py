@@ -40,8 +40,13 @@ System asked: người phụ nữ đó mặc áo màu gì?
 Latest Query: một người phụ nữ đang nấu ăn trong bếp. Additional detail from operator: áo màu vàng
 Rewritten Query: một người phụ nữ mặc áo màu vàng đang nấu ăn trong bếp"""
 
-CQR_INSTRUCTIONS = """You are a Query Rewriter. Given the conversation history and the latest user query, rewrite the latest query to be fully self-contained and descriptive, resolving any pronouns or implicit references. Keep it one concise descriptive sentence. Reply in the same language as the latest query. If "Operator rejected:" lines are present, avoid re-describing those interpretations while preserving the user's original intent; "Operator confirmed:" lines are partial matches worth keeping. Output ONLY the rewritten query, no preamble."""
-
+# The negation clause is load-bearing, not a stylistic preference: this rewrite
+# is what gets embedded, HyDE'd and handed to rerank_type1, and NevIR (Weller
+# et al., EACL 2024) finds bi-encoder and sparse retrievers rank negated pairs
+# WORSE than random. Converting "not red, it's blue" into a purely affirmative
+# description is the only point in the pipeline where that can be repaired
+# before it reaches a retriever that cannot represent it.
+CQR_INSTRUCTIONS = """You are a Query Rewriter. Given the conversation history and the latest user query, rewrite the latest query to be fully self-contained and descriptive, resolving any pronouns or implicit references. Keep it one concise descriptive sentence. Reply in the same language as the latest query. If "Operator rejected:" lines are present, avoid re-describing those interpretations while preserving the user's original intent; "Operator confirmed:" lines are partial matches worth keeping. If the latest query denies or corrects a detail ("not red", "không phải màu đỏ"), state what the target IS and never carry the denied attribute into the rewritten query - write the positive description only. Output ONLY the rewritten query, no preamble."""
 
 def format_history(context_history: list) -> str:
     """

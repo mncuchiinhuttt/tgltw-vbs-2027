@@ -189,10 +189,18 @@ JSON:"""
             # or run on metadata.
             frame_description = f"Caption: {payload.get('caption', '')}. Narrative: {payload.get('scene_narrative', '')}. OCR: {payload.get('ocr_text', '')}."
 
+            # The negation line matters here specifically: this is the only
+            # stage that scores query against candidate with a language model
+            # rather than an embedding, and NevIR (Weller et al., EACL 2024)
+            # finds cross-encoders are the ONLY architecture to beat random on
+            # negated pairs - bi-encoder and sparse retrieval, i.e. everything
+            # upstream of this call, score below random. If a KIS-C
+            # clarification answer's negation survives CQR, this is the last
+            # place it can still be honoured.
             prompt = f"""
 Query: "{query}"
 Frame info: {frame_description}
-Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
+Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). If the query says something is NOT present or NOT a given attribute, a frame that does show it must score LOW, not high. Output only the score as a float.
 Score:"""
 
             # Text-only comparison as base/fallback, or vision if image is provided
