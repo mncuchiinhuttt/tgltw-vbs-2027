@@ -1,10 +1,10 @@
 """
 KIS-C conversational prompt construction + session-history annotation.
 
-Pure string/dict logic only - stdlib only, no imports from config/models/
-qdrant_client. Kept separate from query_processor.py so (a) the prompt
-templates are structurally unit-testable without an LLM, and (b)
-query_processor.py stays under this repo's 200-line-file convention.
+Pure string/dict logic - no imports at all, so it is safe to import from
+anywhere. Kept separate from query_processor.py so the prompt templates are
+structurally unit-testable without an LLM, and so query_processor.py stays
+under this repo's 200-line-file convention.
 
 Hard rule: no function here may add an LLM call - these only build strings
 for calls that already exist in query_processor.py.
@@ -31,7 +31,14 @@ History:
 User: a woman cooking in a kitchen
 Operator rejected: a woman cooking in a kitchen
 Latest Query: no, it's outdoors, she's grilling
-Rewritten Query: a woman grilling food outdoors"""
+Rewritten Query: a woman grilling food outdoors
+
+Example 4:
+History:
+User: một người phụ nữ đang nấu ăn trong bếp
+System asked: người phụ nữ đó mặc áo màu gì?
+Latest Query: một người phụ nữ đang nấu ăn trong bếp. Additional detail from operator: áo màu vàng
+Rewritten Query: một người phụ nữ mặc áo màu vàng đang nấu ăn trong bếp"""
 
 CQR_INSTRUCTIONS = """You are a Query Rewriter. Given the conversation history and the latest user query, rewrite the latest query to be fully self-contained and descriptive, resolving any pronouns or implicit references. Keep it one concise descriptive sentence. Reply in the same language as the latest query. If "Operator rejected:" lines are present, avoid re-describing those interpretations while preserving the user's original intent; "Operator confirmed:" lines are partial matches worth keeping. Output ONLY the rewritten query, no preamble."""
 
@@ -40,10 +47,15 @@ def format_history(context_history: list) -> str:
     """
     Renders each turn as `User:` / `System:` lines, plus optional
     `Operator rejected:` / `Operator confirmed:` lines when that turn
-    carries feedback (see record_feedback_in_history). Omits the `System:`
-    line entirely when a turn has no answer (only VQA/Type-2 turns get one
-    today) - an empty line would teach the model that answers are usually
-    blank.
+    carries feedback (see record_feedback_in_history), plus a final
+    `System asked:` line when the turn ended by asking a KIS-C clarifying
+    question. Optional lines are omitted when absent rather than emitted
+    blank - a blank line would teach the model that field is usually empty.
+
+    `System asked:` comes LAST because it is the utterance the NEXT user turn
+    answers; without it the rewriter sees a bare "áo màu vàng" and must guess
+    which attribute was narrowed. Kept distinct from `System:` (a VQA answer)
+    so the two roles are not conflated.
     """
     lines = []
     for turn in context_history or []:
@@ -54,6 +66,8 @@ def format_history(context_history: list) -> str:
             lines.append(f"Operator rejected: {'; '.join(turn['rejected'])}")
         if turn.get("accepted"):
             lines.append(f"Operator confirmed: {'; '.join(turn['accepted'])}")
+        if turn.get("clarification_asked"):
+            lines.append(f"System asked: {turn['clarification_asked']}")
     return "\n".join(lines)
 
 

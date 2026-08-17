@@ -255,8 +255,13 @@ function SearchView() {
     if (temporalMode && extraQueries.some((q) => !q.trim())) return
     if (isConversationalTask && clarification && !clarificationAnswer.trim()) return
 
+    // Single line on purpose: this string lands in the CQR prompt's
+    // "Latest Query:" slot, and a newline split it into a phantom extra field
+    // that matches none of the few-shot examples. Keep the wording in sync
+    // with CQR_FEWSHOT_EXAMPLES' Example 4, which demonstrates exactly this
+    // shape so the model pattern-matches the live slot.
     const requestQuery = isConversationalTask && clarificationAnswer.trim()
-      ? `${query}\nAdditional detail from operator: ${clarificationAnswer.trim()}`
+      ? `${query}. Additional detail from operator: ${clarificationAnswer.trim()}`
       : query
 
     setLoading(true)

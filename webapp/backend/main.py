@@ -519,6 +519,14 @@ async def run_search(request: SearchRequest):
                     "question": clarification_question,
                     "candidate_ids": summary_ids,
                 }
+                # Record the question on THIS turn so the next CQR rewrite can
+                # see what the operator's reply is answering. Without it the
+                # rewriter receives a bare "áo màu vàng" and has to guess which
+                # attribute was being narrowed - format_history renders this as
+                # the turn's closing "System asked:" line, and
+                # CQR_FEWSHOT_EXAMPLES' Example 4 demonstrates the shape.
+                if clarification_question:
+                    _session_state["history"][-1]["clarification_asked"] = clarification_question
 
             top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
