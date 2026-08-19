@@ -11,9 +11,9 @@ for calls that already exist in query_processor.py.
 """
 
 # Few-shot examples for CQR (PG-ICL, arXiv:2502.15009): fixed
-# History: / Latest Query: / Rewritten Query: shape, one per language plus
-# one demonstrating rejected-feedback handling. Keep short - these ride along
-# on every rewrite call.
+# History: / Latest Query: / Rewritten Query: shape: one per language, one
+# demonstrating rejected-feedback handling, and one demonstrating a KIS-C
+# clarification round-trip. Keep short - these ride along on every rewrite call.
 CQR_FEWSHOT_EXAMPLES = """Example 1:
 History:
 User: a man in a red jacket walking a dog in a park
@@ -78,7 +78,7 @@ def format_history(context_history: list) -> str:
 
 def build_cqr_prompt(query: str, context_history: list) -> str:
     """
-    Few-shot CQR prompt (PG-ICL, arXiv:2502.15009): task instructions + 3
+    Few-shot CQR prompt (PG-ICL, arXiv:2502.15009): task instructions + 4
     static examples + the live History:/Latest Query:/Rewritten Query: block,
     kept byte-identical in shape to the examples so the model pattern-matches
     the live slot the same way.
