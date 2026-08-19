@@ -13,7 +13,7 @@ answers in the negative - "no, not red, the jacket is blue", "không phải màu
 đỏ, áo màu xanh". Matching such an answer as a flat bag of words scores the
 ruled-out candidate exactly as highly as the correct one, because the negated
 attribute ("red"/"đỏ") is still lexically present in its caption. Nor can the
-retriever be relied on to sort it out: NevIR (Weller et al., EACL 2024) finds
+retriever be relied on to sort it out: NevIR (Weller et al., EACL 2024, arXiv:2305.07614) finds
 bi-encoder and sparse architectures rank negated pairs WORSE than random, and
 cross-encoders only slightly above.
 """

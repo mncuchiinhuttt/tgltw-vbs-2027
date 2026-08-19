@@ -191,8 +191,8 @@ JSON:"""
 
             # The negation line matters here specifically: this is the only
             # stage that scores query against candidate with a language model
-            # rather than an embedding, and NevIR (Weller et al., EACL 2024)
-            # finds cross-encoders are the ONLY architecture to beat random on
+            # rather than an embedding, and NevIR (Weller et al., EACL
+            # 2024, arXiv:2305.07614) finds cross-encoders are the ONLY architecture to beat random on
             # negated pairs - bi-encoder and sparse retrieval, i.e. everything
             # upstream of this call, score below random. If a KIS-C
             # clarification answer's negation survives CQR, this is the last

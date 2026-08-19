@@ -42,7 +42,7 @@ Rewritten Query: một người phụ nữ mặc áo màu vàng đang nấu ăn 
 
 # The negation clause is load-bearing, not a stylistic preference: this rewrite
 # is what gets embedded, HyDE'd and handed to rerank_type1, and NevIR (Weller
-# et al., EACL 2024) finds bi-encoder and sparse retrievers rank negated pairs
+# et al., EACL 2024, arXiv:2305.07614) finds bi-encoder and sparse retrievers rank negated pairs
 # WORSE than random. Converting "not red, it's blue" into a purely affirmative
 # description is the only point in the pipeline where that can be repaired
 # before it reaches a retriever that cannot represent it.

@@ -7,7 +7,8 @@ different objectives:
 * Which frames go into the retrieval index?  A frame that was never indexed
   can never be retrieved, so the objective is *coverage*: keep adding frames
   until every candidate lies within TAU of something that was kept.  That is
-  greedy k-center, whose 2-approximation guarantee (Gonzalez 1985) is the same
+  greedy k-center, whose 2-approximation guarantee (Gonzalez 1985,
+  doi:10.1016/0304-3975(85)90224-5) is the same
   construction Core-Set active learning uses (Sener & Savarese, ICLR 2018,
   arXiv:1708.00489).  It also replaces a pair of hand-tuned variance
   thresholds whose scale was tied to one CLIP checkpoint's un-normalized
@@ -117,7 +118,9 @@ def select_by_facility_location(
     """
     Greedy maximisation of sum_i max_{s in S} sim(i, s), i.e. how well the
     selected subset represents the whole pool.  Monotone submodular, so the
-    greedy solution is within (1 - 1/e) of optimal.
+    greedy solution is within (1 - 1/e) of optimal (Nemhauser, Wolsey &
+    Fisher, Mathematical Programming 14:265-294, 1978,
+    doi:10.1007/BF01588971).
 
     `quality` (Laplacian sharpness, already normalised to [0, 1]) breaks ties
     toward frames that are actually readable, at `quality_weight` strength.

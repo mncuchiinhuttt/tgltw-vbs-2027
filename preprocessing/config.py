@@ -156,7 +156,8 @@ KEYFRAME_DAKE_MAX_GAP = int(os.getenv("KEYFRAME_DAKE_MAX_GAP", 4))
 
 # --- Index budget vs VLM budget -------------------------------------------
 # The keyframe selection stack was inherited from video-LLM papers (AKS
-# arXiv:2502.21271, SlowFast-LLaVA) whose constraint is an LLM context window.
+# arXiv:2502.21271, SlowFast-LLaVA arXiv:2407.15841) whose constraint is an
+# LLM context window.
 # Retrieval has a different constraint: a frame that was never indexed can
 # never be found, no matter how good the ranking is, while disk and ANN
 # latency are comparatively cheap. So the two budgets are separated.
