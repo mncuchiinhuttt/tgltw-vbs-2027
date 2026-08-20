@@ -7,6 +7,8 @@ from typing import Any, Iterable
 
 import numpy as np
 
+from preprocessing.config import INDEX_SCHEMA_VERSION
+
 
 def stable_shot_id(video_name: str, scene_idx: int, official_shot_id: str | None = None) -> str:
     """Return an auditable shot id that is stable across resume runs."""
@@ -18,8 +20,15 @@ def stable_shot_point_id(video_name: str, shot_id: str) -> str:
 
 
 def stable_frame_point_id(video_name: str, frame_key: str) -> str:
-    """Stable frame point ID even when a detector changes shot boundaries."""
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-frame:{video_name}:{frame_key}"))
+    """Stable frame point ID even when a detector changes shot boundaries.
+
+    The schema version participates in the ID because a change to which
+    frames are indexed, or to how a frame is keyed, produces a different ID
+    for the same moment.  Without the version an operator could not tell the
+    two generations apart inside one collection; with it, main.py can refuse
+    to mix them (see guard_index_schema).
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-frame:{INDEX_SCHEMA_VERSION}:{video_name}:{frame_key}"))
 
 
 def aggregate_shot_embedding(

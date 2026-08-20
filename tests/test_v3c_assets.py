@@ -5,7 +5,125 @@ import json
 import numpy as np
 from PIL import Image
 
-from preprocessing.v3c_assets import V3CAssetStore
+from preprocessing.v3c_assets import V3CAssetStore, V3CShot
+
+
+def _store_with_msb(tmp_path, content: str) -> V3CAssetStore:
+    (tmp_path / "msb").mkdir(exist_ok=True, parents=True)
+    (tmp_path / "msb" / "video-001.txt").write_text(content, encoding="utf-8")
+    return V3CAssetStore(str(tmp_path))
+
+
+def test_parses_the_six_column_msb_layout_without_mistaking_frames_for_seconds(tmp_path):
+    # starttime startframe endtime endframe middletime id, at 25 fps. Reading
+    # the first two numbers as (start, end) drops shot 1 and turns shot 2 into
+    # a 60-second segment.
+    store = _store_with_msb(
+        tmp_path,
+        "0.0\t0\t2.5\t62\t1.25\tshot00001_1\n"
+        "2.5\t62\t5.0\t125\t3.75\tshot00001_2\n"
+        "5.0\t125\t7.5\t187\t6.25\tshot00001_3\n",
+    )
+
+    shots = store.load_shots("video-001.mp4", fps=25.0)
+
+    assert [shot.shot_id for shot in shots] == ["shot00001_1", "shot00001_2", "shot00001_3"]
+    assert [shot.start for shot in shots] == [0.0, 2.5, 5.0]
+    assert [shot.end for shot in shots] == [2.5, 5.0, 7.5]
+    assert all(shot.end - shot.start < 3.0 for shot in shots)
+
+
+def test_msb_frame_columns_supply_the_native_keyframe_index(tmp_path):
+    # A frame index of None makes an indexed frame invisible to temporal
+    # coherence boosting and to temporal chain matching, and makes TRAKE emit
+    # a null <frame_id> in the submission.
+    store = _store_with_msb(
+        tmp_path,
+        "0.0\t0\t2.5\t62\t1.25\tshot1\n2.5\t62\t5.0\t125\t3.75\tshot2\n",
+    )
+
+    shots = store.load_shots("video-001.mp4", fps=25.0)
+
+    assert shots[0].start_frame == 0 and shots[0].end_frame == 62
+    assert shots[0].middle_frame == 31
+
+
+def test_frame_only_msb_is_converted_with_the_frame_rate(tmp_path):
+    store = _store_with_msb(tmp_path, "shot1\t0\t50\nshot2\t50\t100\n")
+
+    shots = store.load_shots("video-001.mp4", fps=25.0)
+
+    assert [shot.start for shot in shots] == [0.0, 2.0]
+    assert shots[0].start_frame == 0 and shots[0].end_frame == 50
+
+
+def test_frame_only_shots_do_not_overlap_under_either_end_convention(tmp_path):
+    # Assuming an inclusive end frame on an exclusive file makes every shot
+    # overlap its successor by a frame, so that frame is decoded and indexed
+    # twice under two shot ids - two points sharing one native frame index,
+    # which inflates temporal coherence and duplicates TRAKE's timeline.
+    exclusive = _store_with_msb(tmp_path / "a", "s1\t0\t50\ns2\t50\t100\ns3\t100\t150\n")
+    inclusive = _store_with_msb(tmp_path / "b", "s1\t0\t49\ns2\t50\t99\ns3\t100\t149\n")
+
+    for store in (exclusive, inclusive):
+        shots = store.load_shots("video-001.mp4", fps=25.0)
+        assert len(shots) == 3
+        gaps = [shots[i + 1].start - shots[i].end for i in range(len(shots) - 1)]
+        assert all(abs(gap) < 1e-9 for gap in gaps), gaps
+
+
+def test_frame_only_msb_is_refused_when_the_frame_rate_is_unknown(tmp_path):
+    # Seconds and frames cannot be told apart here; indexing against the wrong
+    # one is worse than falling back to local shot detection.
+    store = _store_with_msb(tmp_path, "shot1\t0\t50\nshot2\t50\t100\n")
+
+    assert store.load_shots("video-001.mp4", fps=None) == []
+
+
+def test_keyframe_candidate_carries_a_frame_index(tmp_path):
+    (tmp_path / "keyframes" / "video-001").mkdir(parents=True)
+    path = tmp_path / "keyframes" / "video-001" / "shot1.jpg"
+    Image.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(path)
+
+    from_msb = V3CShot("shot1", 0.0, 2.5, path, start_frame=0, end_frame=62)
+    assert V3CAssetStore.load_keyframe_candidate(from_msb)["frame_idx"] == 31
+
+    # Without frame columns the frame rate is the fallback, never None.
+    timestamps_only = V3CShot("shot1", 0.0, 2.5, path)
+    assert V3CAssetStore.load_keyframe_candidate(timestamps_only, fps=25.0)["frame_idx"] == 31
+
+
+def test_keyframe_matching_does_not_collide_on_shared_identifier_prefixes(tmp_path):
+    # "shot00001_1" is a substring of "shot00001_10".  A plain containment
+    # test silently dropped the single-digit shots of any video with ten.
+    keyframes = tmp_path / "keyframes" / "video-001"
+    keyframes.mkdir(parents=True)
+    for index in range(1, 13):
+        Image.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(
+            keyframes / f"shot00001_{index}.png"
+        )
+
+    store = V3CAssetStore(str(tmp_path))
+    # One fewer shot than file, to force the name-matching fallback.
+    shots = [V3CShot(f"shot00001_{index}", float(index), float(index) + 1.0) for index in range(1, 12)]
+
+    attached = store.attach_keyframes("video-001.mp4", shots)
+
+    assert all(shot.keyframe_path is not None for shot in attached)
+    assert attached[0].keyframe_path.stem == "shot00001_1"
+
+
+def test_keyframe_matching_preserves_frame_columns(tmp_path):
+    keyframes = tmp_path / "keyframes" / "video-001"
+    keyframes.mkdir(parents=True)
+    Image.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(keyframes / "shot1.png")
+
+    store = V3CAssetStore(str(tmp_path))
+    attached = store.attach_keyframes(
+        "video-001.mp4", [V3CShot("shot1", 0.0, 2.5, None, start_frame=0, end_frame=62)]
+    )
+
+    assert attached[0].middle_frame == 31
 
 
 def test_loads_shots_metadata_asr_and_keyframe(tmp_path):

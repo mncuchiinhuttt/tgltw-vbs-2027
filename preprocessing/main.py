@@ -19,6 +19,11 @@ from preprocessing.config import (
     VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, OBJECT_DETECTION_PROMPTS, OBJECT_DETECTION_PROMPTS_EN,
     OBJECT_REGION_CONCEPTS_EN, SAHI_TILE_SIZE, SAHI_TILE_OVERLAP,
     KEYFRAME_DAKE_ENABLED, KEYFRAME_DAKE_RATIO, KEYFRAME_DAKE_WINDOW, KEYFRAME_DAKE_MAX_GAP,
+    KEYFRAME_DAKE_MIN_CANDIDATES, KEYFRAME_CANDIDATE_FPS, KEYFRAME_VLM_MAX_BUDGET,
+    FAST_PATHWAY_DENSE_SAMPLING_FPS,
+    SUBSHOT_SPLIT_ENABLED, SUBSHOT_MAX_DURATION_SEC, SUBSHOT_MIN_DURATION_SEC,
+    REGION_INDEXING_ENABLED, REGION_INDEX_MAX_PER_FRAME,
+    REGION_INDEX_MIN_AREA_RATIO, REGION_INDEX_MAX_AREA_RATIO,
     SCENE_MERGE_ENABLED, SECONDARY_EMBEDDER_ENABLED,
     QDRANT_REBUILD_VIDEO_ON_START,
     V3C_ASSETS_ENABLED, V3C_ASSETS_DIR, V3C_OFFICIAL_KEYFRAMES_ENABLED,
@@ -37,14 +42,18 @@ from models.siglip_embedder import SigLIPEmbedder
 
 # Pipeline Modules
 from preprocessing.video.scene_detector import (
-    detect_scenes, extract_candidate_frames, compute_scene_variance,
-    get_adaptive_budget, select_diverse_keyframes, select_fast_pathway_frames_for_scene,
+    detect_scenes, compute_scene_variance, get_adaptive_budget,
+    decode_scene_frames, subsample_candidates, embed_and_score_candidates,
+    select_index_and_vlm_keyframes, select_fast_pathway_frames_from_decoded,
     refine_scene_boundaries,
 )
+from preprocessing.video.scene_splitter import build_scene_specs
+from preprocessing.video.keyframe_selection import insert_official_candidate
+from preprocessing.video.region_indexing import index_region_crops, probe_video_fps
 from preprocessing.video.ocr import TextDetectorOCR
 from preprocessing.video.captioner import ImageCaptioner
 from preprocessing.audio.audio_processor import AudioProcessor
-from preprocessing.indexing.indexer import QdrantIndexer
+from preprocessing.indexing.indexer import QdrantIndexer, guard_index_schema
 from preprocessing.indexing.heagle import (
     aggregate_shot_embedding,
     shot_payload,
@@ -88,15 +97,20 @@ def detect_objects(region_proposer, detector, image):
     YOLOE-26 runs per-class SAHI-style tiling restricted to those regions
     (detector.detect_in_regions), replacing the previous full-frame
     detect() + fixed-label detect_tiled() merge.
+
+    Returns (detections, regions). The proposals are handed back rather than
+    discarded so region-level index points can reuse them without a second
+    SAM3 pass - see preprocessing/video/region_indexing.py.
     """
     regions = region_proposer.propose(image, OBJECT_REGION_CONCEPTS_EN)
     if not regions:
-        return []
+        return [], []
     region_bboxes = [r["bbox"] for r in regions]
-    return detector.detect_in_regions(
+    detections = detector.detect_in_regions(
         image, region_bboxes, OBJECT_DETECTION_PROMPTS, embed_prompts=OBJECT_DETECTION_PROMPTS_EN,
         tile_size=SAHI_TILE_SIZE, overlap=SAHI_TILE_OVERLAP,
     )
+    return detections, regions
 
 def main():
     parser = argparse.ArgumentParser(description="Run Multimedia Preprocessing and Indexing Pipeline")
@@ -140,6 +154,7 @@ def main():
         print(f"Dynamic Secondary (SigLIP) Index Dimension: {secondary_dim}")
 
     indexer = QdrantIndexer(visual_dim=visual_dim, audio_dim=audio_dim, secondary_dim=secondary_dim)
+    guard_index_schema(indexer.client, QDRANT_REBUILD_VIDEO_ON_START)
 
     # Scan dataset
     supported_video_ext = (".mp4", ".avi", ".mkv", ".mov")
@@ -169,10 +184,20 @@ def main():
             indexer.delete_visual_for_video(video_name)
         indexer.delete_shots_for_video(video_name)
 
+        # The frame rate is needed before anything else: it resolves
+        # frame-based shot boundary files onto a time axis, and it supplies
+        # the native frame index for official keyframes whose msb file only
+        # carries timestamps. An indexed frame without a frame index is
+        # invisible to temporal coherence, to temporal chain matching, and to
+        # TRAKE's submission output.
+        video_fps = probe_video_fps(video_path)
+
         # V3C assets are optional and independently fall back below.  The
         # official shot map is also used to attach an auditable shot_id to
         # every indexed keyframe when the matching assets are present.
-        official_shots = v3c_assets.attach_keyframes(video_name, v3c_assets.load_shots(video_name))
+        official_shots = v3c_assets.attach_keyframes(
+            video_name, v3c_assets.load_shots(video_name, fps=video_fps)
+        )
         official_metadata = v3c_assets.load_metadata(video_name)
         official_keyframe_count = sum(1 for shot in official_shots if shot.keyframe_path is not None)
         official_text_parts = [
@@ -236,31 +261,45 @@ def main():
             scenes = refine_scene_boundaries(video_path, scenes, clip_embedder)
             print(f"Scene merge (VIREO-inspired): {pre_merge_count} -> {len(scenes)} scenes.")
 
+        # Long shots are split into sub-shots before indexing: result
+        # diversification keeps one hit per (video, scene), so an uncut
+        # sequence covering several distinct moments could otherwise only ever
+        # surface one of them.
+        scene_specs = build_scene_specs(
+            scenes, official_shots,
+            max_duration=SUBSHOT_MAX_DURATION_SEC,
+            min_duration=SUBSHOT_MIN_DURATION_SEC,
+            enabled=SUBSHOT_SPLIT_ENABLED,
+        )
+        if len(scene_specs) != len(scenes):
+            print(f"Sub-shot split: {len(scenes)} shots -> {len(scene_specs)} indexing units.")
 
-        for scene_idx, (start_sec, end_sec) in enumerate(scenes):
-            print(f"Processing Scene {scene_idx}: {start_sec:.2f}s - {end_sec:.2f}s")
-            official_shot = official_shots[scene_idx] if scene_idx < len(official_shots) else None
-            shot_id = stable_shot_id(video_name, scene_idx, official_shot.shot_id if official_shot else None)
-            
-            # Extract candidates
-            candidates = []
-            if V3C_OFFICIAL_KEYFRAMES_ENABLED and official_shot is not None:
-                candidate = v3c_assets.load_keyframe_candidate(official_shot)
-                if candidate is not None:
-                    candidates = [candidate]
-                    print(f"  Using official V3C keyframe for {official_shot.shot_id}.")
-            if not candidates:
-                candidates = extract_candidate_frames(video_path, start_sec, end_sec)
-            if not candidates:
-                continue
+
+        for scene_idx, spec in enumerate(scene_specs):
+            start_sec, end_sec = spec.start, spec.end
+            official_shot = spec.official_shot
+            part_label = f" (part {spec.part_index + 1}/{spec.part_count})" if spec.is_part else ""
+            print(f"Processing Scene {scene_idx}{part_label}: {start_sec:.2f}s - {end_sec:.2f}s")
+            shot_id = stable_shot_id(video_name, scene_idx, spec.official_shot_id())
+
+            # One decode per scene, at the Fast pathway's dense rate. The
+            # index candidates and the motion frames are both drawn from it;
+            # the scene used to be decoded twice, and the dense pass discarded
+            # everything it had not motion-sampled.
+            dense_frames = decode_scene_frames(
+                video_path, start_sec, end_sec, dense_sampling_fps=FAST_PATHWAY_DENSE_SAMPLING_FPS
+            )
+            candidates = subsample_candidates(
+                dense_frames, FAST_PATHWAY_DENSE_SAMPLING_FPS, KEYFRAME_CANDIDATE_FPS
+            )
 
             # DAKE pre-filter (training-free, no model inference): drops the
             # candidates with the least JPEG-size "steepness" (U-CESE
-            # arXiv:2605.23274) before the much more expensive CLIP/Qwen
-            # embedding passes below ever see them. Supplementary to AKS, not
-            # a replacement - AKS's own variance budget + farthest-point
-            # sampling still run afterward on whatever this keeps.
-            if KEYFRAME_DAKE_ENABLED:
+            # arXiv:2605.23274) before the much more expensive embedding pass
+            # sees them. Only worth running once there is enough to thin - on
+            # a ~3s master shot it used to discard a third of an already tiny
+            # candidate list to save a negligible amount of compute.
+            if KEYFRAME_DAKE_ENABLED and len(candidates) >= KEYFRAME_DAKE_MIN_CANDIDATES:
                 pre_dake_count = len(candidates)
                 candidates = dake_prefilter_candidates(
                     candidates, keep_ratio=KEYFRAME_DAKE_RATIO,
@@ -268,16 +307,37 @@ def main():
                 )
                 print(f"Scene {scene_idx}: DAKE pre-filter kept {len(candidates)}/{pre_dake_count} candidates.")
 
-            # Adaptive Keyframe Sampling: a cheap CLIP pass over this scene's
-            # candidates decides how many keyframes it needs (static scenes
-            # keep few, dynamic scenes keep more), then farthest-point
-            # sampling picks that many via the real (Qwen) embedding space.
+            # The official keyframe joins the candidate pool as a guaranteed
+            # member rather than replacing it. It is the frame the competition
+            # identifies a shot by, so it must stay indexed - but it is one
+            # frame at the shot's midpoint, and letting it be the only
+            # candidate capped the whole corpus at one indexed frame per shot.
+            forced_indices = []
+            if V3C_OFFICIAL_KEYFRAMES_ENABLED and spec.owns_official_keyframe():
+                official_candidate = v3c_assets.load_keyframe_candidate(official_shot, fps=video_fps)
+                if official_candidate is not None:
+                    candidates, forced_position = insert_official_candidate(candidates, official_candidate)
+                    forced_indices = [forced_position]
+                    print(f"  Anchored official V3C keyframe for {official_shot.shot_id}.")
+            if not candidates:
+                continue
+
+            # A cheap CLIP pass sizes the VLM tier only (static scenes need
+            # fewer described frames than dynamic ones). What gets INDEXED is
+            # decided separately, by coverage - see select_index_and_vlm_keyframes.
             variance = compute_scene_variance(candidates, clip_embedder)
-            budget = get_adaptive_budget(variance)
-            print(f"Scene {scene_idx}: variance={variance:.4f} -> keyframe budget={budget}")
-            diverse_keyframes = select_diverse_keyframes(candidates, embedder, budget=budget)
-            print(f"Scene {scene_idx}: Selected {len(diverse_keyframes)} / {len(candidates)} keyframes.")
-            
+            vlm_budget = min(get_adaptive_budget(variance), KEYFRAME_VLM_MAX_BUDGET)
+            embed_and_score_candidates(candidates, embedder)
+            index_keyframes, vlm_keyframes = select_index_and_vlm_keyframes(
+                candidates, embedder, vlm_budget=vlm_budget, forced_indices=forced_indices,
+            )
+            vlm_frame_ids = {id(frame) for frame in vlm_keyframes}
+            print(
+                f"Scene {scene_idx}: variance={variance:.4f} -> "
+                f"{len(index_keyframes)}/{len(candidates)} indexed, {len(vlm_keyframes)} described."
+            )
+            diverse_keyframes = index_keyframes
+
             # Environmental Audio processing per scene
             if extracted_wav:
                 print(f"  Extracting ambient audio (CLAP) embedding for scene {scene_idx}...")
@@ -292,29 +352,37 @@ def main():
                 }
                 indexer.index_audio_point(str(uuid.uuid4()), clap_vector, audio_payload)
 
-            # Convert numpy frames to PIL for VLMs
+            # Convert numpy frames to PIL. Every indexed frame needs one for
+            # the secondary embedder / region crops; only the VLM tier is sent
+            # to the VLM.
             pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
+            pil_vlm_keyframes = [
+                pil for pil, kf in zip(pil_keyframes, diverse_keyframes) if id(kf) in vlm_frame_ids
+            ]
 
-            # Fast pathway: independent of AKS above - denser, motion-weighted
-            # frames (via optical flow, see motion_sampling.py) for temporal
-            # coverage, at a much lower per-frame token budget than the Slow
-            # keyframes above (enforced inside generate_multi_image()).
-            print(f"  Selecting Fast-pathway motion frames for scene {scene_idx}...")
-            fast_frames = select_fast_pathway_frames_for_scene(video_path, start_sec, end_sec)
+            # Fast pathway: denser, motion-weighted frames (via optical flow,
+            # see motion_sampling.py) for temporal coverage, at a much lower
+            # per-frame token budget than the keyframes above (enforced inside
+            # generate_multi_image()). Drawn from the decode above rather than
+            # re-decoding the scene.
+            fast_frames = select_fast_pathway_frames_from_decoded(dense_frames, end_sec - start_sec)
             pil_fast_frames = [Image.fromarray(f["frame_img"]) for f in fast_frames]
             print(f"Scene {scene_idx}: Selected {len(pil_fast_frames)} Fast-pathway frames.")
 
             # Generate Scene-level Narrative Caption
             print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
-            scene_narrative = captioner.generate_scene_narrative(pil_keyframes, pil_fast_frames)
+            scene_narrative = captioner.generate_scene_narrative(pil_vlm_keyframes, pil_fast_frames)
 
             # Unified per-frame VLM analysis (temporal caption + structured
             # attributes in ONE call per frame instead of two), batched
-            # across all of this scene's keyframes in a single generate_batch()
-            # call so a concurrent/batch-serving VLM backend (e.g. vLLM, see
+            # across the VLM tier in a single generate_batch() call so a
+            # concurrent/batch-serving VLM backend (e.g. vLLM, see
             # host_vllm.sh) processes them together instead of one at a time.
-            print(f"  Analyzing {len(pil_keyframes)} keyframes with VLM (batched, unified prompt)...")
-            frame_analyses = captioner.generate_frame_analysis_batch(pil_keyframes)
+            print(f"  Analyzing {len(pil_vlm_keyframes)} keyframes with VLM (batched, unified prompt)...")
+            vlm_analyses = captioner.generate_frame_analysis_batch(pil_vlm_keyframes)
+            analysis_by_frame = {
+                id(frame): analysis for frame, analysis in zip(vlm_keyframes, vlm_analyses)
+            }
 
             # Segment-level Structured Events (ordered_events/actions): a
             # text-only synthesis call over this scene's own per-frame
@@ -323,7 +391,7 @@ def main():
             print(f"  Extracting ordered events (VLM, text-only) for scene {scene_idx}...")
             scene_frame_captions = [
                 {"timestamp": kf["timestamp"], "caption": analysis.get("caption", "")}
-                for kf, analysis in zip(diverse_keyframes, frame_analyses)
+                for kf, analysis in zip(vlm_keyframes, vlm_analyses)
             ]
             scene_events = captioner.generate_scene_events(scene_frame_captions)
 
@@ -338,22 +406,30 @@ def main():
                 timestamp = kf["timestamp"]
                 frame_vector = kf["embed"]
                 secondary_vector = secondary_embedder.embed_image(frame_img) if secondary_embedder else None
-                analysis = frame_analyses[kf_idx]
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
-                # SAM3-gated Object Detection
-                detected = detect_objects(region_proposer, detector, frame_img)
+                # Only the VLM tier pays for description, detection and OCR.
+                # The remaining indexed frames exist to make their moment
+                # retrievable by embedding; they inherit the scene's narrative
+                # and speech context for the text index. This is what keeps a
+                # wider index from multiplying the expensive passes.
+                analysis = analysis_by_frame.get(id(kf))
+                is_vlm_frame = analysis is not None
+                detected, regions, ocr_results, ocr_text = [], [], [], ""
+                if is_vlm_frame:
+                    print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
+                    detected, regions = detect_objects(region_proposer, detector, frame_img)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6)...")
-                # SAM3-gated OCR extraction and normalization
-                ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
-                ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
+                    print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6)...")
+                    ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
+                    ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
+                else:
+                    analysis = {}
 
                 temporal_caption = analysis.pop("caption", "")
 
                 # Merge structured attributes with detector results
                 final_attrs = captioner.merge_attributes_with_detections(analysis, detected)
-                
+
                 # Flatten detected labels for BM25 text blob
                 detected_labels = final_attrs.get("objects", [])
                 
@@ -403,6 +479,7 @@ def main():
                         else ("v3c_shot_boundary" if official_shot else "local_sampling")
                     ),
                     "keyframe_sharpness": kf.get("sharpness"),
+                    "vlm_described": is_vlm_frame,
                     "text_blob": text_blob
                 }
 
@@ -413,6 +490,22 @@ def main():
                 )
                 point_id = stable_frame_point_id(video_name, frame_key)
                 indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
+
+                # Region-level points from the proposals this frame already
+                # produced for detection/OCR gating - only the VLM tier has
+                # them, which is also where OCR text exists to attach.
+                if REGION_INDEXING_ENABLED and regions:
+                    region_count = index_region_crops(
+                        indexer=indexer, embedder=embedder, video_name=video_name,
+                        frame_img=frame_img, regions=regions,
+                        parent_point_id=point_id, parent_payload=payload,
+                        max_regions=REGION_INDEX_MAX_PER_FRAME,
+                        min_area_ratio=REGION_INDEX_MIN_AREA_RATIO,
+                        max_area_ratio=REGION_INDEX_MAX_AREA_RATIO,
+                    )
+                    if region_count:
+                        print(f"    Indexed {region_count} region crops for this keyframe.")
+
                 shot_frame_vectors.append(frame_vector)
                 shot_quality_scores.append(kf.get("sharpness"))
                 shot_frame_point_ids.append(point_id)
@@ -458,7 +551,7 @@ def main():
         ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
 
         # SAM3-gated Object detection
-        detected = detect_objects(region_proposer, detector, img)
+        detected, _regions = detect_objects(region_proposer, detector, img)
         detected_labels = [obj["label"] for obj in detected]
 
         # Unified VLM analysis (caption + structured attributes in one call)

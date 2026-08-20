@@ -36,6 +36,42 @@ def test_build_cqr_prompt_contains_latest_query_and_history():
     assert "what is he holding" in prompt
 
 
+def test_format_history_renders_clarification_question_last_in_the_turn():
+    history = [{
+        "query": "một người phụ nữ đang nấu ăn",
+        "rejected": ["a man cycling"],
+        "clarification_asked": "người phụ nữ đó mặc áo màu gì?",
+    }]
+    lines = format_history(history).splitlines()
+    assert lines[0].startswith("User:")
+    # must be the turn's closing line - it is what the NEXT user turn answers
+    assert lines[-1] == "System asked: người phụ nữ đó mặc áo màu gì?"
+
+
+def test_format_history_omits_clarification_line_when_absent():
+    assert "System asked:" not in format_history([{"query": "q"}])
+
+
+def test_format_history_keeps_vqa_answer_and_question_distinct():
+    history = [{"query": "q", "answer": "a bus", "clarification_asked": "what colour?"}]
+    rendered = format_history(history)
+    assert "System: a bus" in rendered
+    assert "System asked: what colour?" in rendered
+
+
+def test_cqr_prompt_demonstrates_the_clarification_shape():
+    # Example 4 must teach both halves of the live shape: a "System asked:"
+    # line in History, and the single-line composed "Latest Query:" the
+    # frontend actually sends (App.tsx joins with ". ", never a newline).
+    prompt = build_cqr_prompt("q", [{"query": "h"}])
+    assert "System asked:" in prompt
+    assert "Additional detail from operator:" in prompt
+    example_block = prompt.split("Now do the same:")[0]
+    for line in example_block.splitlines():
+        if line.startswith("Latest Query:"):
+            assert "\n" not in line
+
+
 def test_build_cqr_prompt_has_at_least_three_examples():
     prompt = build_cqr_prompt("q", [{"query": "prev"}])
     assert prompt.count("Rewritten Query:") >= 4

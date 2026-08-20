@@ -30,6 +30,14 @@ LOG_FILE_PATH = BACKEND_DIR / "preprocessing.log"
 sys.path.append(str(WORKSPACE_ROOT))
 sys.path.append(str(WORKSPACE_ROOT / "inference-code"))
 
+# Safe to import at module level (unlike config/models/search.hybrid_search,
+# which the endpoints import lazily): search/ is a namespace package and
+# neither session_history.py nor conversational_context.py has any imports of
+# its own, so this pulls in no torch/qdrant/config side effects. Module level
+# rather than repeated per endpoint because six of them now refresh the cache.
+from search.conversational_context import record_feedback_in_history
+from search.session_history import build_candidate_info, trim_history
+
 app = FastAPI(title="Multimedia Retrieval API", version="1.0.0")
 
 # Enable CORS for frontend development
@@ -109,12 +117,20 @@ _dres_session_id = None
 # reset needed when DRES moves to the next task.
 _avs_submitted_by_task: dict = {}
 # KIS-C clarification-question trigger (see HybridSearcher.compute_ambiguity_score):
-# 0.0-1.0 ratio of distinct videos among the top candidates; above this,
-# /api/search generates a clarifying question instead of just returning
-# results the operator has to disambiguate unaided. Webapp-only knob (not
-# used by CLI/batch_query.py/evaluation), so it lives here rather than
-# inference-code/config.py.
-AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.7"))
+# at or above this, /api/search generates a clarifying question instead of
+# just returning results the operator has to disambiguate unaided. Webapp-only
+# knob (not used by CLI/batch_query.py/evaluation), so it lives here rather
+# than inference-code/config.py.
+#
+# Since kis_c_scoring.MARGIN_WEIGHT became 1.0 the score is exactly top2/top1
+# over the diversified pool, so this reads directly as "ask when the runner-up
+# scores at least half the winner". Retuned from 0.7 to 0.5 because the old
+# value was calibrated against the previous 0.5/0.5 blend, whose constant
+# distinct-video term pinned the score into [0.5, 1.0] - carrying 0.7 over
+# unchanged would have silently made the gate far stricter. Measured on a
+# replay of the real pipeline: a clear winner scores 0.05-0.33, a target with
+# one strong rival 0.71, and a pool of unrelated videos 0.98.
+AMBIGUITY_THRESHOLD = float(os.getenv("AMBIGUITY_THRESHOLD", "0.5"))
 
 
 def _check_avs_duplicate(task_id: str, video_name: Optional[str], force: bool, submitted_by_task: dict) -> Optional[dict]:
@@ -327,6 +343,41 @@ def get_status():
         "preprocessing_active": is_preprocessing
     }
 
+def _reset_session_state():
+    """
+    Clears every per-task field of the single global interactive session.
+    Pure dict mutation, factored out of the endpoint so the reset semantics
+    stay in one place - `_session_state` is rebound field-by-field rather
+    than replaced, so any module holding a reference to the same dict (or to
+    _session_state["history"], which record_feedback_in_history/trim_history
+    mutate in place) observes the reset.
+    """
+    _session_state["history"].clear()
+    _session_state["last_query_vector"] = None
+    _session_state["pending_clarification"] = None
+    _session_state["last_candidate_info"] = {}
+
+
+@app.post("/api/session/reset")
+def reset_session():
+    """
+    Drops the conversational session (CQR history, Rocchio base vector,
+    pending clarification, candidate cache) so the NEXT search starts clean.
+
+    Required because one backend process serves a whole VBS session of many
+    consecutive tasks: without this, turn 1 of a new task is CQR-rewritten
+    against the previous task's queries, which corrupts exactly the mode
+    (KIS-C) that depends on history most. Deliberately operator-triggered
+    rather than driven off DRES task changes - dres_client.get_current_task's
+    response fields are still unverified against a live instance, so keying
+    an automatic reset on `task_id` would make correctness depend on a field
+    that may not exist.
+    """
+    turns = len(_session_state["history"])
+    _reset_session_state()
+    return {"status": "ok", "cleared_turns": turns}
+
+
 @app.post("/api/search")
 async def run_search(request: SearchRequest):
     """
@@ -391,18 +442,17 @@ async def run_search(request: SearchRequest):
         # rewrite resolve references back to this one.
         _session_state["last_query_vector"] = searcher.embedder.embed_text(resolved_query)
         _session_state["history"].append({"query": resolved_query})
+        # Cap the history the NEXT rewrite_query_cqr call has to read. Every
+        # turn is rendered verbatim into the few-shot prompt, so an untrimmed
+        # session grows both the prompt and the rewrite latency without bound
+        # on a 7-minute clock. Keeps turn 1 (the task's opening description).
+        trim_history(_session_state["history"])
 
         # Cache {id: {source_file, caption}} for this turn's fused pool so
         # /api/feedback can describe the operator's accepted/rejected picks
         # in words for the next CQR rewrite, without an extra Qdrant payload
         # fetch. Rebuilt (not appended) every search - naturally bounded.
-        _session_state["last_candidate_info"] = {
-            c["id"]: {
-                "source_file": (c.get("payload") or {}).get("source_file"),
-                "caption": ((c.get("payload") or {}).get("caption") or "")[:200],
-            }
-            for c in candidates
-        }
+        _session_state["last_candidate_info"] = build_candidate_info(candidates)
 
         # Consume the KIS-C clarification flag once per search, regardless of
         # query type, so a stale flag can never boost a much later unrelated
@@ -436,13 +486,14 @@ async def run_search(request: SearchRequest):
             # the ambiguity check: a discriminating answer sharpens the
             # top-1/top-2 margin, which lowers the new ambiguity score and
             # stops the system asking a redundant second question.
-            if pending_clarification and (request.clarification_answer or "").strip():
+            clarification_ids = (pending_clarification or {}).get("candidate_ids") or []
+            answering_clarification = bool(
+                pending_clarification and (request.clarification_answer or "").strip()
+            )
+            if answering_clarification:
                 candidates = boost_by_clarification_answer(
-                    candidates,
-                    pending_clarification.get("candidate_ids") or [],
-                    request.clarification_answer,
+                    candidates, clarification_ids, request.clarification_answer,
                 )
-                clarification_boost_applied = True
 
             # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
             # fused candidate pool is spread across many unrelated videos
@@ -469,18 +520,46 @@ async def run_search(request: SearchRequest):
                     "question": clarification_question,
                     "candidate_ids": summary_ids,
                 }
+                # Record the question on THIS turn so the next CQR rewrite can
+                # see what the operator's reply is answering. Without it the
+                # rewriter receives a bare "áo màu vàng" and has to guess which
+                # attribute was being narrowed - format_history renders this as
+                # the turn's closing "System asked:" line, and
+                # CQR_FEWSHOT_EXAMPLES' Example 4 demonstrates the shape.
+                if clarification_question:
+                    _session_state["history"][-1]["clarification_asked"] = clarification_question
 
             top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
             top_candidates = [
                 c for c in top_candidates
                 if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
             ]
+            # Re-apply the boost to `rerank_score`, the key that actually
+            # orders what the operator sees. The pass above only moves
+            # `rrf_score`, and rerank_type1 sorts SOLELY by rerank_score - so
+            # on its own that pass can change which candidates reach the
+            # reranker but never the order they come back in, which is almost
+            # always a no-op since the clarification candidates were already
+            # top-ranked. Deliberately AFTER the RERANK_SCORE_THRESHOLD
+            # filter: the operator's answer should re-order the surviving
+            # candidates, not push a candidate the VLM scored below the
+            # quality floor back into the results.
+            if answering_clarification:
+                top_candidates = boost_by_clarification_answer(
+                    top_candidates, clarification_ids, request.clarification_answer,
+                    score_key="rerank_score",
+                )
+                clarification_boost_applied = any(
+                    c.get("clarification_overlap") for c in top_candidates
+                )
+
             for idx, c in enumerate(top_candidates):
                 results.append({
                     "rank": idx + 1,
                     "score": c.get("rerank_score", 0.0),
                     "id": c["id"],
                     "payload": c["payload"],
+                    "clarification_overlap": c.get("clarification_overlap"),
                     "matched_via": c.get("matched_via", [])
                 })
                 
@@ -575,8 +654,12 @@ async def run_search(request: SearchRequest):
             "type": request.type,
             "results": results,
             "clarification": clarification_question,
-            # Explainability (mirrors `matched_via`): whether this turn's
-            # ranking was adjusted by kis_c_scoring.boost_by_clarification_answer.
+            # Explainability (mirrors `matched_via`): true only when the
+            # clarification answer actually moved a DISPLAYED result's score,
+            # not merely when an answer was supplied - it used to be set the
+            # moment a boost was attempted, reporting a ranking change the
+            # operator could not see. Per-result `clarification_overlap` shows
+            # which hits it moved and by how much.
             "clarification_boost_applied": clarification_boost_applied,
         }
     except Exception as e:
@@ -616,7 +699,6 @@ def run_feedback(request: FeedbackRequest):
         # history turn means the NEXT rewrite_query_cqr prompt knows which
         # readings were already rejected/confirmed. Same single CQR call as
         # before - prompt context only, no new call.
-        from search.conversational_context import record_feedback_in_history
         record_feedback_in_history(
             _session_state["history"], _session_state["last_candidate_info"],
             request.positive_ids, request.negative_ids,
@@ -625,6 +707,10 @@ def run_feedback(request: FeedbackRequest):
         hits = searcher.dense_search_by_vector(adjusted_vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        # These results REPLACE what the operator sees, so the next round of
+        # accept/reject will name ids from this list - refresh the cache or
+        # record_feedback_in_history will describe them as raw UUIDs.
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "feedback",
             f"positive={request.positive_ids} negative={request.negative_ids}",
@@ -655,6 +741,7 @@ def run_query_by_example(request: QueryByExampleRequest):
         hits = searcher.dense_search_by_vector(vector, top_k=request.top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "query_by_example", f"point_id={request.point_id}", [r["id"] for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
@@ -688,6 +775,7 @@ async def run_search_by_image(file: UploadFile = File(...), top_k: int = Form(20
         hits = searcher.dense_search_by_vector(vector, top_k=top_k)
         results = [{"rank": idx + 1, "score": hit["score"], "id": hit["id"], "payload": hit["payload"]}
                    for idx, hit in enumerate(hits)]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "search_by_image", f"uploaded_image:{file.filename}", [r["id"] for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
@@ -764,6 +852,7 @@ async def run_search_by_video(file: UploadFile = File(...), top_k: int = Form(20
             for index, hit in enumerate(ranked_hits)
         ]
         _session_state["last_query_vector"] = last_visual_vector
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         interaction_log.log_query(
             "search_by_video",
             f"uploaded_video:{file.filename}",
@@ -884,6 +973,7 @@ async def run_in_video_search(request: InVideoSearchRequest):
             }
             for idx, c in enumerate(top_candidates)
         ]
+        _session_state["last_candidate_info"] = build_candidate_info(results)
         return {"query": request.query, "video_name": request.video_name, "results": results}
     except Exception as e:
         import traceback

@@ -169,15 +169,39 @@ function SearchView() {
   const isConversationalTask = taskMode === "kis-c"
   const isAvsTask = taskMode === "avs"
 
-  const handleTaskModeChange = (mode: TaskMode) => {
-    setTaskMode(mode)
-    setTemporalMode(false)
+  const clearConversationState = () => {
     setResults([])
     setError(null)
     setClarification(null)
     setClarificationAnswer("")
     setKisCMessages([])
+    setExpandedIndex(null)
+  }
+
+  // One backend process serves a whole VBS session of consecutive tasks, and
+  // the backend's CQR history/Rocchio vector are global to that process - so
+  // clearing only React state would leave the NEXT task's first query being
+  // rewritten against the previous task's turns. Always clear both sides.
+  const handleResetSession = async (notify = true) => {
+    clearConversationState()
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/session/reset`, { method: "POST" })
+      if (!response.ok) throw new Error("reset failed")
+      const data = await response.json()
+      if (notify) setActionMessage(`Đã reset phiên - xoá ${data.cleared_turns} lượt hội thoại.`)
+    } catch {
+      setError("Không reset được phiên trên backend - lịch sử CQR có thể còn sót lại từ task trước.")
+    }
+  }
+
+  const handleTaskModeChange = (mode: TaskMode) => {
+    setTaskMode(mode)
+    setTemporalMode(false)
     if (mode !== "kis-v") setKisVideoFile(null)
+    // Switching task mode is a task boundary in practice - reset the backend
+    // session too. Not sufficient on its own (two consecutive KIS-C tasks
+    // never fire this), which is why the explicit button exists as well.
+    handleResetSession(false)
   }
 
   const acceptKisVideo = (file: File | undefined) => {
@@ -231,8 +255,13 @@ function SearchView() {
     if (temporalMode && extraQueries.some((q) => !q.trim())) return
     if (isConversationalTask && clarification && !clarificationAnswer.trim()) return
 
+    // Single line on purpose: this string lands in the CQR prompt's
+    // "Latest Query:" slot, and a newline split it into a phantom extra field
+    // that matches none of the few-shot examples. Keep the wording in sync
+    // with CQR_FEWSHOT_EXAMPLES' Example 4, which demonstrates exactly this
+    // shape so the model pattern-matches the live slot.
     const requestQuery = isConversationalTask && clarificationAnswer.trim()
-      ? `${query}\nAdditional detail from operator: ${clarificationAnswer.trim()}`
+      ? `${query}. Additional detail from operator: ${clarificationAnswer.trim()}`
       : query
 
     setLoading(true)
@@ -654,6 +683,16 @@ function SearchView() {
                       <SelectItem value="vqa">VQA · Visual question</SelectItem>
                     </SelectContent>
                   </Select>
+                  <button
+                    type="button"
+                    onClick={() => handleResetSession()}
+                    disabled={loading}
+                    title="Xoá lịch sử hội thoại trên backend trước khi bắt đầu task mới"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 disabled:opacity-50"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Reset phiên (task mới)
+                  </button>
                 </div>
                 )}
 

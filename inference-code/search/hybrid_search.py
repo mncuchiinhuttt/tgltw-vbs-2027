@@ -10,8 +10,36 @@ from config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT,
     SECONDARY_EMBEDDER_ENABLED, QDRANT_EXACT_SEARCH,
     HEAGLE_LITE_ENABLED, HEAGLE_SHOT_TOP_K, HEAGLE_FRAME_MULTIPLIER,
+    DENSE_MAX_PER_SCENE, SPARSE_TOP_K_RETRIEVAL,
+    REGION_SEARCH_ENABLED, REGION_SEARCH_TOP_K,
+    QUERY_TIME_EXTRACTION_ENABLED, VIDEO_SOURCE_DIR,
+    QUERY_TIME_EXTRACTION_FPS, QUERY_TIME_EXTRACTION_MAX_FRAMES,
 )
 from search.kis_c_scoring import distinct_video_ratio, score_margin_ambiguity, combine_ambiguity_signals
+from search.query_time_frames import extract_query_time_frames
+
+
+def cap_hits_per_scene(hits: list, max_per_scene: int) -> list:
+    """
+    Keep at most `max_per_scene` hits from any one (video, scene).
+
+    With several frames indexed per shot, a single strongly-matching moment
+    can fill the dense pool with near-duplicates of itself and crowd out every
+    other scene before diversify_by_scene ever gets to look at them. Capping
+    preserves the extra recall the wider index buys without letting one moment
+    consume the candidate budget.
+    """
+    if max_per_scene <= 0:
+        return hits
+    seen: dict = {}
+    capped = []
+    for hit in hits:
+        payload = hit.get("payload") or {}
+        key = (payload.get("source_file"), payload.get("scene_id"))
+        seen[key] = seen.get(key, 0) + 1
+        if seen[key] <= max_per_scene:
+            capped.append(hit)
+    return capped
 
 class HybridSearcher:
     """
@@ -83,13 +111,14 @@ class HybridSearcher:
             search_params=SearchParams(exact=use_exact, hnsw_ef=hnsw_ef),
             **search_kwargs,
         ).points
-        return [
+        hits = [
             {
                 "id": hit.id,
                 "score": hit.score,
                 "payload": hit.payload
             } for hit in search_result
         ]
+        return cap_hits_per_scene(hits, DENSE_MAX_PER_SCENE)
 
     def dense_search(
         self, query: str, top_k: int = TOP_K_RETRIEVAL, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None
@@ -232,7 +261,81 @@ class HybridSearcher:
             } for hit in search_result
         ]
 
-    def sparse_search(self, query: str, top_k: int = TOP_K_RETRIEVAL) -> list:
+    def dense_search_regions(self, query: str, top_k: int = REGION_SEARCH_TOP_K) -> list:
+        """
+        Search the region crops preprocessing indexed with modality="region".
+
+        A pooled frame embedding averages a small object away, so a query for
+        a license plate or a shop sign scores poorly against the whole frame
+        even when the object is plainly there. The crop embeds it on its own.
+
+        Every hit is remapped onto its PARENT frame's point id before being
+        returned, which is what keeps regions out of the mechanisms that key
+        off frame identity: a crop can promote the frame it came from, but it
+        can never appear as a result in its own right, evict its parent from
+        the diversified grid, or add a duplicate frame index to TRAKE's
+        timeline. Returns [] when region indexing was never run, so callers
+        can include it in merge_rrf unconditionally.
+        """
+        if not REGION_SEARCH_ENABLED:
+            return []
+        try:
+            query_vector = self.embedder.embed_text(query)
+            search_result = self.client.query_points(
+                collection_name="visual_index",
+                query=query_vector.tolist() if hasattr(query_vector, "tolist") else list(query_vector),
+                limit=top_k,
+                query_filter=Filter(
+                    must=[FieldCondition(key="modality", match=MatchValue(value="region"))]
+                ),
+                search_params=SearchParams(exact=QDRANT_EXACT_SEARCH),
+                **({"using": "default"} if SECONDARY_EMBEDDER_ENABLED else {}),
+            ).points
+        except Exception as exc:
+            print(f"Warning: region search unavailable ({exc}); continuing without it.")
+            return []
+
+        # Several crops of one frame collapse to a single parent hit, ranked
+        # by their best crop, so a frame with many regions is not rewarded for
+        # quantity alone.
+        best_by_parent: dict = {}
+        for hit in search_result:
+            payload = hit.payload or {}
+            parent_id = payload.get("parent_point_id")
+            if parent_id is None:
+                continue
+            existing = best_by_parent.get(parent_id)
+            if existing is None or hit.score > existing[0]:
+                best_by_parent[parent_id] = (hit.score, payload.get("region_concept") or "region")
+        if not best_by_parent:
+            return []
+
+        # Return the PARENT frame's payload, not the crop's. merge_rrf keys
+        # payloads by point id and lets the last writer win, so handing back a
+        # region payload under a frame's id would replace that frame's
+        # caption, OCR text and detections everywhere downstream.
+        try:
+            parents = self.client.retrieve(
+                collection_name="visual_index", ids=list(best_by_parent), with_payload=True
+            )
+        except Exception as exc:
+            print(f"Warning: could not resolve region parents ({exc}); continuing without them.")
+            return []
+
+        hits = []
+        for parent in parents:
+            score, concept = best_by_parent.get(parent.id, (None, None))
+            if score is None:
+                continue
+            hits.append({
+                "id": parent.id,
+                "score": score,
+                "payload": parent.payload,
+                "matched_region": concept,
+            })
+        return sorted(hits, key=lambda hit: hit["score"], reverse=True)
+
+    def sparse_search(self, query: str, top_k: int = SPARSE_TOP_K_RETRIEVAL) -> list:
         """
         Simulated BM25/keyword match using Qdrant's payload full-text search capability.
         Queries the 'text_blob' payload field containing OCR, captions, and labels.
@@ -373,24 +476,26 @@ class HybridSearcher:
         decides the threshold at which to act on this (e.g. trigger a
         clarification question).
 
-        Combines two signals (search.kis_c_scoring, pure/testable):
-        - distinct_video_ratio: ratio of DISTINCT videos among the top
-          `top_n` candidates - 0.0 (all one video) to 1.0 (every candidate
-          a different video).
-        - score_margin_ambiguity: normalized top-1 vs top-2 score margin -
-          catches the case the count-only ratio misses (a 10-distinct-video
-          pool with a runaway winner vs. one where all 10 are tied both
-          score 1.0 under distinct_video_ratio alone). Margin was chosen
-          over entropy for simplicity (one subtraction, two numbers) - it
-          is only meaningful here because this method runs AFTER
-          temporal_coherence_boost, which spreads out an otherwise
-          near-flat RRF score distribution.
-        Still returns a single float in [0.0, 1.0] on the same scale the
-        AMBIGUITY_THRESHOLD env knob is tuned against - no caller change.
-        Side effect (intentional): a single-candidate pool used to score
-        1.0 (1 distinct / 1) and always triggered a clarification; the
-        margin term is undefined for <2 candidates and returns 0.0, so the
-        combined score now falls below the default 0.7 threshold.
+        Blends two signals (search.kis_c_scoring, pure/testable), but at the
+        current kis_c_scoring.MARGIN_WEIGHT of 1.0 only the second one has
+        any weight:
+        - score_margin_ambiguity (weight 1.0): the top-1 vs top-2 score
+          margin, which simplifies exactly to top2/top1. Meaningful here
+          because this method runs AFTER temporal_coherence_boost, which
+          spreads out an otherwise near-flat RRF score distribution. Margin
+          was chosen over entropy for simplicity, and entropy was later
+          measured to be strictly worse anyway.
+        - distinct_video_ratio (weight 0.0): ratio of DISTINCT videos among
+          the top `top_n` candidates. Retained for tunability but currently
+          inert, because this method also runs AFTER diversify_by_scene -
+          which collapses the pool to one candidate per (source_file,
+          scene_id), so the ratio sits at a constant ~1.0 and carried a
+          fixed offset instead of information. See kis_c_scoring.
+          MARGIN_WEIGHT for the measurements.
+        Still returns a single float in [0.0, 1.0] on the scale the
+        AMBIGUITY_THRESHOLD env knob is compared against - no caller change.
+        A pool of fewer than 2 candidates scores 0.0 (the margin is
+        undefined) and so never triggers a clarification.
         """
         distinct_ratio = distinct_video_ratio(candidates, top_n)
         margin_ambiguity = score_margin_ambiguity(candidates, top_n)
@@ -431,8 +536,9 @@ class HybridSearcher:
         vector search, so it has no exact/HNSW setting to override.
         """
         dense_hits = self.dense_search(query, top_k, exact=exact, hnsw_ef=hnsw_ef)
-        sparse_hits = self.sparse_search(query, top_k)
-        return self.merge_rrf(dense_hits, sparse_hits)
+        sparse_hits = self.sparse_search(query)
+        region_hits = self.dense_search_regions(query)
+        return self.merge_rrf(dense_hits, sparse_hits, region_hits)
 
     def get_all_points_for_video(self, video_name: str, limit: int = 10000) -> list:
         """
@@ -443,22 +549,33 @@ class HybridSearcher:
         the handful of frames that happened to score well enough to reach the
         candidate pool. Includes stored vectors (with_vectors=True) so
         callers can compute similarity without re-embedding frame images.
-        Single scroll call with a generous limit rather than full pagination
-        - a reasonable simplification since one video's keyframe count is
-        typically at most a few hundred, well under the default limit.
+        Paginated rather than a single generous-limit call: this used to
+        assume a video held "at most a few hundred" keyframes, which stopped
+        being true once several frames are indexed per shot instead of one. A
+        silent truncation here would hide the tail of a long video from
+        TRAKE's alignment and from in-video refinement, which is exactly the
+        recall the wider index was meant to buy.
         """
-        points, _ = self.client.scroll(
-            collection_name="visual_index",
-            scroll_filter=Filter(
-                must=[
-                    FieldCondition(key="modality", match=MatchValue(value="visual")),
-                    FieldCondition(key="source_file", match=MatchValue(value=video_name)),
-                ]
-            ),
-            limit=limit,
-            with_payload=True,
-            with_vectors=True,
+        scroll_filter = Filter(
+            must=[
+                FieldCondition(key="modality", match=MatchValue(value="visual")),
+                FieldCondition(key="source_file", match=MatchValue(value=video_name)),
+            ]
         )
+        points = []
+        offset = None
+        while len(points) < limit:
+            batch, offset = self.client.scroll(
+                collection_name="visual_index",
+                scroll_filter=scroll_filter,
+                limit=min(1000, limit - len(points)),
+                offset=offset,
+                with_payload=True,
+                with_vectors=True,
+            )
+            points.extend(batch)
+            if offset is None or not batch:
+                break
         # When SECONDARY_EMBEDDER_ENABLED, "visual_index" uses named vectors
         # and qdrant-client returns p.vector as {"default": [...], "siglip":
         # [...]} instead of a plain list - normalize back to the primary
@@ -647,4 +764,47 @@ class HybridSearcher:
                     "payload": p["payload"],
                 }
 
+            # Everything above reorders frames that were already indexed, so
+            # it cannot recover a moment offline selection never kept. This
+            # decodes the video and scores frames that have no index point at
+            # all, which is the only step here that raises the recall ceiling
+            # rather than redistributing what is under it.
+            for extracted in self._extract_query_time_frames(video, query_vector, video_points, top_frames_per_video):
+                merged_by_id[extracted["id"]] = extracted
+
         return sorted(merged_by_id.values(), key=lambda h: h.get("rrf_score", 0.0), reverse=True)
+
+    def _extract_query_time_frames(self, video: str, query_vector, video_points: list, top_frames: int) -> list:
+        """Decode and score frames of `video` that are not in the index."""
+        if not QUERY_TIME_EXTRACTION_ENABLED or not VIDEO_SOURCE_DIR:
+            return []
+        known = {
+            point["payload"].get("frame_idx")
+            for point in video_points
+            if point.get("payload") and point["payload"].get("frame_idx") is not None
+        }
+        try:
+            extracted = extract_query_time_frames(
+                video_name=video,
+                video_source_dir=VIDEO_SOURCE_DIR,
+                embedder=self.embedder,
+                query_vector=query_vector,
+                known_frame_indices=known,
+                sampling_fps=QUERY_TIME_EXTRACTION_FPS,
+                max_frames=QUERY_TIME_EXTRACTION_MAX_FRAMES,
+                top_frames=top_frames,
+            )
+        except Exception as exc:
+            print(f"Warning: query-time frame extraction failed for {video} ({exc}).")
+            return []
+
+        return [
+            {
+                # Not a Qdrant point - it was decoded just now - so the id is
+                # synthetic and marked, and must never be fed back to Qdrant.
+                "id": f"query-time:{video}:{frame['payload']['frame_idx']}",
+                "rrf_score": frame["similarity"] * (1.0 / (RRF_CONSTANT + 1)),
+                "payload": frame["payload"],
+            }
+            for frame in extracted
+        ]
