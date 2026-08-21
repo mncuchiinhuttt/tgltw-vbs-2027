@@ -1,0 +1,255 @@
+% Draft system paper for TGLTW VBS 2027.
+% All values marked \tbd{} require a frozen benchmark run before submission.
+\documentclass[runningheads]{llncs}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    citecolor=green!50!black,
+    urlcolor=blue!80!black
+}
+
+\newcommand{\tbd}{\textit{To be measured}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{TGLTW: A Live-First Multimodal Video Retrieval System for VBS 2027}
+\titlerunning{TGLTW: Live-First Video Retrieval for VBS 2027}
+
+\author{Long Minh Vo\inst{1,2} \and
+Hung Gia Vu\inst{1} \and
+Khoa Huynh Minh Nguyen\inst{1} \and
+Kien Vi Tran\inst{1} \and
+Danh Kim Tran\inst{1} \and
+Thi-Tuyet-Trang Chau\inst{1}}
+
+\authorrunning{L. M. Vo et al.}
+
+\institute{School of Science, Engineering and Technology, RMIT University Vietnam, Ho Chi Minh City, Vietnam \\
+\and
+CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted Students, Vinh Long, Vietnam}
+
+\maketitle
+
+\begin{abstract}
+Interactive video retrieval systems are evaluated under a different constraint from offline image or video benchmarks: the operator, the interface, and the retrieval engine must jointly find and submit evidence before the live task clock expires. This paper presents TGLTW, our live-first multimodal retrieval system for the Video Browser Showdown (VBS) 2027. The system combines offline keyframe, speech, OCR, metadata, and ambient-audio processing with approximate vector search, full-text retrieval, reciprocal-rank fusion, and a browser-based interaction loop. It supports the official VBS modes KIS-V, KIS-T, KIS-C, AVS, and VQA while keeping temporal browsing and in-video refinement as explicit operator actions. A central engineering contribution is an evidence contract for VQA: a response is accepted only when it is grounded in a real candidate frame, has a strict JSON schema, and preserves candidate/video/frame identity through the API and user interface; unavailable or malformed evidence fails closed. We describe the architecture and a reproducible evaluation plan. Quantitative results are intentionally left as \tbd{} until the query manifest, index snapshot, and hardware configuration are frozen.
+
+\keywords{Video retrieval \and Multimodal search \and Interactive retrieval \and Video Browser Showdown \and Grounded VQA \and Live systems}
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+The Video Browser Showdown (VBS) is an interactive evaluation of multimedia retrieval systems in which a human operator searches a known video collection and submits candidate segments during a timed session~\cite{vbs2026}. The system therefore has two coupled objectives: retrieve semantically relevant evidence and expose it quickly enough for the operator to verify it. A retrieval model that improves offline recall but adds an unbounded sequence of model calls can be less useful during a live task than a slightly less accurate model with predictable latency.
+
+TGLTW is designed around this live constraint. The current implementation maintains separate visual, speech, and ambient-audio paths, combines dense and payload full-text retrieval, and uses reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal} before task-specific ranking. Approximate HNSW search~\cite{malkov2018efficient} is the default; exact search, verification, and in-video refinement are explicit precision-escalation actions. The interface presents source media, timestamps, evidence fields, feedback actions, and DRES submission controls in one loop.
+
+The system also makes a distinction that is easy to lose in a rapidly evolving multimedia codebase. The repository contains a source preprocessing pipeline capable of producing enriched VLM, OCR, object, speech, and audio fields, while the live deployment may still point at a legacy Qdrant snapshot with a narrower payload schema. We consequently report the observed running index and the implemented source pipeline separately, and reserve performance claims for frozen replay experiments.
+
+This paper makes three contributions:
+\begin{enumerate}
+    \item a live-first multimodal retrieval architecture that joins dense visual/text search, payload full-text evidence, RRF, conversational context, and diversity-aware browsing;
+    \item task-specific interaction paths for visual KIS, textual and conversational KIS, AVS, and VQA, with expensive operations exposed as bounded operator actions; and
+    \item an auditable VQA grounding and media-provenance contract that rejects missing or malformed evidence rather than fabricating a visual input or returning an answer from a different frame.
+\end{enumerate}
+
+The remainder of the paper describes the task setting and system, specifies the evaluation that is required before making accuracy claims, and records the current limitations of the draft.
+
+\section{Task and Dataset Setting}
+\label{sec:setting}
+
+\subsection{Official task modes}
+
+The VBS workflow implemented by TGLTW exposes five official modes. KIS-V searches from a visual clip example; KIS-T searches for a known item from text; KIS-C adds conversational clarification and relevance feedback; AVS searches for multiple shots and benefits from diversity across videos; and VQA returns a textual answer about visual content. The repository also contains Type~3 temporal code inherited from earlier experiments, but temporal alignment is not presented as a separate official VBS task in this paper.
+
+\subsection{Running index and source pipeline}
+
+At the time of this draft, the deployment notes distinguish the legacy collections observed by the web application from collections produced by the newer source indexer. The following inventory is an operational snapshot, not a benchmark result.
+
+\begin{table}[t]
+\centering
+\caption{Observed legacy index inventory. Counts must be re-recorded with the final benchmark manifest.}
+\label{tab:index-inventory}
+\small
+\begin{tabular}{lll}
+\toprule
+Collection & Modality & Observed points \\
+\midrule
+\code{visual\_keyframes\_v1} & visual keyframes & 178{,}826 \\
+\code{speech\_segments\_v1} & speech transcripts & 16{,}400 \\
+\code{audio\_segments\_v1} & ambient audio & 47{,}436 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The observed visual payload contains source-file and temporal mapping fields, BTC keyframe information, OCR/text evidence, and dataset metadata. Enriched fields such as scene narratives, structured attributes, and object detections may be present in the schema but are not assumed to be populated for every point. The source pipeline additionally supports V3C assets, TransNetV2 shot detection with a controlled fallback, representative-keyframe sampling, OCR, object detection, faster-whisper ASR, M2D-CLAP ambient audio, optional VLM enrichment, and optional SigLIP named vectors. These branches require an index rebuild or a matching collection schema before they can be counted as part of a measured deployment.
+
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{Offline processing and provenance}
+
+For each video, preprocessing resolves available official assets, extracts or reuses audio, obtains shot boundaries, and selects representative frames. Local candidates can be filtered by visual change and sampled with a farthest-point strategy; official keyframe mappings are preserved when their provenance is unambiguous. OCR and object detection are optional enrichments. ASR segments and ambient-audio windows are indexed separately because their native temporal units and embedding spaces differ from visual frames.
+
+Every visual result carries a source file or video identifier, a canonical frame index when available, a timestamp, and the evidence fields that were actually indexed. This mapping is used by both the UI and the VQA path. It prevents a semantic score from being presented without a reproducible location in the original media.
+
+\subsection{Dense, sparse, and fused retrieval}
+
+The online text path searches the original query and, when enabled, a hypothetical description generated by HyDE-style query expansion. Dense search uses the configured visual/text embedding space. Sparse search operates over indexed payload text such as OCR, metadata, speech, captions, and object names when those fields exist. The result lists are fused with RRF:
+\begin{equation}
+\label{eq:rrf}
+\operatorname{RRF}(x)=\sum_{\ell\in\mathcal{L}}\frac{1}{k+\operatorname{rank}_{\ell}(x)},
+\end{equation}
+where $\mathcal{L}$ is the set of retrieval lists and $k$ is the RRF constant. This describes the implemented fusion more accurately than a single weighted cosine-plus-BM25 equation: dense and sparse evidence are produced by separate branches, and their ranks are combined rather than calibrated as one probability.
+
+After fusion, a temporal-coherence heuristic can group nearby hits from the same video, while scene diversification keeps the result grid from being dominated by near-duplicate frames. Neither heuristic is treated as a separate temporal task. The default search remains approximate HNSW; exact search and larger HNSW candidate lists are available as bounded operator overrides.
+
+\subsection{Interactive loop}
+
+The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time.
+
+\section{Task-Specific Retrieval}
+\label{sec:tasks}
+
+\subsection{KIS-V}
+
+The current interface accepts a short visual clip for KIS-V. The backend samples a bounded number of frames, embeds each frame in the same visual space used by the index, searches them independently, and merges the strongest results. The query clip is not inserted into Qdrant. The final evidence remains a source video and timestamp that the operator can inspect before submission.
+
+\subsection{KIS-T and KIS-C}
+
+KIS-T uses the shared text pipeline: query processing, dense and sparse retrieval, RRF, temporal coherence, scene diversification, and a small VLM reranking head. KIS-C adds session context. Clarification answers and relevance feedback are stored with the current turn, used to reformulate the next query, and can shift the query vector toward accepted candidates or away from rejected ones. Verification reranking is disabled by default because it adds model calls; it is an escalation option for a difficult query.
+
+\subsection{AVS}
+
+AVS is implemented as broad text retrieval followed by diversity-aware browsing rather than as a separate learned AVS head. Scene-level diversification reduces repeated frames from a single video, and the operator can browse or search inside a promising video before submitting multiple results. The live judge remains the source of the official AVS score, so automatic coverage and duplicate-rate metrics are reported only as proxies.
+
+\subsection{Grounded VQA}
+\label{sec:vqa}
+
+VQA first decomposes the question into a bounded set of target sub-queries, retrieves candidate frames, and optionally crops a detector box. A candidate is passed to the VLM only if a real keyframe can be loaded or its source video can be decoded. When both are present, the canonical indexed \code{frame\_idx} is used for video seeking; timestamp is a fallback for legacy payloads.
+
+The VLM must return a JSON object with \code{found=true}, a non-empty answer, and finite confidence in $[0,1]$. The answer is stored with candidate ID, video ID, and frame index. Missing media, malformed JSON, \code{found=false}, unknown answers, invalid confidence, VLM errors, and timeouts fail closed to \code{UNKNOWN/N/A} with VQA score zero. No synthetic gray image is used. The backend reuses this candidate-specific answer rather than making a second unbound answer-generation call. With verification disabled, the current fusion is $0.4S_{\mathrm{RRF}}+0.6S_{\mathrm{VQA}}$; when verification is explicitly enabled, the configured three-way weights are used.
+
+This contract has two purposes. It prevents an unavailable frame from receiving a neutral score that can outrank grounded evidence, and it keeps the frame displayed to the operator aligned with the frame that the VLM saw. Media paths are constrained to the server dataset root, and a media decode failure returns an error rather than a fabricated preview.
+
+\section{Experimental Methodology}
+\label{sec:methodology}
+
+The system description above is not itself an evaluation. This section defines the minimum protocol for a defensible VBS paper, following the system-paper pattern of separating architecture, controlled comparisons, and interaction/runtime evidence~\cite{rossetto2021vitrivr}.
+
+\subsection{Corpus, query protocol, and split}
+
+The final experiment will freeze the exact video manifest, index snapshot, query set, task labels, and relevance annotations. The split should prevent a query from being evaluated against a different index revision than the one used during preprocessing. For KIS, each query should identify the relevant video and, where available, the target frame or temporal interval. For VQA, annotations should include the answer and the evidence frame/interval. AVS should record the accepted video set and the duplicate-video policy.
+
+\begin{table}[t]
+\centering
+\caption{Required frozen benchmark metadata.}
+\label{tab:protocol}
+\small
+\begin{tabular}{ll}
+\toprule
+Artifact & Required contents \\
+\midrule
+Manifest & video IDs, paths, durations, checksums \\
+Index snapshot & collection names, schema, dimensions, point counts \\
+Models & embedding/VLM/OCR/ASR IDs and revisions \\
+Runtime & hardware, CUDA, Python lock, provider and timeout \\
+Queries & task, query text, split, relevance/evidence labels \\
+Provenance & git SHA, config and manifest hashes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Baselines and ablations}
+
+The primary retrieval comparison should include dense-only, sparse-only, RRF, RRF with HyDE, and RRF with the VLM reranking head. Additional ablations should remove temporal coherence, scene diversification, detector cropping, grounded VQA, verification reranking, or H-EAGLE-lite one at a time. Exact search and larger HNSW settings should be evaluated as latency--recall trade-offs rather than silently replacing the live default.
+
+\subsection{Metrics}
+
+For KIS, report Recall@1, Recall@5, Recall@10, Recall@20, MRR, nDCG@10, video hit rate, and frame/interval hit rate. For AVS, report unique-video coverage, duplicate rate, accepted-set recall when annotations exist, and operator time; official live judging is reported separately. For VQA, report candidate localization, exact or semantic answer accuracy, grounded-answer rate, and evidence identity parity. For all tasks, report query-processing, retrieval, reranking, VLM, end-to-end, and human-action latency, including p50/p95 warm and cold measurements. The current draft has no frozen ground-truth replay, so all result cells remain \tbd{}.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Retrieval quality}
+
+Table~\ref{tab:retrieval-results} is the result table to fill after the evaluation harness is connected to the frozen manifest. It deliberately contains no invented values.
+
+\begin{table*}[t]
+\centering
+\caption{Retrieval results on the frozen VBS query set. Values are placeholders in this draft.}
+\label{tab:retrieval-results}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & R@1 & R@5 & R@10 & R@20 & MRR & nDCG@10 \\
+\midrule
+Dense only & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} \\
+Sparse only & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} \\
+RRF & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} \\
+RRF + HyDE & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} \\
+RRF + VLM rerank & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} & \tbd{} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\subsection{VQA grounding and latency}
+
+The VQA table should report not only answer accuracy but also how often the answer was supported by the frame actually shown to the VLM and operator. This is particularly important for a live system whose media index and source files can drift.
+
+\begin{table}[t]
+\centering
+\caption{VQA and runtime measurements to be collected.}
+\label{tab:vqa-results}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Measure & Baseline & Grounded path & Difference \\
+\midrule
+Answer accuracy & \tbd{} & \tbd{} & \tbd{} \\
+Grounded-answer rate & \tbd{} & \tbd{} & \tbd{} \\
+Candidate/frame parity & \tbd{} & \tbd{} & \tbd{} \\
+End-to-end p50 (s) & \tbd{} & \tbd{} & \tbd{} \\
+End-to-end p95 (s) & \tbd{} & \tbd{} & \tbd{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Operational safety measurements}
+
+The benchmark should count missing-frame events, malformed VLM responses, timeout events, empty retrievals, preview decode failures, and duplicate or wrong submissions. These are not substitutes for retrieval quality, but they make the live failure surface visible and allow a future system version to trade precision for speed explicitly.
+
+\section{Ablation and Failure Analysis}
+\label{sec:ablation}
+
+The most important ablation is the retrieval--latency frontier. HyDE and VLM reranking can improve semantic matching while adding model calls; exact search can improve recall while increasing Qdrant time; and in-video refinement can recover a target missed by the initial candidate pool while being too expensive to run on every query. Each option should therefore be reported with both quality and p95 latency.
+
+The grounding contract introduces observable failure categories rather than hiding them in a neutral score. A missing or unreadable frame is a media/index failure; an invalid JSON object is a provider/model failure; a confidence outside $[0,1]$ is a contract failure; and a candidate/frame mismatch is a provenance failure. A final paper should include representative examples for each category and verify that the answer, source file, frame index, timestamp, API response, and displayed preview agree.
+
+\section{Limitations and Reproducibility}
+\label{sec:limitations}
+
+First, the current deployment has a migration gap between legacy Qdrant collection names and the newer source indexing schema. Optional enrichment fields cannot be treated as universal until a re-index is completed and audited. Second, VQA reranking is bounded but sequential over a small candidate head; its p95 latency must be measured before changing the default candidate count. Third, OpenAI-compatible and local VLMs can differ in token semantics, latency, and response formatting. The runtime therefore exposes completion-token and timeout budgets, but cross-provider scores should not be compared without recording the provider and model revision.
+
+Fourth, AVS and some KIS-C outcomes depend on operator decisions and DRES live judging. Offline recall is useful for diagnosis but does not reproduce the full competition score. Finally, this draft reports no accuracy improvement because the repository currently lacks a frozen, ground-truth-backed evaluation artifact. The final version must publish the run manifest, configuration, model revisions, index version, raw predictions, metric script, and failure logs.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented TGLTW, a live-first multimodal video retrieval system for VBS 2027. Its design joins offline multimodal indexing, approximate dense/sparse retrieval, RRF fusion, task-specific interaction, and bounded precision escalation. The main engineering safeguard is grounded VQA with end-to-end media provenance: unavailable or malformed evidence fails closed, and the operator sees the same canonical frame used for answering. The next step is a frozen replay evaluation that fills the retrieval, VQA, latency, and ablation tables without changing the index or runtime configuration during measurement.
+
+\bibliographystyle{splncs04}
+\bibliography{references}
+
+\end{document}
