@@ -75,7 +75,7 @@ CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted S
 \maketitle
 
 \begin{abstract}
-Interactive video retrieval systems are evaluated under a different constraint from offline image or video benchmarks: the operator, the interface, and the retrieval engine must jointly find and submit evidence before the live task clock expires. This paper presents TGLTW, our live-first multimodal retrieval system for the Video Browser Showdown (VBS) 2027. The system combines offline keyframe, speech, OCR, metadata, and ambient-audio processing with approximate vector search, full-text retrieval, reciprocal-rank fusion, and a browser-based interaction loop. It supports the official VBS modes KIS-V, KIS-T, KIS-C, AVS, and VQA while keeping temporal browsing and in-video refinement as explicit operator actions. A central engineering contribution is an evidence contract for VQA: a response is accepted only when it is grounded in a real candidate frame, has a strict JSON schema, and preserves candidate/video/frame identity through the API and user interface; unavailable or malformed evidence fails closed. We describe the architecture and a reproducible evaluation plan. Quantitative results are intentionally left as \tbd{} until the query manifest, index snapshot, and hardware configuration are frozen.
+Interactive video retrieval systems are evaluated under a different constraint from offline image or video benchmarks: the operator, the interface, and the retrieval engine must jointly find and submit evidence before the live task clock expires. This paper presents TGLTW, our live-first multimodal retrieval system for the Video Browser Showdown (VBS) 2027. The system combines offline keyframe, speech, OCR, metadata, and ambient-audio processing with approximate vector search, full-text retrieval, reciprocal-rank fusion, and a browser-based interaction loop. It supports the official VBS modes KIS-V, KIS-T, KIS-C, AVS, and VQA while keeping temporal browsing and in-video refinement as explicit operator actions. A central engineering contribution is an evidence contract for VQA: a response is accepted only when it is grounded in a real candidate frame, has a strict JSON schema, and preserves candidate/video/frame identity through the API and user interface; unavailable or malformed evidence fails closed. We describe the architecture and a reproducible evaluation plan. Quantitative results are intentionally left as \tbd{} until the query manifest, index snapshot, and hardware configuration are frozen. The accompanying public project page collects the source repository, implementation updates, paper source, and deployment entry points; see~\projectpage.
 
 \keywords{Video retrieval \and Multimodal search \and Interactive retrieval \and Video Browser Showdown \and Grounded VQA \and Live systems}
 \end{abstract}
@@ -97,8 +97,6 @@ This paper makes three contributions:
 \end{enumerate}
 
 The remainder of the paper first positions TGLTW against related challenge systems, then describes the task setting and system, specifies the evaluation that is required before making accuracy claims, and records the current limitations of the draft.
-
-The public project page collects the source repository, implementation updates, paper source, and deployment entry points~\projectpage.
 
 \section{Related Work and Method Positioning}
 \label{sec:related-work}
