@@ -8,9 +8,28 @@ The evaluation runner operates as a completely decoupled test harness that impor
 existing pipeline modules (`QueryProcessor`, `HybridSearcher`, `Reranker`) without
 altering any production codebase files:
 - **Latency Breakdown**: Measures exact execution times for **HyDE Generation**, **Qdrant Vector Search**, and **VLM Reranking**.
-- **Accuracy Metrics**: Computes **Recall@1**, **Recall@5**, **MRR (Mean Reciprocal Rank)**, and **Throughput (QPS)** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries — whenever the query file provides `ground_truth`.
-- **Generation-Quality Metrics**: Computes real **Ragas** `faithfulness` / `answer_correctness` (Type 2) and `context_recall` (Type 3) scores.
+- **Offline replay metrics**: Computes **Recall@1**, **Recall@5**, **MRR (Mean Reciprocal Rank)**, and **Throughput (QPS)** whenever the query file provides `ground_truth`.
+- **Generation-quality diagnostics**: Computes real **Ragas** `faithfulness` / `answer_correctness` for VQA and `context_recall` for the legacy temporal path.
   Ragas is an **optional dependency** (`evaluation/requirements.txt`) — if it isn't installed, or a judge-LLM call fails, these are reported as **`N/A`**, never a fabricated number.
+
+This runner is an **offline diagnostic harness**, not the official VBS 2027 scorer. Its numeric labels are retained for compatibility with the inherited AIC evaluation code: Type 1 is textual known-item retrieval, Type 2 is grounded VQA, and Type 3 is a legacy temporal-alignment experiment. It does not yet reproduce live DRES scoring or cover the full KIS-V clip path, KIS-C multi-turn clock, or AVS judge workflow.
+
+## VBS 2027 evaluation contract
+
+The official VBS 2027 call defines KIS-V, KIS-T, KIS-C, AVS, and VQA tasks over the V3C collection plus marine and laparoscopic data. The collection is available ahead of the event, but the live queries and task outcomes are not an offline test set. See the [official VBS call](https://videobrowsershowdown.org/call-for-papers/), [existing data and tools](https://videobrowsershowdown.org/about-vbs/existing-data-and-tools/), and [DRES communication guide](https://videobrowsershowdown.org/about-vbs/communication-with-dres/) before creating the final manifest.
+
+Use two clearly labelled tracks:
+
+1. **Live DRES track:** preserve evaluation/task/session IDs, task clock, ordered query and clarification turns, candidate IDs shown, every submission, correct/false or judge outcome, and the official score/rank. Report time-to-first, time-to-first-correct, false submissions, and task-specific diversity/evidence fields.
+2. **Offline replay track:** freeze the accessible dataset manifest, index snapshot, model/configuration revisions, query labels, raw ranked outputs, and latency traces. Report retrieval and grounding metrics only as replay diagnostics; never call them the VBS 2027 leaderboard score.
+
+Task-specific replay/live diagnostics should be:
+
+- **KIS-V/T/C:** target video and frame/interval hit, Recall@K/MRR for replay, time-to-correct and false submissions for live; keep KIS-C clarification turns in the same session.
+- **AVS:** accepted shots/source videos/ranges, unique-video coverage, duplicate rate, and live judge outcomes. Do not substitute ordinary Recall@K when accepted labels are not complete.
+- **VQA:** candidate localization, answer correctness or judge outcome, grounded-answer rate, evidence identity parity, and answer latency.
+
+VBS 2027 does not advertise a novice session. Any internal usability test should be named as an internal replay or operator study, not as an official novice score. The [2025 VBS results](https://arxiv.org/html/2509.12000v1) are a historical evaluation precedent, not a guarantee of the 2027 timing or scoring configuration.
 
 ---
 
@@ -41,20 +60,18 @@ for demonstrating the schema) — replace it with real annotations for your data
 before trusting the accuracy numbers.
 
 ```jsonc
-// Type 1 & 2 — a single target frame. "frame_id" (native video frame index,
-// what the AIC competition's <frame_id> answer field actually is) is
-// preferred over "timestamp" when both are present - matching then uses
+// Type 1 & 2 — a single target frame. "frame_id" (native video frame index)
+// is preferred over "timestamp" when both are present - matching then uses
 // FRAME_MATCH_TOLERANCE (frames) instead of TIMESTAMP_TOLERANCE_SEC (seconds).
 // "timestamp" alone still works for older ground_truth files.
 "ground_truth": { "video_name": "video_0012.mp4", "timestamp": 45.5, "frame_id": 1365 }
 // Type 2 also accepts an "answer" string, used for Ragas answer_correctness:
 "ground_truth": { "video_name": "video_0045.mp4", "timestamp": 12.0, "frame_id": 360, "answer": "License plate 59-X1 12345" }
 
-// Type 3 — the target video, the expected event frames (each with a
-// "frame_id" and/or "timestamp", for Sequence Recall), and optionally a
-// free-text reference summary (for Ragas context_recall). The competition's
-// per-event TRAKE window is documented as usually under 10 frames, far
-// tighter than a few seconds - always include "frame_id" here if you have it.
+// Type 3 — legacy temporal replay: the target video, expected event frames
+// (each with a "frame_id" and/or "timestamp", for Sequence Recall), and
+// optionally a free-text reference summary (for Ragas context_recall). The
+// frame tolerance is a local replay setting; it is not a VBS 2027 rule.
 "ground_truth": {
   "video_name": "video_0089.mp4",
   "event_frames": [
@@ -100,9 +117,9 @@ for demonstration; actual runs will differ, and any Ragas metric shows `N/A` whe
 
 ---
 
-### 3️⃣ TYPE 3: Temporal Alignment (Sequential Events)
+### 3️⃣ TYPE 3: Legacy temporal alignment (not an official VBS 2027 mode)
 - **Search Output Format:** `<video_name>, <frame_id_1>, <frame_id_2>, ..., <frame_id_N>`
-- **Sequence Recall** is the fraction of the ground truth's `event_frames` timestamps found (within a ±3s tolerance) in the matched candidate sequence — it is not a re-use of the video-level Recall@1.
+- **Sequence Recall** is the fraction of the ground truth's `event_frames` found in the matched candidate sequence — it is not a re-use of the video-level Recall@1. This remains a local diagnostic for inherited temporal code, not a VBS 2027 leaderboard metric.
 - **Chronological Order Check** validates the matched sequence's **timestamps** (not Qdrant point IDs, which carry no guaranteed temporal ordering) are strictly increasing.
 - **Console Log Example & Metric Scores:**
   ```text
@@ -150,3 +167,5 @@ Exported JSON structure (`eval_results.json`):
   - **Type 1**: `correct_rank`, `recall_1`, `recall_5`, `reciprocal_rank`.
   - **Type 2**: the same, plus `faithfulness`, `answer_correctness` (`null` when Ragas is unavailable).
   - **Type 3**: `video_correct_rank`, `video_recall_1`, `video_recall_5`, `video_reciprocal_rank`, `sequence_recall`, `order_pass`, `ragas_context_recall` (any of which may be `null` if the corresponding ground-truth field or Ragas isn't available).
+
+Before publishing any numbers, include the dataset manifest/checksums, index revision, model/provider revisions, runtime hardware, query source/year, and whether the number came from offline replay or a DRES live session. The [Performance Evaluation in Multimedia Retrieval](https://doi.org/10.1145/3678881) paper and DRES documentation provide the evaluation/logging rationale.

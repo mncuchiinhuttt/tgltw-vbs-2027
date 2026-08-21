@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Standalone Evaluation Runner for Multimedia Video-RAG System (HCMC AI Challenge 2026).
-This script executes benchmarks and measures End-to-End Latency and Accuracy Metrics (Recall@K, MRR, Ragas).
-It imports existing system modules without altering any codebase files.
+Standalone offline replay runner for the inherited multimodal video-retrieval system.
+This script measures retrieval, grounding, and latency diagnostics; it does not
+reproduce the official VBS 2027 DRES score.
 """
 
 import os
@@ -53,13 +53,10 @@ except ImportError:
     RAGAS_AVAILABLE = False
 
 TIMESTAMP_TOLERANCE_SEC = 3.0
-# Frame-index tolerance for TRAKE (Type 3) ground truth matching - the AIC
-# competition's actual per-event semantic-keyframe window is documented as
-# "thường dưới 10 frame" (usually under 10 frames), which at typical 25-30fps
-# is a fraction of a second - TIMESTAMP_TOLERANCE_SEC (3s) is roughly 10x too
-# loose for TRAKE and was overestimating recall against the real scoring rule.
-# Type 1/2's exact [s,e] window width isn't specified in the competition doc,
-# so TIMESTAMP_TOLERANCE_SEC is kept as their (unconfirmed) default.
+# Frame-index tolerance for the legacy Type 3 temporal replay path. This is a
+# local diagnostic convention, not an official VBS 2027 scoring rule. Type 1/2's
+# exact target-window width is likewise a replay configuration and must be
+# recorded with the query manifest rather than presented as a DRES metric.
 FRAME_MATCH_TOLERANCE = 5
 _RAGAS_METRICS = {
     "faithfulness": faithfulness if RAGAS_AVAILABLE else None,
@@ -97,17 +94,54 @@ def compute_ragas_scores(question, contexts, answer=None, ground_truth=None, met
         return None
 
 
-def load_frame_image(dataset_dir: str, video_name: str):
-    """Load a candidate's keyframe image from disk, or None if unavailable."""
-    if not video_name:
+def load_frame_image(dataset_dir: str, media_name: str, frame_idx=None, timestamp=None):
+    """Load grounded evidence from an image or decode a frame from a video.
+
+    Returns ``None`` for missing/unreadable/out-of-root media so callers can
+    fail closed instead of asking the VLM to answer without visual evidence.
+    """
+    if not media_name:
         return None
-    frame_path = os.path.join(dataset_dir, video_name)
-    if os.path.exists(frame_path) and frame_path.lower().endswith((".jpg", ".jpeg", ".png")):
+
+    dataset_root = os.path.realpath(dataset_dir)
+    media_path = os.path.realpath(os.path.join(dataset_root, media_name))
+    try:
+        if os.path.commonpath((dataset_root, media_path)) != dataset_root:
+            return None
+    except ValueError:
+        return None
+    if not os.path.isfile(media_path):
+        return None
+
+    if media_path.lower().endswith((".jpg", ".jpeg", ".png")):
         try:
-            return Image.open(frame_path).convert("RGB")
+            return Image.open(media_path).convert("RGB")
         except Exception:
-            pass
-    return None
+            return None
+
+    if not media_path.lower().endswith((".mp4", ".avi", ".mkv", ".mov", ".webm")):
+        return None
+
+    try:
+        import cv2
+
+        cap = cv2.VideoCapture(media_path)
+        if not cap.isOpened():
+            cap.release()
+            return None
+        try:
+            if frame_idx is not None:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, int(frame_idx)))
+            elif timestamp is not None:
+                cap.set(cv2.CAP_PROP_POS_MSEC, max(0.0, float(timestamp)) * 1000.0)
+            ok, frame = cap.read()
+        finally:
+            cap.release()
+        if not ok or frame is None:
+            return None
+        return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    except Exception:
+        return None
 
 
 def load_vlm():
@@ -271,18 +305,25 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
                     "score": item.get("final_score", 0.0)
                 })
 
-            # Generate the VQA answer grounded in the top-ranked candidate's actual
-            # keyframe image -- previously this called the VLM with image=None, so the
-            # "answer" was produced blind with no visual evidence to be faithful to.
+            # Generate the VQA answer only from the top-ranked candidate's actual
+            # keyframe image. Missing media is a failed-grounding event, not an
+            # invitation to call the VLM with image=None.
             if top_candidates:
-                best_video = top_candidates[0]["payload"].get("source_file")
-                best_frame_img = load_frame_image(dataset_dir, best_video)
+                best_payload = top_candidates[0]["payload"]
+                best_video = best_payload.get("source_file")
+                best_frame_img = load_frame_image(
+                    dataset_dir,
+                    best_video,
+                    frame_idx=best_payload.get("frame_idx"),
+                    timestamp=best_payload.get("timestamp"),
+                )
                 if best_frame_img is None:
                     print(f"  ├─ [WARN] Could not load keyframe for '{best_video}'; "
-                          f"answer will be generated without visual grounding.")
-                answer_prompt = f"Answer the following question about this image concisely: {q_text}."
-                generated_answer = vlm.generate(best_frame_img, answer_prompt).strip()
-                print(f"  ├─ VLM Generated Answer: \"{generated_answer}\"")
+                          f"VQA answer is marked N/A (fail-closed).")
+                else:
+                    answer_prompt = f"Answer the following question about this image concisely: {q_text}."
+                    generated_answer = vlm.generate(best_frame_img, answer_prompt).strip()
+                    print(f"  ├─ VLM Generated Answer: \"{generated_answer}\"")
 
         elif q_type == 3:
             # No head/tail split needed - rerank_type3_temporal calls the VLM
@@ -362,7 +403,9 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
                 gt_answer = ground_truth.get("answer")
                 best_payload = top_candidates[0]["payload"] if top_candidates else {}
                 contexts = [c for c in [best_payload.get("caption"), best_payload.get("ocr_text")] if c]
-                metric_names = ["faithfulness"] + (["answer_correctness"] if gt_answer else [])
+                metric_names = (["faithfulness"] if generated_answer else [])
+                if generated_answer and gt_answer:
+                    metric_names.append("answer_correctness")
 
                 ragas_scores = compute_ragas_scores(
                     question=q_text, contexts=contexts, answer=generated_answer,
@@ -401,12 +444,12 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str):
             seq_frame_ids = matched_seq.get("sequence_frame_ids") or [] if matched_seq else []
 
             def event_matches(ef):
-                # Prefer frame_id matching (the real TRAKE ground-truth unit,
-                # window "usually under 10 frames" per the competition rules)
-                # over timestamp - falls back to timestamp for ground_truth
-                # entries that only have it. reranker.rerank_type3_temporal
-                # now returns real per-frame video indices here (previously
-                # this field held meaningless Qdrant point UUIDs).
+                # Prefer frame_id matching for this legacy temporal replay
+                # path over timestamp; the tolerance is a local manifest
+                # convention, not an official VBS 2027 rule. Fall back to
+                # timestamp for ground-truth entries that only have it.
+                # reranker.rerank_type3_temporal returns real per-frame video
+                # indices here rather than Qdrant point UUIDs.
                 gt_frame_id = ef.get("frame_id")
                 if gt_frame_id is not None and seq_frame_ids:
                     return any(
