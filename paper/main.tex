@@ -2,13 +2,20 @@
 % All values marked \tbd{} require a frozen benchmark run before submission.
 \documentclass[runningheads]{llncs}
 
-\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[T5,T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{microtype}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{orcidlink}
+\usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
+
+% Keep the author identifiers from the original BTC paper draft.
+\renewcommand{\orcidID}[1]{\unskip\,\orcidlink{#1}}
 
 \hypersetup{
     colorlinks=true,
@@ -19,24 +26,40 @@
 
 \newcommand{\tbd}{\textit{To be measured}}
 \newcommand{\code}[1]{\texttt{#1}}
+\definecolor{placeholderred}{RGB}{180,0,0}
+\newcommand{\screenshotplaceholder}[3]{%
+\begin{figure*}[t]
+\centering
+\setlength{\fboxsep}{8pt}%
+\fcolorbox{placeholderred}{red!3}{%
+\parbox[c][3.0cm][c]{0.88\textwidth}{%
+\centering
+\textcolor{placeholderred}{\Large\bfseries SCREENSHOT NEEDED}\\[3pt]
+\textcolor{placeholderred}{\textbf{#1}}\\[2pt]
+\textcolor{placeholderred}{\small #2}}}
+\caption{\textcolor{placeholderred}{#1. Replace this red placeholder with the final UI capture before submission.}}
+\label{fig:#3}
+\end{figure*}%
+}
 
 \begin{document}
 
 \title{TGLTW: A Live-First Multimodal Video Retrieval System for VBS 2027}
 \titlerunning{TGLTW: Live-First Video Retrieval for VBS 2027}
 
-\author{Long Minh Vo\inst{1,2} \and
-Hung Gia Vu\inst{1} \and
-Khoa Huynh Minh Nguyen\inst{1} \and
-Kien Vi Tran\inst{1} \and
-Danh Kim Tran\inst{1} \and
-Thi-Tuyet-Trang Chau\inst{1}}
+\author{Long Minh Vo\inst{1,2}\orcidID{0000-0001-2345-6789} \and
+Hung Gia Vu\inst{1}\orcidID{0000-0002-3456-7890} \and
+Khoa Huynh Minh Nguyen\inst{1}\orcidID{0000-0003-4567-8901} \and
+Kien Vi Tran\inst{1}\orcidID{0000-0003-4567-8901} \and
+Danh Kim Tran\inst{1}\orcidID{0000-0003-4567-8901} \and
+Thi-Tuyet-Trang Chau\inst{1}\orcidID{0000-0003-4567-8901}}
 
 \authorrunning{L. M. Vo et al.}
 
 \institute{School of Science, Engineering and Technology, RMIT University Vietnam, Ho Chi Minh City, Vietnam \\
-\and
-CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted Students, Vinh Long, Vietnam}
+\email{\{s4215945\}@rmit.edu.vn} \and
+CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted Students, Vinh Long, Vietnam \\
+\email{}}
 
 \maketitle
 
@@ -96,6 +119,43 @@ The observed visual payload contains source-file and temporal mapping fields, BT
 \section{System Architecture}
 \label{sec:architecture}
 
+\begin{figure*}[t]
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=4mm and 5mm,
+  box/.style={rounded corners=2pt, draw=black!65, thick, align=left, fill=gray!6, minimum height=10mm},
+  stage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=left, fill=blue!5, minimum height=11mm},
+  opt/.style={rounded corners=2pt, draw=orange!70!black, dashed, thick, align=left, fill=orange!6, minimum height=8mm},
+  arrow/.style={-{Latex[length=2.2mm]}, thick}
+]
+
+\node[box, minimum width=3.0cm, minimum height=1.5cm] (assets) {\textbf{BTC / V3C assets}\\videos and official keyframes\\metadata, audio, query manifest};
+\node[stage, right=7mm of assets, minimum width=3.0cm, minimum height=1.4cm] (offline) {\textbf{Offline processing}\\shot boundaries\\representative frames\\provenance mapping};
+\node[stage, right=7mm of offline, minimum width=3.2cm, minimum height=1.4cm] (enrich) {\textbf{Multimodal enrichment}\\visual embeddings\\OCR, ASR, ambient audio\\payload text and metadata};
+\node[stage, right=7mm of enrich, minimum width=3.0cm, minimum height=1.4cm] (indexes) {\textbf{Serving indexes}\\Qdrant HNSW\\speech/audio collections\\payload full-text fields};
+\node[stage, right=7mm of indexes, minimum width=3.0cm, minimum height=1.4cm] (online) {\textbf{Online retrieval}\\dense + sparse search\\RRF fusion\\task-specific ranking};
+\node[box, right=7mm of online, minimum width=2.9cm, minimum height=1.4cm] (ui) {\textbf{Operator loop}\\result grid and video\\feedback / refine\\DRES submission};
+
+\node[opt, below=4mm of enrich, minimum width=5.0cm] (optional) {\textbf{Optional, measured separately}\\VLM enrichment, SigLIP named vectors, H-EAGLE-lite};
+
+\draw[arrow] (assets) -- (offline);
+\draw[arrow] (offline) -- (enrich);
+\draw[arrow] (enrich) -- (indexes);
+\draw[arrow] (indexes) -- (online);
+\draw[arrow] (online) -- (ui);
+\draw[arrow,dashed] (optional.north) -- (enrich.south);
+\draw[arrow,dashed] (optional.east) -| (indexes.south);
+
+\node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(enrich)(indexes), inner sep=5pt, label={[font=\small]above:\textbf{Offline index build}}] (offline-group) {};
+\node[draw=blue!45!black, rounded corners=2pt, fit=(online)(ui), inner sep=5pt, label={[font=\small]above:\textbf{Live query and interaction}}] (online-group) {};
+\end{tikzpicture}%
+}
+\caption{TGLTW system pipeline. The live path uses the already-built multimodal indexes and bounded approximate retrieval; optional enrichment and precision-escalation branches are kept explicit so their cost can be measured before they become defaults.}
+\label{fig:system-pipeline}
+\end{figure*}
+
 \subsection{Offline processing and provenance}
 
 For each video, preprocessing resolves available official assets, extracts or reuses audio, obtains shot boundaries, and selects representative frames. Local candidates can be filtered by visual change and sampled with a farthest-point strategy; official keyframe mappings are preserved when their provenance is unambiguous. OCR and object detection are optional enrichments. ASR segments and ambient-audio windows are indexed separately because their native temporal units and embedding spaces differ from visual frames.
@@ -117,8 +177,48 @@ After fusion, a temporal-coherence heuristic can group nearby hits from the same
 
 The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time.
 
+\screenshotplaceholder{Live search workspace and result grid}{Show the query controls, modality/task selector, ranked keyframes, score/evidence metadata, and the action used to open a candidate video.}{ui-search-workspace}
+
 \section{Task-Specific Retrieval}
 \label{sec:tasks}
+
+\begin{figure*}[t]
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=4mm and 6mm,
+  box/.style={rounded corners=2pt, draw=black!65, thick, align=left, fill=gray!6, minimum height=10mm},
+  stage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=left, fill=blue!5, minimum height=11mm},
+  opt/.style={rounded corners=2pt, draw=orange!70!black, dashed, thick, align=left, fill=orange!6, minimum height=9mm},
+  decision/.style={diamond, draw=blue!55!black, thick, align=center, fill=blue!5, aspect=2.1, inner sep=1.5pt},
+  arrow/.style={-{Latex[length=2.2mm]}, thick}
+]
+
+\node[box, minimum width=2.8cm, minimum height=1.25cm] (query) {\textbf{User query}\\text / image / clip\\conversation context};
+\node[stage, right=7mm of query, minimum width=2.8cm, minimum height=1.25cm] (router) {\textbf{Task router}\\KIS-V / KIS-T\\KIS-C / AVS / VQA};
+\node[stage, right=7mm of router, minimum width=3.2cm, minimum height=1.25cm] (fast) {\textbf{Fast retrieval path}\\HNSW dense search\\payload text + RRF\\bounded reranking head};
+\node[stage, right=7mm of fast, minimum width=2.9cm, minimum height=1.25cm] (grid) {\textbf{Candidate grid}\\ranked evidence\\video / frame / time\\diversity controls};
+\node[decision, right=8mm of grid, minimum width=2.1cm, minimum height=1.3cm] (decision) {operator\\decision};
+\node[box, right=8mm of decision, minimum width=2.8cm, minimum height=1.25cm] (submit) {\textbf{Inspect / submit}\\playback and feedback\\DRES result};
+
+\node[opt, below=5mm of grid, minimum width=7.5cm] (escalate) {\textbf{Precision escalation on demand}\\exact search, larger HNSW candidate set, verification reranking, or in-video refinement};
+
+\draw[arrow] (query) -- (router);
+\draw[arrow] (router) -- (fast);
+\draw[arrow] (fast) -- (grid);
+\draw[arrow] (grid) -- (decision);
+\draw[arrow] (decision) -- node[above, font=\scriptsize]{accept} (submit);
+\draw[arrow,dashed] (decision.south) |- node[pos=0.25, right, font=\scriptsize]{uncertain} (escalate.east);
+\draw[arrow,dashed] (escalate.west) -| node[pos=0.25, left, font=\scriptsize]{rerank / refine} (grid.south);
+\draw[arrow,dashed] (decision.north) |- node[pos=0.25, right, font=\scriptsize]{reject / reformulate} (router.north);
+
+\node[draw=blue!45!black, rounded corners=2pt, fit=(router)(fast)(grid), inner sep=5pt, label={[font=\small]above:\textbf{Low-latency default}}] (default-group) {};
+\end{tikzpicture}%
+}
+\caption{Live query loop. TGLTW keeps the fast retrieval path bounded and makes expensive precision operations explicit operator actions. This supports the VBS time constraint while preserving an auditable route for difficult candidates.}
+\label{fig:live-query-loop}
+\end{figure*}
 
 \subsection{KIS-V}
 
@@ -132,14 +232,54 @@ KIS-T uses the shared text pipeline: query processing, dense and sparse retrieva
 
 AVS is implemented as broad text retrieval followed by diversity-aware browsing rather than as a separate learned AVS head. Scene-level diversification reduces repeated frames from a single video, and the operator can browse or search inside a promising video before submitting multiple results. The live judge remains the source of the official AVS score, so automatic coverage and duplicate-rate metrics are reported only as proxies.
 
+\screenshotplaceholder{In-video browsing and evidence inspection}{Show the video player, selected keyframe, frame index/timestamp, manual in-video search control, and the action that sends a verified result to the submission list.}{ui-in-video-browsing}
+
 \subsection{Grounded VQA}
 \label{sec:vqa}
+
+\begin{figure*}[t]
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=4mm and 5mm,
+  box/.style={rounded corners=2pt, draw=black!65, thick, align=left, fill=gray!6, minimum height=10mm},
+  stage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=left, fill=blue!5, minimum height=11mm},
+  fail/.style={rounded corners=2pt, draw=red!65!black, thick, align=left, fill=red!5, minimum height=9mm},
+  arrow/.style={-{Latex[length=2.2mm]}, thick}
+]
+
+\node[box, minimum width=2.6cm, minimum height=1.2cm] (question) {\textbf{VQA question}\\bounded target\\sub-queries};
+\node[stage, right=6mm of question, minimum width=2.8cm, minimum height=1.2cm] (retrieve) {\textbf{Candidate retrieval}\\visual / text evidence\\ranked candidate head};
+\node[stage, right=6mm of retrieve, minimum width=2.9cm, minimum height=1.2cm] (media) {\textbf{Media resolver}\\real keyframe or video\\canonical frame index};
+\node[stage, right=6mm of media, minimum width=2.8cm, minimum height=1.2cm] (vlm) {\textbf{Grounded VLM}\\answer only on\\resolved evidence};
+\node[stage, right=6mm of vlm, minimum width=2.8cm, minimum height=1.2cm] (parse) {\textbf{Strict contract}\\JSON / found / answer\\finite confidence};
+\node[box, right=6mm of parse, minimum width=2.8cm, minimum height=1.2cm] (public) {\textbf{Public evidence}\\video + frame\\answer + UI payload};
+
+\node[fail, below=5mm of parse, minimum width=5.4cm] (closed) {\textbf{Fail closed}\\missing media, malformed response, timeout, or invalid identity $\Rightarrow$ UNKNOWN / N/A / score 0};
+
+\draw[arrow] (question) -- (retrieve);
+\draw[arrow] (retrieve) -- (media);
+\draw[arrow] (media) -- (vlm);
+\draw[arrow] (vlm) -- (parse);
+\draw[arrow] (parse) -- node[above, font=\scriptsize]{valid} (public);
+\draw[arrow] (parse.south) -- node[right, font=\scriptsize]{invalid} (closed.north);
+\draw[arrow,dashed] (media.south) |- node[pos=0.22, left, font=\scriptsize]{unreadable} (closed.west);
+
+\node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(media)(vlm)(parse), inner sep=5pt, label={[font=\small]above:\textbf{Candidate-specific grounding}}] (grounding-group) {};
+\end{tikzpicture}%
+}
+\caption{Grounded VQA and evidence provenance. The answer-generation step is bound to a resolved candidate frame, and the same identity is propagated to the API and UI. Invalid or unavailable evidence cannot receive a neutral score.}
+\label{fig:vqa-contract}
+\end{figure*}
 
 VQA first decomposes the question into a bounded set of target sub-queries, retrieves candidate frames, and optionally crops a detector box. A candidate is passed to the VLM only if a real keyframe can be loaded or its source video can be decoded. When both are present, the canonical indexed \code{frame\_idx} is used for video seeking; timestamp is a fallback for legacy payloads.
 
 The VLM must return a JSON object with \code{found=true}, a non-empty answer, and finite confidence in $[0,1]$. The answer is stored with candidate ID, video ID, and frame index. Missing media, malformed JSON, \code{found=false}, unknown answers, invalid confidence, VLM errors, and timeouts fail closed to \code{UNKNOWN/N/A} with VQA score zero. No synthetic gray image is used. The backend reuses this candidate-specific answer rather than making a second unbound answer-generation call. With verification disabled, the current fusion is $0.4S_{\mathrm{RRF}}+0.6S_{\mathrm{VQA}}$; when verification is explicitly enabled, the configured three-way weights are used.
 
 This contract has two purposes. It prevents an unavailable frame from receiving a neutral score that can outrank grounded evidence, and it keeps the frame displayed to the operator aligned with the frame that the VLM saw. Media paths are constrained to the server dataset root, and a media decode failure returns an error rather than a fabricated preview.
+
+\screenshotplaceholder{Grounded VQA result card}{Show the question, answer, confidence, grounded/failed status, evidence media name, frame index/timestamp, and the exact preview used by the VLM.}{ui-vqa-grounding}
 
 \section{Experimental Methodology}
 \label{sec:methodology}
