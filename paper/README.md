@@ -27,6 +27,18 @@ khi query manifest, ground truth, index snapshot và hardware được freeze.
 placeholder bằng số liệu: Recall/MRR/nDCG, VQA answer và grounding, latency
 p50/p95, ablation, failure rate và provenance artifact.
 
+## Figures và screenshot cần bổ sung
+
+`main.tex` đã có các flowchart TikZ cho offline indexing, live query loop và
+grounded VQA provenance. Các khung màu đỏ có chữ `SCREENSHOT NEEDED` là vị trí
+cần thay bằng ảnh UI thật trước khi submit:
+
+- live search workspace và result grid;
+- in-video browsing/evidence inspection;
+- grounded VQA result card với answer, frame index/timestamp và preview.
+
+Author block giữ lại ORCID metadata từ paper BTC gốc.
+
 ## 🚀 Live Preview Server
 
 Server đang chạy ở port **`8088`** (địa chỉ `http://localhost:8088`).
