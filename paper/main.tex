@@ -95,14 +95,25 @@ This paper makes three contributions:
     \item an auditable VQA grounding and media-provenance contract that rejects missing or malformed evidence rather than fabricating a visual input or returning an answer from a different frame.
 \end{enumerate}
 
-The remainder of the paper describes the task setting and system, specifies the evaluation that is required before making accuracy claims, and records the current limitations of the draft.
+The remainder of the paper first positions TGLTW against related challenge systems, then describes the task setting and system, specifies the evaluation that is required before making accuracy claims, and records the current limitations of the draft.
+
+\section{Related Work and Method Positioning}
+\label{sec:related-work}
+
+The HCMC AI Challenge literature is a useful local reference point because it makes the same accuracy--latency trade-off explicit. The 2024 challenge overview separates textual KIS, visual KIS, and Q\&A, and evaluates live submissions using accuracy, speed, and reliability~\cite{do2025aichallenge}. It also identifies recurring components---vision-language embeddings, OCR/ASR and object evidence, temporal search, query expansion, and feedback or reranking---that appear in TGLTW as implementation patterns rather than as copied model stacks.
+
+Several team systems provide close design precedents. Vo et al. combine keyframe retrieval with CLIP/TASK-Former embeddings, transcripts, OCR, temporal search, and visual feedback~\cite{vo2025comprehensive}. KPI and Fustar likewise expose modular visual, OCR, ASR, temporal, and feedback paths for interactive search~\cite{doan2025kpi,le2025fustar}. TGLTW shares the underlying multimodal-evidence and operator-loop principles, but its live path uses the official BTC keyframes, Qwen3-VL embeddings, Qdrant indexes, payload search, and RRF. It therefore does not claim to reproduce the CLIP/TASK-Former, ALIGN/CLIP2Video, FAISS, or ElasticSearch stacks in those papers.
+
+The implemented query-expansion path is related to, but narrower than, the GPT-4 query assistant in Bui-Tran et al., which generates multiple paraphrases and supports external image search~\cite{buitran2025query}. TGLTW uses bounded conversational query rewriting (CQR), a single HyDE-style hypothetical description when enabled, and query-by-example from an indexed or uploaded visual point. External web-image retrieval and the five-paraphrase selection workflow are not part of the current VBS implementation. Similarly, the positive/negative feedback endpoint performs a Rocchio-style vector update toward accepted points and away from rejected points; this is conceptually close to the interactive vector reweighting in ReViMM, but TGLTW uses fixed coefficients and centroid means rather than ReViMM's user-assigned per-item weights or its CLIP/FAISS/ElasticSearch stack~\cite{phat2025revimm}.
+
+Finally, the inherited Type~3 path is structurally related to local ordered-event retrieval work. Fustar and KPI describe temporal modules over ordered events~\cite{le2025fustar,doan2025kpi}, while Luu et al.'s DANTE uses dynamic programming to align narrative events with chronologically ordered keyframes~\cite{luu2027dante}. TGLTW's implementation is a simpler strict-increasing weighted-subsequence DP over candidate-frame similarities; it does not use DANTE's BEiT-3/Milvus stack or temporal-distance penalty. Because Type~3 is not one of the official VBS modes reported here, this relationship is recorded as implementation provenance rather than as an evaluated VBS contribution.
 
 \section{Task and Dataset Setting}
 \label{sec:setting}
 
 \subsection{Official task modes}
 
-The VBS workflow implemented by TGLTW exposes five official modes. KIS-V searches from a visual clip example; KIS-T searches for a known item from text; KIS-C adds conversational clarification and relevance feedback; AVS searches for multiple shots and benefits from diversity across videos; and VQA returns a textual answer about visual content. The repository also contains Type~3 temporal code inherited from earlier experiments, but temporal alignment is not presented as a separate official VBS task in this paper.
+The VBS workflow implemented by TGLTW exposes five official modes. KIS-V searches from a visual clip example; KIS-T searches for a known item from text; KIS-C adds conversational clarification and relevance feedback; AVS searches for multiple shots and benefits from diversity across videos; and VQA returns a textual answer about visual content. The repository also contains Type~3 temporal code inherited from earlier experiments and related to ordered-event DP methods~\cite{le2025fustar,luu2027dante}, but temporal alignment is not presented as a separate official VBS task in this paper.
 
 \subsection{Running index and source pipeline}
 
@@ -174,7 +185,7 @@ Every visual result carries a source file or video identifier, a canonical frame
 
 \subsection{Dense, sparse, and fused retrieval}
 
-The online text path searches the original query and, when enabled, a hypothetical description generated by HyDE-style query expansion. Dense search uses the configured visual/text embedding space. Sparse search operates over indexed payload text such as OCR, metadata, speech, captions, and object names when those fields exist. The result lists are fused with RRF:
+The online text path searches the original query and, when enabled, a hypothetical description generated by HyDE-style query expansion. This bounded rewrite branch follows the broader local challenge pattern of using language models to make underspecified visual queries more descriptive, while avoiding an open-ended paraphrase or external-search loop~\cite{buitran2025query,le2025fustar}. Dense search uses the configured visual/text embedding space. Sparse search operates over indexed payload text such as OCR, metadata, speech, captions, and object names when those fields exist. The result lists are fused with RRF:
 \begin{equation}
 \label{eq:rrf}
 \operatorname{RRF}(x)=\sum_{\ell\in\mathcal{L}}\frac{1}{k+\operatorname{rank}_{\ell}(x)},
@@ -185,7 +196,7 @@ After fusion, a temporal-coherence heuristic can group nearby hits from the same
 
 \subsection{Interactive loop}
 
-The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time.
+The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The feedback action is a lightweight vector update, related to the interactive reweighting mechanism reported by ReViMM~\cite{phat2025revimm}; it does not add another generation call. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time.
 
 \screenshotplaceholder{Live search workspace and result grid}{Show the query controls, modality/task selector, ranked keyframes, score/evidence metadata, and the action used to open a candidate video.}{ui-search-workspace}
 
