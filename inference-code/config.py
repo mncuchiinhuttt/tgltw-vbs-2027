@@ -11,6 +11,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # vision-capable model without loading a local VLM
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "") or None
 OPENAI_VLM_MODEL_NAME = os.getenv("OPENAI_VLM_MODEL_NAME", "gpt-5.5-pro")
+# Bound reasoning/output work for live VBS requests.  The value is an upper
+# bound, not a request to generate a long answer; lower it (for example to
+# 2048) when an endpoint prioritizes latency over difficult-query accuracy.
+OPENAI_VLM_MAX_COMPLETION_TOKENS = int(os.getenv("OPENAI_VLM_MAX_COMPLETION_TOKENS", 4096))
+OPENAI_VLM_TIMEOUT_SEC = float(os.getenv("OPENAI_VLM_TIMEOUT_SEC", 45.0))
 # How many OpenAIVLM.generate_batch() requests to issue concurrently. Raise
 # this when OPENAI_BASE_URL points at a self-hosted vLLM server (see
 # host_vllm.sh at the repo root) to get its continuous-batching throughput benefit.
@@ -129,3 +134,8 @@ SIGLIP_MODEL_ID = os.getenv("SIGLIP_MODEL_ID", "google/siglip-so400m-patch14-384
 
 VLM_MIN_PIXELS = int(os.getenv("VLM_MIN_PIXELS", 256 * 28 * 28))   # ~256 token/ảnh (sàn)
 VLM_MAX_PIXELS = int(os.getenv("VLM_MAX_PIXELS", 768 * 28 * 28))   # ~768 token/ảnh (trần)
+# Lower-cost secondary images used by the shared OpenAI/Qwen multi-image
+# pathway. Keep these in inference config as well as preprocessing config so
+# importing either VLM backend is self-contained.
+FAST_PATHWAY_MIN_PIXELS = int(os.getenv("FAST_PATHWAY_MIN_PIXELS", 64 * 28 * 28))
+FAST_PATHWAY_MAX_PIXELS = int(os.getenv("FAST_PATHWAY_MAX_PIXELS", 128 * 28 * 28))

@@ -12,6 +12,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # vision-capable model without loading a local VLM
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "") or None
 OPENAI_VLM_MODEL_NAME = os.getenv("OPENAI_VLM_MODEL_NAME", "gpt-5.5-pro")
+# Shared OpenAI-compatible VLM runtime bounds. Keep preprocessing and live
+# inference on the same request contract when they import models/openai_vlm.
+OPENAI_VLM_MAX_COMPLETION_TOKENS = int(os.getenv("OPENAI_VLM_MAX_COMPLETION_TOKENS", 4096))
+OPENAI_VLM_TIMEOUT_SEC = float(os.getenv("OPENAI_VLM_TIMEOUT_SEC", 45.0))
 # How many OpenAIVLM.generate_batch() requests to issue concurrently. Only
 # matters for batch/concurrent-serving backends (self-hosted vLLM, or a
 # provider that handles concurrent requests efficiently) - raise this when

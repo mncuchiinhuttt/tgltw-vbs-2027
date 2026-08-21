@@ -144,6 +144,8 @@ VLM_OPTION=openai
 OPENAI_BASE_URL=http://localhost:8000/v1
 OPENAI_VLM_MODEL_NAME=<same model served by host_vllm.sh>
 VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batching
+OPENAI_VLM_MAX_COMPLETION_TOKENS=4096  # bounded reasoning/output budget
+OPENAI_VLM_TIMEOUT_SEC=45             # fail a hung live request promptly
 ```
 
 ### 2c. Migrating Indexed Data to a New Server
