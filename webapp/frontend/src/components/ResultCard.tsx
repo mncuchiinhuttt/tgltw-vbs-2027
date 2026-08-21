@@ -32,6 +32,7 @@ export interface ResultHit {
   payload: {
     source_file?: string
     timestamp?: number
+    frame_idx?: number
     caption?: string
     scene_narrative?: string
     ocr_text?: string
@@ -75,7 +76,8 @@ export function ResultCard({
   const payload = hit.payload || {}
   const videoName = payload.source_file || "Unknown File"
   const timestamp = payload.timestamp !== undefined ? payload.timestamp : 0.0
-  const frameUrl = `${BACKEND_URL}/api/media/frame?video_name=${encodeURIComponent(videoName)}&timestamp=${timestamp}`
+  const frameIdxParam = payload.frame_idx != null ? `&frame_idx=${encodeURIComponent(payload.frame_idx)}` : ""
+  const frameUrl = `${BACKEND_URL}/api/media/frame?video_name=${encodeURIComponent(videoName)}&timestamp=${timestamp}${frameIdxParam}`
 
   return (
     <Card className="tech-card overflow-hidden flex flex-col justify-between">
