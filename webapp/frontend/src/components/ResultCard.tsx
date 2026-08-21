@@ -28,6 +28,9 @@ export interface ResultHit {
   answer_candidate_id?: string | null
   answer_video_id?: string | null
   answer_frame_idx?: number | null
+  evidence_media_name?: string | null
+  evidence_frame_idx?: number | null
+  evidence_timestamp?: number | null
   matched_via?: string[]
   payload: {
     source_file?: string
@@ -46,7 +49,7 @@ interface ResultCardProps {
   idx: number
   isExpanded: boolean
   onToggleExpand: () => void
-  onPlay: (videoName: string, time: number) => void
+  onPlay: (videoName: string, time: number, frameIdx?: number | null) => void
   onFeedback: (id: string, positive: boolean) => void
   onUseAsQuery: (id: string) => void
   onInVideoSearch: (videoName: string) => void
@@ -75,9 +78,18 @@ export function ResultCard({
 }: ResultCardProps) {
   const payload = hit.payload || {}
   const videoName = payload.source_file || "Unknown File"
-  const timestamp = payload.timestamp !== undefined ? payload.timestamp : 0.0
-  const frameIdxParam = payload.frame_idx != null ? `&frame_idx=${encodeURIComponent(payload.frame_idx)}` : ""
-  const frameUrl = `${BACKEND_URL}/api/media/frame?video_name=${encodeURIComponent(videoName)}&timestamp=${timestamp}${frameIdxParam}`
+  const evidenceFrameIdx = Number.isInteger(hit.evidence_frame_idx)
+    ? hit.evidence_frame_idx
+    : Number.isInteger(payload.frame_idx) ? payload.frame_idx : null
+  const evidenceTimestamp = typeof hit.evidence_timestamp === "number" && Number.isFinite(hit.evidence_timestamp)
+    ? hit.evidence_timestamp
+    : typeof payload.timestamp === "number" && Number.isFinite(payload.timestamp) ? payload.timestamp : null
+  const displayMediaName = hit.evidence_media_name || videoName
+  const playbackTimestamp = evidenceTimestamp ?? 0.0
+  const frameParams = new URLSearchParams({ video_name: displayMediaName })
+  if (evidenceFrameIdx != null) frameParams.set("frame_idx", String(evidenceFrameIdx))
+  else if (evidenceTimestamp != null) frameParams.set("timestamp", String(evidenceTimestamp))
+  const frameUrl = `${BACKEND_URL}/api/media/frame?${frameParams.toString()}`
 
   return (
     <Card className="tech-card overflow-hidden flex flex-col justify-between">
@@ -85,7 +97,7 @@ export function ResultCard({
         <div className="relative group aspect-video bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100">
           <img
             src={frameUrl}
-            alt={`Frame ${videoName}`}
+            alt={`Frame ${displayMediaName}`}
             className="object-cover w-full h-full group-hover:scale-102 transition-transform duration-500"
             loading="lazy"
           />
@@ -104,7 +116,7 @@ export function ResultCard({
             </Badge>
           </div>
           <div className="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <button onClick={() => onPlay(videoName, timestamp)} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full p-4">
+            <button onClick={() => onPlay(videoName, playbackTimestamp, evidenceFrameIdx)} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full p-4">
               <Play className="h-6 w-6 fill-white" />
             </button>
           </div>
@@ -118,7 +130,7 @@ export function ResultCard({
             <Clock className="h-4 w-4 text-indigo-500" />
             <span>Timestamp:</span>
             <span className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">
-              {timestamp.toFixed(2)}s
+              {evidenceTimestamp != null ? `${evidenceTimestamp.toFixed(2)}s` : "N/A"}
             </span>
           </div>
 
@@ -226,7 +238,7 @@ export function ResultCard({
             {isExpanded ? <>Hide Metadata<ChevronUp className="h-4 w-4" /></> : <>Inspect Metadata<ChevronDown className="h-4 w-4" /></>}
           </button>
           <button
-            onClick={() => onPlay(videoName, timestamp)}
+            onClick={() => onPlay(videoName, playbackTimestamp, evidenceFrameIdx)}
             className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-indigo-750 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
           >
             <Play className="h-3.5 w-3.5 fill-indigo-600 text-indigo-600" />

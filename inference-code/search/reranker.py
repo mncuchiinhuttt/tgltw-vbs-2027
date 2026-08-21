@@ -206,14 +206,23 @@ def _coerce_timestamp(value: Any) -> Optional[float]:
     return number if math.isfinite(number) and number >= 0 else None
 
 
-def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[Image.Image]:
-    """Load a real keyframe or decode its source video at the payload time."""
+def resolve_candidate_evidence(dataset_dir: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Resolve the exact media and canonical identity used for VQA."""
     for frame_path in _candidate_paths(dataset_dir, payload):
         if not os.path.isfile(frame_path):
             continue
         try:
             with Image.open(frame_path) as image:
-                return image.convert("RGB").copy()
+                return {
+                    "image": image.convert("RGB").copy(),
+                    "path": frame_path,
+                    "frame_idx": _coerce_frame_idx(payload.get("frame_idx")),
+                    "timestamp": _coerce_timestamp(
+                        payload.get("timestamp")
+                        if payload.get("timestamp") is not None
+                        else payload.get("pts_time")
+                    ),
+                }
         except (OSError, Image.UnidentifiedImageError):
             pass
 
@@ -237,10 +246,24 @@ def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[
                 continue
             success, frame = capture.read()
             if success and frame is not None:
-                return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                actual_timestamp = capture.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+                if not math.isfinite(actual_timestamp) or actual_timestamp < 0:
+                    actual_timestamp = timestamp
+                return {
+                    "image": Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)),
+                    "path": frame_path,
+                    "frame_idx": frame_idx,
+                    "timestamp": actual_timestamp,
+                }
         finally:
             capture.release()
     return None
+
+
+def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[Image.Image]:
+    """Load a real keyframe or decode its source video at the payload time."""
+    evidence = resolve_candidate_evidence(dataset_dir, payload)
+    return evidence["image"] if evidence is not None else None
 
 class Reranker:
     """
@@ -402,9 +425,15 @@ Score:"""
 
         for hit in candidate_frames:
             payload = hit["payload"]
-            frame_img = load_candidate_frame(dataset_dir, payload)
+            evidence = resolve_candidate_evidence(dataset_dir, payload)
+            frame_img = evidence["image"] if evidence is not None else None
             hit["vqa_video_id"] = payload.get("source_file")
-            hit["vqa_frame_idx"] = payload.get("frame_idx")
+            hit["vqa_frame_idx"] = evidence.get("frame_idx") if evidence is not None else None
+            hit["vqa_evidence_frame_idx"] = hit["vqa_frame_idx"]
+            hit["vqa_evidence_timestamp"] = evidence.get("timestamp") if evidence is not None else None
+            # Internal absolute path; the backend converts it to a validated
+            # dataset-relative reference before returning JSON to the client.
+            hit["vqa_evidence_path"] = evidence.get("path") if evidence is not None else None
             hit["vqa_candidate_id"] = hit.get("id")
             hit["vqa_evidence_available"] = frame_img is not None
             hit["vqa_answer"] = "UNKNOWN"

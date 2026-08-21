@@ -15,7 +15,7 @@ interface BrowseFrame {
 interface BrowseVideoDialogProps {
   videoName: string | null
   onClose: () => void
-  onPlayFrame: (videoName: string, time: number) => void
+  onPlayFrame: (videoName: string, time: number, frameIdx?: number | null) => void
 }
 
 /**
@@ -55,12 +55,17 @@ export function BrowseVideoDialog({ videoName, onClose, onPlayFrame }: BrowseVid
           {error && <div className="text-red-600 text-sm font-semibold">{error}</div>}
           <div className="grid grid-cols-4 gap-2">
             {frames.map((frame) => {
-              const timestamp = frame.payload.timestamp ?? 0.0
-              const frameUrl = `${BACKEND_URL}/api/media/frame?video_name=${encodeURIComponent(videoName || "")}&timestamp=${timestamp}`
+              const timestamp = typeof frame.payload.timestamp === "number" && Number.isFinite(frame.payload.timestamp)
+                ? frame.payload.timestamp : null
+              const frameIdx = Number.isInteger(frame.payload.frame_idx) ? frame.payload.frame_idx : null
+              const frameParams = new URLSearchParams({ video_name: videoName || "" })
+              if (frameIdx != null) frameParams.set("frame_idx", String(frameIdx))
+              else if (timestamp != null) frameParams.set("timestamp", String(timestamp))
+              const frameUrl = `${BACKEND_URL}/api/media/frame?${frameParams.toString()}`
               return (
                 <button
                   key={frame.id}
-                  onClick={() => videoName && onPlayFrame(videoName, timestamp)}
+                  onClick={() => videoName && onPlayFrame(videoName, timestamp ?? 0.0, frameIdx)}
                   className="relative aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition-colors"
                   title={`frame_idx ${frame.payload.frame_idx ?? "N/A"}`}
                 >

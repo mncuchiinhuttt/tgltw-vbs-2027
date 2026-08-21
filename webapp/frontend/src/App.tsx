@@ -131,7 +131,7 @@ function SearchView() {
   const batchLogContainerRef = useRef<HTMLDivElement>(null)
   
   // Video player modal state
-  const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number} | null>(null)
+  const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number, frameIdx?: number | null} | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // KIS-V clip upload
@@ -907,7 +907,7 @@ function SearchView() {
                   idx={idx}
                   isExpanded={expandedIndex === idx}
                   onToggleExpand={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-                  onPlay={(name, time) => setSelectedVideo({ name, time })}
+                  onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
                   onFeedback={handleFeedback}
                   onUseAsQuery={handleUseAsQuery}
                   onInVideoSearch={handleInVideoSearch}
@@ -1154,6 +1154,9 @@ function SearchView() {
               <DialogTitle className="text-slate-800 truncate pr-6">{selectedVideo.name}</DialogTitle>
               <DialogDescription className="text-slate-500">
                 Playing starting at timestamp: <span className="text-indigo-600 font-semibold">{selectedVideo.time.toFixed(2)}s</span>
+                {selectedVideo.frameIdx != null && (
+                  <> · frame <span className="text-indigo-600 font-semibold">{selectedVideo.frameIdx}</span></>
+                )}
               </DialogDescription>
             </DialogHeader>
 
@@ -1182,9 +1185,9 @@ function SearchView() {
       <BrowseVideoDialog
         videoName={browsingVideo}
         onClose={() => setBrowsingVideo(null)}
-        onPlayFrame={(name, time) => {
+        onPlayFrame={(name, time, frameIdx) => {
           setBrowsingVideo(null)
-          setSelectedVideo({ name, time })
+          setSelectedVideo({ name, time, frameIdx })
         }}
       />
     </main>
