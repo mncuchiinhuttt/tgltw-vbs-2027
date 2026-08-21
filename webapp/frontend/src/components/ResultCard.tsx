@@ -22,6 +22,12 @@ export interface ResultHit {
   score?: number
   rrf_score?: number
   answer?: string | null
+  vqa_answer_valid?: boolean
+  vqa_evidence_available?: boolean
+  vqa_evidence_reason?: string
+  answer_candidate_id?: string | null
+  answer_video_id?: string | null
+  answer_frame_idx?: number | null
   matched_via?: string[]
   payload: {
     source_file?: string
@@ -132,7 +138,7 @@ export function ResultCard({
             </div>
           )}
 
-          {hit.answer && (
+          {hit.answer && hit.vqa_answer_valid && (
             <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg mb-3">
               <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" />
@@ -153,6 +159,20 @@ export function ResultCard({
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {hit.answer === "N/A" && !hit.vqa_answer_valid && (
+            <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg mb-3">
+              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">
+                No grounded VQA answer
+              </p>
+              <p className="text-xs text-amber-800">
+                {hit.vqa_evidence_available
+                  ? "The frame was available, but the VLM response did not satisfy the grounded JSON contract."
+                  : "The indexed frame could not be loaded, so the system did not guess."
+                }
+              </p>
             </div>
           )}
 

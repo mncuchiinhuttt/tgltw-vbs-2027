@@ -1,5 +1,8 @@
 import json
+import math
+import os
 import re
+import cv2
 import numpy as np
 from PIL import Image
 from typing import Callable, List, Dict, Any, Optional
@@ -99,7 +102,111 @@ def _parse_vlm_score(text: str) -> Optional[float]:
     match = re.search(r"-?\d+(?:\.\d+)?", text)
     if match is None:
         return None
-    return float(match.group())
+    score = float(match.group())
+    return score if math.isfinite(score) and 0.0 <= score <= 1.0 else None
+
+
+def _strip_json_fence(text: str) -> str:
+    """Remove a Markdown JSON fence without accepting extra prose."""
+    value = (text or "").strip()
+    if value.startswith("```"):
+        first_newline = value.find("\n")
+        value = value[first_newline + 1:] if first_newline >= 0 else value[3:]
+    if value.endswith("```"):
+        value = value[:-3]
+    return value.strip()
+
+
+def parse_grounded_vqa_response(raw_response: str) -> Dict[str, Any]:
+    """Parse the live VQA contract and fail closed on every invalid response."""
+    invalid = {
+        "valid": False,
+        "found": False,
+        "answer": "UNKNOWN",
+        "confidence": 0.0,
+        "reason": "malformed_response",
+    }
+    try:
+        parsed = json.loads(_strip_json_fence(raw_response))
+    except (TypeError, json.JSONDecodeError):
+        return invalid
+    if not isinstance(parsed, dict):
+        return invalid
+    if parsed.get("found") is not True:
+        return {**invalid, "reason": "answer_not_found"}
+
+    answer = parsed.get("answer")
+    if not isinstance(answer, str) or not answer.strip():
+        return {**invalid, "reason": "missing_answer"}
+    if answer.strip().upper() in {"UNKNOWN", "N/A", "NA", "NONE", "NULL"}:
+        return {**invalid, "reason": "unknown_answer"}
+
+    try:
+        confidence = float(parsed.get("confidence"))
+    except (TypeError, ValueError):
+        return {**invalid, "reason": "invalid_confidence"}
+    if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+        return {**invalid, "reason": "confidence_out_of_range"}
+
+    return {
+        "valid": True,
+        "found": True,
+        "answer": answer.strip(),
+        "confidence": confidence,
+        "reason": str(parsed.get("reason") or ""),
+    }
+
+
+def _candidate_paths(dataset_dir: str, payload: Dict[str, Any]) -> List[str]:
+    """Return explicit keyframe paths followed by the source video path."""
+    paths: List[str] = []
+    for field in ("keyframe_path", "frame_path", "source_file"):
+        raw_path = payload.get(field)
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            continue
+        path = raw_path if os.path.isabs(raw_path) else os.path.join(dataset_dir, raw_path)
+        if path not in paths:
+            paths.append(path)
+    return paths
+
+
+def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[Image.Image]:
+    """Load a real keyframe or decode its source video at the payload time."""
+    for frame_path in _candidate_paths(dataset_dir, payload):
+        if not os.path.isfile(frame_path):
+            continue
+        try:
+            with Image.open(frame_path) as image:
+                return image.convert("RGB").copy()
+        except (OSError, Image.UnidentifiedImageError):
+            pass
+
+        capture = cv2.VideoCapture(frame_path)
+        if not capture.isOpened():
+            capture.release()
+            continue
+        try:
+            timestamp = payload.get("timestamp", payload.get("pts_time"))
+            frame_idx = payload.get("frame_idx")
+            if timestamp is not None:
+                timestamp = float(timestamp)
+                if not math.isfinite(timestamp) or timestamp < 0:
+                    timestamp = None
+            if timestamp is not None:
+                capture.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000.0)
+            elif frame_idx is not None:
+                frame_idx = int(frame_idx)
+                if frame_idx < 0:
+                    continue
+                capture.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+            else:
+                continue
+            success, frame = capture.read()
+            if success and frame is not None:
+                return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        finally:
+            capture.release()
+    return None
 
 class Reranker:
     """
@@ -125,16 +232,14 @@ Output ONLY valid JSON matching this format:
 Query: "{query}"
 JSON:"""
         raw_output = self.vlm.generate(None, prompt).strip()
-        if raw_output.startswith("```json"):
-            raw_output = raw_output[7:]
-        if raw_output.endswith("```"):
-            raw_output = raw_output[:-3]
         try:
-            parsed = json.loads(raw_output.strip())
-            questions = parsed.get("questions", [])
-            return questions[:n] if questions else [query]
-        except json.JSONDecodeError:
-            return [query]
+            parsed = json.loads(_strip_json_fence(raw_output))
+        except (TypeError, json.JSONDecodeError):
+            return []
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("questions"), list):
+            return []
+        questions = [q.strip() for q in parsed["questions"] if isinstance(q, str) and q.strip()]
+        return questions if len(questions) == n else []
 
     def verify_candidate(
         self,
@@ -220,15 +325,21 @@ Score:"""
         Crop bounding box [x1, y1, x2, y2] from a PIL image.
         """
         width, height = image.size
-        # Bboxes might be normalized or pixel coordinates.
-        # Assume pixel coordinates first, but clamp to image bounds.
-        x1 = max(0, min(width, int(bbox[0])))
-        y1 = max(0, min(height, int(bbox[1])))
-        x2 = max(0, min(width, int(bbox[2])))
-        y2 = max(0, min(height, int(bbox[3])))
-        
+        try:
+            coords = [float(value) for value in bbox]
+        except (TypeError, ValueError):
+            return image
+        if len(coords) != 4 or not all(math.isfinite(value) for value in coords):
+            return image
+        if all(0.0 <= value <= 1.0 for value in coords):
+            coords = [coords[0] * width, coords[1] * height, coords[2] * width, coords[3] * height]
+        x1 = max(0, min(width, int(round(coords[0]))))
+        y1 = max(0, min(height, int(round(coords[1]))))
+        x2 = max(0, min(width, int(round(coords[2]))))
+        y2 = max(0, min(height, int(round(coords[3]))))
+
         if x2 <= x1 or y2 <= y1:
-            return image # return original if bbox invalid
+            return image
         return image.crop((x1, y1, x2, y2))
 
     def rerank_type2_vqa(
@@ -240,11 +351,12 @@ Score:"""
         verify: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Type 2 Visual Question Answering crop-reranking logic:
-        1. Run object detection for sub-queries on each frame.
-        2. Crop image around matching bounding boxes if found.
-        3. Pass crop (or fallback full frame) to VLM to answer query.
-        4. Calculate weighted score: 0.4 * rrf_score + 0.6 * vqa_score.
+        Type 2 Visual Question Answering crop-reranking logic.
+
+        Missing media never becomes a fabricated image, and the answer is
+        stored together with the candidate/frame identity that produced it.
+        This keeps the live route bounded while making VQA evidence
+        fail-closed.
 
         `verify`, when not None, overrides VERIFICATION_RERANK_ENABLED for
         this call - see rerank_type1's docstring for the rationale.
@@ -256,68 +368,64 @@ Score:"""
 
         for hit in candidate_frames:
             payload = hit["payload"]
-            video_name = payload["source_file"]
-            timestamp = payload["timestamp"]
-            
-            # Form path to keyframe image (assumed saved during preprocessing or simulated)
-            # In a real environment, keyframe image is loaded from disk.
-            # We mock the image loading here, or construct the local file path if present.
-            frame_img = None
-            frame_path = os.path.join(dataset_dir, video_name) # simplified path
-            if os.path.exists(frame_path) and frame_path.lower().endswith(('.jpg', '.jpeg', '.png')):
-                try:
-                    frame_img = Image.open(frame_path).convert("RGB")
-                except Exception:
-                    pass
-            
-            # If no actual image file is found, create a dummy placeholder PIL image for mock runs
-            if frame_img is None:
-                frame_img = Image.new("RGB", (640, 480), color=(128, 128, 128))
-            
-            # Bounding box cropping logic based on sub-queries
+            frame_img = load_candidate_frame(dataset_dir, payload)
+            hit["vqa_video_id"] = payload.get("source_file")
+            hit["vqa_frame_idx"] = payload.get("frame_idx")
+            hit["vqa_candidate_id"] = hit.get("id")
+            hit["vqa_evidence_available"] = frame_img is not None
+            hit["vqa_answer"] = "UNKNOWN"
+            hit["vqa_answer_valid"] = False
+            hit["vqa_evidence_reason"] = "frame_unavailable" if frame_img is None else ""
+
+            # Bounding-box cropping is an optional precision hint. If the
+            # detector is unavailable or fails, the real full frame remains
+            # valid evidence and is sent to the VLM.
             crop_img = frame_img
-            if self.detector is not None and sub_queries:
-                # Search for target objects matching our sub-queries
-                detections = self.detector.detect(frame_img, sub_queries)
+            if frame_img is not None and self.detector is not None and sub_queries:
+                try:
+                    detections = self.detector.detect(frame_img, sub_queries)
+                except Exception as exc:
+                    print(f"Object detection failed for frame: {exc}")
+                    detections = []
                 if detections:
-                    # Select detection with highest confidence
-                    best_det = max(detections, key=lambda x: x["conf"])
-                    print(f"Found object '{best_det['label']}' with conf {best_det['conf']}. Cropping bbox {best_det['bbox']}...")
-                    crop_img = self.crop_bounding_box(frame_img, best_det["bbox"])
-            
-            # VQA Evaluation Prompt on the cropped image
-            VQA_PROMPT = f"""
-            Question: {query}
-            Answer YES or NO, then give confidence 0-1.
-            Format: {{"answer": "YES/NO", "confidence": 0.9, "reason": "..."}}
-            """
-            
+                    best_det = max(detections, key=lambda x: x.get("conf", 0.0))
+                    print(
+                        f"Found object '{best_det.get('label', '')}' with conf "
+                        f"{best_det.get('conf', 0.0)}. Cropping bbox {best_det.get('bbox')}..."
+                    )
+                    crop_img = self.crop_bounding_box(frame_img, best_det.get("bbox", []))
+
+            # No VLM call is made without a real frame. Invalid VLM output is
+            # also zero-scored instead of receiving the old neutral 0.5.
             vqa_score = 0.0
-            try:
-                raw_res = self.vlm.generate(crop_img, VQA_PROMPT).strip()
-                if raw_res.startswith("```json"):
-                    raw_res = raw_res[7:]
-                if raw_res.endswith("```"):
-                    raw_res = raw_res[:-3]
-                    
-                result = json.loads(raw_res.strip())
-                conf = float(result.get("confidence", 0.5))
-                
-                if result.get("answer") == "YES":
-                    vqa_score = conf
-                else:
-                    vqa_score = 1.0 - conf
-            except Exception as e:
-                print(f"VQA scoring failed for frame: {e}")
-                vqa_score = 0.5 # neutral score on failure
-                
+            if crop_img is not None:
+                vqa_prompt = f"""
+Question: {query}
+Return ONLY one JSON object with this exact schema:
+{{"found": true, "answer": "short answer", "confidence": 0.0, "reason": "..."}}
+Use found=false, answer="UNKNOWN", confidence=0.0 when the frame cannot answer the question.
+The answer must be grounded in this frame; do not guess.
+"""
+                try:
+                    parsed = parse_grounded_vqa_response(self.vlm.generate(crop_img, vqa_prompt))
+                    if parsed["valid"]:
+                        vqa_score = parsed["confidence"]
+                        hit["vqa_answer"] = parsed["answer"]
+                        hit["vqa_answer_valid"] = True
+                        hit["vqa_evidence_reason"] = "grounded"
+                    else:
+                        hit["vqa_evidence_reason"] = parsed["reason"]
+                except Exception as exc:
+                    print(f"VQA scoring failed for frame: {exc}")
+                    hit["vqa_evidence_reason"] = "vlm_error"
+
             # Weighted fusion: original_rank (rrf_score), vqa_score, and
             # (if enabled) the verification match ratio against crop_img -
             # falls back to the original rrf/vqa-only split when disabled.
             rrf_score = hit.get("rrf_score", 0.0)
             hit["vqa_score"] = vqa_score
             if questions:
-                verification_ratio = self.verify_candidate(crop_img, "", questions)
+                verification_ratio = self.verify_candidate(crop_img, "", questions) if crop_img is not None else 0.0
                 hit["verification_ratio"] = verification_ratio
                 hit["final_score"] = (
                     TYPE2_RRF_WEIGHT * rrf_score
@@ -414,4 +522,3 @@ Score:"""
             })
 
         return sorted(sequences, key=lambda s: s["score"], reverse=True)
-import os
