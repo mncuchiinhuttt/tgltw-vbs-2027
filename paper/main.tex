@@ -82,9 +82,9 @@ Interactive video retrieval systems are evaluated under a different constraint f
 \section{Introduction}
 \label{sec:intro}
 
-The Video Browser Showdown (VBS) is an interactive evaluation of multimedia retrieval systems in which a human operator searches a known video collection and submits candidate segments during a timed session~\cite{vbs2026}. The system therefore has two coupled objectives: retrieve semantically relevant evidence and expose it quickly enough for the operator to verify it. A retrieval model that improves offline recall but adds an unbounded sequence of model calls can be less useful during a live task than a slightly less accurate model with predictable latency.
+The Video Browser Showdown (VBS) is an interactive evaluation of multimedia retrieval systems in which a human operator searches a known video collection and submits candidate segments during a timed session~\cite{vbs2027call,rossetto2025vbs}. The system therefore has two coupled objectives: retrieve semantically relevant evidence and expose it quickly enough for the operator to verify it. A retrieval model that improves offline recall but adds an unbounded sequence of model calls can be less useful during a live task than a slightly less accurate model with predictable latency.
 
-TGLTW is designed around this live constraint. The current implementation maintains separate visual, speech, and ambient-audio paths, combines dense and payload full-text retrieval, and uses reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal} before task-specific ranking. Approximate HNSW search~\cite{malkov2018efficient} is the default; exact search, verification, and in-video refinement are explicit precision-escalation actions. The interface presents source media, timestamps, evidence fields, feedback actions, and DRES submission controls in one loop.
+TGLTW is designed around this live constraint. The current implementation maintains separate visual, speech, and ambient-audio paths, combines dense and payload full-text retrieval, and uses reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal} before task-specific ranking. Approximate HNSW search~\cite{malkov2018efficient} is the default; exact search, verification, and in-video refinement are explicit precision-escalation actions. The interface presents source media, timestamps, evidence fields, feedback actions, and DRES submission controls in one loop, while the DRES client and interaction log are kept as explicit evaluation boundaries~\cite{sauter2024performance,vbs2027call}.
 
 The system also makes a distinction that is easy to lose in a rapidly evolving multimedia codebase. The repository contains a source preprocessing pipeline capable of producing enriched VLM, OCR, object, speech, and audio fields, while the live deployment may still point at a legacy Qdrant snapshot with a narrower payload schema. We consequently report the observed running index and the implemented source pipeline separately, and reserve performance claims for frozen replay experiments.
 
@@ -113,7 +113,35 @@ Finally, the inherited Type~3 path is structurally related to local ordered-even
 
 \subsection{Official task modes}
 
-The VBS workflow implemented by TGLTW exposes five official modes. KIS-V searches from a visual clip example; KIS-T searches for a known item from text; KIS-C adds conversational clarification and relevance feedback; AVS searches for multiple shots and benefits from diversity across videos; and VQA returns a textual answer about visual content. The repository also contains Type~3 temporal code inherited from earlier experiments and related to ordered-event DP methods~\cite{le2025fustar,luu2027dante}, but temporal alignment is not presented as a separate official VBS task in this paper.
+The VBS workflow implemented by TGLTW exposes five official modes. KIS-V searches from a visual clip example; KIS-T searches for a known item from text; KIS-C adds conversational clarification and relevance feedback; AVS searches for multiple shots and benefits from diversity across videos; and VQA returns a textual answer about visual content~\cite{vbs2027call}. The 2027 call explicitly makes KIS-V a minority case and expects more KIS-T, KIS-C, VQA, and AVS interactions, so the default engineering path prioritizes fast text, conversational, and multi-shot search. The repository also contains Type~3 temporal code inherited from earlier experiments and related to ordered-event DP methods~\cite{le2025fustar,luu2027dante}, but temporal alignment is not presented as a separate official VBS task in this paper.
+
+\subsection{VBS 2027 corpus and access assumptions}
+
+The official VBS 2027 call names the complete Vimeo Creative Commons Collection (V3C), an extended marine-video collection, and the GynSurg/LapGynLHE laparoscopic collection as the relevant data sources; most tasks are expected to use V3C~\cite{vbs2027call}. V3C was introduced as a 28,450-video collection of roughly 3,800 hours with shot-level access and metadata~\cite{rossetto2019v3c}. The three shards listed for the 2027 event are:
+
+\begin{table}[t]
+\centering
+\caption{V3C shards named in the VBS 2027 call.}
+\label{tab:v3c-shards}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Shard & Videos & Hours & Predefined segments \\
+\midrule
+V3C1 & 7{,}475 & 1{,}000 & 1{,}082{,}659 \\
+V3C2 & 9{,}760 & 1{,}300 & 1{,}425{,}454 \\
+V3C3 & 11{,}215 & 1{,}500 & 1{,}635{,}580 \\
+\midrule
+Total & 28{,}450 & 3{,}800 & 4{,}143{,}693 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+V3C2 has a separate dataset analysis and should be treated as a reproducibility reference when checking segmentation, keyframes, and shard-specific statistics~\cite{rossetto2021v3c2}. The marine branch is based on the Marine Video Kit, which was designed for content-based analysis and retrieval of underwater video~\cite{truong2023mvk}. The GynSurg work documents the laparoscopic video and annotation resources behind the gynecology collection~\cite{nasirihaghighi2025gynsurg}. These sources are not interchangeable: V3C is a broad Creative Commons web collection, whereas marine and surgical data are domain-specific and have separate access or data-agreement requirements~\cite{vbs2027call}.
+
+The table below records the currently observed local Qdrant snapshot, not coverage of the official 2027 corpus. A final benchmark must freeze a manifest containing the exact accessible shard, video IDs, source paths, durations, checksums, and segmentation version; otherwise a retrieval score cannot be compared across index builds.
 
 \subsection{Running index and source pipeline}
 
@@ -135,7 +163,7 @@ Collection & Modality & Observed points \\
 \end{tabular}
 \end{table}
 
-The observed visual payload contains source-file and temporal mapping fields, BTC keyframe information, OCR/text evidence, and dataset metadata. Enriched fields such as scene narratives, structured attributes, and object detections may be present in the schema but are not assumed to be populated for every point. The source pipeline additionally supports V3C assets, TransNetV2 shot detection with a controlled fallback, representative-keyframe sampling, OCR, object detection, faster-whisper ASR, M2D-CLAP ambient audio, optional VLM enrichment, and optional SigLIP named vectors. These branches require an index rebuild or a matching collection schema before they can be counted as part of a measured deployment.
+The observed visual payload contains source-file and temporal mapping fields, BTC keyframe information, OCR/text evidence, and dataset metadata. Enriched fields such as scene narratives, structured attributes, and object detections may be present in the schema but are not assumed to be populated for every point. The source pipeline additionally supports V3C assets and the supplied shot/keyframe analysis data, including TransNetV2-based shot detection~\cite{soucek2020transnetv2}, representative-keyframe sampling, OCR, object detection, faster-whisper ASR, M2D-CLAP ambient audio, optional VLM enrichment, and optional SigLIP named vectors. These branches require an index rebuild or a matching collection schema before they can be counted as part of a measured deployment.
 
 \section{System Architecture}
 \label{sec:architecture}
@@ -196,7 +224,7 @@ After fusion, a temporal-coherence heuristic can group nearby hits from the same
 
 \subsection{Interactive loop}
 
-The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The feedback action is a lightweight vector update, related to the interactive reweighting mechanism reported by ReViMM~\cite{phat2025revimm}; it does not add another generation call. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time.
+The browser interface exposes search, frame preview, video playback, metadata inspection, positive/negative feedback, query-by-example, browsing, manual in-video search, and DRES submission. KIS-C stores a bounded session history and can ask a clarification question when the candidate pool is ambiguous. AVS reuses the shared text retrieval path but emphasizes cross-video diversity and operator review. The feedback action is a lightweight vector update, related to the interactive reweighting mechanism reported by ReViMM~\cite{phat2025revimm}; it does not add another generation call. The backend logs query and action identifiers so that a later evaluation can separate retrieval time from human interaction time, as required for reproducible interactive-retrieval evaluation~\cite{sauter2024performance,lokoc2023vbs}.
 
 \screenshotplaceholder{Live search workspace and result grid}{Show the query controls, modality/task selector, ranked keyframes, score/evidence metadata, and the action used to open a candidate video.}{ui-search-workspace}
 
@@ -243,7 +271,7 @@ The browser interface exposes search, frame preview, video playback, metadata in
 
 \subsection{Shared task contract}
 
-The four live retrieval modes share a result contract but intentionally use different query interfaces. KIS-V starts from visual evidence and therefore bypasses the text/HyDE branch. KIS-T, KIS-C, and AVS enter the Type~1 text route; they share retrieval primitives but differ in session state, ambiguity handling, and how the operator selects submissions. VQA is a separate Type~2 route because answer generation must be grounded in a resolved frame. In every route, the final candidate should retain a source video identifier, a frame index when available, a timestamp, and enough payload provenance for the operator to inspect the evidence.
+The five official modes share a result contract but intentionally use different query interfaces. KIS-V starts from visual evidence and therefore bypasses the text/HyDE branch. KIS-T, KIS-C, and AVS enter the Type~1 text route; they share retrieval primitives but differ in session state, ambiguity handling, and how the operator selects submissions. KIS-C is interaction-dependent: the initial description and later clarification turns must be logged as one task session rather than flattened into one text query. VQA is a separate Type~2 route because answer generation must be grounded in a resolved frame. In every route, the final candidate should retain a source video identifier, a frame index when available, a timestamp, and enough payload provenance for the operator to inspect the evidence.
 
 \begin{table*}[t]
 \centering
@@ -461,18 +489,45 @@ This contract has two purposes. It prevents an unavailable frame from receiving 
 \section{Experimental Methodology}
 \label{sec:methodology}
 
-The system description above is not itself an evaluation. This section defines the minimum protocol for a defensible VBS paper, following the system-paper pattern of separating architecture, controlled comparisons, and interaction/runtime evidence~\cite{rossetto2021vitrivr}.
+The system description above is not itself an evaluation. This section separates the official live DRES outcome from a reproducible offline replay, following the system-paper pattern of separating architecture, controlled comparisons, and interaction/runtime evidence~\cite{rossetto2021vitrivr,sauter2024performance}. The distinction is essential for VBS: a ranked retrieval metric can diagnose the engine, but it is not a substitute for a timed human--system submission session.
+
+\subsection{Live DRES evaluation and offline replay}
+
+DRES presents the live task, receives submissions, and evaluates against ground truth or live judges for open-ended cases~\cite{vbs2027call,sauter2024performance}. The competition report will preserve the DRES task/session identity and official per-task score and rank. The current backend records query and interaction events locally in JSONL and best-effort pushes them to DRES, but its thin REST wrapper is a staging boundary. Before the event, the client must be regenerated or checked against the exact VBS 2027 OpenAPI specification, including login, current-task, submission, and log payloads~\cite{vbs2027call}.
+
+The live record must include the DRES evaluation and task IDs, task mode, task start and end timestamps, every query or clarification turn, candidate IDs shown, every submission in order, whether it was correct or judged, and the model/index/configuration hashes. For KIS-C, the clarification transcript and answer times remain part of the same task session. For AVS, the log must retain source-video identity and temporal range for every submitted shot because diversity and duplicate handling are part of the task outcome. VBS 2027 does not advertise a novice session, so an internal usability run must not be reported as an official novice-session score~\cite{vbs2027call}.
+
+Offline replay uses a frozen manifest and an annotated query file from a released prior-year task set or an internally annotated holdout. It is useful for ablations, retrieval metrics, grounding checks, and latency measurements, but it must be labelled as replay and must not be presented as a VBS 2027 leaderboard result. This separation follows the VBS evaluation literature, where task types, live judging, time-to-submission, false submissions, and interaction logs all affect the final interpretation~\cite{rossetto2025vbs,lokoc2023vbs}.
+
+The task clock and scoring configuration are supplied by the event's DRES evaluation; the implementation must record them rather than hard-code a historical duration. The 2025 results are a useful precedent for task-specific timing and score trajectories, not a promise about the 2027 schedule~\cite{rossetto2025vbs}.
+
+\begin{table}[t]
+\centering
+\caption{Two evaluation tracks used in this paper.}
+\label{tab:evaluation-tracks}
+\small
+\begin{tabular}{@{}P{1.65cm}P{4.95cm}@{}}
+\toprule
+Track & Required record and interpretation \\
+\midrule
+Live DRES & Official score/rank, elapsed time, correct and false submissions, judge or ground-truth outcome, task/session IDs, and interaction log. Primary competition evidence. \\
+Offline replay & Frozen manifest, query labels, raw ranked outputs, component/end-to-end latency, ablations, and grounding/provenance checks. Diagnostic evidence; not the live leaderboard score. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Corpus, query protocol, and split}
 
-The final experiment will freeze the exact video manifest, index snapshot, query set, task labels, and relevance annotations. The split should prevent a query from being evaluated against a different index revision than the one used during preprocessing. For KIS, each query should identify the relevant video and, where available, the target frame or temporal interval. For VQA, annotations should include the answer and the evidence frame/interval. AVS should record the accepted video set and the duplicate-video policy.
+The final experiment will freeze the exact accessible V3C/marine/surgical manifest, index snapshot, query set, task labels, and relevance annotations. Dataset agreements and shard availability will be recorded alongside the manifest; the paper will not imply that an unmounted or agreement-gated collection was indexed. Live queries are unknown until the event, so no live query text, target media, or judge feedback may enter preprocessing, prompt tuning, or index selection. The split must also prevent a replay query from being evaluated against a different index revision than the one used during preprocessing.
+
+For KIS, each replay query should identify the relevant video and, where available, the target frame or temporal interval. For VQA, annotations should include the answer, accepted answer variants, and the evidence frame/interval. AVS should record an accepted set of shots or source videos only when an annotation protocol exists; otherwise, the paper reports judge outcomes and submission diversity rather than pretending that recall is complete. Historical VBS results show why this matters: open-ended AVS and some question-answering cases require human assessment, while KIS can be checked against a known target~\cite{rossetto2025vbs}.
 
 \begin{table}[t]
 \centering
 \caption{Required frozen benchmark metadata.}
 \label{tab:protocol}
 \small
-\begin{tabular}{ll}
+\begin{tabular}{@{}P{1.8cm}P{4.8cm}@{}}
 \toprule
 Artifact & Required contents \\
 \midrule
@@ -482,6 +537,7 @@ Models & embedding/VLM/OCR/ASR IDs and revisions \\
 Runtime & hardware, CUDA, Python lock, provider and timeout \\
 Queries & task, query text, split, relevance/evidence labels \\
 Provenance & git SHA, config and manifest hashes \\
+Live trace & DRES task/session IDs, ordered submissions, action/query timestamps \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -492,7 +548,15 @@ The primary retrieval comparison should include dense-only, sparse-only, RRF, RR
 
 \subsection{Metrics}
 
-For KIS, report Recall@1, Recall@5, Recall@10, Recall@20, MRR, nDCG@10, video hit rate, and frame/interval hit rate. For AVS, report unique-video coverage, duplicate rate, accepted-set recall when annotations exist, and operator time; official live judging is reported separately. For VQA, report candidate localization, exact or semantic answer accuracy, grounded-answer rate, and evidence identity parity. For all tasks, report query-processing, retrieval, reranking, VLM, end-to-end, and human-action latency, including p50/p95 warm and cold measurements. The current draft has no frozen ground-truth replay, so all result cells remain \tbd{}.
+The live track reports the official DRES score and rank per task/session, together with time-to-first submission, time-to-first correct submission, correct and false submissions, total submission count, and the ordered interaction trace. The exact VBS score remains the authority for the competition report; the following task-level diagnostics explain it without replacing it:
+
+\begin{itemize}
+    \item KIS-V, KIS-T, and KIS-C: target-video and target-frame/interval hit, time-to-correct, false-submission count, and the number and duration of clarification turns for KIS-C;
+    \item AVS: accepted shots, accepted source videos, accepted temporal ranges, unique-video coverage, duplicate rate, and judge outcome. Diversity is reported explicitly because multiple nearby shots from one video do not have the same value as distinct source videos~\cite{vbs2027call,rossetto2025vbs};
+    \item VQA: answer correctness or judge outcome, evidence identity, grounded-answer rate, and time-to-answer. An answer generated from a different or unavailable frame is a provenance failure, not a neutral success.
+\end{itemize}
+
+The offline replay reports Recall@1, Recall@5, Recall@10, Recall@20, MRR, nDCG@10, video hit rate, and frame/interval hit rate for known-item tasks. For AVS, it reports unique-video coverage, duplicate rate, and accepted-set recall only when a frozen annotation protocol exists. For VQA, it reports candidate localization, exact or semantic answer accuracy, grounded-answer rate, and evidence identity parity. For all tasks, report query-processing, retrieval, reranking, VLM, end-to-end, and human-action latency, including p50/p95 warm and cold measurements. The current draft has no frozen ground-truth replay, so all result cells remain \tbd{}.
 
 \section{Results}
 \label{sec:results}
@@ -503,7 +567,7 @@ Table~\ref{tab:retrieval-results} is the result table to fill after the evaluati
 
 \begin{table*}[t]
 \centering
-\caption{Retrieval results on the frozen VBS query set. Values are placeholders in this draft.}
+\caption{Offline replay retrieval results on a frozen query set; these values are not the live VBS leaderboard score. Values are placeholders in this draft.}
 \label{tab:retrieval-results}
 \small
 \resizebox{\textwidth}{!}{%
@@ -560,6 +624,8 @@ The grounding contract introduces observable failure categories rather than hidi
 First, the current deployment has a migration gap between legacy Qdrant collection names and the newer source indexing schema. Optional enrichment fields cannot be treated as universal until a re-index is completed and audited. Second, VQA reranking is bounded but sequential over a small candidate head; its p95 latency must be measured before changing the default candidate count. Third, OpenAI-compatible and local VLMs can differ in token semantics, latency, and response formatting. The runtime therefore exposes completion-token and timeout budgets, but cross-provider scores should not be compared without recording the provider and model revision.
 
 Fourth, AVS and some KIS-C outcomes depend on operator decisions and DRES live judging. Offline recall is useful for diagnosis but does not reproduce the full competition score. Finally, this draft reports no accuracy improvement because the repository currently lacks a frozen, ground-truth-backed evaluation artifact. The final version must publish the run manifest, configuration, model revisions, index version, raw predictions, metric script, and failure logs.
+
+\paragraph{\textcolor{placeholderred}{Submission-format TODO.}} \textcolor{placeholderred}{The current engineering draft is longer than the VBS 2027 extended-demo budget of six content pages plus up to two pages of references. Before submission, compress the full system description into one architecture figure, one task-contract figure/table, one or two real UI captures, and the live/offline evaluation protocol; retain the detailed ablations and failure examples only if they fit the permitted space. The official VBS deadline and camera-ready date must be checked again before upload~\cite{vbs2027call}.}
 
 \section{Conclusion}
 \label{sec:conclusion}
