@@ -500,37 +500,15 @@ async def run_search(request: SearchRequest):
             )
             
             for idx, c in enumerate(top_candidates):
-                # Retrieve concise answer for the top candidate
-                answer = "N/A"
-                if idx == 0:
-                    # In backend we try to extract the real cropped frame for VLM answer if possible
-                    try:
-                        from PIL import Image
-                        import os
-                        video_name = c["payload"]["source_file"]
-                        timestamp = c["payload"]["timestamp"]
-                        frame_path = os.path.join(dataset_dir, video_name)
-                        frame_img = None
-                        if os.path.exists(frame_path) and frame_path.lower().endswith(('.jpg', '.jpeg', '.png')):
-                            frame_img = Image.open(frame_path).convert("RGB")
-                        else:
-                            # Try video extraction
-                            cap = cv2.VideoCapture(frame_path)
-                            fps = cap.get(cv2.CAP_PROP_FPS)
-                            if fps > 0:
-                                cap.set(cv2.CAP_PROP_POS_FRAMES, int(timestamp * fps))
-                                ret, frame = cap.read()
-                                if ret:
-                                    frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                                cap.release()
-                        
-                        answer_prompt = f"Answer the following question about this image: {resolved_query}. Be concise."
-                        vlm = load_vlm()
-                        answer = vlm.generate(frame_img, answer_prompt).strip()
-                    except Exception as e:
-                        print(f"Failed to generate answer for top result: {e}")
-                        answer = "Error generating answer"
-                
+                # The reranker already answered this exact candidate/frame.
+                # Do not issue a second ungrounded call here: that used to
+                # answer from a possibly missing frame and could leak a
+                # result that did not correspond to the ranked candidate.
+                is_answer_candidate = idx == 0
+                answer = c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None
+                if is_answer_candidate and not c.get("vqa_answer_valid", False):
+                    answer = "N/A"
+
                 results.append({
                     "rank": idx + 1,
                     "score": c.get("final_score", 0.0),
@@ -538,14 +516,21 @@ async def run_search(request: SearchRequest):
                     "rrf_score": c.get("rrf_score", 0.0),
                     "id": c["id"],
                     "payload": c["payload"],
-                    "answer": answer if idx == 0 else None,
+                    "answer": answer,
+                    "vqa_answer": c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None,
+                    "vqa_answer_valid": c.get("vqa_answer_valid", False) if is_answer_candidate else False,
+                    "vqa_evidence_available": c.get("vqa_evidence_available", False),
+                    "vqa_evidence_reason": c.get("vqa_evidence_reason", ""),
+                    "answer_candidate_id": c.get("vqa_candidate_id") if is_answer_candidate else None,
+                    "answer_video_id": c.get("vqa_video_id") if is_answer_candidate else None,
+                    "answer_frame_idx": c.get("vqa_frame_idx") if is_answer_candidate else None,
                     "matched_via": c.get("matched_via", [])
                 })
             # Record the generated answer against this turn so a later CQR
             # rewrite (e.g. "was there a sign in that scene too?") can
             # resolve against what the system actually answered, not just
             # the query text.
-            if results and results[0].get("answer"):
+            if results and results[0].get("vqa_answer_valid") and results[0].get("answer"):
                 _session_state["history"][-1]["answer"] = results[0]["answer"]
 
         elif request.type == 3:
