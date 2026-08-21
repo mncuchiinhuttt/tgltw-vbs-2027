@@ -3,6 +3,7 @@
 import os
 import sys
 
+import numpy as np
 from PIL import Image
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,8 +12,10 @@ sys.path.append(os.path.join(REPO_ROOT, "inference-code"))
 from search.reranker import (  # noqa: E402
     Reranker,
     _parse_vlm_score,
+    load_candidate_frame,
     parse_grounded_vqa_response,
 )
+import search.reranker as reranker_module  # noqa: E402
 
 
 class FakeVLM:
@@ -48,6 +51,7 @@ def test_grounded_vqa_parser_requires_found_answer_and_bounded_confidence():
         '{"answer": "a car", "confidence": 0.8}',
         '{"found": true, "answer": "UNKNOWN", "confidence": 0.8}',
         '{"found": true, "answer": "a car", "confidence": 1.1}',
+        '{"found": true, "answer": "a car", "confidence": true}',
         '{"found": false, "answer": "UNKNOWN", "confidence": 0.0}',
     ):
         result = parse_grounded_vqa_response(raw)
@@ -75,6 +79,62 @@ def test_missing_frame_fails_closed_without_calling_vlm(tmp_path):
     assert result["vqa_answer"] == "UNKNOWN"
     assert result["vqa_score"] == 0.0
     assert result["vqa_evidence_reason"] == "frame_unavailable"
+
+
+def test_malformed_media_metadata_fails_closed(tmp_path):
+    vlm = FakeVLM([])
+    reranker = Reranker(vlm)
+    result = reranker.rerank_type2_vqa(
+        "Is there a person?",
+        ["person"],
+        [_candidate("bad", "missing.mp4", timestamp="not-a-time", frame_idx="not-an-index")],
+        str(tmp_path),
+    )[0]
+
+    assert result["vqa_evidence_available"] is False
+    assert result["vqa_evidence_reason"] == "frame_unavailable"
+    assert vlm.calls == []
+
+
+def test_video_loading_prefers_canonical_frame_idx(monkeypatch, tmp_path):
+    video_path = tmp_path / "video.mp4"
+    video_path.write_bytes(b"not a real video")
+
+    class FakeCapture:
+        def __init__(self):
+            self.positions = []
+
+        def isOpened(self):
+            return True
+
+        def set(self, property_id, value):
+            self.positions.append((property_id, value))
+            return True
+
+        def read(self):
+            return True, np.zeros((4, 4, 3), dtype=np.uint8)
+
+        def release(self):
+            return None
+
+    capture = FakeCapture()
+    monkeypatch.setattr(reranker_module.cv2, "VideoCapture", lambda _: capture)
+    image = load_candidate_frame(
+        str(tmp_path),
+        {"source_file": "video.mp4", "frame_idx": 7, "timestamp": 99.0},
+    )
+
+    assert image is not None
+    assert capture.positions == [(reranker_module.cv2.CAP_PROP_POS_FRAMES, 7)]
+
+
+def test_candidate_paths_cannot_escape_dataset_root(tmp_path):
+    outside_path = tmp_path.parent / "outside-evidence.png"
+    Image.new("RGB", (8, 8), color="red").save(outside_path)
+    assert load_candidate_frame(
+        str(tmp_path),
+        {"keyframe_path": str(outside_path), "source_file": "missing.mp4"},
+    ) is None
 
 
 def test_answers_stay_bound_to_their_candidate_frame(tmp_path):

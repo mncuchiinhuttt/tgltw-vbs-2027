@@ -141,8 +141,11 @@ def parse_grounded_vqa_response(raw_response: str) -> Dict[str, Any]:
     if answer.strip().upper() in {"UNKNOWN", "N/A", "NA", "NONE", "NULL"}:
         return {**invalid, "reason": "unknown_answer"}
 
+    raw_confidence = parsed.get("confidence")
+    if isinstance(raw_confidence, bool):
+        return {**invalid, "reason": "invalid_confidence"}
     try:
-        confidence = float(parsed.get("confidence"))
+        confidence = float(raw_confidence)
     except (TypeError, ValueError):
         return {**invalid, "reason": "invalid_confidence"}
     if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
@@ -158,16 +161,49 @@ def parse_grounded_vqa_response(raw_response: str) -> Dict[str, Any]:
 
 
 def _candidate_paths(dataset_dir: str, payload: Dict[str, Any]) -> List[str]:
-    """Return explicit keyframe paths followed by the source video path."""
+    """Return only media paths contained by the configured dataset directory."""
+    if not isinstance(payload, dict):
+        return []
+    try:
+        dataset_root = os.path.realpath(dataset_dir)
+    except (TypeError, ValueError, OSError):
+        return []
     paths: List[str] = []
     for field in ("keyframe_path", "frame_path", "source_file"):
         raw_path = payload.get(field)
         if not isinstance(raw_path, str) or not raw_path.strip():
             continue
-        path = raw_path if os.path.isabs(raw_path) else os.path.join(dataset_dir, raw_path)
+        path = os.path.realpath(raw_path if os.path.isabs(raw_path) else os.path.join(dataset_root, raw_path))
+        try:
+            if os.path.commonpath((dataset_root, path)) != dataset_root:
+                continue
+        except ValueError:
+            continue
         if path not in paths:
             paths.append(path)
     return paths
+
+
+def _coerce_frame_idx(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number) or number < 0 or not number.is_integer():
+        return None
+    return int(number)
+
+
+def _coerce_timestamp(value: Any) -> Optional[float]:
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) and number >= 0 else None
 
 
 def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[Image.Image]:
@@ -186,19 +222,17 @@ def load_candidate_frame(dataset_dir: str, payload: Dict[str, Any]) -> Optional[
             capture.release()
             continue
         try:
-            timestamp = payload.get("timestamp", payload.get("pts_time"))
-            frame_idx = payload.get("frame_idx")
-            if timestamp is not None:
-                timestamp = float(timestamp)
-                if not math.isfinite(timestamp) or timestamp < 0:
-                    timestamp = None
-            if timestamp is not None:
-                capture.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000.0)
-            elif frame_idx is not None:
-                frame_idx = int(frame_idx)
-                if frame_idx < 0:
-                    continue
+            # frame_idx is the canonical indexed identity. Timestamp is only
+            # a fallback for legacy payloads that do not have it.
+            frame_idx = _coerce_frame_idx(payload.get("frame_idx"))
+            timestamp = payload.get("timestamp")
+            if timestamp is None:
+                timestamp = payload.get("pts_time")
+            timestamp = _coerce_timestamp(timestamp)
+            if frame_idx is not None:
                 capture.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+            elif timestamp is not None:
+                capture.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000.0)
             else:
                 continue
             success, frame = capture.read()

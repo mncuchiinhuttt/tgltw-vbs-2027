@@ -1,4 +1,5 @@
 import os
+import math
 import sys
 import cv2
 import json
@@ -196,6 +197,39 @@ def init_services(query_type: int = 1):
 # Ensure datasets directory exists
 DATASETS_DIR.mkdir(parents=True, exist_ok=True)
 
+
+def _resolve_dataset_dir(requested: Optional[str]) -> str:
+    """Resolve a dataset directory without allowing the API to escape it."""
+    dataset_root = os.path.realpath(str(DATASETS_DIR))
+    raw_path = requested or dataset_root
+    candidate = raw_path if os.path.isabs(raw_path) else os.path.join(dataset_root, raw_path)
+    resolved = os.path.realpath(candidate)
+    try:
+        inside_root = os.path.commonpath((dataset_root, resolved)) == dataset_root
+    except ValueError:
+        inside_root = False
+    if not inside_root:
+        raise HTTPException(status_code=400, detail="dataset_dir must be inside the server dataset directory")
+    return resolved
+
+
+def _resolve_media_path(video_name: str) -> Path:
+    """Resolve a frontend media name under DATASETS_DIR and require a file."""
+    dataset_root = os.path.realpath(str(DATASETS_DIR))
+    if not isinstance(video_name, str) or not video_name.strip():
+        raise HTTPException(status_code=400, detail="video_name is required")
+    resolved = os.path.realpath(os.path.join(dataset_root, video_name))
+    try:
+        inside_root = os.path.commonpath((dataset_root, resolved)) == dataset_root
+    except ValueError:
+        inside_root = False
+    if not inside_root:
+        raise HTTPException(status_code=400, detail="media path is outside the dataset directory")
+    media_path = Path(resolved)
+    if not media_path.is_file():
+        raise HTTPException(status_code=404, detail="Media file not found")
+    return media_path
+
 # 3. Request Models
 class SearchRequest(BaseModel):
     type: int
@@ -334,14 +368,12 @@ async def run_search(request: SearchRequest):
     """
     if request.type not in [1, 2, 3]:
         raise HTTPException(status_code=400, detail="Invalid search type. Must be 1, 2, or 3.")
-        
+    dataset_dir = _resolve_dataset_dir(request.dataset_dir)
+
     try:
         # Initialize services dynamically
         query_proc, searcher, reranker = init_services(query_type=request.type)
         
-        # Determine dataset_dir
-        dataset_dir = request.dataset_dir or str(DATASETS_DIR)
-
         # 0. CQR: resolve pronouns/implicit references against this
         # session's prior turns (QueryProcessor.rewrite_query_cqr existed
         # since the AIC-era code but was never called anywhere - VBS's
@@ -838,9 +870,9 @@ async def run_in_video_search(request: InVideoSearchRequest):
     its full frame timeline directly (HybridSearcher.in_video_refine) rather
     than only whatever made the original candidate pool.
     """
+    dataset_dir = _resolve_dataset_dir(request.dataset_dir)
     try:
         query_proc, searcher, reranker = init_services(query_type=2)
-        dataset_dir = request.dataset_dir or str(DATASETS_DIR)
 
         # Seed in_video_refine with a single synthetic candidate for the
         # requested video (top_videos=1 scopes it to exactly that video,
@@ -858,17 +890,28 @@ async def run_in_video_search(request: InVideoSearchRequest):
         sub_queries = decomp.get("sub_queries", [request.query])
         top_candidates = reranker.rerank_type2_vqa(request.query, sub_queries, candidates[:10], dataset_dir)
 
-        results = [
-            {
+        results = []
+        for idx, c in enumerate(top_candidates):
+            is_answer_candidate = idx == 0
+            answer = c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None
+            if is_answer_candidate and not c.get("vqa_answer_valid", False):
+                answer = "N/A"
+            results.append({
                 "rank": idx + 1,
                 "score": c.get("final_score", 0.0),
                 "vqa_score": c.get("vqa_score", 0.0),
                 "rrf_score": c.get("rrf_score", 0.0),
                 "id": c["id"],
                 "payload": c["payload"],
-            }
-            for idx, c in enumerate(top_candidates)
-        ]
+                "answer": answer,
+                "vqa_answer": c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None,
+                "vqa_answer_valid": c.get("vqa_answer_valid", False) if is_answer_candidate else False,
+                "vqa_evidence_available": c.get("vqa_evidence_available", False),
+                "vqa_evidence_reason": c.get("vqa_evidence_reason", ""),
+                "answer_candidate_id": c.get("vqa_candidate_id") if is_answer_candidate else None,
+                "answer_video_id": c.get("vqa_video_id") if is_answer_candidate else None,
+                "answer_frame_idx": c.get("vqa_frame_idx") if is_answer_candidate else None,
+            })
         return {"query": request.query, "video_name": request.video_name, "results": results}
     except Exception as e:
         import traceback
@@ -876,16 +919,11 @@ async def run_in_video_search(request: InVideoSearchRequest):
         raise HTTPException(status_code=500, detail=f"In-video search failed: {str(e)}")
 
 @app.get("/api/media/frame")
-def get_frame(video_name: str, timestamp: float):
+def get_frame(video_name: str, timestamp: float, frame_idx: Optional[int] = None):
     """
     Dynamically extract a frame from a video at a specific timestamp and return as JPEG.
     """
-    video_path = DATASETS_DIR / video_name
-    if not video_path.exists():
-        # Fallback to image check
-        if video_name.lower().endswith(('.jpg', '.jpeg', '.png')):
-            return FileResponse(str(video_path))
-        raise HTTPException(status_code=404, detail="Media file not found")
+    video_path = _resolve_media_path(video_name)
 
     # If it is a static image, return directly
     if video_name.lower().endswith(('.jpg', '.jpeg', '.png')):
@@ -898,17 +936,22 @@ def get_frame(video_name: str, timestamp: float):
         cap.release()
         raise HTTPException(status_code=400, detail="Unable to retrieve FPS from video")
 
-    frame_idx = int(timestamp * fps)
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+    if frame_idx is not None:
+        if frame_idx < 0:
+            cap.release()
+            raise HTTPException(status_code=400, detail="frame_idx must be non-negative")
+        canonical_frame_idx = frame_idx
+    else:
+        if not math.isfinite(timestamp) or timestamp < 0:
+            cap.release()
+            raise HTTPException(status_code=400, detail="timestamp must be finite and non-negative")
+        canonical_frame_idx = int(timestamp * fps)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, canonical_frame_idx)
     ret, frame = cap.read()
     cap.release()
 
     if not ret:
-        # Create an empty dark gray PIL Image
-        img = Image.new("RGB", (640, 360), color=(30, 41, 59))
-        output = io.BytesIO()
-        img.save(output, format="JPEG")
-        return Response(content=output.getvalue(), media_type="image/jpeg")
+        raise HTTPException(status_code=404, detail="Unable to decode requested frame")
 
     # Encode to JPEG
     is_success, buffer = cv2.imencode(".jpg", frame)
@@ -922,10 +965,7 @@ def get_video(video_name: str):
     """
     Serve video file directly with support for seeking/range queries.
     """
-    video_path = DATASETS_DIR / video_name
-    if not video_path.exists():
-        raise HTTPException(status_code=404, detail="Video file not found")
-        
+    video_path = _resolve_media_path(video_name)
     return FileResponse(str(video_path))
 
 # 5b. DRES Integration (VBS_GUIDE.md section 6) - proxied through this
