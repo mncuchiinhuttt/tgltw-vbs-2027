@@ -8,7 +8,8 @@ from openai import OpenAI
 from .base_vlm import BaseVLM
 from .image_resize import resize_image_for_vlm, estimate_token_count
 from config import (
-    OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME, VLM_BATCH_CONCURRENCY,
+    OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_VLM_MODEL_NAME, OPENAI_VLM_MAX_COMPLETION_TOKENS,
+    OPENAI_VLM_TIMEOUT_SEC, VLM_BATCH_CONCURRENCY,
     VLM_MIN_PIXELS, VLM_MAX_PIXELS, FAST_PATHWAY_MIN_PIXELS, FAST_PATHWAY_MAX_PIXELS,
 )
 
@@ -19,13 +20,32 @@ class OpenAIVLM(BaseVLM):
     """
     def __init__(self, model_name: str = OPENAI_VLM_MODEL_NAME, api_key: str = OPENAI_API_KEY, base_url: str = OPENAI_BASE_URL,
                  min_pixels: int = VLM_MIN_PIXELS, max_pixels: int = VLM_MAX_PIXELS):
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        self.client = OpenAI(api_key=api_key, base_url=base_url, timeout=OPENAI_VLM_TIMEOUT_SEC)
         self.model_name = model_name
         self.min_pixels = min_pixels
         self.max_pixels = max_pixels
         print(f"Initialized OpenAI-compatible VLM with model: {self.model_name}" + (f" at {base_url}" if base_url else "")
             + f" (pixel budget: {min_pixels}-{max_pixels}, ~{max_pixels // (28 * 28)} max tokens/image)"
         )
+
+    def _create_completion(self, messages):
+        """Call reasoning-capable APIs with a bounded, compatible budget."""
+        kwargs = {
+            "model": self.model_name,
+            "messages": messages,
+            "max_completion_tokens": OPENAI_VLM_MAX_COMPLETION_TOKENS,
+        }
+        try:
+            return self.client.chat.completions.create(**kwargs)
+        except Exception as exc:
+            # A few older OpenAI-compatible servers reject the newer
+            # max_completion_tokens name. Retry only for that specific
+            # compatibility failure; real timeouts/API errors must propagate.
+            if "max_completion_tokens" not in str(exc).lower():
+                raise
+            kwargs.pop("max_completion_tokens")
+            kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+            return self.client.chat.completions.create(**kwargs)
 
     def _image_to_base64_budget(self, image: Union[Image.Image, str], min_pixels: int, max_pixels: int) -> str:
         """
@@ -53,35 +73,25 @@ class OpenAIVLM(BaseVLM):
 
     def generate(self, image: Union[Image.Image, str], prompt: str) -> str:
         if image is None:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=1000
-            )
+            response = self._create_completion([{"role": "user", "content": prompt}])
             return response.choices[0].message.content
 
         base64_image = self._image_to_base64(image)
 
-        response = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                            }
+        response = self._create_completion([
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
                         }
-                    ]
-                }
-            ],
-            max_tokens=1000
-        )
+                    }
+                ]
+            }
+        ])
         return response.choices[0].message.content
 
     def generate_batch(self, images: List[Union[Image.Image, str]], prompt: str) -> List[str]:
@@ -119,9 +129,5 @@ class OpenAIVLM(BaseVLM):
             b64 = self._image_to_base64_budget(img, FAST_PATHWAY_MIN_PIXELS, FAST_PATHWAY_MAX_PIXELS)
             content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
 
-        response = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "user", "content": content}],
-            max_tokens=1000,
-        )
+        response = self._create_completion([{"role": "user", "content": content}])
         return response.choices[0].message.content
