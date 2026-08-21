@@ -230,6 +230,68 @@ def _resolve_media_path(video_name: str) -> Path:
         raise HTTPException(status_code=404, detail="Media file not found")
     return media_path
 
+
+def _vqa_public_evidence(candidate: dict) -> dict:
+    """Expose one validated, dataset-relative media reference to the UI."""
+    media_name = None
+    raw_path = candidate.get("vqa_evidence_path")
+    if isinstance(raw_path, str) and raw_path:
+        dataset_root = os.path.realpath(str(DATASETS_DIR))
+        resolved = os.path.realpath(raw_path)
+        try:
+            if os.path.commonpath((dataset_root, resolved)) == dataset_root and os.path.isfile(resolved):
+                media_name = os.path.relpath(resolved, dataset_root)
+        except ValueError:
+            media_name = None
+
+    frame_idx = candidate.get("vqa_evidence_frame_idx")
+    if isinstance(frame_idx, bool) or not isinstance(frame_idx, int) or frame_idx < 0:
+        frame_idx = None
+    timestamp = candidate.get("vqa_evidence_timestamp")
+    if isinstance(timestamp, bool) or not isinstance(timestamp, (int, float)):
+        timestamp = None
+    elif not math.isfinite(float(timestamp)) or float(timestamp) < 0:
+        timestamp = None
+    else:
+        timestamp = float(timestamp)
+    return {
+        "evidence_media_name": media_name,
+        "evidence_frame_idx": frame_idx,
+        "evidence_timestamp": timestamp,
+    }
+
+
+def _public_vqa_payload(payload: dict) -> dict:
+    """Remove local paths and malformed temporal fields from VQA JSON."""
+    public_payload = dict(payload or {})
+    public_payload.pop("keyframe_path", None)
+    public_payload.pop("frame_path", None)
+
+    raw_frame_idx = public_payload.get("frame_idx")
+    if isinstance(raw_frame_idx, bool):
+        public_payload.pop("frame_idx", None)
+    else:
+        try:
+            normalized_frame_idx = float(raw_frame_idx)
+            if not math.isfinite(normalized_frame_idx) or normalized_frame_idx < 0 or not normalized_frame_idx.is_integer():
+                raise ValueError
+            public_payload["frame_idx"] = int(normalized_frame_idx)
+        except (TypeError, ValueError):
+            public_payload.pop("frame_idx", None)
+
+    raw_timestamp = public_payload.get("timestamp")
+    if isinstance(raw_timestamp, bool):
+        public_payload.pop("timestamp", None)
+    else:
+        try:
+            normalized_timestamp = float(raw_timestamp)
+            if not math.isfinite(normalized_timestamp) or normalized_timestamp < 0:
+                raise ValueError
+            public_payload["timestamp"] = normalized_timestamp
+        except (TypeError, ValueError):
+            public_payload.pop("timestamp", None)
+    return public_payload
+
 # 3. Request Models
 class SearchRequest(BaseModel):
     type: int
@@ -538,7 +600,8 @@ async def run_search(request: SearchRequest):
                 # result that did not correspond to the ranked candidate.
                 is_answer_candidate = idx == 0
                 answer = c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None
-                if is_answer_candidate and not c.get("vqa_answer_valid", False):
+                vqa_answer_valid = is_answer_candidate and c.get("vqa_answer_valid", False)
+                if is_answer_candidate and not vqa_answer_valid:
                     answer = "N/A"
 
                 results.append({
@@ -547,15 +610,16 @@ async def run_search(request: SearchRequest):
                     "vqa_score": c.get("vqa_score", 0.0),
                     "rrf_score": c.get("rrf_score", 0.0),
                     "id": c["id"],
-                    "payload": c["payload"],
+                    "payload": _public_vqa_payload(c["payload"]),
                     "answer": answer,
                     "vqa_answer": c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None,
-                    "vqa_answer_valid": c.get("vqa_answer_valid", False) if is_answer_candidate else False,
+                    "vqa_answer_valid": vqa_answer_valid,
                     "vqa_evidence_available": c.get("vqa_evidence_available", False),
                     "vqa_evidence_reason": c.get("vqa_evidence_reason", ""),
-                    "answer_candidate_id": c.get("vqa_candidate_id") if is_answer_candidate else None,
-                    "answer_video_id": c.get("vqa_video_id") if is_answer_candidate else None,
-                    "answer_frame_idx": c.get("vqa_frame_idx") if is_answer_candidate else None,
+                    "answer_candidate_id": c.get("vqa_candidate_id") if vqa_answer_valid else None,
+                    "answer_video_id": c.get("vqa_video_id") if vqa_answer_valid else None,
+                    "answer_frame_idx": c.get("vqa_frame_idx") if vqa_answer_valid else None,
+                    **_vqa_public_evidence(c),
                     "matched_via": c.get("matched_via", [])
                 })
             # Record the generated answer against this turn so a later CQR
@@ -894,7 +958,8 @@ async def run_in_video_search(request: InVideoSearchRequest):
         for idx, c in enumerate(top_candidates):
             is_answer_candidate = idx == 0
             answer = c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None
-            if is_answer_candidate and not c.get("vqa_answer_valid", False):
+            vqa_answer_valid = is_answer_candidate and c.get("vqa_answer_valid", False)
+            if is_answer_candidate and not vqa_answer_valid:
                 answer = "N/A"
             results.append({
                 "rank": idx + 1,
@@ -902,15 +967,16 @@ async def run_in_video_search(request: InVideoSearchRequest):
                 "vqa_score": c.get("vqa_score", 0.0),
                 "rrf_score": c.get("rrf_score", 0.0),
                 "id": c["id"],
-                "payload": c["payload"],
+                "payload": _public_vqa_payload(c["payload"]),
                 "answer": answer,
                 "vqa_answer": c.get("vqa_answer", "UNKNOWN") if is_answer_candidate else None,
-                "vqa_answer_valid": c.get("vqa_answer_valid", False) if is_answer_candidate else False,
+                "vqa_answer_valid": vqa_answer_valid,
                 "vqa_evidence_available": c.get("vqa_evidence_available", False),
                 "vqa_evidence_reason": c.get("vqa_evidence_reason", ""),
-                "answer_candidate_id": c.get("vqa_candidate_id") if is_answer_candidate else None,
-                "answer_video_id": c.get("vqa_video_id") if is_answer_candidate else None,
-                "answer_frame_idx": c.get("vqa_frame_idx") if is_answer_candidate else None,
+                "answer_candidate_id": c.get("vqa_candidate_id") if vqa_answer_valid else None,
+                "answer_video_id": c.get("vqa_video_id") if vqa_answer_valid else None,
+                "answer_frame_idx": c.get("vqa_frame_idx") if vqa_answer_valid else None,
+                **_vqa_public_evidence(c),
             })
         return {"query": request.query, "video_name": request.video_name, "results": results}
     except Exception as e:
@@ -919,7 +985,7 @@ async def run_in_video_search(request: InVideoSearchRequest):
         raise HTTPException(status_code=500, detail=f"In-video search failed: {str(e)}")
 
 @app.get("/api/media/frame")
-def get_frame(video_name: str, timestamp: float, frame_idx: Optional[int] = None):
+def get_frame(video_name: str, timestamp: Optional[float] = None, frame_idx: Optional[int] = None):
     """
     Dynamically extract a frame from a video at a specific timestamp and return as JPEG.
     """
@@ -942,7 +1008,7 @@ def get_frame(video_name: str, timestamp: float, frame_idx: Optional[int] = None
             raise HTTPException(status_code=400, detail="frame_idx must be non-negative")
         canonical_frame_idx = frame_idx
     else:
-        if not math.isfinite(timestamp) or timestamp < 0:
+        if timestamp is None or not math.isfinite(timestamp) or timestamp < 0:
             cap.release()
             raise HTTPException(status_code=400, detail="timestamp must be finite and non-negative")
         canonical_frame_idx = int(timestamp * fps)

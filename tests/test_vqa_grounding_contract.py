@@ -114,6 +114,9 @@ def test_video_loading_prefers_canonical_frame_idx(monkeypatch, tmp_path):
         def read(self):
             return True, np.zeros((4, 4, 3), dtype=np.uint8)
 
+        def get(self, _property_id):
+            return 0.0
+
         def release(self):
             return None
 
