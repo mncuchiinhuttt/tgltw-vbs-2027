@@ -125,8 +125,8 @@ The official 2027 corpus includes the complete V3C collection, an extended marin
 \draw[arrow] (offline) -- (index);
 \draw[arrow] (index) -- (retrieve);
 \draw[arrow] (retrieve) -- (operator);
-\draw[arrow,dashed] (operator.south) |- (escalate.east);
-\draw[arrow,dashed] (escalate.west) -| (retrieve.south);
+\draw[arrow,dashed] (operator.south) -- ++(0,-3mm) -| (escalate.north);
+\draw[arrow,dashed] (escalate.south west) -- ++(-5mm,0) |- (retrieve.west);
 \node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
 \node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
 \end{tikzpicture}%
@@ -189,7 +189,7 @@ The five official modes share the candidate contract but differ in their entry p
 \node[pstage, right=3mm of c4] (c5) {one clarification\\or feedback boost};
 \node[pbox, right=3mm of c5] (c6) {updated results\\/ next turn};
 \foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5,c5/c6} {\draw[arrow] (\a) -- (\b);}
-\draw[arrow,dashed] (c6.south) |- node[pos=.2,right,font=\tiny] {next turn} (c2.south);
+\draw[arrow,dashed] (c6.south) -- ++(0,-5mm) -| (c1.south);
 
 \node[lane, below=9mm of l3] (l4) {AVS};
 \node[pbox, right=4mm of l4] (a1) {multi-shot\\description};
