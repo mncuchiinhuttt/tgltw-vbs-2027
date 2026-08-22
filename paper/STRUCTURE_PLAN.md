@@ -1,8 +1,8 @@
-# TGLTW VBS 2027 paper plan
+# TGLTW-RMIT VBS 2027 paper plan
 
 ## Positioning
 
-Write this as a system paper for an interactive video retrieval competition. The central claim is not that every offline enrichment branch is already validated; it is that TGLTW combines a live-first retrieval loop with auditable multimodal evidence and an explicit evaluation protocol.
+Write this as a system paper for an interactive video retrieval competition. The central claim is not that every offline enrichment branch is already validated; it is that TGLTW-RMIT combines a live-first retrieval loop with auditable multimodal evidence and an explicit evaluation protocol.
 
 The paper should separate three states:
 
