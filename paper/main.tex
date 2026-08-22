@@ -127,8 +127,8 @@ The official 2027 corpus includes the complete V3C collection, an extended marin
 \draw[arrow] (offline) -- (index);
 \draw[arrow] (index) -- (retrieve);
 \draw[arrow] (retrieve) -- (operator);
-\draw[arrow,dashed] (operator.south) -- ++(0,-3mm) -| (escalate.north east);
-\draw[arrow,dashed] (escalate.north west) -- ++(-1mm,0) |- (retrieve.south);
+\draw[arrow,dashed] (operator.south) -- (escalate.north east);
+\draw[arrow,dashed] (escalate.north west) -- (retrieve.south);
 \node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
 \node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
 \end{tikzpicture}%
