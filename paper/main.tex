@@ -120,15 +120,17 @@ The official 2027 corpus includes the complete V3C collection, an extended marin
 \node[stage, right=7mm of offline, minimum width=2.8cm] (index) {\textbf{Serving indexes}\\visual/text vectors,\\speech/audio, payload fields};
 \node[stage, right=7mm of index, minimum width=2.9cm] (retrieve) {\textbf{Fast retrieval}\\HNSW + payload search,\\RRF, bounded reranking};
 \node[box, right=7mm of retrieve, minimum width=2.8cm] (operator) {\textbf{Operator loop}\\ranked evidence, playback,\\feedback, DRES submit};
-\node[opt, below=5mm of retrieve, minimum width=6.0cm] (escalate) {\textbf{On demand:} exact search, larger candidate set, verification, in-video refinement};
+\node[opt, below=5mm of retrieve, xshift=18mm, minimum width=5.6cm,
+      text width=5.6cm] (escalate) {\textbf{On demand:} exact search, larger candidate set,\\
+      verification, in-video refinement};
 \draw[arrow] (assets) -- (offline);
 \draw[arrow] (offline) -- (index);
 \draw[arrow] (index) -- (retrieve);
 \draw[arrow] (retrieve) -- (operator);
 \draw[arrow,dashed] (operator.south) -- ++(0,-3mm) -| (escalate.north east);
-\draw[arrow,dashed] (escalate.north) -- (retrieve.south);
+\draw[arrow,dashed] (escalate.north west) -- ++(-1mm,0) |- (retrieve.south);
 \node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
-\node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
+\node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
 \end{tikzpicture}%
 }
 \caption{TGLTW-RMIT separates an auditable offline index build from a bounded live path. Precision escalation is an operator action, so its quality and latency can be measured without making every live query pay the cost.}
