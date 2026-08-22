@@ -1,6 +1,6 @@
 # LaTeX Paper & Live Preview Server
 
-Mục này chứa mã nguồn bài báo LaTeX cho **TGLTW VBS 2027** cùng công cụ Live Preview Server.
+Mục này chứa mã nguồn bài báo LaTeX cho **TGLTW-RMIT VBS 2027** cùng công cụ Live Preview Server.
 
 ## 📂 Cấu trúc thư mục
 

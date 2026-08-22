@@ -54,8 +54,8 @@
 
 \begin{document}
 
-\title{TGLTW: A Live-First Multimodal Video Retrieval System for VBS 2027}
-\titlerunning{TGLTW: Live-First Video Retrieval for VBS 2027}
+\title{TGLTW-RMIT: A Live-First Multimodal Video Retrieval System for VBS 2027}
+\titlerunning{TGLTW-RMIT: Live-First Video Retrieval for VBS 2027}
 
 \author{Long Minh Vo\inst{1,2}\orcidID{0000-0001-2345-6789} \and
 Hung Gia Vu\inst{1}\orcidID{0000-0002-3456-7890} \and
@@ -74,7 +74,7 @@ CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted S
 \maketitle
 
 \begin{abstract}
-Interactive video retrieval is a joint test of retrieval quality, operator effort, interface latency, and reliable submission. We present TGLTW, our live-first multimodal system for the Video Browser Showdown (VBS) 2027. TGLTW combines offline visual, speech, OCR, metadata, and ambient-audio evidence with approximate vector search, payload full-text retrieval, reciprocal-rank fusion, and bounded precision escalation. Its task router supports the official KIS-V, KIS-T, KIS-C, AVS, and VQA modes while retaining source-video and frame provenance throughout browsing and DRES submission. For VQA, a strict evidence contract accepts an answer only when a real candidate frame is resolved, the response is valid JSON, and the identity shown to the operator is the identity seen by the model. We describe the implementation and a reproducible live/offline evaluation protocol; quantitative results are reserved for a frozen benchmark run. Source, updates, and deployment links are collected on the public \projectpage.
+Interactive video retrieval is a joint test of retrieval quality, operator effort, interface latency, and reliable submission. We present TGLTW-RMIT, our live-first multimodal system for the Video Browser Showdown (VBS) 2027. TGLTW-RMIT combines offline visual, speech, OCR, metadata, and ambient-audio evidence with approximate vector search, payload full-text retrieval, reciprocal-rank fusion, and bounded precision escalation. Its task router supports the official KIS-V, KIS-T, KIS-C, AVS, and VQA modes while retaining source-video and frame provenance throughout browsing and DRES submission. For VQA, a strict evidence contract accepts an answer only when a real candidate frame is resolved, the response is valid JSON, and the identity shown to the operator is the identity seen by the model. We describe the implementation and a reproducible live/offline evaluation protocol; quantitative results are reserved for a frozen benchmark run. Source, updates, and deployment links are collected on the public \projectpage.
 \keywords{Video retrieval \and Multimodal search \and Interactive retrieval \and Video Browser Showdown \and Grounded VQA}
 \end{abstract}
 
@@ -83,7 +83,7 @@ Interactive video retrieval is a joint test of retrieval quality, operator effor
 
 The Video Browser Showdown evaluates exploratory video-search tools in a timed, public setting. An operator must interpret a task, retrieve evidence, inspect a video, and submit a temporal result before the clock expires. The 2027 call expects mostly textual KIS, conversational KIS, VQA, and AVS tasks, with KIS-V as the minority; it also requires an extended demo paper of six content pages plus up to two pages of references, including a screenshot and a description of interactive search~\cite{vbs2027call}. This makes predictable interaction a first-class system property: an unbounded precision model can be less useful live than a slightly weaker model with known latency.
 
-TGLTW is organized around that constraint. It keeps a fast default path based on already-built indexes, approximate HNSW retrieval~\cite{malkov2018efficient}, payload search, rank fusion, and a small reranking head. Exact search, larger candidate pools, verification, and in-video refinement are explicit per-request actions. This allows the operator to spend time only on difficult candidates and lets later evaluation measure the cost of each escalation.
+TGLTW-RMIT is organized around that constraint. It keeps a fast default path based on already-built indexes, approximate HNSW retrieval~\cite{malkov2018efficient}, payload search, rank fusion, and a small reranking head. Exact search, larger candidate pools, verification, and in-video refinement are explicit per-request actions. This allows the operator to spend time only on difficult candidates and lets later evaluation measure the cost of each escalation.
 
 The paper makes three implementation contributions:
 \begin{enumerate}
@@ -97,7 +97,7 @@ This is an engineering description rather than a completed leaderboard report. T
 \section{Positioning and VBS Setting}
 \label{sec:setting}
 
-Interactive multimedia retrieval work consistently combines semantic representations with fast browsing and feedback. The VBS literature emphasizes the interaction trace and time-to-submission in addition to retrieval quality~\cite{rossetto2025vbs}; performance evaluation work likewise recommends reporting system and human-action latency separately~\cite{sauter2024performance}. Local challenge systems provide useful precedents for OCR/ASR evidence, query expansion, temporal search, reranking, and feedback~\cite{doan2025kpi,le2025fustar}. TGLTW uses the same broad principles but does not claim to reproduce those systems' model stacks. Its current online path uses Qdrant-style vector collections, dense and payload text retrieval, reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal}, and bounded operator actions. Query rewriting and vector feedback are deliberately narrower than open-ended multi-query or reweighting systems~\cite{buitran2025query,phat2025revimm}.
+Interactive multimedia retrieval work consistently combines semantic representations with fast browsing and feedback. The VBS literature emphasizes the interaction trace and time-to-submission in addition to retrieval quality~\cite{rossetto2025vbs}; performance evaluation work likewise recommends reporting system and human-action latency separately~\cite{sauter2024performance}. Local challenge systems provide useful precedents for OCR/ASR evidence, query expansion, temporal search, reranking, and feedback~\cite{doan2025kpi,le2025fustar}. TGLTW-RMIT uses the same broad principles but does not claim to reproduce those systems' model stacks. Its current online path uses Qdrant-style vector collections, dense and payload text retrieval, reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal}, and bounded operator actions. Query rewriting and vector feedback are deliberately narrower than open-ended multi-query or reweighting systems~\cite{buitran2025query,phat2025revimm}.
 
 The official 2027 corpus includes the complete V3C collection, an extended marine-video collection, and the GynSurg/LapGynLHE laparoscopic collection; most tasks are expected to use V3C~\cite{vbs2027call}. V3C provides broad Creative Commons video and shot-level access~\cite{rossetto2019v3c}, while MVK and GynSurg represent domain-specific marine and surgical content~\cite{truong2023mvk,nasirihaghighi2025gynsurg}. The final run must record the exact accessible shards, video IDs, durations, checksums, keyframe/shot version, collection schema, and data-agreement status. The legacy running snapshot and the newer source indexer are therefore reported as separate implementation states until a re-index is audited.
 
@@ -125,13 +125,13 @@ The official 2027 corpus includes the complete V3C collection, an extended marin
 \draw[arrow] (offline) -- (index);
 \draw[arrow] (index) -- (retrieve);
 \draw[arrow] (retrieve) -- (operator);
-\draw[arrow,dashed] (operator.south) -- ++(0,-3mm) -| (escalate.north);
-\draw[arrow,dashed] (escalate.south west) -- ++(-5mm,0) |- (retrieve.west);
+\draw[arrow,dashed] (operator.south) -- ++(0,-3mm) -| (escalate.north east);
+\draw[arrow,dashed] (escalate.north) -- (retrieve.south);
 \node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
 \node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
 \end{tikzpicture}%
 }
-\caption{TGLTW separates an auditable offline index build from a bounded live path. Precision escalation is an operator action, so its quality and latency can be measured without making every live query pay the cost.}
+\caption{TGLTW-RMIT separates an auditable offline index build from a bounded live path. Precision escalation is an operator action, so its quality and latency can be measured without making every live query pay the cost.}
 \label{fig:system-pipeline}
 \end{figure*}
 
@@ -191,7 +191,7 @@ The five official modes share the candidate contract but differ in their entry p
 \foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5,c5/c6} {\draw[arrow] (\a) -- (\b);}
 \draw[arrow,dashed] (c6.south) -- ++(0,-5mm) -| (c1.south);
 
-\node[lane, below=9mm of l3] (l4) {AVS};
+\node[lane, below=15mm of l3] (l4) {AVS};
 \node[pbox, right=4mm of l4] (a1) {multi-shot\\description};
 \node[pstage, right=3mm of a1] (a2) {broad KIS-T\\retrieval};
 \node[pstage, right=3mm of a2] (a3) {scene /\\video diversity};
@@ -258,7 +258,7 @@ Offline replay & Manifest, labels, raw ranked outputs, ablations, latency, groun
 
 The current deployment still has a migration boundary between legacy Qdrant collections and the newer source-index schema, so optional enrichment fields cannot be treated as universal. Sequential VLM verification may dominate p95 latency, and provider/model revisions can change token semantics and response formatting. AVS and some KIS-C outcomes depend on operator decisions and live judging; offline recall cannot reproduce them. The final release should publish the manifest, index schema and version, configuration, model revisions, raw predictions, metric script, interaction trace, and failure logs.
 
-TGLTW presents a compact live-first design for VBS 2027: multimodal evidence is indexed offline, bounded dense/sparse retrieval supports the five task modes, and precision operations are visible operator choices. The central reliability safeguard is candidate-specific VQA grounding, which prevents unavailable or mismatched media from becoming a seemingly valid answer. The next milestone is a frozen replay and an on-site rehearsal that fills the evaluation record without changing the live configuration.
+TGLTW-RMIT presents a compact live-first design for VBS 2027: multimodal evidence is indexed offline, bounded dense/sparse retrieval supports the five task modes, and precision operations are visible operator choices. The central reliability safeguard is candidate-specific VQA grounding, which prevents unavailable or mismatched media from becoming a seemingly valid answer. The next milestone is a frozen replay and an on-site rehearsal that fills the evaluation record without changing the live configuration.
 
 \bibliographystyle{splncs04}
 \bibliography{references}
