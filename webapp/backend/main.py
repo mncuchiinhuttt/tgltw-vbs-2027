@@ -529,16 +529,9 @@ async def run_search(request: SearchRequest):
         if request.type == 1:
             # Type 1: Textual-KIS
             import config
-            from search.kis_c_scoring import boost_by_clarification_answer
+            from search.kis_c_scoring import boost_by_clarification_answer, apply_conversational_negative_filter
 
             # KIS-C clarification-answer boost (Sekulic et al. arXiv:2008.03717):
-            # additive re-rank of the CURRENT turn's normal RRF-fused pool
-            # using whichever of last turn's clarification candidates now
-            # overlap with the operator's answer - not a fast path that
-            # skips search, the full pipeline above still ran. Run before
-            # the ambiguity check: a discriminating answer sharpens the
-            # top-1/top-2 margin, which lowers the new ambiguity score and
-            # stops the system asking a redundant second question.
             if pending_clarification and (request.clarification_answer or "").strip():
                 candidates = boost_by_clarification_answer(
                     candidates,
@@ -547,6 +540,13 @@ async def run_search(request: SearchRequest):
                 )
                 clarification_boost_applied = True
 
+            # Conversational negative feedback filtering (Rocchio/Exquisitor loop):
+            if _session_state.get("history"):
+                recent_rejected = []
+                for turn in _session_state["history"][-2:]:
+                    recent_rejected.extend(turn.get("rejected", []))
+                if recent_rejected:
+                    candidates = apply_conversational_negative_filter(candidates, recent_rejected)
             # KIS-C clarification (CAR/ambiguity-detection-inspired): if the
             # fused candidate pool is spread across many unrelated videos
             # with no clear winner, ask the operator a clarifying question

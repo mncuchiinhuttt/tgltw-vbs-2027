@@ -367,17 +367,39 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
                     generated_answer = "N/A"
 
         elif q_type == 3:
-            # KIS-C Conversational
-            top_candidates = candidates[:SUBMISSION_TOP_K]
+            # KIS-C Conversational Known-Item Search
+            from search.kis_c_scoring import boost_by_clarification_answer
+
+            history_raw = q_info.get("history", [])
+            formatted_history = []
+            for h in history_raw:
+                formatted_history.append({"query": h.get("text") if h.get("role") == "user" else "", "answer": h.get("text") if h.get("role") == "system" else ""})
+
+            # 1. CQR Rewrite if history is present
+            resolved_cqr_query = query_proc.rewrite_query_cqr(q_text, formatted_history) if formatted_history else q_text
+            print(f"  ├─ KIS-C CQR Rewritten Query: \"{resolved_cqr_query}\"")
+
+            # 2. Ambiguity Scoring
+            ambiguity = searcher.compute_ambiguity_score(candidates)
+            print(f"  ├─ KIS-C Ambiguity Index    : {ambiguity:.3f}")
+            st["ambiguity_sum"] = st.get("ambiguity_sum", 0.0) + ambiguity
+
+            # 3. Clarification Answer Boost
+            system_answer = str(q_info.get("system_answer") or "").strip()
+            if system_answer:
+                prior_ids = [c["id"] for c in candidates[:10]]
+                candidates = boost_by_clarification_answer(candidates, prior_ids, system_answer)
+
+            # 4. Rerank top conversational candidates
+            top_candidates = reranker.rerank_type1(resolved_cqr_query, candidates[:SUBMISSION_TOP_K])
             for item in top_candidates:
                 p = item.get("payload", {})
                 results.append({
                     "video_name": canonical_video_id(p.get("source_file") or p.get("video_id")),
                     "timestamp": p.get("timestamp"),
                     "frame_idx": p.get("frame_idx"),
-                    "score": item.get("score", 0.0),
+                    "score": item.get("final_score", item.get("rerank_score", item.get("score", 0.0))),
                 })
-
         elif q_type == 4:
             # AVS Ad-hoc Search
             top_candidates = candidates[:SUBMISSION_TOP_K]

@@ -118,6 +118,49 @@ def tokenize_answer(text: str) -> set:
     return {t for t in tokens if len(t) >= MIN_TOKEN_LEN and t not in STOPWORDS}
 
 
+def extract_phrases(text: str) -> set:
+    """
+    Extracts bi-gram and tri-gram phrases to capture compound visual concepts
+    (e.g., 'traditional wedding', 'peacock theme', 'áo đỏ', 'xe máy').
+    """
+    if not text:
+        return set()
+    words = [w for w in re.findall(r"\w+", text.lower(), re.UNICODE) if w not in STOPWORDS and len(w) >= MIN_TOKEN_LEN]
+    phrases = set()
+    for i in range(len(words) - 1):
+        phrases.add(f"{words[i]} {words[i+1]}")
+    for i in range(len(words) - 2):
+        phrases.add(f"{words[i]} {words[i+1]} {words[i+2]}")
+    return phrases
+
+def compute_semantic_overlap(answer_text: str, candidate_text: str) -> float:
+    """
+    Computes hybrid unigram + compound phrase overlap between operator answer
+    and candidate text payload.
+    """
+    if not answer_text or not candidate_text:
+        return 0.0
+    
+    cand_lower = candidate_text.lower()
+    answer_tokens = tokenize_answer(answer_text)
+    if not answer_tokens:
+        return 0.0
+
+    cand_tokens = tokenize_answer(cand_lower)
+    unigram_overlap = len(answer_tokens & cand_tokens) / len(answer_tokens) if answer_tokens else 0.0
+
+    # Phrase / N-gram bonus when consecutive multi-word phrases match
+    answer_phrases = extract_phrases(answer_text)
+    phrase_bonus = 0.0
+    if answer_phrases:
+        matched_phrases = sum(1 for p in answer_phrases if p in cand_lower)
+        phrase_bonus = 0.25 * (matched_phrases / len(answer_phrases))
+
+    # Base unigram overlap plus phrase bonus, capped at 1.0
+    combined = min(1.0, unigram_overlap + phrase_bonus)
+    return round(combined, 4)
+
+
 def boost_by_clarification_answer(
     candidates: list,
     prior_candidate_ids: list,
@@ -126,27 +169,11 @@ def boost_by_clarification_answer(
     score_key: str = "rrf_score",
 ) -> list:
     """
-    Clarification-answer -> direct re-rank (Sekulic et al., arXiv:2008.03717,
-    "Analysing the Effect of Clarifying Questions on Document Ranking in
-    Conversational Search"; +18% recall / +12% nDCG@3 in that paper's setting
-    - indicative, not a guarantee here). Additively boosts, on the CURRENT
-    turn's normal RRF-fused pool, whichever of the candidates the clarifying
-    question was based on (`prior_candidate_ids`) now overlap with the
-    operator's answer text. This is deliberately NOT a fast path that skips
-    search - the full per-turn pipeline still runs; this only sharpens its
-    final ranking.
-
-    True no-op (returns the exact same `candidates` object, untouched) when
-    there is no answer text, no prior ids, or no candidates. When tokens and
-    prior ids exist but nothing actually overlaps, a new list is returned
-    (same order/content, since the input is already score-sorted) rather
-    than the original object - total/never-raises either way, since KIS-C
-    runs on a live 7-minute competition clock.
+    Clarification-answer -> direct re-rank with compound phrase & semantic overlap.
     """
     if not candidates:
         return candidates
-    tokens = tokenize_answer(answer_text)
-    if not tokens:
+    if not answer_text or not answer_text.strip():
         return candidates
     prior = set(prior_candidate_ids or ())
     if not prior:
@@ -158,13 +185,46 @@ def boost_by_clarification_answer(
     for c in candidates:
         if c.get("id") not in prior:
             continue
-        candidate_tokens = tokenize_answer(candidate_match_text(c.get("payload")))
-        if not candidate_tokens:
+        cand_text = candidate_match_text(c.get("payload"))
+        if not cand_text:
             continue
-        overlap = len(tokens & candidate_tokens) / len(tokens)
+        overlap = compute_semantic_overlap(answer_text, cand_text)
         if overlap <= 0:
             continue
         c[score_key] = c.get(score_key, 0.0) + boost_weight * overlap * top_score
         c["clarification_overlap"] = round(overlap, 3)
+
+    return sorted(candidates, key=lambda c: c.get(score_key, 0.0), reverse=True)
+
+
+def apply_conversational_negative_filter(
+    candidates: list,
+    rejected_descriptions: list,
+    penalty_weight: float = 0.35,
+    score_key: str = "rrf_score",
+) -> list:
+    """
+    Applies a calibrated penalty to candidates that match concepts explicitly rejected
+    by the operator during conversational exploration.
+    """
+    if not candidates or not rejected_descriptions:
+        return candidates
+
+    rejected_text = " ".join(str(d) for d in rejected_descriptions if d).lower()
+    rejected_tokens = tokenize_answer(rejected_text)
+    if not rejected_tokens:
+        return candidates
+
+    for c in candidates:
+        cand_text = candidate_match_text(c.get("payload"))
+        if not cand_text:
+            continue
+        cand_tokens = tokenize_answer(cand_text)
+        overlap = len(rejected_tokens & cand_tokens) / len(rejected_tokens)
+        if overlap > 0.3:
+            current_score = float(c.get(score_key, 0.0))
+            penalty = penalty_weight * overlap * current_score
+            c[score_key] = max(0.0, current_score - penalty)
+            c["negative_feedback_penalty"] = round(penalty, 4)
 
     return sorted(candidates, key=lambda c: c.get(score_key, 0.0), reverse=True)
