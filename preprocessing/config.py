@@ -35,12 +35,9 @@ DASHSCOPE_EMBEDDING_MODEL_NAME = os.getenv("DASHSCOPE_EMBEDDING_MODEL_NAME", "to
 
 # Model Checkpoints (used if VLM_OPTION="local" or during local embeddings/transcription)
 QWEN_VLM_MODEL_ID = os.getenv("QWEN_VLM_MODEL_ID", "Qwen/Qwen2.5-VL-7B-Instruct")
-# Default is the 2B variant (2.13B params) - fits comfortably alongside the
-# other local models (YOLOE/SigLIP/M2D-CLAP) on resource-constrained
-# hardware. Override to "Qwen/Qwen3-VL-Embedding-8B" (8.14B params) for
-# slightly higher accuracy if VRAM allows - both sizes support Matryoshka
-# Representation Learning (MRL) equally, see EMBEDDING_MRL_DIM below.
-QWEN_EMBEDDING_MODEL_ID = os.getenv("QWEN_EMBEDDING_MODEL_ID", "Qwen/Qwen3-VL-Embedding-2B")
+# Default visual embedding model: Tencent WeMM-Embedding-4B (4B params multimodal embedder)
+VISUAL_EMBEDDING_MODEL_ID = os.getenv("VISUAL_EMBEDDING_MODEL_ID", "tencent/WeMM-Embedding-4B")
+QWEN_EMBEDDING_MODEL_ID = os.getenv("QWEN_EMBEDDING_MODEL_ID", VISUAL_EMBEDDING_MODEL_ID)
 # Optional MRL truncation: truncate + re-normalize QwenVL8BEmbedder's output
 # to this many leading dimensions (e.g. 512) for a smaller/faster Qdrant
 # index at a small recall cost - a train-time property of the Qwen3-VL-Embedding

@@ -46,12 +46,11 @@ for p in (str(METHOD_DIR), str(INFERENCE_DIR), str(QUERY_DIR)):
 try:
     from config import (
         VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K,
-        SECONDARY_EMBEDDER_ENABLED,
+        SECONDARY_EMBEDDER_ENABLED, VISUAL_EMBEDDING_MODEL_ID,
     )
     from models.qwen_vlm import QwenVLM
     from models.openai_vlm import OpenAIVLM
-    from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
-    from models.siglip_embedder import SigLIPEmbedder
+    from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
     from models.object_detector import ObjectDetector
 
     from search.query_processor import QueryProcessor
@@ -214,6 +213,8 @@ def load_vlm():
 
 def load_embedder():
     if EMBEDDING_OPTION == "local":
+        if "wemm" in str(VISUAL_EMBEDDING_MODEL_ID).lower():
+            return WeMMEmbedding4BEmbedder()
         return QwenVL8BEmbedder()
     elif EMBEDDING_OPTION == "cloud":
         return DashScopeCloudEmbedder()

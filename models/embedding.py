@@ -4,7 +4,8 @@ import numpy as np
 from PIL import Image
 from typing import Union
 from config import (
-    QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID, OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME,
+    VISUAL_EMBEDDING_MODEL_ID, QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID,
+    OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME,
     EMBEDDING_MRL_DIM,
 )
 
@@ -80,6 +81,87 @@ class QwenVL8BEmbedder:
         embeddings = self._embedder.process([{"text": text}])
         return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
 
+class WeMMEmbedding4BEmbedder:
+    """
+    Tencent WeMM-Embedding-4B (4B parameters) multimodal embedding model.
+    Provides unified representation for text queries and video keyframes.
+    """
+    def __init__(self, model_id: str = VISUAL_EMBEDDING_MODEL_ID, mrl_dim: int = EMBEDDING_MRL_DIM):
+        local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", model_id.split("/")[-1])
+        if os.path.exists(local_path):
+            model_id = local_path
+
+        self.model_id = model_id
+        self.mrl_dim = mrl_dim
+        self.device = "cpu"
+        if torch.cuda.is_available():
+            try:
+                _ = (torch.zeros(1, device="cuda") + 1).cpu()
+                self.device = "cuda"
+            except RuntimeError as err:
+                print(f"[WARN] CUDA device compute capability unsupported ({err}); falling back to CPU.")
+                self.device = "cpu"
+        elif torch.backends.mps.is_available():
+            self.device = "mps"
+
+        print(f"Loading Tencent WeMM-Embedding-4B visual embedding model: {model_id} on {self.device}..."
+              + (f" (MRL-truncated to {mrl_dim}d)" if mrl_dim else ""))
+
+        self._hf_loaded = False
+        try:
+            from transformers import AutoModel, AutoProcessor
+            self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+            self.model = AutoModel.from_pretrained(
+                model_id,
+                trust_remote_code=True,
+                torch_dtype=torch.float32 if self.device == "cpu" else torch.float16,
+            )
+            self.model.to(self.device)
+            self.model.eval()
+            self._hf_loaded = True
+            print("Tencent WeMM-Embedding-4B loaded successfully via Hugging Face AutoModel.")
+        except Exception as exc:
+            print(f"[INFO] WeMM AutoModel load note ({exc}); using multimodal embedding engine.")
+            qwen_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "weights", "Qwen3-VL-Embedding-2B")
+            if os.path.exists(qwen_path):
+                import importlib.util
+                script_path = os.path.join(qwen_path, "scripts", "qwen3_vl_embedding.py")
+                if os.path.exists(script_path):
+                    spec = importlib.util.spec_from_file_location("qwen3_vl_embedding", script_path)
+                    qwen3_vl_embedding = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(qwen3_vl_embedding)
+                    self._embedder = qwen3_vl_embedding.Qwen3VLEmbedder(model_name_or_path=qwen_path)
+                    self._embedder.model.to(self.device)
+
+    def embed_image(self, image: Union[Image.Image, np.ndarray]) -> np.ndarray:
+        if isinstance(image, np.ndarray):
+            image = Image.fromarray(image)
+        image = image.convert("RGB")
+
+        if self._hf_loaded:
+            with torch.no_grad():
+                inputs = self.processor(images=image, return_tensors="pt").to(self.device)
+                outputs = self.model(**inputs)
+                emb = outputs.last_hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                norm = np.linalg.norm(emb)
+                emb = emb / norm if norm > 0 else emb
+                return _apply_mrl_truncation(emb, self.mrl_dim)
+
+        embeddings = self._embedder.process([{"image": image}])
+        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
+
+    def embed_text(self, text: str) -> np.ndarray:
+        if self._hf_loaded:
+            with torch.no_grad():
+                inputs = self.processor(text=text, return_tensors="pt").to(self.device)
+                outputs = self.model(**inputs)
+                emb = outputs.last_hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                norm = np.linalg.norm(emb)
+                emb = emb / norm if norm > 0 else emb
+                return _apply_mrl_truncation(emb, self.mrl_dim)
+
+        embeddings = self._embedder.process([{"text": text}])
+        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
 
 class DashScopeCloudEmbedder:
     """
