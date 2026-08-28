@@ -295,6 +295,22 @@ def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
 
     if txt_file.exists():
         query_text = txt_file.read_text(encoding="utf-8").strip()
+    else:
+        # Check JSON manifests in folder
+        for mf in folder_path.glob("*.json"):
+            if mf.name in ("submission.json", "audit_benchmark_summary.json", "package.json"):
+                continue
+            try:
+                with mf.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        for mq in data:
+                            if str(mq.get("id") or mq.get("query_stem")) == query_id:
+                                query_text = str(mq.get("query", ""))
+                                q_type = int(mq.get("type", q_type))
+                                break
+            except Exception:
+                pass
 
     detail_data: Dict[str, Any] = {}
     if detail_file.exists():
@@ -302,10 +318,10 @@ def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
             with detail_file.open("r", encoding="utf-8") as f:
                 detail_data = json.load(f)
                 q_type = detail_data.get("query_type", q_type)
-                query_text = detail_data.get("query_text", query_text)
+                if not query_text:
+                    query_text = detail_data.get("query_text", query_text)
         except Exception:
             pass
-
     # Read ranked rows from CSV
     rows: List[List[str]] = []
     if csv_file.exists():
@@ -355,12 +371,31 @@ def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
         "prior_info": prior_details,
     }
 
-
 def _run_query_worker(folder: str, query_id: str, fast_mode: bool, top_k: int):
     folder_path = resolve_folder_path(folder)
     txt_file = folder_path / f"{query_id}.txt"
     q_type = parse_query_type_from_filename(query_id)
-    query_text = txt_file.read_text(encoding="utf-8").strip() if txt_file.exists() else query_id
+    query_text = ""
+
+    if txt_file.exists():
+        query_text = txt_file.read_text(encoding="utf-8").strip()
+    else:
+        for mf in folder_path.glob("*.json"):
+            if mf.name in ("submission.json", "audit_benchmark_summary.json", "package.json"):
+                continue
+            try:
+                with mf.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        for mq in data:
+                            if str(mq.get("id") or mq.get("query_stem")) == query_id:
+                                query_text = str(mq.get("query", ""))
+                                q_type = int(mq.get("type", q_type))
+                                break
+            except Exception:
+                pass
+    if not query_text:
+        query_text = query_id
 
     with _jobs_lock:
         _active_query_jobs[query_id] = {
@@ -371,7 +406,6 @@ def _run_query_worker(folder: str, query_id: str, fast_mode: bool, top_k: int):
             "error": None,
             "folder": folder,
         }
-
     try:
         from search.query_processor import QueryProcessor
         from search.hybrid_search import HybridSearcher

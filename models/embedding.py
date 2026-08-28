@@ -42,10 +42,20 @@ class QwenVL8BEmbedder:
             model_id = local_path
 
         self.mrl_dim = mrl_dim
-        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+        self.device = "cpu"
+        if torch.cuda.is_available():
+            try:
+                # Probe tensor op on CUDA to verify compute capability kernel
+                _ = (torch.zeros(1, device="cuda") + 1).cpu()
+                self.device = "cuda"
+            except RuntimeError as err:
+                print(f"[WARN] CUDA device compute capability unsupported ({err}); falling back to CPU.")
+                self.device = "cpu"
+        elif torch.backends.mps.is_available():
+            self.device = "mps"
+
         print(f"Loading visual embedding model: {model_id} on {self.device}..."
               + (f" (MRL-truncated to {mrl_dim}d)" if mrl_dim else ""))
-
         import importlib.util
         script_path = os.path.join(model_id, "scripts", "qwen3_vl_embedding.py")
         spec = importlib.util.spec_from_file_location("qwen3_vl_embedding", script_path)

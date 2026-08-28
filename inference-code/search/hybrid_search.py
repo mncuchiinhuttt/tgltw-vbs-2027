@@ -10,6 +10,7 @@ from config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY, TOP_K_RETRIEVAL, RRF_CONSTANT,
     SECONDARY_EMBEDDER_ENABLED, QDRANT_EXACT_SEARCH,
     HEAGLE_LITE_ENABLED, HEAGLE_SHOT_TOP_K, HEAGLE_FRAME_MULTIPLIER,
+    VISUAL_COLLECTION_NAME,
 )
 from search.kis_c_scoring import distinct_video_ratio, score_margin_ambiguity, combine_ambiguity_signals
 
@@ -31,7 +32,16 @@ class HybridSearcher:
             port=QDRANT_PORT,
             api_key=QDRANT_API_KEY if QDRANT_API_KEY else None
         )
-
+        self.collection_name = VISUAL_COLLECTION_NAME
+        try:
+            colls = [c.name for c in self.client.get_collections().collections]
+            if self.collection_name not in colls:
+                if "visual_keyframes_v1" in colls:
+                    self.collection_name = "visual_keyframes_v1"
+                elif "visual_index" in colls:
+                    self.collection_name = "visual_index"
+        except Exception:
+            pass
     def _dense_search_vector(
         self, vector, top_k: int, exact: Optional[bool] = None, hnsw_ef: Optional[int] = None,
         shot_ids: Optional[list[str]] = None,
@@ -76,7 +86,7 @@ class HybridSearcher:
         else:
             search_filter = Filter(must=filter_must)
         search_result = self.client.query_points(
-            collection_name="visual_index",
+            collection_name=self.collection_name,
             query=vector_list,
             limit=top_k,
             query_filter=search_filter,
@@ -190,7 +200,7 @@ class HybridSearcher:
         image through the embedder. Returns None if the point doesn't
         exist or has no vector stored.
         """
-        points = self.client.retrieve(collection_name="visual_index", ids=[point_id], with_vectors=True)
+        points = self.client.retrieve(collection_name=self.collection_name, ids=[point_id], with_vectors=True)
         if not points:
             return None
         vector = points[0].vector
@@ -213,7 +223,7 @@ class HybridSearcher:
         use_exact = exact if exact is not None else QDRANT_EXACT_SEARCH
         query_vector = self.secondary_embedder.embed_text(query)
         search_result = self.client.query_points(
-            collection_name="visual_index",
+            collection_name=self.collection_name,
             query=query_vector.tolist(),
             using="siglip",
             limit=top_k,
@@ -239,7 +249,7 @@ class HybridSearcher:
         """
         # Qdrant supports full-text match filtering:
         search_result = self.client.scroll(
-            collection_name="visual_index",
+            collection_name=self.collection_name,
             scroll_filter=Filter(
                 must=[
                     FieldCondition(key="modality", match=MatchValue(value="visual")),
@@ -448,7 +458,7 @@ class HybridSearcher:
         typically at most a few hundred, well under the default limit.
         """
         points, _ = self.client.scroll(
-            collection_name="visual_index",
+            collection_name=self.collection_name,
             scroll_filter=Filter(
                 must=[
                     FieldCondition(key="modality", match=MatchValue(value="visual")),

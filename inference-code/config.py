@@ -57,7 +57,8 @@ DETECTION_CONF_THRESHOLD = float(os.getenv("DETECTION_CONF_THRESHOLD", 0.15))
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
-
+VISUAL_COLLECTION_NAME = os.getenv("VISUAL_COLLECTION_NAME", os.getenv("QDRANT_COLLECTION_NAME", "visual_keyframes_v1"))
+QDRANT_COLLECTION_NAME = VISUAL_COLLECTION_NAME
 # Search settings
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
