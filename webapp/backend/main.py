@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 
 import dres_client
 import interaction_log
-
+import vbs_audit_router
 # 1. Path Configuration
 BACKEND_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = BACKEND_DIR.parent.parent
@@ -41,6 +41,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register VBS Audit / Sơ tuyển routers
+app.include_router(vbs_audit_router.router)
+app.include_router(vbs_audit_router.sotuyen_router)
 
 def load_vlm():
     import config

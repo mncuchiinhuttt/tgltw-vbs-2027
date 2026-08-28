@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select"
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
-
+import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
 // -------------------------------------------------------------
@@ -51,6 +51,7 @@ function Navbar() {
   
   const navItems = [
     { path: "/", label: "Live Search", icon: SearchIcon },
+    { path: "/audit", label: "Audit & Sơ tuyển", icon: Layers },
     { path: "/preprocess", label: "Indexing Lab", icon: Cpu },
     { path: "/database", label: "Vector Store", icon: Database }
   ]
@@ -1568,6 +1569,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<SearchView />} />
+            <Route path="/audit" element={<VBSAuditWorkspace />} />
             <Route path="/preprocess" element={<PreprocessView />} />
             <Route path="/database" element={<DatabaseView />} />
           </Routes>
