@@ -6,7 +6,7 @@ import {
   Eye,
   Loader2,
   Play,
-  Zap,
+  Sparkles,
   Film,
   History,
   Terminal,
@@ -82,7 +82,6 @@ export const VBSAuditWorkspace: React.FC = () => {
   // Trace State
   const [traceQuery, setTraceQuery] = useState<string>("a person riding a red motorcycle on a mountain road in the morning")
   const [traceType, setTraceType] = useState<VBSTaskType>(1)
-  const [fastMode, setFastMode] = useState<boolean>(true)
   const [isTracing, setIsTracing] = useState<boolean>(false)
   const [currentTraceId, setCurrentTraceId] = useState<string | null>(null)
   const [activeStageIndex, setActiveStageIndex] = useState<number>(0)
@@ -132,7 +131,7 @@ export const VBSAuditWorkspace: React.FC = () => {
         body: JSON.stringify({
           query: traceQuery,
           type: traceType,
-          fast_submission: fastMode,
+          fast_submission: false,
           top_k: 30,
           include_content: true,
           include_prompts: true,
@@ -342,21 +341,13 @@ export const VBSAuditWorkspace: React.FC = () => {
                 </button>
               ))}
             </div>
-
             {/* Action Bar */}
             <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100 flex-wrap">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setFastMode(!fastMode)}
-                  className={`px-3.5 py-1.5 text-xs rounded-lg border transition font-bold flex items-center gap-2 ${
-                    fastMode
-                      ? "bg-amber-50 border-amber-300 text-amber-900 shadow-xs"
-                      : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <Zap className="h-3.5 w-3.5 text-amber-500" />
-                  <span>{fastMode ? "Fast Mode On (No Heavy VLM)" : "Full VLM Verification"}</span>
-                </button>
+                <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-bold shadow-xs">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Full VLM Verification Active</span>
+                </div>
 
                 {currentTraceId && (
                   <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
