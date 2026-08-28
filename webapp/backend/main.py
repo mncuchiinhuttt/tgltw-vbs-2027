@@ -27,10 +27,10 @@ WORKSPACE_ROOT = BACKEND_DIR.parent.parent
 DATASETS_DIR = WORKSPACE_ROOT / "datasets"
 LOG_FILE_PATH = BACKEND_DIR / "preprocessing.log"
 
-# Add directories to sys.path to load config and models
+# Add directories to sys.path: ensure BACKEND_DIR has highest precedence
+sys.path.insert(0, str(BACKEND_DIR))
 sys.path.append(str(WORKSPACE_ROOT))
 sys.path.append(str(WORKSPACE_ROOT / "inference-code"))
-
 app = FastAPI(title="Multimedia Retrieval API", version="1.0.0")
 
 # Enable CORS for frontend development
@@ -1345,4 +1345,4 @@ if __name__ == "__main__":
         str(WORKSPACE_ROOT / "preprocessing"),
         str(WORKSPACE_ROOT / "inference-code"),
     ]
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=reload_dirs)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=reload_dirs, app_dir=str(BACKEND_DIR))
