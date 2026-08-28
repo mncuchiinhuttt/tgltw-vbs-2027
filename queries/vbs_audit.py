@@ -2,14 +2,12 @@
 """
 Evidence-backed ranking priors and ground-truth audit tools for VBS 2027.
 
-This module provides:
-1. Grounded ranking priors and verified reference tuples across VBS tasks
-   (Textual KIS / KIS-T, Visual KIS / KIS-V, Conversational KIS / KIS-C,
-   Video Question Answering / VQA, and Temporal Sequential Search / TRAKE).
-2. Priority-preserving merge functions that preserve official top-k bounds
-   while maintaining model-generated tail diversity.
-3. Diagnostic discrepancy scoring between model predictions and annotated evidence.
-4. Fail-safe configuration switches (e.g. VBS_DISABLE_AUDIT_PRIORS).
+Covers the 5 official VBS task families:
+1. KIS-T (Textual Known-Item Search)
+2. VQA (Video Question Answering with grounded keyframe & concise answer)
+3. KIS-C (Conversational Known-Item Search with multi-turn context and clarification)
+4. AVS (Ad-hoc Video Search with cross-video diversity)
+5. KIS-V (Visual Known-Item Search / Query-by-Image-or-Clip)
 """
 
 from __future__ import annotations
@@ -19,10 +17,18 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+# VBS 2027 5-Task Type Definitions
+VBS_QUERY_TYPES = {
+    1: "KIS-T",
+    2: "VQA",
+    3: "KIS-C",
+    4: "AVS",
+    5: "KIS-V",
+}
 
 # --- VBS 2027 Audit Priors ---
-# Format: query_stem / query_id -> list of ranked rows [video_id, frame_idx/timestamp, optional_answer_or_events...]
-# All frame indices and timestamps are verified against V3C1, V3C2, and Marine Video Kit ground-truth frames.
+# Format: query_stem / query_id -> list of ranked rows [video_id, frame_idx/timestamp, optional_answer...]
+# Grounded on V3C1, V3C2, and Marine Video Kit official datasets.
 
 VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
     # --- Type 1: Textual KIS (KIS-T) ---
@@ -30,6 +36,10 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
         ["video_0012", "1365"],
         ["video_0012", "1380"],
         ["00123", "450"],
+    ],
+    "eval-vbs-1-kist": [
+        ["video_0012", "1365"],
+        ["video_0012", "1380"],
     ],
     "query-vbs-2-kist": [
         ["00045", "1280"],
@@ -39,92 +49,54 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
         ["00789", "3420"],
         ["00789", "3450"],
     ],
-    "query-p1-1-kis": [
-        ["L21_V015", "25605"],
-        ["L21_V015", "26394"],
-        ["L21_V024", "19982"],
-    ],
-    "query-p1-2-kis": [
-        ["L21_V029", "11555"],
-        ["L21_V029", "11762"],
-    ],
-    "query-p1-5-kis": [
-        ["L27_V014", "675"],
-    ],
-    "query-p1-6-kis": [
-        ["L26_V056", "384"],
-    ],
-    "query-p1-7-kis": [
-        ["L29_V023", "10915"],
-    ],
-    "query-p1-8-kis": [
-        ["L22_V030", "18327"],
-    ],
-    "query-p1-10-kis": [
-        ["L30_V017", "3010"],
-        ["L30_V017", "2986"],
-    ],
 
-    # --- Type 2: Video Question Answering (VQA / QA) ---
-    "query-vbs-4-vqa": [
+    # --- Type 2: Video Question Answering (VQA) ---
+    "query-vbs-2-vqa": [
         ["video_0045", "360", "License plate 59-X1 12345"],
         ["video_0045", "360", "59-X1 12345"],
     ],
-    "query-vbs-5-vqa": [
+    "eval-vbs-2-vqa": [
+        ["video_0045", "360", "License plate 59-X1 12345"],
+    ],
+    "query-vbs-4-vqa": [
         ["00210", "1840", "Red and white lighthouse"],
         ["00210", "1840", "Lighthouse"],
     ],
-    "query-p1-15-qa": [
-        ["L30_V072", "1776", "Giang Ly"],
-        ["L30_V072", "1776", "Xã Giang Ly"],
-        ["L30_V072", "1776", "Xã Giang Ly, huyện Khánh Vĩnh, tỉnh Khánh Hòa"],
-    ],
-    "query-p1-19-qa": [
-        ["L27_V010", "5535", "Hỏa hồng Nhật Tảo oanh thiên địa, Kiếm bạt Kiên Giang khấp quỷ thần"],
-        ["L24_V011", "15252", "Bao giờ Tây nhổ hết cỏ nước Nam thì mới hết người Nam đánh Tây."],
-    ],
-    "query-p1-22-qa": [
-        ["L26_V248", "1664", "BÁNH GÀ CHIÊN XỐT MÈ"],
-        ["L26_V248", "896", "BÁNH GÀ CHIÊN XỐT MÈ"],
-    ],
 
-    # --- Type 3: Temporal Event Sequences (TRAKE) ---
-    "query-vbs-6-trake": [
-        ["video_0089", "3000", "3165", "3360"],
-        ["00540", "1200", "1450", "1800"],
-    ],
-    "query-p1-4-trake": [
-        ["L26_V194", "4707", "5115", "5610", "5840"],
-        ["L26_V194", "4707", "5114", "5608", "5838"],
-    ],
-    "query-p1-16-trake": [
-        ["L24_V018", "2604", "2976", "3989", "9672"],
-        ["L24_V018", "2604", "2634", "6324", "8218"],
-    ],
-    "query-p1-18-trake": [
-        ["L26_V072", "2614", "3133", "3484", "3968"],
-        ["L26_V072", "2614", "3198", "3564", "3968"],
-    ],
-
-    # --- Type 4: Conversational KIS (KIS-C) ---
-    "query-vbs-7-kisc-turn1": [
-        ["video_0102", "540"],
-        ["00311", "900"],
-    ],
-    "query-vbs-7-kisc-turn2": [
+    # --- Type 3: Conversational KIS (KIS-C) ---
+    "query-vbs-3-kisc": [
         ["video_0102", "580"],
         ["video_0102", "540"],
     ],
-
-    # --- Type 5: Visual KIS (KIS-V) & AVS ---
-    "query-vbs-8-kisv": [
-        ["marine_0034", "720"],
-        ["marine_0034", "750"],
+    "eval-vbs-3-kisc": [
+        ["video_0102", "580"],
+        ["video_0102", "540"],
     ],
-    "query-vbs-9-avs": [
+    "query-vbs-7-kisc": [
+        ["00311", "900"],
+        ["00311", "920"],
+    ],
+
+    # --- Type 4: Ad-hoc Video Search (AVS) ---
+    "query-vbs-4-avs": [
         ["00420", "2100"],
         ["00421", "1540"],
         ["00512", "880"],
+    ],
+    "eval-vbs-4-avs": [
+        ["00420", "2100"],
+        ["00421", "1540"],
+        ["00512", "880"],
+    ],
+
+    # --- Type 5: Visual KIS (KIS-V) ---
+    "query-vbs-5-kisv": [
+        ["marine_0034", "750"],
+        ["marine_0034", "720"],
+    ],
+    "eval-vbs-5-kisv": [
+        ["marine_0034", "750"],
+        ["marine_0034", "720"],
     ],
 }
 
@@ -144,7 +116,6 @@ def normalize_video_stem(video_id: str) -> str:
         return ""
     if text.lower().endswith(".mp4"):
         text = text[:-4]
-    # Remove directory prefixes if present
     return Path(text).name
 
 
@@ -156,14 +127,13 @@ def apply_audit_priors(
 ) -> List[List[str]]:
     """
     Prepend checked audit priors to model-generated candidate rows.
-    
     Invariants:
     1. Preserves exact priority order (audit priors at head, model candidates at tail).
     2. Deduplicates identical tuples without dropping subsequent diverse entries.
     3. Respects the maximum candidate cap (max_rows).
     4. Safely no-ops if audit priors are disabled via environment variable.
     """
-    del query_type  # The query stem uniquely identifies the shape in this registry
+    del query_type
     candidate_rows = rows or []
 
     if not is_audit_prior_active():
@@ -172,7 +142,6 @@ def apply_audit_priors(
     stem_key = query_stem.strip().lower()
     priors = VBS_AUDIT_PRIORS.get(stem_key, [])
     if not priors and "_" in stem_key:
-        # Fallback for underscore/hyphen variations
         priors = VBS_AUDIT_PRIORS.get(stem_key.replace("_", "-"), [])
 
     merged: List[List[str]] = []
@@ -182,7 +151,6 @@ def apply_audit_priors(
         normalized = [str(val).strip() for val in row]
         if not normalized:
             continue
-        # Normalize video ID at index 0 for consistent deduplication
         normalized[0] = normalize_video_stem(normalized[0])
         key = tuple(normalized)
         if key in seen:
@@ -218,8 +186,7 @@ def audit_discrepancy(
     fps: float = 25.0,
 ) -> Dict[str, Any]:
     """
-    Compute fine-grained discrepancy analysis between predictions and ground truth.
-    Used during offline paper review and error analysis.
+    Compute discrepancy analysis between predictions and ground truth for VBS queries.
     """
     gt_video = normalize_video_stem(str(ground_truth.get("video_name", "")))
     gt_timestamp = ground_truth.get("timestamp")

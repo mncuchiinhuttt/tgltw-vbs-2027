@@ -4,7 +4,13 @@
 VBS 2027 Offline Audit & Benchmark Runner.
 
 Executes end-to-end retrieval, ranking, VLM verification, and diagnostic auditing
-across VBS task types (KIS-T, KIS-V, KIS-C, VQA, TRAKE, AVS).
+across the 5 official VBS task families:
+- Type 1: KIS-T (Textual Known-Item Search)
+- Type 2: VQA (Video Question Answering with grounded keyframe & answer)
+- Type 3: KIS-C (Conversational Known-Item Search with ambiguity gating & feedback)
+- Type 4: AVS (Ad-hoc Video Search with cross-video diversification)
+- Type 5: KIS-V (Visual Known-Item Search / Query-by-Image-or-Clip)
+
 Generates submission-compliant ranked lists and auditable trace logs for paper experiments.
 """
 
@@ -66,7 +72,12 @@ from batch_query import (
     load_embedder,
     load_secondary_embedder,
 )
-from vbs_audit import apply_audit_priors, normalize_video_stem, audit_discrepancy
+from vbs_audit import (
+    apply_audit_priors,
+    normalize_video_stem,
+    audit_discrepancy,
+    VBS_QUERY_TYPES,
+)
 
 
 class QueryTimeout(Exception):
@@ -81,7 +92,6 @@ def time_limit(seconds: float):
         yield
         return
 
-    # Use signal-based alarm if on main thread and supported
     if hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread():
         def _timeout_handler(signum, frame):
             raise QueryTimeout(f"Execution timed out after {seconds} seconds")
@@ -94,7 +104,6 @@ def time_limit(seconds: float):
             signal.setitimer(signal.ITIMER_REAL, 0)
             signal.signal(signal.SIGALRM, old_handler)
     else:
-        # Fallback thread timer
         timer: Optional[threading.Timer] = None
         interrupted = [False]
 
@@ -128,7 +137,12 @@ def emit_event(log_path: Union[str, Path], run_id: str, started_at: float, event
 
 def parse_query_type(query_item: Union[dict, str, Path]) -> int:
     """
-    Identify VBS query type (1=KIS-T, 2=VQA, 3=TRAKE, 4=KIS-C, 5=KIS-V/AVS).
+    Identify VBS query type:
+    1 = KIS-T (Textual KIS)
+    2 = VQA (Video Question Answering)
+    3 = KIS-C (Conversational KIS)
+    4 = AVS (Ad-hoc Video Search)
+    5 = KIS-V (Visual KIS)
     """
     if isinstance(query_item, dict):
         if "type" in query_item:
@@ -136,37 +150,28 @@ def parse_query_type(query_item: Union[dict, str, Path]) -> int:
         query_text = query_item.get("query", "")
     else:
         stem = Path(str(query_item)).stem.lower()
-        if stem.endswith("-kis") or stem.endswith("-kist") or "kis-t" in stem:
+        if stem.endswith("-kist") or "kis-t" in stem or stem.endswith("-kis"):
             return 1
-        if stem.endswith("-qa") or stem.endswith("-vqa") or "vqa" in stem:
+        if stem.endswith("-vqa") or "vqa" in stem or stem.endswith("-qa"):
             return 2
-        if stem.endswith("-trake") or "trake" in stem or "event" in stem:
-            return 3
         if stem.endswith("-kisc") or "kis-c" in stem:
+            return 3
+        if stem.endswith("-avs") or "avs" in stem or "adhoc" in stem or "ad-hoc" in stem:
             return 4
-        if stem.endswith("-kisv") or stem.endswith("-avs") or "kis-v" in stem:
+        if stem.endswith("-kisv") or "kis-v" in stem or "image" in stem:
             return 5
         query_text = stem
 
     text_lower = str(query_text).lower()
-    if re.search(r"(?:^|\s|\n)e\d+\s*:", text_lower) or ("đầu tiên" in text_lower and "tiếp đến" in text_lower) or ("first" in text_lower and "then" in text_lower):
-        return 3
     if "?" in text_lower or any(w in text_lower for w in ("mấy", "gì", "ai", "đâu", "nào", "bao nhiêu", "what", "where", "who", "which", "how", "when", "why")):
         return 2
-    if "session" in text_lower or "turn" in text_lower or "history" in text_lower:
+    if "session" in text_lower or "turn" in text_lower or "history" in text_lower or "clarif" in text_lower:
+        return 3
+    if "all shots" in text_lower or "shots showing" in text_lower or "find all" in text_lower or "tất cả các cảnh" in text_lower:
         return 4
+    if "reference_media" in str(query_item) or "image_path" in str(query_item):
+        return 5
     return 1
-
-
-def parse_trake_events(query_text: str) -> List[str]:
-    """Extract ordered chronological event descriptions from a TRAKE query."""
-    events = re.findall(r"(?:^|\n)\s*E\d+\s*:?\s*([^\n]+)", query_text, re.IGNORECASE)
-    events = [" ".join(e.split()) for e in events if e.strip()]
-    if not events:
-        # Fallback split on transition words
-        parts = re.split(r",?\s*(?:tiếp đến|sau đó|tiếp theo|then|next|after that)\s*", query_text, flags=re.IGNORECASE)
-        events = [" ".join(p.split()) for p in parts if p.strip()]
-    return events or [query_text.strip()]
 
 
 def extract_vqa_answer(vlm, query_text: str, best_candidate: dict, dataset_dir: str) -> str:
@@ -175,7 +180,6 @@ def extract_vqa_answer(vlm, query_text: str, best_candidate: dict, dataset_dir: 
     caption = payload.get("caption") or payload.get("text_blob") or ""
     video_id = normalize_video_stem(payload.get("source_file") or payload.get("video_id") or "unknown")
 
-    # Fast heuristic extraction from OCR / caption if VLM is None
     if vlm is None:
         if "biển số" in query_text.lower() or "license plate" in query_text.lower():
             match = re.search(r"(\d{2}[A-Z\d]+[-.]?\d{3,5})", caption, re.IGNORECASE)
@@ -183,7 +187,6 @@ def extract_vqa_answer(vlm, query_text: str, best_candidate: dict, dataset_dir: 
                 return match.group(1)
         return caption[:60].strip() or f"Answer at {video_id}"
 
-    # VLM-guided grounded answer
     prompt = (
         f"Based on this video frame, answer the question concisely:\n"
         f"Question: {query_text}\n"
@@ -207,7 +210,7 @@ def run_single_query(
     fast_mode: bool = False,
     ablation: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Execute a single VBS query through the multi-stage cascade."""
+    """Execute a single VBS query through the 5-task multi-stage cascade."""
     q_text = str(query_info.get("query", "")).strip()
     q_type = int(query_info.get("type", 1))
     q_stem = str(query_info.get("query_stem") or query_info.get("id") or "query-1").strip()
@@ -218,34 +221,41 @@ def run_single_query(
 
     # Stage 1: Query Processing & HyDE
     t0 = time.monotonic()
-    use_hyde = (ablation != "no-hyde" and not fast_mode and vlm is not None)
+    use_hyde = (ablation != "no-hyde" and not fast_mode and vlm is not None and q_type != 5)
     hyde_text = query_proc.generate_hyde(q_text) if use_hyde else q_text
     timings["query_proc_ms"] = (time.monotonic() - t0) * 1000
 
     # Stage 2: Dense + Sparse Retrieval & Multi-channel Fusion
     t1 = time.monotonic()
-    query_hits = searcher.search(q_text, top_k=top_k)
-    hyde_hits = searcher.search(hyde_text, top_k=top_k) if use_hyde else []
-    secondary_hits = searcher.dense_search_secondary(q_text, top_k=top_k) if ablation != "no-secondary" else []
-
-    if ablation == "no-rrf":
+    if q_type == 5:
+        # KIS-V: Visual query directly dense-searches
+        query_hits = searcher.search(q_text, top_k=top_k)
         candidates = query_hits
     else:
-        candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
+        query_hits = searcher.search(q_text, top_k=top_k)
+        hyde_hits = searcher.search(hyde_text, top_k=top_k) if use_hyde else []
+        secondary_hits = searcher.dense_search_secondary(q_text, top_k=top_k) if ablation != "no-secondary" else []
 
-    if ablation != "no-diversity":
-        candidates = searcher.diversify_by_scene(candidates, top_k=top_k)
+        if ablation == "no-rrf":
+            candidates = query_hits
+        else:
+            candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
+
+        # Cross-video scene diversification
+        if ablation != "no-diversity":
+            candidates = searcher.diversify_by_scene(candidates, top_k=top_k)
+
     timings["retrieval_ms"] = (time.monotonic() - t1) * 1000
 
-    # Stage 3: Task-Specific Ranking & VLM Verification
+    # Stage 3: Task-Specific Ranking & Verification
     t2 = time.monotonic()
     ranked_rows: List[List[str]] = []
     vqa_answer: Optional[str] = None
     kisc_ambiguity: Optional[float] = None
 
     if q_type == 1 or q_type == 5:
-        # KIS-T / KIS-V / AVS
-        if not fast_mode and reranker is not None:
+        # Type 1 (KIS-T) & Type 5 (KIS-V)
+        if not fast_mode and reranker is not None and q_type == 1:
             ranked = rerank_with_tail(
                 lambda c: reranker.rerank_type1(q_text, c),
                 candidates, RERANK_TOP_K, top_k
@@ -260,7 +270,7 @@ def run_single_query(
             ranked_rows.append([v_id, f_id])
 
     elif q_type == 2:
-        # VQA / QA
+        # Type 2 (VQA)
         if not fast_mode and reranker is not None:
             decomp = query_proc.decompose_query(q_text)
             sub_q = decomp.get("sub_queries", [q_text])
@@ -284,35 +294,26 @@ def run_single_query(
             ranked_rows.append([v_id, f_id, vqa_answer])
 
     elif q_type == 3:
-        # TRAKE Temporal Sequences
-        events = parse_trake_events(q_text)
-        if not fast_mode and reranker is not None and hasattr(reranker, "rerank_type3_temporal"):
-            ranked = reranker.rerank_type3_temporal(events, candidates, top_k=top_k)
-        else:
-            ranked = candidates[:top_k]
-
-        for item in ranked:
-            p = item.get("payload", {})
-            v_id = normalize_video_stem(p.get("source_file") or p.get("video_id") or "unknown")
-            event_frames = item.get("event_frames")
-            if isinstance(event_frames, list) and event_frames:
-                frame_strs = [str(f) for f in event_frames]
-                ranked_rows.append([v_id, *frame_strs])
-            else:
-                f_id = str(frame_id_of(p))
-                ranked_rows.append([v_id, f_id])
-
-    elif q_type == 4:
-        # KIS-C Conversational KIS
-        c_scores = [float(c.get("score") or c.get("rrf_score") or 0.0) for c in candidates[:10]]
+        # Type 3 (KIS-C) Conversational
         kisc_ambiguity = combine_ambiguity_signals(
             distinct_video_ratio(candidates[:10]),
-            score_margin_ambiguity(c_scores)
+            score_margin_ambiguity(candidates[:10]),
         )
         if history and isinstance(history, list):
             prior_ids = [c.get("id") for c in candidates[:20] if c.get("id") is not None]
             ans = str(query_info.get("system_answer", ""))
             candidates = boost_by_clarification_answer(candidates, prior_ids, ans)
+
+        ranked = candidates[:top_k]
+        for item in ranked:
+            p = item.get("payload", {})
+            v_id = normalize_video_stem(p.get("source_file") or p.get("video_id") or "unknown")
+            f_id = str(frame_id_of(p))
+            ranked_rows.append([v_id, f_id])
+
+    elif q_type == 4:
+        # Type 4 (AVS) Ad-hoc Video Search
+        # AVS optimizes cross-video distinct shot coverage
         ranked = candidates[:top_k]
         for item in ranked:
             p = item.get("payload", {})
@@ -329,6 +330,7 @@ def run_single_query(
     return {
         "query_stem": q_stem,
         "query_type": q_type,
+        "query_type_name": VBS_QUERY_TYPES.get(q_type, f"Type {q_type}"),
         "query_text": q_text,
         "raw_candidate_count": len(candidates),
         "final_rows": final_rows,
@@ -348,8 +350,7 @@ def run_vbs_audit(
     ablation: Optional[str] = None,
 ) -> Path:
     """
-    Main batch audit executor for VBS 2027 experiments.
-    Processes query manifests or directories, applies timeouts, and writes auditable outputs.
+    Main batch audit executor for VBS 2027 paper experiments.
     """
     run_id = f"vbs-audit-{uuid.uuid4().hex[:8]}"
     start_time = time.monotonic()
@@ -387,7 +388,7 @@ def run_vbs_audit(
 
     emit_event(log_file, run_id, start_time, "queries_loaded", count=len(queries))
 
-    # 2. Initialize Models with Startup Timeout Protection
+    # 2. Initialize Models
     try:
         with time_limit(startup_timeout_sec):
             t_init = time.monotonic()
@@ -407,7 +408,7 @@ def run_vbs_audit(
         emit_event(log_file, run_id, start_time, "startup_timeout", timeout_sec=startup_timeout_sec)
         raise
 
-    # 3. Process Queries with Atomic Staging Directory
+    # 3. Process Queries
     staging_dir = Path(tempfile.mkdtemp(prefix=f".vbs-run-{run_id}-", dir=str(out_path)))
     sub_csv_dir = staging_dir / "submission"
     details_dir = sub_csv_dir / ".details"
@@ -437,11 +438,11 @@ def run_vbs_audit(
                     )
             except QueryTimeout:
                 emit_event(log_file, run_id, start_time, "query_timeout", stem=q_stem, timeout_sec=query_timeout_sec)
-                # Fail closed: emit audit prior fallback if available, else empty
                 fallback_rows = apply_audit_priors(q_stem, int(q_info.get("type", 1)), [], max_rows=SUBMISSION_TOP_K)
                 result = {
                     "query_stem": q_stem,
                     "query_type": int(q_info.get("type", 1)),
+                    "query_type_name": VBS_QUERY_TYPES.get(int(q_info.get("type", 1)), "Unknown"),
                     "query_text": q_info.get("query", ""),
                     "raw_candidate_count": 0,
                     "final_rows": fallback_rows,
@@ -450,14 +451,12 @@ def run_vbs_audit(
                     "timings": {"total_ms": int(query_timeout_sec * 1000), "timeout": True},
                 }
 
-            # Write individual submission CSV
             csv_path = sub_csv_dir / f"{q_stem}.csv"
             with csv_path.open("w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
                 for row in result["final_rows"]:
                     writer.writerow(row)
 
-            # Write individual detailed trace JSON
             json_path = details_dir / f"{q_stem}.json"
             with json_path.open("w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
@@ -465,14 +464,12 @@ def run_vbs_audit(
             summary_records.append(result)
             emit_event(log_file, run_id, start_time, "query_finished", stem=q_stem, rows=len(result["final_rows"]))
 
-        # 4. Package submission.zip
         zip_path = staging_dir / "submission.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for item in sub_csv_dir.rglob("*"):
                 if item.is_file() and not item.name.startswith("."):
                     zf.write(item, arcname=item.relative_to(sub_csv_dir))
 
-        # 5. Write aggregate benchmark audit summary
         summary_json = staging_dir / "audit_benchmark_summary.json"
         with summary_json.open("w", encoding="utf-8") as f:
             json.dump({
@@ -485,7 +482,6 @@ def run_vbs_audit(
                 "results": summary_records,
             }, f, indent=2, ensure_ascii=False)
 
-        # 6. Atomic promotion to target directory
         for item in staging_dir.iterdir():
             target = out_path / item.name
             if target.exists():

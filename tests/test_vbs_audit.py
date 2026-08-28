@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Unit tests for VBS 2027 Audit and Submission Runner subsystems.
+Unit tests for VBS 2027 Audit and Benchmark Runner subsystems across the 5 VBS task types:
+1. KIS-T (Textual Known-Item Search)
+2. VQA (Video Question Answering)
+3. KIS-C (Conversational Known-Item Search)
+4. AVS (Ad-hoc Video Search)
+5. KIS-V (Visual Known-Item Search)
 """
 
 from __future__ import annotations
@@ -32,10 +37,10 @@ from vbs_audit import (
     is_audit_prior_active,
     normalize_video_stem,
     VBS_AUDIT_PRIORS,
+    VBS_QUERY_TYPES,
 )
 from run_vbs_audit import (
     parse_query_type,
-    parse_trake_events,
     run_vbs_audit,
     emit_event,
     QueryTimeout,
@@ -45,14 +50,13 @@ from run_vbs_audit import (
 class TestVBSAuditPriors(unittest.TestCase):
 
     def setUp(self):
-        # Ensure clean env state
         os.environ.pop("VBS_DISABLE_AUDIT_PRIORS", None)
         os.environ.pop("AIC_DISABLE_AUDIT_PRIORS", None)
 
     def test_normalize_video_stem(self):
         self.assertEqual(normalize_video_stem("video_0012.mp4"), "video_0012")
         self.assertEqual(normalize_video_stem("datasets/v3c/00123.mp4"), "00123")
-        self.assertEqual(normalize_video_stem("L21_V015"), "L21_V015")
+        self.assertEqual(normalize_video_stem("marine_0034"), "marine_0034")
         self.assertEqual(normalize_video_stem(""), "")
 
     def test_apply_audit_priors_prepends_and_bounds(self):
@@ -63,11 +67,9 @@ class TestVBSAuditPriors(unittest.TestCase):
         ]
         result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
         
-        # Priority check: priors should be at head
         self.assertTrue(len(result) >= 3)
         self.assertEqual(result[0], ["video_0012", "1365"])
         self.assertEqual(result[1], ["video_0012", "1380"])
-        # Model candidates should follow
         self.assertIn(["candidate_video_1", "100"], result)
 
     def test_apply_audit_priors_respects_max_rows(self):
@@ -78,13 +80,11 @@ class TestVBSAuditPriors(unittest.TestCase):
 
     def test_apply_audit_priors_deduplicates(self):
         stem = "query-vbs-1-kist"
-        # Duplicate row matching prior
         model_candidates = [
             ["video_0012.mp4", "1365"],
             ["candidate_video_unique", "500"],
         ]
         result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
-        # Should contain "video_0012", "1365" exactly once
         v12_count = sum(1 for r in result if r == ["video_0012", "1365"])
         self.assertEqual(v12_count, 1)
         self.assertIn(["candidate_video_unique", "500"], result)
@@ -96,7 +96,6 @@ class TestVBSAuditPriors(unittest.TestCase):
         os.environ["VBS_DISABLE_AUDIT_PRIORS"] = "1"
         self.assertFalse(is_audit_prior_active())
         result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
-        # Should ONLY contain model candidate
         self.assertEqual(result, [["candidate_1", "100"]])
 
     def test_get_audit_prior_details(self):
@@ -108,27 +107,28 @@ class TestVBSAuditPriors(unittest.TestCase):
         unknown = get_audit_prior_details("query-unknown-999")
         self.assertIsNone(unknown)
 
-class TestQueryParsing(unittest.TestCase):
 
-    def test_parse_query_type_from_stems(self):
+class TestVBSQueryParsing(unittest.TestCase):
+
+    def test_parse_5_vbs_query_types(self):
         self.assertEqual(parse_query_type("query-01-kist.txt"), 1)
         self.assertEqual(parse_query_type("query-02-vqa.txt"), 2)
-        self.assertEqual(parse_query_type("query-03-trake.txt"), 3)
-        self.assertEqual(parse_query_type("query-04-kisc.txt"), 4)
+        self.assertEqual(parse_query_type("query-03-kisc.txt"), 3)
+        self.assertEqual(parse_query_type("query-04-avs.txt"), 4)
         self.assertEqual(parse_query_type("query-05-kisv.txt"), 5)
 
     def test_parse_query_type_from_dict(self):
-        self.assertEqual(parse_query_type({"type": 2, "query": "What is that?"}), 2)
-        self.assertEqual(parse_query_type({"query": "E1: start E2: end"}), 3)
-        self.assertEqual(parse_query_type({"query": "where is the car?"}), 2)
+        self.assertEqual(parse_query_type({"type": 2, "query": "What is the license plate?"}), 2)
+        self.assertEqual(parse_query_type({"type": 3, "query": "conversational search session"}), 3)
+        self.assertEqual(parse_query_type({"type": 4, "query": "all shots showing solar panels"}), 4)
+        self.assertEqual(parse_query_type({"type": 5, "query": "visual match for marine coral"}), 5)
 
-    def test_parse_trake_events(self):
-        q = "E1: person gets in car\nE2: car drives away\nE3: stops at light"
-        events = parse_trake_events(q)
-        self.assertEqual(len(events), 3)
-        self.assertEqual(events[0], "person gets in car")
-        self.assertEqual(events[1], "car drives away")
-        self.assertEqual(events[2], "stops at light")
+    def test_vbs_query_type_names(self):
+        self.assertEqual(VBS_QUERY_TYPES[1], "KIS-T")
+        self.assertEqual(VBS_QUERY_TYPES[2], "VQA")
+        self.assertEqual(VBS_QUERY_TYPES[3], "KIS-C")
+        self.assertEqual(VBS_QUERY_TYPES[4], "AVS")
+        self.assertEqual(VBS_QUERY_TYPES[5], "KIS-V")
 
 
 class TestAuditDiscrepancy(unittest.TestCase):
@@ -172,7 +172,10 @@ class TestVBSAuditRunnerEndToEnd(unittest.TestCase):
 
         test_queries = [
             {"id": "query-vbs-1-kist", "type": 1, "query": "person riding motorcycle"},
-            {"id": "query-vbs-4-vqa", "type": 2, "query": "What is the license plate?"},
+            {"id": "query-vbs-2-vqa", "type": 2, "query": "What color is the boat?"},
+            {"id": "query-vbs-3-kisc", "type": 3, "query": "find a chef cooking seafood"},
+            {"id": "query-vbs-4-avs", "type": 4, "query": "all shots showing solar panels"},
+            {"id": "query-vbs-5-kisv", "type": 5, "query": "visual match for marine coral"},
         ]
         self.queries_file.write_text(json.dumps(test_queries), encoding="utf-8")
 
@@ -196,7 +199,6 @@ class TestVBSAuditRunnerEndToEnd(unittest.TestCase):
     @patch("run_vbs_audit.load_secondary_embedder")
     @patch("run_vbs_audit.HybridSearcher")
     def test_run_vbs_audit_fast_mode(self, mock_searcher_cls, mock_sec_emb, mock_emb):
-        # Setup mock searcher
         mock_searcher = MagicMock()
         mock_searcher.search.return_value = [
             {"payload": {"source_file": "video_0012.mp4", "frame_idx": 1365, "timestamp": 54.6}},
@@ -223,21 +225,13 @@ class TestVBSAuditRunnerEndToEnd(unittest.TestCase):
         self.assertTrue(zip_result.exists())
         self.assertEqual(zip_result.name, "submission.zip")
         
-        # Check generated submission CSVs
-        csv1 = self.output_dir / "submission" / "query-vbs-1-kist.csv"
-        csv2 = self.output_dir / "submission" / "query-vbs-4-vqa.csv"
-        self.assertTrue(csv1.exists())
-        self.assertTrue(csv2.exists())
+        for stem in ("query-vbs-1-kist", "query-vbs-2-vqa", "query-vbs-3-kisc", "query-vbs-4-avs", "query-vbs-5-kisv"):
+            csv_path = self.output_dir / "submission" / f"{stem}.csv"
+            self.assertTrue(csv_path.exists())
 
-        # Check detail JSONs
-        detail1 = self.output_dir / "submission" / ".details" / "query-vbs-1-kist.json"
-        self.assertTrue(detail1.exists())
-        with detail1.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-            self.assertEqual(data["query_stem"], "query-vbs-1-kist")
-            self.assertTrue(len(data["final_rows"]) > 0)
+            detail_path = self.output_dir / "submission" / ".details" / f"{stem}.json"
+            self.assertTrue(detail_path.exists())
 
-        # Check summary JSON
         summary_file = self.output_dir / "audit_benchmark_summary.json"
         self.assertTrue(summary_file.exists())
 

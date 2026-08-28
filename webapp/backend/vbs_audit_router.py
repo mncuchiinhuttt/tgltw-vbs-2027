@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-VBS 2027 Audit & Sơ tuyển API Router.
+VBS 2027 System Audit & Benchmark API Router.
 Handles query discovery, background execution, manual candidate reordering,
-interactive verification, and submission zip export for VBS 2027 offline benchmarks.
+interactive verification, and submission zip export across the 5 VBS task types:
+1. KIS-T (Textual Known-Item Search)
+2. VQA (Video Question Answering)
+3. KIS-C (Conversational Known-Item Search)
+4. AVS (Ad-hoc Video Search)
+5. KIS-V (Visual Known-Item Search)
 """
 
 import csv
@@ -45,9 +50,9 @@ from vbs_audit import (
     is_audit_prior_active,
     normalize_video_stem,
     VBS_AUDIT_PRIORS,
+    VBS_QUERY_TYPES,
 )
 
-# Active background query job tracking
 _active_query_jobs: Dict[str, Dict[str, Any]] = {}
 _jobs_lock = threading.Lock()
 _batch_state_lock = threading.Lock()
@@ -56,7 +61,7 @@ _video_src_cache: Dict[str, str] = {}
 
 def _batch_concurrency() -> int:
     try:
-        configured = int(os.getenv("VBS_BATCH_CONCURRENCY", os.getenv("SO_TUYEN_BATCH_CONCURRENCY", "2")))
+        configured = int(os.getenv("VBS_BATCH_CONCURRENCY", "2"))
     except ValueError:
         configured = 2
     return max(1, min(configured, 4))
@@ -81,30 +86,21 @@ def resolve_folder_path(folder_str: str) -> Path:
 
 def parse_query_type_from_filename(filename: str) -> int:
     stem = Path(filename).stem.lower()
-    if stem.endswith("-kist") or "-kist" in stem or stem.endswith("-kis") or "-kis" in stem:
+    if stem.endswith("-kist") or "kis-t" in stem or stem.endswith("-kis"):
         return 1
-    if stem.endswith("-vqa") or "-vqa" in stem or stem.endswith("-qa") or "-qa" in stem:
+    if stem.endswith("-vqa") or "vqa" in stem or stem.endswith("-qa"):
         return 2
-    if stem.endswith("-trake") or "-trake" in stem or "event" in stem:
+    if stem.endswith("-kisc") or "kis-c" in stem:
         return 3
-    if stem.endswith("-kisc") or "-kisc" in stem or "turn" in stem:
+    if stem.endswith("-avs") or "avs" in stem:
         return 4
-    if stem.endswith("-kisv") or "-kisv" in stem or stem.endswith("-avs") or "-avs" in stem:
+    if stem.endswith("-kisv") or "kis-v" in stem:
         return 5
     return 1
 
 
 def parse_type_name(q_type: int) -> str:
-    return {1: "KIS-T", 2: "VQA", 3: "TRAKE", 4: "KIS-C", 5: "KIS-V"}.get(q_type, f"Type {q_type}")
-
-
-def parse_trake_events(query_text: str) -> List[str]:
-    events = re.findall(r"(?:^|\n)\s*E\d+\s*:?\s*([^\n]+)", query_text, re.IGNORECASE)
-    events = [" ".join(e.split()) for e in events if e.strip()]
-    if not events:
-        lines = [line.strip() for line in query_text.splitlines() if line.strip()]
-        events = lines if lines else [query_text.strip()]
-    return events
+    return VBS_QUERY_TYPES.get(q_type, f"Type {q_type}")
 
 
 def sanitize_csv_cell(value: str) -> str:
@@ -128,7 +124,6 @@ def resolve_video_src_file(v_id: str) -> str:
         return _video_src_cache[v_id]
 
     norm_id = normalize_video_stem(v_id)
-    # Search common dataset locations
     for pattern in (f"**/{norm_id}.mp4", f"**/{norm_id}.jpg", f"**/{norm_id}.png"):
         matches = list(DATASETS_DIR.glob(pattern))
         if matches:
@@ -170,14 +165,13 @@ def list_query_folders():
     folders = []
     if QUERIES_DIR.exists():
         for p in QUERIES_DIR.iterdir():
-            if p.is_dir() and not p.name.startswith("."):
+            if p.is_dir() and not p.name.startswith(".") and not p.name.startswith("__"):
                 has_queries = bool(list(p.glob("*.txt")) or list(p.glob("*.json")))
                 folders.append({
                     "path": str(p.relative_to(REPO_ROOT)).replace("\\", "/"),
                     "name": p.name,
                     "has_queries": has_queries,
                 })
-        # Root queries directory itself
         folders.insert(0, {
             "path": "queries",
             "name": "queries (root)",
@@ -196,7 +190,6 @@ def list_queries(folder: str = "queries"):
 
     items: List[Dict[str, Any]] = []
 
-    # 1. Check JSON manifest if present
     manifests = list(folder_path.glob("*.json"))
     manifest_queries = []
     for mf in manifests:
@@ -210,7 +203,6 @@ def list_queries(folder: str = "queries"):
         except Exception:
             pass
 
-    # 2. Check .txt query files
     txt_files = sorted(folder_path.glob("*.txt"))
 
     if txt_files:
@@ -220,7 +212,6 @@ def list_queries(folder: str = "queries"):
             q_text = f.read_text(encoding="utf-8").strip()
 
             csv_file = sub_dir / f"{q_stem}.csv"
-            detail_file = details_dir / f"{q_stem}.json"
             status = "completed" if csv_file.exists() else "pending"
 
             with _jobs_lock:
@@ -298,7 +289,6 @@ def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
     csv_file = sub_dir / f"{query_id}.csv"
     detail_file = details_dir / f"{query_id}.json"
 
-    # Read query text
     txt_file = folder_path / f"{query_id}.txt"
     query_text = ""
     q_type = parse_query_type_from_filename(query_id)
@@ -325,7 +315,6 @@ def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
         except Exception:
             pass
 
-    # Form structured candidates
     candidates: List[Dict[str, Any]] = []
     prior_details = get_audit_prior_details(query_id)
     prior_tuples = {tuple(p) for p in (prior_details["all_priors"] if prior_details else [])}
@@ -422,14 +411,12 @@ def _run_query_worker(folder: str, query_id: str, fast_mode: bool, top_k: int):
         sub_dir.mkdir(parents=True, exist_ok=True)
         details_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write CSV
         csv_file = sub_dir / f"{query_id}.csv"
         with csv_file.open("w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             for row in res["final_rows"]:
                 writer.writerow(row)
 
-        # Write details JSON
         detail_file = details_dir / f"{query_id}.json"
         with detail_file.open("w", encoding="utf-8") as f:
             json.dump(res, f, indent=2, ensure_ascii=False)
@@ -507,7 +494,6 @@ def update_query_ranks(payload: UpdateRanksPayload):
         writer = csv.writer(f)
         for row in payload.ranks:
             if payload.vqa_answer and len(row) >= 2:
-                # Update QA answer in third cell
                 clean_row = [row[0], row[1], payload.vqa_answer]
                 writer.writerow(clean_row)
             else:

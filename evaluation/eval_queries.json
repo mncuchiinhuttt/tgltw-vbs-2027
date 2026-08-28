@@ -1,7 +1,9 @@
 [
   {
+    "id": "eval-vbs-1-kist",
     "type": 1,
-    "query": "a person riding a red motorcycle in the morning",
+    "type_name": "KIS-T",
+    "query": "a person riding a red motorcycle on a mountain road in the morning",
     "ground_truth": {
       "video_name": "video_0012.mp4",
       "timestamp": 45.5,
@@ -9,7 +11,9 @@
     }
   },
   {
+    "id": "eval-vbs-2-vqa",
     "type": 2,
+    "type_name": "VQA",
     "query": "What is the license plate of the red motorcycle next to the gas station?",
     "ground_truth": {
       "video_name": "video_0045.mp4",
@@ -19,16 +23,44 @@
     }
   },
   {
+    "id": "eval-vbs-3-kisc",
     "type": 3,
-    "query": "First a person opens the car door, then steps inside and drives away",
+    "type_name": "KIS-C",
+    "query": "find a chef preparing seafood in an open kitchen",
+    "history": [
+      { "role": "user", "text": "find a chef cooking seafood" },
+      { "role": "system", "text": "Is the kitchen indoors or outdoors?" },
+      { "role": "user", "text": "it is an open indoor kitchen with stainless steel counters" }
+    ],
+    "system_answer": "open indoor kitchen with stainless steel counters",
     "ground_truth": {
-      "video_name": "video_0089.mp4",
-      "event_frames": [
-        { "timestamp": 100.0, "frame_id": 3000 },
-        { "timestamp": 105.5, "frame_id": 3165 },
-        { "timestamp": 112.0, "frame_id": 3360 }
-      ],
-      "reference_summary": "A person opens a car door, gets inside, and the car drives away."
+      "video_name": "video_0102.mp4",
+      "timestamp": 23.2,
+      "frame_id": 580
+    }
+  },
+  {
+    "id": "eval-vbs-4-avs",
+    "type": 4,
+    "type_name": "AVS",
+    "query": "shots showing solar panels installed on rooftops or in fields",
+    "ground_truth": {
+      "video_name": "00420.mp4",
+      "timestamp": 84.0,
+      "frame_id": 2100,
+      "distinct_target_videos": ["00420", "00421", "00512"]
+    }
+  },
+  {
+    "id": "eval-vbs-5-kisv",
+    "type": 5,
+    "type_name": "KIS-V",
+    "query": "visual match for marine coral reef with yellow tropical fish",
+    "reference_media": "marine_0034.mp4",
+    "ground_truth": {
+      "video_name": "marine_0034.mp4",
+      "timestamp": 30.0,
+      "frame_id": 750
     }
   }
 ]

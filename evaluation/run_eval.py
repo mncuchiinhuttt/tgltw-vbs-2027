@@ -3,12 +3,19 @@
 """
 VBS 2027 Offline Benchmark & Evaluation Audit Runner.
 
-This script executes offline replay benchmarks and computes mathematically sound
-diagnostics across VBS retrieval types (KIS-T, KIS-V, KIS-C, VQA, TRAKE, AVS):
-- Accuracy: Recall@1, Recall@5, Recall@10, Recall@20, Recall@50, Recall@100, MRR, MAP
-- Grounding: VQA Exact Match, Substring Match, Token F1, Temporal Error (MAE sec)
-- Temporal Sequence: Exact Order Match, 1-to-1 Event Recall, IoU
-- Conversational KIS-C: Multi-turn Ambiguity Reduction, CQR Retrieval Gain
+Executes offline replay benchmarks and computes mathematically sound
+diagnostics across the 5 official VBS retrieval task families:
+- Type 1: KIS-T (Textual Known-Item Search)
+- Type 2: VQA (Video Question Answering with grounded keyframe & answer)
+- Type 3: KIS-C (Conversational Known-Item Search with ambiguity & feedback)
+- Type 4: AVS (Ad-hoc Video Search with cross-video diversity)
+- Type 5: KIS-V (Visual Known-Item Search / Query-by-Image-or-Clip)
+
+Metrics computed:
+- Retrieval: Recall@1, Recall@5, Recall@10, Recall@20, Recall@50, Recall@100, MRR, MAP
+- Grounding: VQA Exact Match, Substring Match, Token F1, Timestamp MAE
+- Conversational: Ambiguity Reduction, CQR Retrieval Score Gain
+- AVS Diversity: Distinct Video Coverage, Duplicate Shot Rate
 - Latency Profiling: Stage 1 (HyDE/QueryProc), Stage 2 (Hybrid Search), Stage 3 (Rerank/VLM)
 """
 
@@ -26,7 +33,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from PIL import Image
 
-# Setup paths to import system modules
+# Setup paths
 EVAL_DIR = Path(__file__).resolve().parent
 METHOD_DIR = EVAL_DIR.parent
 INFERENCE_DIR = METHOD_DIR / "inference-code"
@@ -61,13 +68,13 @@ try:
         score_margin_ambiguity,
         boost_by_clarification_answer,
     )
-    from vbs_audit import apply_audit_priors, is_audit_prior_active, normalize_video_stem
+    from vbs_audit import apply_audit_priors, is_audit_prior_active, normalize_video_stem, VBS_QUERY_TYPES
 except ImportError as err:
     print(f"[ERROR] Failed to import inference modules: {err}")
     print("Ensure you are running from the project environment.")
     sys.exit(1)
 
-# Ragas is an optional dependency
+# Optional Ragas dependency
 try:
     from ragas import evaluate as ragas_evaluate
     from ragas.metrics import faithfulness, answer_correctness, context_recall
@@ -87,13 +94,11 @@ _RAGAS_METRICS = {
 
 
 def canonical_video_id(value: Any) -> str:
-    """Normalize indexed paths and extensions to a canonical video identifier."""
+    """Normalize paths and extensions to canonical video identifier."""
     text = str(value or "").strip().replace("\\", "/")
     if not text:
         return ""
-    # Extract stem if file path
     stem = Path(text.rsplit("/", 1)[-1]).stem
-    # Match patterns like L21_V001, video_0012, 00123, marine_001
     match = re.search(r"([A-Za-z0-9_-]+)", stem, re.IGNORECASE)
     return match.group(1) if match else stem
 
@@ -124,19 +129,12 @@ def is_valid_ground_truth(q_type: int, ground_truth: Any) -> bool:
     """Validate whether an annotation contains sound ground-truth coordinates."""
     if not isinstance(ground_truth, dict) or not canonical_video_id(ground_truth.get("video_name")):
         return False
-    if q_type in (1, 2, 4, 5):
-        return _has_valid_annotation_coordinate(ground_truth)
-    if q_type == 3:
-        events = ground_truth.get("event_frames")
-        return isinstance(events, list) and bool(events) and all(
-            _has_valid_annotation_coordinate(e) for e in events
-        )
-    return False
+    return _has_valid_annotation_coordinate(ground_truth)
 
 
 def compute_ragas_scores(question: str, contexts: List[str], answer: Optional[str] = None,
                          ground_truth: Optional[str] = None, metric_names: Optional[List[str]] = None) -> Optional[Dict[str, float]]:
-    """Run real Ragas metrics for a single sample."""
+    """Run real Ragas metrics for generation quality."""
     if not RAGAS_AVAILABLE or not metric_names:
         return None
 
@@ -161,7 +159,7 @@ def compute_ragas_scores(question: str, contexts: List[str], answer: Optional[st
 
 
 def load_frame_image(dataset_dir: str, media_name: str, frame_idx=None, timestamp=None) -> Optional[Image.Image]:
-    """Load grounded evidence from an image or video frame."""
+    """Load grounded keyframe image from disk."""
     if not media_name:
         return None
 
@@ -251,7 +249,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
     with open(query_path, "r", encoding="utf-8") as f:
         queries = json.load(f)
 
-    print(f"=== Loaded {len(queries)} evaluation queries from {query_path.name} ===")
+    print(f"=== Loaded {len(queries)} VBS evaluation queries from {query_path.name} ===")
     if not RAGAS_AVAILABLE:
         print("[WARN] `ragas` not installed -- generation-quality metrics reported as N/A.")
     print("\n=== Initializing System Models ===")
@@ -276,8 +274,8 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
     stats_by_type: Dict[int, Dict[str, Any]] = {
         1: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0},
         2: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0, "vqa_exact_match": 0, "faithfulness_sum": 0.0, "faithfulness_n": 0, "correctness_sum": 0.0, "correctness_n": 0},
-        3: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0, "order_pass": 0, "order_n": 0, "sequence_recall_sum": 0.0, "sequence_recall_n": 0, "context_recall_sum": 0.0, "context_recall_n": 0},
-        4: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0, "ambiguity_sum": 0.0},
+        3: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0, "ambiguity_sum": 0.0},
+        4: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0, "distinct_videos_sum": 0},
         5: {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0},
     }
 
@@ -293,18 +291,20 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
         if not q_text:
             continue
 
-        print(f"\n[{idx}/{len(queries)}] Processing Type {q_type} Query: '{q_text}'")
+        type_name = VBS_QUERY_TYPES.get(q_type, f"Type {q_type}")
+        print(f"\n[{idx}/{len(queries)}] Processing {type_name} Query: '{q_text}'")
         q_t0 = time.perf_counter()
 
         # 1. HyDE
         t0_hyde = time.perf_counter()
-        hyde_query = query_proc.generate_hyde(q_text)
+        use_hyde = (q_type not in (4, 5))
+        hyde_query = query_proc.generate_hyde(q_text) if use_hyde else q_text
         t1_hyde = time.perf_counter()
 
         # 2. Candidate Retrieval
         t0_search = time.perf_counter()
         query_hits = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
-        hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K)
+        hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K) if use_hyde else []
         secondary_hits = searcher.dense_search_secondary(q_text, top_k=SUBMISSION_TOP_K)
         candidates = searcher.merge_rrf(query_hits, hyde_hits, secondary_hits)
         candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
@@ -366,22 +366,19 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
                     generated_answer = "N/A"
 
         elif q_type == 3:
-            top_sequences = reranker.rerank_type3_temporal(q_text, candidates[:SUBMISSION_TOP_K], query_proc, searcher)
-            for seq in top_sequences:
-                timestamps = seq.get("timestamps") or []
+            # KIS-C Conversational
+            top_candidates = candidates[:SUBMISSION_TOP_K]
+            for item in top_candidates:
+                p = item.get("payload", {})
                 results.append({
-                    "video_name": canonical_video_id(seq.get("video_name")),
-                    "timestamp": timestamps[0] if timestamps else 0.0,
-                    "score": seq.get("score", 0.0),
-                    "sequence_frame_ids": seq.get("frame_ids"),
-                    "sequence_timestamps": timestamps,
+                    "video_name": canonical_video_id(p.get("source_file") or p.get("video_id")),
+                    "timestamp": p.get("timestamp"),
+                    "frame_idx": p.get("frame_idx"),
+                    "score": item.get("score", 0.0),
                 })
-            if top_sequences:
-                best_seq = top_sequences[0]
-                print(f"  ├─ Sequence Candidate: {best_seq.get('video_name')} [Frame IDs: {best_seq.get('frame_ids')}]")
 
         elif q_type == 4:
-            # KIS-C Conversational
+            # AVS Ad-hoc Search
             top_candidates = candidates[:SUBMISSION_TOP_K]
             for item in top_candidates:
                 p = item.get("payload", {})
@@ -411,107 +408,59 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
 
         accuracy_metrics: Dict[str, Any] = {}
 
-        # Ground truth verification
         if ground_truth and results and is_valid_ground_truth(q_type, ground_truth):
             gt_video = canonical_video_id(ground_truth.get("video_name"))
             gt_time = ground_truth.get("timestamp")
             gt_frame_id = ground_truth.get("frame_id")
 
-            if q_type in (1, 2, 4, 5):
-                def is_match(res):
-                    if canonical_video_id(res.get("video_name")) != gt_video:
-                        return False
-                    if gt_frame_id is not None and res.get("frame_idx") is not None:
-                        return abs(int(res["frame_idx"]) - int(gt_frame_id)) <= FRAME_MATCH_TOLERANCE
-                    if gt_time is not None and res.get("timestamp") is not None:
-                        return abs(float(res["timestamp"]) - float(gt_time)) <= TIMESTAMP_TOLERANCE_SEC
-                    return True
+            def is_match(res):
+                if canonical_video_id(res.get("video_name")) != gt_video:
+                    return False
+                if gt_frame_id is not None and res.get("frame_idx") is not None:
+                    return abs(int(res["frame_idx"]) - int(gt_frame_id)) <= FRAME_MATCH_TOLERANCE
+                if gt_time is not None and res.get("timestamp") is not None:
+                    return abs(float(res["timestamp"]) - float(gt_time)) <= TIMESTAMP_TOLERANCE_SEC
+                return True
 
-                match_rank = next((i for i, r in enumerate(results) if is_match(r)), -1)
-                reciprocal_rank = 1.0 / (match_rank + 1) if match_rank >= 0 else 0.0
+            match_rank = next((i for i, r in enumerate(results) if is_match(r)), -1)
+            reciprocal_rank = 1.0 / (match_rank + 1) if match_rank >= 0 else 0.0
 
-                if match_rank == 0:
-                    st["recall_1"] += 1
-                if 0 <= match_rank < 5:
-                    st["recall_5"] += 1
-                if 0 <= match_rank < 10:
-                    st["recall_10"] += 1
-                if 0 <= match_rank < 20:
-                    st["recall_20"] += 1
-                if 0 <= match_rank < 50:
-                    st["recall_50"] += 1
-                if 0 <= match_rank < 100:
-                    st["recall_100"] += 1
-                st["rr_sum"] += reciprocal_rank
+            if match_rank == 0:
+                st["recall_1"] += 1
+            if 0 <= match_rank < 5:
+                st["recall_5"] += 1
+            if 0 <= match_rank < 10:
+                st["recall_10"] += 1
+            if 0 <= match_rank < 20:
+                st["recall_20"] += 1
+            if 0 <= match_rank < 50:
+                st["recall_50"] += 1
+            if 0 <= match_rank < 100:
+                st["recall_100"] += 1
+            st["rr_sum"] += reciprocal_rank
 
-                accuracy_metrics = {
-                    "correct_rank": match_rank + 1 if match_rank >= 0 else -1,
-                    "recall_1": 1.0 if match_rank == 0 else 0.0,
-                    "recall_5": 1.0 if 0 <= match_rank < 5 else 0.0,
-                    "reciprocal_rank": reciprocal_rank,
-                }
+            accuracy_metrics = {
+                "correct_rank": match_rank + 1 if match_rank >= 0 else -1,
+                "recall_1": 1.0 if match_rank == 0 else 0.0,
+                "recall_5": 1.0 if 0 <= match_rank < 5 else 0.0,
+                "reciprocal_rank": reciprocal_rank,
+            }
 
-                if q_type == 2 and generated_answer and ground_truth.get("answer"):
-                    gt_ans = str(ground_truth["answer"]).strip().lower()
-                    gen_ans = str(generated_answer).strip().lower()
-                    em = (gen_ans == gt_ans) or (gt_ans in gen_ans) or (gen_ans in gt_ans)
-                    if em:
-                        st["vqa_exact_match"] = st.get("vqa_exact_match", 0) + 1
-                    accuracy_metrics["vqa_exact_match"] = em
+            if q_type == 2 and generated_answer and ground_truth.get("answer"):
+                gt_ans = str(ground_truth["answer"]).strip().lower()
+                gen_ans = str(generated_answer).strip().lower()
+                em = (gen_ans == gt_ans) or (gt_ans in gen_ans) or (gen_ans in gt_ans)
+                if em:
+                    st["vqa_exact_match"] = st.get("vqa_exact_match", 0) + 1
+                accuracy_metrics["vqa_exact_match"] = em
 
-                print(f"  └─ Metric Scores     : Recall@1 = {accuracy_metrics['recall_1']:.2f}, Recall@5 = {accuracy_metrics['recall_5']:.2f}, MRR = {reciprocal_rank:.3f}")
-
-            elif q_type == 3:
-                # 1-to-1 Temporal Event Matching
-                event_frames = ground_truth.get("event_frames") or []
-                video_rank = next((i for i, r in enumerate(results) if canonical_video_id(r.get("video_name")) == gt_video), -1)
-                video_rr = 1.0 / (video_rank + 1) if video_rank >= 0 else 0.0
-
-                if video_rank == 0:
-                    st["recall_1"] += 1
-                if 0 <= video_rank < 5:
-                    st["recall_5"] += 1
-                if 0 <= video_rank < 10:
-                    st["recall_10"] += 1
-                if 0 <= video_rank < 20:
-                    st["recall_20"] += 1
-                if 0 <= video_rank < 50:
-                    st["recall_50"] += 1
-                if 0 <= video_rank < 100:
-                    st["recall_100"] += 1
-                st["rr_sum"] += video_rr
-
-                matched_seq = results[video_rank] if video_rank >= 0 else None
-                seq_timestamps = matched_seq.get("sequence_timestamps", []) if matched_seq else []
-
-                # 1-to-1 event alignment (avoiding greedy duplication)
-                used_indices: Set[int] = set()
-                matched_event_count = 0
-                for ef in event_frames:
-                    ef_time = ef.get("timestamp")
-                    if ef_time is not None:
-                        for s_idx, ts in enumerate(seq_timestamps):
-                            if s_idx not in used_indices and abs(ts - ef_time) <= TIMESTAMP_TOLERANCE_SEC:
-                                used_indices.add(s_idx)
-                                matched_event_count += 1
-                                break
-
-                event_recall = (matched_event_count / len(event_frames)) if event_frames else 0.0
-                st["sequence_recall_sum"] += event_recall
-                st["sequence_recall_n"] += 1
-
-                accuracy_metrics = {
-                    "video_rank": video_rank + 1 if video_rank >= 0 else -1,
-                    "event_recall": event_recall,
-                    "matched_events": matched_event_count,
-                    "total_events": len(event_frames),
-                }
-                print(f"  └─ Metric Scores     : Video Recall@1 = {1.0 if video_rank == 0 else 0.0:.2f}, Event Recall = {event_recall:.2f}, MRR = {video_rr:.3f}")
+            print(f"  └─ Metric Scores     : Recall@1 = {accuracy_metrics['recall_1']:.2f}, Recall@5 = {accuracy_metrics['recall_5']:.2f}, MRR = {reciprocal_rank:.3f}")
 
         eval_results.append({
             "query_index": idx,
             "query_stem": q_stem,
             "type": q_type,
+            "type_name": type_name,
             "query": q_text,
             "latency": {
                 "total_sec": total_lat,
@@ -542,7 +491,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
         r20 = st["recall_20"] / cnt
         mrr = st["rr_sum"] / cnt
 
-        type_label = {1: "Type 1 (KIS-T)", 2: "Type 2 (VQA)", 3: "Type 3 (TRAKE)", 4: "Type 4 (KIS-C)", 5: "Type 5 (KIS-V/AVS)"}.get(q_type, f"Type {q_type}")
+        type_label = VBS_QUERY_TYPES.get(q_type, f"Type {q_type}")
         print(f"--- {type_label} Metrics (N={cnt}) ---")
         print(f"  • Avg Latency : {avg_lat:.2f}s")
         print(f"  • Recall@1    : {r1:.3f} ({st['recall_1']}/{cnt})")

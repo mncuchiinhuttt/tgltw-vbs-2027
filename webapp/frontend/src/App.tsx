@@ -8,9 +8,7 @@ import {
   Sliders,
   Sparkles,
   AlertCircle,
-  CheckCircle2,
   Terminal,
-  FileCode,
   FolderOpen,
   Layers,
   PlayCircle,
@@ -30,13 +28,12 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select"
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
@@ -51,8 +48,7 @@ function Navbar() {
   
   const navItems = [
     { path: "/", label: "Live Search", icon: SearchIcon },
-    { path: "/audit", label: "Audit & Sơ tuyển", icon: Layers },
-    { path: "/preprocess", label: "Indexing Lab", icon: Cpu },
+    { path: "/audit", label: "System Audit", icon: Layers },
     { path: "/database", label: "Vector Store", icon: Database }
   ]
 
@@ -1196,264 +1192,6 @@ function SearchView() {
 }
 
 // -------------------------------------------------------------
-// VIEW 2: PREPROCESS DASHBOARD
-// -------------------------------------------------------------
-function PreprocessView() {
-  const [statusData, setStatusData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [logs, setLogs] = useState<string[]>([])
-  const [preprocessorRunning, setPreprocessorRunning] = useState(false)
-  const logContainerRef = useRef<HTMLDivElement>(null)
-
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/status`)
-      const data = await response.json()
-      setStatusData(data)
-      setPreprocessorRunning(data.preprocessing_active)
-    } catch (err) {
-      console.error("Error fetching status:", err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchLogs = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/preprocess/logs`)
-      const data = await response.json()
-      setLogs(data.logs || [])
-      setPreprocessorRunning(data.running)
-    } catch (err) {
-      console.error("Error fetching logs:", err)
-    }
-  }
-
-  const triggerPreprocessing = async () => {
-    try {
-      setPreprocessorRunning(true)
-      const response = await fetch(`${BACKEND_URL}/api/preprocess/run`, { method: "POST" })
-      const data = await response.json()
-      console.log("Triggered pipeline:", data)
-      fetchLogs()
-    } catch (err) {
-      console.error("Error triggering pipeline:", err)
-      setPreprocessorRunning(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchStatus()
-  }, [])
-
-  useEffect(() => {
-    let interval: any
-    if (preprocessorRunning) {
-      interval = setInterval(() => {
-        fetchLogs()
-        fetchStatus()
-      }, 2000)
-    } else {
-      fetchLogs()
-    }
-    return () => clearInterval(interval)
-  }, [preprocessorRunning])
-
-  useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight
-    }
-  }, [logs])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[500px]">
-        <RefreshCw className="h-8 w-8 text-indigo-500 animate-spin" />
-      </div>
-    )
-  }
-
-  const datasetFiles = statusData?.dataset_files || []
-  const qdrant = statusData?.qdrant || {}
-
-  return (
-    <div className="max-w-7xl mx-auto px-6 py-8 relative">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="tech-card text-left bg-white/90">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-500 font-semibold">Qdrant connection</CardDescription>
-            <CardTitle className="text-slate-800 flex items-center gap-2 text-lg font-bold mt-1">
-              {qdrant.status === "connected" ? (
-                <>
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  Connected
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                  Disconnected
-                </>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-500 font-semibold">
-            {qdrant.status === "connected" ? (
-              <p>Running on: <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">{qdrant.host}:{qdrant.port}</code></p>
-            ) : (
-              <p className="text-red-500">Could not resolve vector database.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="tech-card text-left bg-white/90">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-500 font-semibold">Indexed media</CardDescription>
-            <CardTitle className="text-slate-800 text-lg font-bold mt-1 flex items-center gap-2">
-              <FolderOpen className="h-5 w-5 text-indigo-500" />
-              {datasetFiles.length} files detected
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-500 font-semibold">
-            <p>Stored in root folder <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">datasets/</code>.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="tech-card text-left bg-white/90">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-500 font-semibold">Active configuration</CardDescription>
-            <CardTitle className="text-slate-800 text-lg font-bold mt-1 flex items-center gap-2">
-              <FileCode className="h-5 w-5 text-indigo-500" />
-              VLM: {statusData?.vlm_option || "openai"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-500 font-semibold">
-            <p>Object detector: <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">{statusData?.detector_option || "local"}</code></p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="tech-card text-left h-full flex flex-col justify-between bg-white/90">
-            <div>
-              <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2 text-base">
-                  <FolderOpen className="h-5 w-5 text-indigo-500" />
-                  Scanned Media files
-                </CardTitle>
-                <CardDescription className="font-medium text-xs">
-                  Files scanned inside the <code className="text-indigo-600 font-mono">datasets/</code> directory.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-y-auto max-h-96 pr-2">
-                {datasetFiles.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400 text-sm border border-dashed border-slate-200 rounded-lg p-6">
-                    <p className="font-semibold mb-1">No media files detected</p>
-                    <p className="text-xs">Place your raw videos or images in the root folder <code className="text-slate-600">datasets/</code> to process them.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {datasetFiles.map((file: any, fIdx: number) => (
-                      <div key={fIdx} className="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-lg p-3 hover:border-slate-350 transition-colors">
-                        <div className="truncate pr-2">
-                          <span className="text-sm text-slate-800 font-semibold block truncate" title={file.name}>
-                            {file.name}
-                          </span>
-                          <span className="text-xs text-slate-500 capitalize font-medium">
-                            {file.type} &bull; {file.size_mb} MB
-                          </span>
-                        </div>
-                        <Badge variant="outline" className="border-slate-200 bg-white text-slate-500 font-mono text-[10px] shrink-0">
-                          {file.name.substring(file.name.lastIndexOf('.'))}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </div>
-            <CardFooter className="pt-4 border-t border-slate-100 bg-slate-50/50">
-              <button
-                onClick={fetchStatus}
-                className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-2 rounded-lg text-sm font-semibold transition-colors flex justify-center items-center gap-2 shadow-sm"
-              >
-                <RefreshCw className="h-4 w-4 text-slate-500" />
-                Rescan Folder
-              </button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="tech-card text-left h-full flex flex-col justify-between bg-white/90 overflow-hidden relative">
-            {preprocessorRunning && <div className="scan-line" />}
-            <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <CardTitle className="text-slate-800 flex items-center gap-2 text-base">
-                  <Terminal className="h-5 w-5 text-indigo-500" />
-                  Indexing Pipeline Controls
-                </CardTitle>
-                <CardDescription className="text-xs font-medium">
-                  Triggers keyframe selection, normalized Unicode OCR indexing, PhoWhisper transcribing, and CLAP ambient audio embeddings.
-                </CardDescription>
-              </div>
-              <div>
-                <button
-                  onClick={triggerPreprocessing}
-                  disabled={preprocessorRunning || datasetFiles.length === 0}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-md shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 tech-glow-button"
-                >
-                  {preprocessorRunning ? (
-                    <><RefreshCw className="h-4 w-4 animate-spin" />Indexing...</>
-                  ) : (
-                    <><Cpu className="h-4 w-4" />Start Pipeline</>
-                  )}
-                </button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 flex-1 flex flex-col justify-between">
-              {preprocessorRunning && (
-                <div className="mb-4 space-y-2 bg-slate-50 border border-slate-100 p-4 rounded-lg">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-indigo-600">Extracting descriptors & captions...</span>
-                    <span className="text-slate-500">In Progress</span>
-                  </div>
-                  <Progress value={50} className="h-2" />
-                  <p className="text-[10px] text-slate-400 font-semibold">Executing preprocessing python script in the background. Keep this browser open.</p>
-                </div>
-              )}
-
-              <div className="bg-slate-900 border border-slate-950 rounded-lg p-4 font-mono text-xs text-slate-200 h-96 overflow-y-auto space-y-1 select-text shadow-inner">
-                {logs.length === 0 ? (
-                  <div className="text-slate-500 italic py-32 text-center font-mono">
-                    Console idle. Click "Start Pipeline" to execute indexing.
-                  </div>
-                ) : (
-                  logs.map((log, lIdx) => (
-                    <div 
-                      key={lIdx} 
-                      className={`py-0.5 leading-relaxed break-all ${
-                        log.startsWith("ERROR") || log.includes("Error") 
-                          ? "text-red-400 font-semibold" 
-                          : log.startsWith("---") 
-                          ? "text-indigo-400 font-bold" 
-                          : "text-emerald-400"
-                      }`}
-                    >
-                      {log}
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// -------------------------------------------------------------
 // VIEW 3: DATABASE VIEW
 // -------------------------------------------------------------
 function DatabaseView() {
@@ -1570,7 +1308,6 @@ function App() {
           <Routes>
             <Route path="/" element={<SearchView />} />
             <Route path="/audit" element={<VBSAuditWorkspace />} />
-            <Route path="/preprocess" element={<PreprocessView />} />
             <Route path="/database" element={<DatabaseView />} />
           </Routes>
         </div>
