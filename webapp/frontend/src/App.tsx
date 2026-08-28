@@ -22,6 +22,7 @@ import {
   UploadCloud,
   Film,
   MessageCircle,
+  History,
   X,
 } from "lucide-react"
 
@@ -38,6 +39,7 @@ import {
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
+import { AuditHistoryView } from "@/components/AuditHistoryView"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
 // -------------------------------------------------------------
@@ -49,6 +51,7 @@ function Navbar() {
   const navItems = [
     { path: "/", label: "Live Search", icon: SearchIcon },
     { path: "/audit", label: "System Audit", icon: Layers },
+    { path: "/history", label: "Audit History", icon: History },
     { path: "/database", label: "Vector Store", icon: Database }
   ]
 
@@ -1308,6 +1311,7 @@ function App() {
           <Routes>
             <Route path="/" element={<SearchView />} />
             <Route path="/audit" element={<VBSAuditWorkspace />} />
+            <Route path="/history" element={<AuditHistoryView />} />
             <Route path="/database" element={<DatabaseView />} />
           </Routes>
         </div>
