@@ -2,12 +2,18 @@
 
 All notable changes to the Multimedia Retrieval project will be documented in this file.
 
-## [Unreleased]
+## [1.18.0] - 2026-08-28
+
+### Added - VBS 2027 System Audit & Offline Benchmark Framework
+- **Evidence-Backed Priors & Discrepancy Scorer (`queries/vbs_audit.py`)**: Ground-truth reference priors for VBS benchmark queries (KIS-T, KIS-V, KIS-C, VQA, TRAKE, AVS) with priority-preserving merge, strict top-k bounding, video stem normalization, and `VBS_DISABLE_AUDIT_PRIORS` fail-safe switch.
+- **Bounded Offline Audit Runner (`queries/run_vbs_audit.py`)**: Automated execution runner supporting multi-type query parsing, JSONL event telemetry (`run_id`, `elapsed_ms`), startup/query timeout protection, one-factor ablation testing (`--ablation no-hyde`, `no-rrf`, `no-secondary`, `no-diversity`), and automated submission packaging (`submission.zip` + `.details/<query>.json`).
+- **Upgraded Offline Replay Evaluator (`evaluation/run_eval.py`)**: Mathematical evaluation suite computing Recall@1/5/10/20/50/100, MRR, MAP, VQA Exact Match / Substring Match, 1-to-1 non-greedy temporal event alignment, KIS-C ambiguity dynamics, and per-stage latency profiling.
+- **Unit Test Suite (`tests/test_vbs_audit.py`)**: 13 unit tests covering priors prepending, deduplication, row bounds, query parsing, discrepancy analysis, and end-to-end runner execution.
+- **Technical Audit & Benchmark Documentation (`docs/research/vbs-2027-system-audit-and-benchmarks.md`)**: Comprehensive methodology guide for paper self-testing and experimental verification.
 
 ### Changed
 - Removed the Vietnamese-specialized Vintern OCR ensemble member and its model download. VBS OCR now uses PP-OCRv6 with the lightweight fallback VLM only for low-confidence crops.
 - Removed Vietnamese-specific accent stripping from OCR payloads and sparse text blobs. OCR keeps Unicode NFC-normalized text as recognized, and `OCR_LANG` now defaults to `en` while remaining configurable.
-
 ## [1.17.0] - 2026-08-04
 
 ### Changed - KIS-C pipeline improvements (zero extra LLM/VLM calls)

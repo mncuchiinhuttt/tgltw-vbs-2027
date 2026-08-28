@@ -46,6 +46,29 @@ ffmpeg
 # Evaluation benchmark output reports
 eval_results.json
 evaluation/eval_results.json
+evaluation/eval_audit_results.json
+queries/audit_output/
+queries/ablation_*/
+queries/submission/
+queries/submission.zip
+queries/*.jsonl
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.out
+*.synctex.gz
+*.nav
+*.snm
+*.toc
+paper/live_server.py
+paper/start_server.sh
+paper/compile.sh
+paper/index.html
+paper/comments.json
 
 # Private files
 VBS-2026-978-981-95-6963-2.pdf

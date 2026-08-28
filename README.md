@@ -22,7 +22,11 @@ tgltw-vbs-2027/
 │   ├── README.md          # Evaluation module documentation & instructions
 │   ├── eval_queries.json  # Annotated example query set with ground_truth (fill in real data)
 │   ├── requirements.txt   # Optional deps (ragas, datasets) for generation-quality metrics
-│   └── run_eval.py        # Standalone benchmark runner (Latency, Recall@K, MRR, optional Ragas)
+│   └── run_eval.py        # Standalone benchmark runner (Latency, Recall@K, MRR, 1-to-1 temporal IoU)
+├── queries/               # Offline query manifests, audit priors, and runners
+│   ├── queries.json       # Example VBS query set
+│   ├── vbs_audit.py       # Grounded audit priors and discrepancy scorer
+│   └── run_vbs_audit.py   # Bounded offline audit & benchmark runner with JSONL telemetry
 ├── models/                # [SHARED PYTHON MODELS] 
 │   ├── base_vlm.py        # Abstract VLM interface
 │   ├── qwen_vlm.py        # Local Qwen3-VL vision-language model loader
@@ -372,6 +376,28 @@ uv run --group evaluation python evaluation/run_eval.py --query_file evaluation/
 - **Output Metrics**: Evaluates **Recall@1**, **Recall@5**, **MRR**, **Latency Breakdown** (HyDE, Search, Rerank), and **QPS Throughput** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries. Ragas-based generation metrics report `N/A` if `ragas` isn't installed, rather than a fabricated score.
 - Accuracy metrics require a `ground_truth`-annotated query file — do not point `--query_file` at `queries/queries.json`, which is the production query registry and has no ground truth.
 - Detailed results are printed to stdout and saved to `evaluation/eval_results.json`. See `evaluation/README.md` for complete documentation.
+
+---
+
+## 8. Offline System Audit & Paper Experiments
+
+To support self-testing and offline evaluation for our VBS 2027 Demo Paper, an audit subsystem matching our AIC-2026 methodology is provided:
+
+```bash
+# 1. Run unit tests for the audit runner and priors
+PYTHONPATH=inference-code:queries:. python3 -m unittest discover -s tests
+
+# 2. Run fast offline audit on query sets
+python3 queries/run_vbs_audit.py --queries queries/queries.json --output queries/audit_output --fast
+
+# 3. Run one-factor ablation experiments
+python3 queries/run_vbs_audit.py --queries queries/queries.json --output queries/ablation_no_hyde --fast --ablation no-hyde
+
+# 4. Run evaluation audit report (Recall@K, MRR, 1-to-1 event alignment, VQA exact match)
+python3 evaluation/run_eval.py --query_file evaluation/eval_queries.json --output_file evaluation/eval_audit_results.json
+```
+
+See [`docs/research/vbs-2027-system-audit-and-benchmarks.md`](docs/research/vbs-2027-system-audit-and-benchmarks.md) for full technical documentation.
 
 ---
 
