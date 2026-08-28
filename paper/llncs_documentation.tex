@@ -1,0 +1,442 @@
+% This is LLNCSDOC.TEX the documentation file of
+% the LaTeX2e class from Springer-Verlag
+% for Lecture Notes in Computer Science, version 2.26
+\documentclass{llncs}
+\usepackage{llncsdoc}
+\usepackage{graphicx}
+\usepackage{doc}
+\usepackage[dvips,bookmarksopen]{hyperref}
+%
+\makeatletter\@twosidefalse\@mparswitchfalse\makeatother
+%
+\begin{document}
+\title{Instructions for Using Springer's \texttt{llncs} Class for
+Computer Science Proceedings Papers}
+%
+\subtitle{\texttt{llncs}, Version 2.26, Feb 25, 2025}
+%
+\author{}
+\institute{}
+
+\maketitle \thispagestyle{empty}
+\markright{Instructions for Using Springer's \texttt{llncs} Class}
+%
+\section{Installation}
+%
+Copy \texttt{llncs.cls} to a directory that is searched by \LaTeX{},
+e.g. either your \texttt{texmf} tree or the local work directory with your main
+{\LaTeX} file.
+
+%
+\section{Working with the \texttt{llncs} Document Class}
+%
+\subsection{General Information}
+The \texttt{llncs} class is an extension of the standard \LaTeX{} \texttt{article}
+class. Therefore you may use all \texttt{article} commands in your
+manuscript.
+
+If you are already familiar with \LaTeX{}, the \texttt{llncs} class should
+not give you any major difficulties. It basically adjusts the layout
+to the required standard, defining styles and spacing of headings
+and captions and setting the printing area to 122\,mm horizontally
+by 193\,mm vertically. To keep the layout consistent, we kindly ask
+you to refrain from using any \LaTeX{} or \TeX{} command that
+modifies these settings (i.e. \verb|\textheight|, \verb|\vspace|,
+\verb|baselinestretch|, etc.). Such manual layout adjustments should
+be limited to very exceptional cases.
+
+In addition to defining the general layout, the \texttt{llncs} document class
+provides some special commands for typesetting the contribution
+header, i.e. title, authors, affiliations, abstract, and additional
+metadata. These special commands are described in Sect.~\ref{Sec2}.
+
+For a more detailed description of how to prepare your text,
+illustrations, and references, see the {\em Springer Guidelines for
+Authors of Proceedings}.
+
+
+\subsection{How to Use the \texttt{llncs} Document Class}
+The \texttt{llncs} class is invoked by replacing \texttt{article} by \texttt{llncs} in
+the first line of your \LaTeX{} document:
+\begin{verbatim}
+\documentclass{llncs}
+%
+\begin{document}
+  <Your contribution>
+\end{document}
+\end{verbatim}
+%
+If your file is already coded with \LaTeX{}, you can easily adapt it
+to the \texttt{llncs} document class by replacing
+\begin{verbatim}
+\documentclass{article}
+\end{verbatim}
+with
+\begin{verbatim}
+\documentclass{llncs}
+\end{verbatim}
+
+
+\section{How to Code the Header of Your Paper}\label{Sec2}
+\label{contbegin}
+\subsection{Title}
+%
+\DescribeMacro{\title} Please code the title of your contribution as
+follows:
+\begin{verbatim}
+\title{<Your contribution title>}
+\end{verbatim}
+All words in titles should be capitalized except for conjunctions,
+prepositions (e.g.\ on, of, by, and, or, but, from, with, without,
+under), and definite/indefinite articles (the, a, an), unless they
+appear at the beginning. Formula letters are typeset as in the text.
+Long titles that run over multiple lines can be wrapped explicitly
+with \verb|\\|. Titles have no end punctuation.
+
+Acknowledgements should generally be placed in an unnumbered
+subsection at the end of the paper. If you still need to refer to a
+support or funding program in a note to the title, you can use
+the\DescribeMacro{\thanks} \verb|\thanks| macro inside the title:
+\begin{verbatim}
+\title{<Your contribution title>\thanks{<granted by x>}}
+\end{verbatim}
+Please do not use \verb|\thanks| inside \verb|\author| or
+\verb|\institute| as footnotes for these elements are not supported
+in the online version and will therefore be dropped.
+
+\DescribeMacro{\fnmsep} If you need two or more footnotes please
+separate them with \verb|\fnmsep| (i.e. {\itshape f}oot\emph note
+\emph mark \emph{sep}arator).
+
+\DescribeMacro{\titlerunning} If a long title does not fit in the
+single line of the running head, a warning is generated. You can
+specify an abbreviated title for the running head with the command
+\begin{verbatim}
+\titlerunning{<Your abbreviated contribution title>}
+\end{verbatim}
+\DescribeMacro{\subtitle} An optional subtitle may also be added:
+\begin{verbatim}
+\subtitle{<subtitle of your contribution>}
+\end{verbatim}
+
+\subsection{Author(s)}
+\DescribeMacro{\author} The name(s) of the author(s) are specified
+by:
+\begin{verbatim}
+\author{<author(s) name(s)>}
+\end{verbatim}
+\DescribeMacro{\and} If there is more than one author, please
+separate them by \verb|\and|. This makes sure that correct
+punctuation is inserted according to the number of authors.
+
+\DescribeMacro{\inst} Numbers referring to different addresses or
+affiliations should be attached to each author with the
+\verb|\inst{<number>}| command. If an author is affiliated with
+multiple institutions the numbers should be separated by a comma,
+for example \verb|\inst{2,3}|.
+
+\DescribeMacro{\orcidID} ORCID identifiers can be included with
+\begin{verbatim}
+\orcidID{<ORCID identifier>}
+\end{verbatim}
+The ORCID (Open Researcher and Contributor ID) registry provides
+authors with unique digital identifiers that distinguish them from
+other researchers and help them link their research activities to
+these identifiers. Authors who are not yet registered with ORCID are
+encouraged to apply for an individual ORCID id at
+\url{https://www.orcid.org} and to include it in their papers. In
+the final publication, the ORCID id will be replaced by an ORCID
+icon, which will link from the eBook to the
+actual ID in the ORCID database. The ORCID icon will also replace
+the number in the printed book.
+
+If you have done this correctly, the author line now reads, for
+example:
+\begin{verbatim}
+\author{First Author\inst{1}\orcidID{0000-1111-2222-3333} \and
+Second Author\inst{2,3}\orcidID{1111-2222-3333-4444}}
+\end{verbatim}
+The given name(s) should always be followed by the family name(s).
+Authors who have more than one family name should indicate which
+part of their name represents the family name(s), for example by
+non-breaking spaces \verb|Jos\'{e} Martinez~Perez| or curly braces
+\verb|Jos\'{e} {Martinez Perez}|.
+
+\DescribeMacro{\authorrunning} As given name(s) are to be shortened
+to initials in the running heads, specifying an abbreviated author
+list with the optional command:
+\begin{verbatim}
+\authorrunning{<abbreviated author list>}
+\end{verbatim}
+might add some clarity about the correct representation of author
+names, in the running-heads as well as in the author index.
+
+\subsection{Affiliations}
+\DescribeMacro{\institute} Addresses of institutes, companies, etc.
+should be given in \verb|\institute|.
+
+\DescribeMacro{\and} Multiple affiliations are separated by
+\verb|\and|, which automatically assures correct numbering:
+\begin{verbatim}
+\institute{<name of an institute>
+\and <name of the next institute>
+\and <name of the next institute>}
+\end{verbatim}
+\DescribeMacro{\email}Inside \verb|\institute| you can use
+\begin{verbatim}
+\email{<email address>}
+\end{verbatim}
+\DescribeMacro{\url}and
+\begin{verbatim}
+\url{<url>}
+\end{verbatim}
+to provide author email addresses and Web pages. If you need to
+typeset the tilde character -- e.g. for your Web page in your unix
+system's home directory -- the \verb|\homedir| command will do this.
+If multiple authors have the same affiliation, please check that the
+order of email addresses matches the sequence of (affiliated) author
+names.
+
+Please note that, if email addresses are given in your paper, they
+will also be included in the metadata of the online version.
+
+\subsection{Format the Header}
+\DescribeMacro{\maketitle} The command \verb|\maketitle| formats the
+header of your paper. If you leave it out the work done so far will
+produce \emph{no} text.
+
+\subsection{Abstract and Keywords}
+\DescribeEnv{abstract}The abstract is coded as follows:
+\begin{verbatim}
+\begin{abstract}
+<Text of the summary of your paper>
+\end{abstract}
+\end{verbatim}
+\DescribeMacro{\keywords} Keywords should be specified inside the
+\verb|abstract| environment. \DescribeMacro{\and}Please capitalize
+the first letter of each keyword and again separate them with
+\verb|\and|:
+\begin{verbatim}
+\keywords{First keyword \and Second keyword \and Third keyword}
+\end{verbatim}
+The keyword separator will then be properly rendered as a middle
+dot.
+
+\section{How to Code the Body of Your Paper}
+%
+\subsection{General Rules}
+From a technical point of view, the \texttt{llncs} document class does not
+require any specific {\LaTeX} coding in the body of your paper. You
+can simply use the commands provided by the `article' document
+class. For more information about what will be done with your
+manuscript before publication, please refer to the {\em Springer
+Guidelines for Authors of Proceedings}.
+
+\subsection{Special Math Characters}
+The \texttt{llncs} document class supports some additional special
+characters:\smallskip
+\begin{center}
+\begin{tabular}{l@{\hspace{1em}yields\hspace{1em}}
+c@{\hspace{3em}}l@{\hspace{1em}yields\hspace{1em}}c}
+\verb|\grole| & $\grole$ & \verb|\getsto| & $\getsto$\\
+\verb|\lid|   & $\lid$   & \verb|\gid|    & $\gid$
+\end{tabular}\smallskip
+\end{center}
+If you need blackboard bold characters, i.e. for sets of numbers,
+please load the related \AmSTeX fonts. If for some reason this is
+not possible you can also use the following commands from the \texttt{llncs}
+class:\smallskip
+\begin{center}
+\begin{tabular}{l@{\hspace{1em}yields\hspace{1em}}
+c@{\hspace{3em}}l@{\hspace{1em}yields\hspace{1em}}c}
+\verb|\bbbc| & $\bbbc$ & \verb|\bbbf| & $\bbbf$\\
+\verb|\bbbh| & $\bbbh$ & \verb|\bbbk| & $\bbbk$\\
+\verb|\bbbm| & $\bbbm$ & \verb|\bbbn| & $\bbbn$\\
+\verb|\bbbp| & $\bbbp$ & \verb|\bbbq| & $\bbbq$\\
+\verb|\bbbr| & $\bbbr$ & \verb|\bbbs| & $\bbbs$\\
+\verb|\bbbt| & $\bbbt$ & \verb|\bbbz| & $\bbbz$\\
+\verb|\bbbone| & $\bbbone$
+\end{tabular}\smallskip
+\end{center}
+Please note that all these characters are only available in math
+mode.
+
+\section{Theorems, Definitions, and Proofs}\label{builtintheo}
+\subsection{Predefined Theorem-Like Environments}
+\DescribeEnv{corollary}\DescribeEnv{definition}\DescribeEnv{lemma}\DescribeEnv{proposition}\DescribeEnv{theorem}%
+Several theorem-like environments are predefined in the \texttt{llncs}
+document class. The following environments have a bold run-in
+heading, while the following text is in italics:
+\begin{verbatim}
+\begin{corollary}   <text> \end{corollary}
+\begin{definition}  <text> \end{definition}
+\begin{lemma}       <text> \end{lemma}
+\begin{proposition} <text> \end{proposition}
+\begin{theorem}     <text> \end{theorem}
+\end{verbatim}
+\DescribeEnv{case}\DescribeEnv{conjecture}\DescribeEnv{example}\DescribeEnv{exercise}\DescribeEnv{note}%
+\DescribeEnv{problem}\DescribeEnv{property}\DescribeEnv{question}\DescribeEnv{remark}\DescribeEnv{solution}%
+Other theorem-like environments render the text in roman, while the
+run-in heading is bold as well:
+\begin{verbatim}
+\begin{case}        <text> \end{case}
+\begin{conjecture}  <text> \end{conjecture}
+\begin{example}     <text> \end{example}
+\begin{exercise}    <text> \end{exercise}
+\begin{note}        <text> \end{note}
+\begin{problem}     <text> \end{problem}
+\begin{property}    <text> \end{property}
+\begin{question}    <text> \end{question}
+\begin{remark}      <text> \end{remark}
+\begin{solution}    <text> \end{solution}
+\end{verbatim}
+\DescribeEnv{claim}\DescribeEnv{proof} Finally, there are also two
+unnumbered environments that have the run-in heading in italics and
+the text in upright roman.
+\begin{verbatim}
+\begin{claim}       <text> \end{claim}
+\begin{proof}       <text> \end{proof}
+\end{verbatim}
+\DescribeMacro{\qed}Proofs may contain an eye catching square, which
+can be inserted with \verb|\qed|) before the environment ends.
+
+\subsection{User-Defined Theorem-Like Environments}
+\DescribeMacro{\spnewtheorem}We have enhanced the standard
+\verb|\newtheorem| command and slightly changed its syntax to get
+two new commands \verb|\spnewtheorem| and \verb|\spnewtheorem*| that
+now can be used to define additional environments. They require two
+additional arguments, namely the font style of the label and the
+font style of the text of the new environment:
+\begin{verbatim}
+\spnewtheorem{<env_nam>}[<num_like>]{<caption>}{<cap_font>}{<body_font>}
+\end{verbatim}
+For example,
+\begin{verbatim}
+\spnewtheorem{maintheorem}[theorem]{Main Theorem}{\bfseries}{\itshape}
+\end{verbatim}
+will create a {\em main theorem\/} environment that is numbered
+together with the predefined {\em theorem\/}. The sharing of the
+default counter (\verb|[theorem]|) is desired. If you omit the
+optional second argument of \verb|\spnewtheorem|, a separate counter
+for your new environment is used throughout your document.
+
+In combination with the (obsolete) class option \verb|envcountsect|
+(see. Sect.~\ref{SecClassOptions}), the \verb|\spnewtheorem| command
+also supports the syntax:
+\begin{verbatim}
+\spnewtheorem{<env_nam>}{<caption>}[<within>]{<cap_font>}{<body_font>}
+\end{verbatim}
+With the parameter \verb|<within>|, you can control the sectioning
+element that resets the theorem counters. If you specify, for
+example, \verb|subsection|, the newly defined environment is
+numbered subsectionwise.
+
+\DescribeMacro{\spnewtheorem*}If you wish to add an unnumbered
+environment, please use the syntax
+\begin{verbatim}
+\spnewtheorem*{<env_nam>}{<caption>}{<cap_font>}{<body_font>}
+\end{verbatim}
+
+%
+\section{Credits and Acknowledgments}
+\label{credits}
+\DescribeEnv{credits}
+Credits and acknowledgments should be placed at the end of the paper,
+just before the references. Please use the \verb|credits| environment
+to make sure that both text and run-in headings are printed in small
+font size.
+
+\DescribeMacro{\ackname}\DescribeMacro{\discintname}
+There are two possible \verb|\subsubsection| headings to provide such
+statements: ``Acknowledgments'' and ``Disclosure of Interests''.
+The \verb|\ackname| and \verb|\discintname| macros are used to generate
+the correct run-in titles.
+
+General acknowledgments can be provided in the (optional) paragraph
+``Acknowledgments'', which is followed by the (mandatory) paragraph
+``Disclosure of Interests'', where any competing interests of the authors
+are to be declared.
+
+
+%
+\section{References}
+\label{refer}
+%
+There are three options for citing references:
+\begin{itemize}
+\item arabic numbers, i.e. [1], [3--5], [4--6,9],
+\item labels, i.e. [CE1], [AB1,XY2],
+\item author/year system, (Smith et al. 2000), (Miller 1999a, 12; Brown
+2018).
+\end{itemize}
+We prefer citations with arabic numbers, i.e. the usage of
+\verb|\bibitem| without an optional parameter.
+\DescribeMacro{citeauthoryear}If you want to use the author/year
+system, you can use the class option \verb|citeauthoryear|, i.e.
+\begin{verbatim}
+\documentclass[citeauthoryear]{llncs}
+\end{verbatim}
+Please note that this option does not automatically change your
+citations to the author/year style. It basically redefines the
+\verb|\bibitem| command to take the publication year as an optional
+parameter that is displayed instead of an arabic number. Author
+name(s) and, if necessary, parentheses are to be typed manually. If
+your reference reads
+\begin{verbatim}
+\bibitem[2016]{vdaalst:2016}
+van der Aalst, W.: Process Mining, 2nd ed. Springer, Heidelberg (2016)
+\end{verbatim}
+and is cited as follows:
+\begin{verbatim}
+... is shown by van der Aalst (\cite{vdaalst:2016})
+\end{verbatim}
+the resulting text will be:\begin{quote} ``\dots is shown by van der
+Aalst (2016).''
+\end{quote}
+
+\DescribeMacro{splncs04.bst}We encourage you to use {\sc Bib}\TeX{}
+for typesetting your references. For formatting the bibliography
+according to Springer's standard (for mathematics, physical
+sciences, and computer science), please use the bibliography style
+file \verb|splncs04.bst| that comes with the \texttt{llncs} document class.
+You simply need to add \verb|\bibliographystyle{splncs04}| to your
+document. DOIs should be provided in the doi field of your .bib
+database. {\sc Bib}\TeX{} will then automatically add them to your
+references.
+
+\DescribeMacro{\doi}If you do not use {\sc Bib}\TeX{}, you can
+include a DOI with the \verb|\doi| command:
+\begin{verbatim}
+\doi{<DOI>}
+\end{verbatim}
+The DOI will be expanded to the URL \verb|https://doi.org/<DOI>| in
+accordance with the CrossRef guidelines.
+
+\section{Obsolete Class Options}\label{SecClassOptions}
+The \texttt{llncs} document class contains several class options that have
+become obsolete over the years. We only mention them for
+completeness:
+\begin{itemize}
+\item \DescribeMacro{orivec}The \texttt{llncs} document class changes the formatting of
+vectors coded with \verb|\vec| to boldface italics. If you
+absolutely need the original {\LaTeX} design for vectors, i.e. an
+arrow above the related variable, you can restore it with the
+\verb|orivec| option.
+\item \DescribeMacro{envcountsame}All theorem-like environments
+share one counter, i.e. Theorem 1, Lemma 2, Corollary 3, etc.
+\item \DescribeMacro{envcountreset}All theorem-like environments
+are numbered per section, i.e. the related counters are reset to 1
+in every section.
+\item \DescribeMacro{envcountsect}All theorem-like environments
+are numbered per section, and the section number added to the
+individual counter, i.e. Theorem 1.2, Lemma 2.2, etc.
+\item \DescribeMacro{openbib}This option produces the ``open'' bibliography style, in which each block starts
+on a new line, and succeeding lines in a block are indented by
+\verb|\bibindent|.
+\item \DescribeMacro{oribibl}This option restores the original
+{\LaTeX} definitions for the bibliography and the \verb|\cite|
+mechanism that some {\sc Bib}\TeX{} applications rely on.
+\end{itemize}
+%
+%
+\end{document}

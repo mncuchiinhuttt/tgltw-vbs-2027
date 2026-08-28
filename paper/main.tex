@@ -18,6 +18,9 @@
 
 % Keep the author identifiers from the original BTC paper draft.
 \renewcommand{\orcidID}[1]{\unskip\,\orcidlink{#1}}
+% The proceedings style defines DOI as a clickable URL; keep the requested
+% compact DOI identifier form in the rendered bibliography.
+\AtBeginDocument{\renewcommand{\doi}[1]{doi:\texttt{\detokenize{#1}}}}
 
 \hypersetup{
     colorlinks=true,
@@ -38,70 +41,71 @@
   parrow/.style={-{Latex[length=1.8mm]}, thick}
 }
 \newcommand{\screenshotplaceholder}[3]{%
-\begin{figure*}[t]
+\begin{center}
 \centering
 \setlength{\fboxsep}{6pt}%
 \fcolorbox{placeholderred}{red!3}{%
-\parbox[c][2.15cm][c]{0.88\textwidth}{%
+\parbox[c][1.2cm][c]{0.96\columnwidth}{%
 \centering
-\textcolor{placeholderred}{\large\bfseries SCREENSHOT NEEDED}\quad
-\textcolor{placeholderred}{\textbf{#1}}\\[3pt]
-\textcolor{placeholderred}{\small #2}}}
-\caption{\textcolor{placeholderred}{#1. Replace this red placeholder with the final UI capture before submission.}}
-\label{fig:#3}
-\end{figure*}%
+\textcolor{placeholderred}{\small\bfseries SCREENSHOT NEEDED}\\[-1pt]
+\textcolor{placeholderred}{\scriptsize\textbf{#1:} #2}}}
+\par\vspace{1pt}
+{\scriptsize\textcolor{placeholderred}{\textbf{Fig. #3:} #1. Replace before submission.}}
+\end{center}%
 }
 
 \begin{document}
 
-\title{TGLTW-RMIT: Live-First, Evidence-Grounded Multimodal Video Retrieval}
-\titlerunning{TGLTW-RMIT: Live-First Video Retrieval}
+\title{Evidence-Carrying Live Search: Budgeted Multimodal Retrieval for Interactive Video Browsing}
+\titlerunning{Evidence-Carrying Live Search}
 
-\author{Long Minh Vo\inst{1,2}\orcidID{0000-0001-2345-6789} \and
-Hung Gia Vu\inst{1}\orcidID{0000-0002-3456-7890} \and
-Khoa Huynh Minh Nguyen\inst{1}\orcidID{0000-0003-4567-8901} \and
-Kien Vi Tran\inst{1}\orcidID{0000-0003-4567-8901} \and
-Danh Kim Tran\inst{1}\orcidID{0000-0003-4567-8901} \and
-Thi-Tuyet-Trang Chau\inst{1}\orcidID{0000-0003-4567-8901}}
+\author{Long Minh Vo\inst{1,2}\orcidID{0009-0002-8449-7669} \and
+Hung Gia Vu\inst{1}\orcidID{0009-0009-5704-0162} \and
+Danh Kim Tran\inst{1}\orcidID{0009-0006-7278-4336} \and
+Khoa Huynh Minh Nguyen\inst{1}\orcidID{} \and
+Kien Vi Tran\inst{1}\orcidID{0009-0006-8454-1227} \and
+Thi-Tuyet-Trang Chau\inst{1}\orcidID{0000-0003-0102-7427}}
 
 \authorrunning{L. M. Vo et al.}
 
 \institute{School of Science, Engineering and Technology, RMIT University Vietnam, Ho Chi Minh City, Vietnam \\
-\email{\{s4215945\}@rmit.edu.vn} \and
+\email{\{s4215945, s4189753, s4174536, s4162248, s4187708, thituyettrang.chau\}@rmit.edu.vn} \and
 CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted Students, Vinh Long, Vietnam \\
 \email{}}
 
 \maketitle
 
 \begin{abstract}
-Interactive video retrieval is a joint test of retrieval quality, operator effort, interface latency, and reliable submission. We present TGLTW-RMIT, our live-first multimodal system for the Video Browser Showdown (VBS) 2027. TGLTW-RMIT combines offline visual, speech, OCR, metadata, and ambient-audio evidence with approximate vector search, payload full-text retrieval, reciprocal-rank fusion, and bounded precision escalation. Its task router supports the official KIS-V, KIS-T, KIS-C, AVS, and VQA modes while retaining source-video and frame provenance throughout browsing and DRES submission. For VQA, a strict evidence contract accepts an answer only when a real candidate frame is resolved, the response is valid JSON, and the identity shown to the operator is the identity seen by the model. We describe the implementation and a reproducible live/offline evaluation protocol; quantitative results are reserved for a frozen benchmark run. Source, updates, and deployment links are collected on the public \projectpage.
+Interactive video retrieval often fails at the handoff from a ranked hit to submit-ready evidence: a relevant frame can lose its media identity, become impossible to reopen, or trigger an expensive verification path too late. We present TGLTW-RMIT, a live-first multimodal system built around an evidence-carrying candidate contract and a budgeted precision ladder. Offline processing gives selected frames and shot parents stable identifiers, joins them with timestamps, OCR, speech, metadata, and VLM fields, and stores parent-to-frame links. The web path fuses dense and payload-text retrieval with reciprocal-rank fusion, temporal coherence, scene diversity, and bounded reranking; exact search, larger HNSW pools, verification, and in-video search are request-scoped escalations. KIS-V, KIS-T, KIS-C, AVS, and VQA use different policies over the same evidence identity. Grounded VQA fails closed on unavailable media, malformed output, invalid confidence, or missing evidence. We give implementation details and a frozen live/offline evaluation protocol; no leaderboard numbers are claimed before the corpus, index, and runtime are frozen. Source and deployment links are on the public \projectpage.
 \keywords{Video retrieval \and Multimodal search \and Interactive retrieval \and Video Browser Showdown \and Grounded VQA}
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-The Video Browser Showdown evaluates exploratory video-search tools in a timed, public setting. An operator must interpret a task, retrieve evidence, inspect a video, and submit a temporal result before the clock expires. The 2027 call expects mostly textual KIS, conversational KIS, VQA, and AVS tasks, with KIS-V as the minority; it also requires an extended demo paper of six content pages plus up to two pages of references, including a screenshot and a description of interactive search~\cite{vbs2027call}. This makes predictable interaction a first-class system property: an unbounded precision model can be less useful live than a slightly weaker model with known latency.
+The Video Browser Showdown evaluates exploratory video search in a timed public setting: an operator interprets a task, retrieves evidence, inspects media, and submits a temporal result before the clock expires. The 2027 call emphasizes KIS-T, KIS-C, VQA, and AVS, with KIS-V as a minority task, and asks for a six-page demo paper with a screenshot and interactive-search description~\cite{vbs2027call}. Earlier VBS work also treats interaction traces and human-facing search as evaluation objects~\cite{lokoc2023vbs,rossetto2025vbs}. Predictable latency is therefore a system property, not only an implementation detail.
 
-TGLTW-RMIT is organized around that constraint. It keeps a fast default path based on already-built indexes, approximate HNSW retrieval~\cite{malkov2018efficient}, payload search, rank fusion, and a small reranking head. Exact search, larger candidate pools, verification, and in-video refinement are explicit per-request actions. This allows the operator to spend time only on difficult candidates and lets later evaluation measure the cost of each escalation.
+TGLTW-RMIT keeps a fast path over existing indexes: approximate HNSW retrieval~\cite{malkov2018efficient}, payload search, rank fusion, and bounded reranking. Exact search, larger pools, verification, and in-video refinement are explicit per-request actions. The retrieval unit is consequently a reopenable evidence object: relevance is insufficient if media identity is lost, evidence cannot be loaded again, or an answer cannot be submitted safely.
 
-The paper makes three implementation contributions:
+The novelty is system-level rather than a new embedding model. The implementation contributions are:
 \begin{enumerate}
-    \item a multimodal offline-to-online architecture that preserves media provenance from indexed evidence to UI and DRES;
-    \item one explicit live contract for the five VBS task modes, with different query interfaces but shared candidate, browsing, feedback, and submission primitives; and
-    \item grounded VQA that fails closed on unavailable media, malformed output, invalid confidence, or candidate/frame mismatch.
+    \item \textbf{Evidence-carrying indexing}: deterministic frame/shot identifiers, parent links, temporal fields, and inspectable multimodal payloads survive rank fusion;
+    \item \textbf{A budgeted precision ladder}: dense/payload retrieval, fusion, coherence, and diversity form the default, while exact search, larger pools, verification, and in-video search expose measurable cost;
+    \item \textbf{A task and grounding contract}: five VBS modes reuse identity but select different interaction policies, and web VQA refuses an answer when evidence or the response is invalid.
 \end{enumerate}
 
-This is an engineering description rather than a completed leaderboard report. The repository currently contains the system and logging paths, but the final VBS query set, index manifest, and runtime configuration must be frozen before accuracy or latency claims are filled. The public \projectpage{} links the source repository, implementation notes, paper source, and deployment entry points.
+HNSW, RRF, VLM reranking, and grounded VQA are not claimed as individually new. Contract tests cover the implementation, while accuracy and latency remain pending a frozen query set, index manifest, and runtime configuration. Source, paper, and deployment links are on the public \projectpage.
 
-\section{Positioning and VBS Setting}
+\section{VBS Setting and System-Level Delta}
 \label{sec:setting}
 
-Interactive multimedia retrieval work consistently combines semantic representations with fast browsing and feedback. The VBS literature emphasizes the interaction trace and time-to-submission in addition to retrieval quality~\cite{rossetto2025vbs}; performance evaluation work likewise recommends reporting system and human-action latency separately~\cite{sauter2024performance}. Local challenge systems provide useful precedents for OCR/ASR evidence, query expansion, temporal search, reranking, and feedback~\cite{doan2025kpi,le2025fustar}. TGLTW-RMIT uses the same broad principles but does not claim to reproduce those systems' model stacks. Its current online path uses Qdrant-style vector collections, dense and payload text retrieval, reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal}, and bounded operator actions. Query rewriting and vector feedback are deliberately narrower than open-ended multi-query or reweighting systems~\cite{buitran2025query,phat2025revimm}.
+VBS systems combine semantic representations with fast browsing, feedback, and interaction-aware evaluation~\cite{lokoc2023vbs,rossetto2021vitrivr,rossetto2025vbs,sauter2024performance}. Local challenge systems provide precedents for OCR/ASR evidence, query expansion, temporal search, reranking, and feedback~\cite{doan2025kpi,le2025fustar}. TGLTW-RMIT uses Qdrant-style collections, dense/payload retrieval, reciprocal-rank fusion (RRF)~\cite{cormack2009reciprocal}, and bounded operator actions; its rewriting and feedback remain narrower than open-ended expansion or reweighting~\cite{buitran2025query,phat2025revimm}.
 
-The official 2027 corpus includes the complete V3C collection, an extended marine-video collection, and the GynSurg/LapGynLHE laparoscopic collection; most tasks are expected to use V3C~\cite{vbs2027call}. V3C provides broad Creative Commons video and shot-level access~\cite{rossetto2019v3c}, while MVK and GynSurg represent domain-specific marine and surgical content~\cite{truong2023mvk,nasirihaghighi2025gynsurg}. The final run must record the exact accessible shards, video IDs, durations, checksums, keyframe/shot version, collection schema, and data-agreement status. The legacy running snapshot and the newer source indexer are therefore reported as separate implementation states until a re-index is audited.
+\paragraph{System-level delta.} Three goals drive the design: keep the common path fast, attribute expensive precision actions to the operator, and preserve evidence identity from retrieval through submission. Relative to the legacy running snapshot, the instrumented path makes provenance an invariant, task routing and escalation bounded policies, and VQA evidence tied to the media shown. The claims are falsifiable through identity parity, the quality--latency frontier of each escalation, and grounded-answer/failure rates; legacy records remain source/timestamp-level until migration is audited.
 
-\section{System Architecture}
+The planned corpus combines V3C, marine video, and GynSurg/LapGynLHE collections, with V3C dominant for most tasks~\cite{vbs2027call,rossetto2019v3c,truong2023mvk,nasirihaghighi2025gynsurg}. The final run must freeze accessible shards, video IDs, checksums, keyframe/shot version, schema, and data agreements; legacy and source-index states are reported separately until re-indexing is audited.
+
+\section{TGLTW-RMIT Architecture}
 \label{sec:architecture}
 
 \begin{figure*}[t]
@@ -127,30 +131,33 @@ The official 2027 corpus includes the complete V3C collection, an extended marin
 \draw[arrow] (offline) -- (index);
 \draw[arrow] (index) -- (retrieve);
 \draw[arrow] (retrieve) -- (operator);
-\draw[arrow,dashed] (operator.south) -- (escalate.north east);
-\draw[arrow,dashed] (escalate.north west) -- (retrieve.south);
+% Keep both escalation links straight: operator -> on-demand action, then
+% on-demand action -> fast retrieval. The box is wide enough to contain both
+% vertical attachment points, so no diagonal line crosses the serving index.
+\draw[arrow,dashed] (operator.south) -- (operator.south |- escalate.north);
+\draw[arrow,dashed] (escalate.north -| retrieve.south) -- (retrieve.south);
 \node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
 \node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live path}}] {};
 \end{tikzpicture}%
 }
-\caption{TGLTW-RMIT separates an auditable offline index build from a bounded live path. Precision escalation is an operator action, so its quality and latency can be measured without making every live query pay the cost.}
+\caption{TGLTW-RMIT's evidence-carrying, live-first control plane on the instrumented path. The offline index supplies a fast common path, while exact search, verification, and in-video refinement are budgeted escalations rather than mandatory steps for every query.}
 \label{fig:system-pipeline}
 \end{figure*}
 
 \subsection{Offline evidence and provenance}
-For each video, preprocessing reuses official keyframes when their mapping is known, otherwise detects shots and selects representative frames. The source pipeline can add OCR, object labels, faster-whisper speech segments, ambient-audio windows, optional VLM narratives, and named visual vectors; these fields are not assumed to be populated in the legacy deployment. Visual, speech, and audio points are kept in separate native temporal units. Every candidate carries a source video or file identifier, a frame index when available, a timestamp, and the evidence fields actually indexed. This identity is the join key for the UI, VQA, logs, and DRES.
+Preprocessing prefers official V3C shot maps, keyframes, metadata, and ASR; otherwise it uses TransNetV2~\cite{soucek2020transnetv2}. A compressed-size prefilter, CLIP variance~\cite{radford2021learning}, farthest-point sampling, and sharpness bonus set a bounded frame budget. OCR, objects, faster-whisper speech~\cite{radford2022whisper}, VLM narratives, and optional audio/visual vectors enrich the payload; speech is joined to nearby visual text, while ambient audio remains a separate collection.
+
+The central structure is a two-level evidence graph. Each frame has a deterministic point ID and payload (media, native frame index/timestamp, shot, captions, OCR, objects, events, speech, and provenance). Each shot has a normalized aggregate and representative frame IDs in \code{vbs\_shot\_index}; coarse-to-fine routing stays disabled until recall is measured. Timestamp/ordinal fallbacks support legacy records, while web VQA prefers native indices. A candidate is therefore a reopenable evidence object shared by browser, model input, log, and submission adapter.
 
 \subsection{Retrieval and interaction}
-Text queries enter a bounded conversational rewrite (CQR) when session context exists and may produce one HyDE-style hypothetical description. Dense lists and payload full-text lists (OCR, metadata, speech, captions, and object names when available) are combined with
-\begin{equation*}
-\operatorname{RRF}(x)=\sum_{\ell\in\mathcal{L}}\frac{1}{k+\operatorname{rank}_{\ell}(x)}.
-\end{equation*}
-Temporal coherence groups nearby hits from one video, while scene diversification limits near-duplicate frames. The browser exposes result cards, source media, timestamps, metadata, playback, query-by-example, positive/negative feedback, manual in-video search, and DRES submission. The backend records query, action, candidate, and submission events separately, allowing human-action time to be distinguished from retrieval time.
+Text queries use bounded CQR and at most one HyDE description. The web path fuses original, HyDE, optional secondary-vector, and payload full-text lists with $\operatorname{RRF}(x)=\sum_{\ell\in\mathcal{L}}(k+\operatorname{rank}_{\ell}(x))^{-1}$~\cite{cormack2009reciprocal}. The lexical branch is a full-text gate with rank-position, not calibrated BM25, scores. Temporal coherence, scene diversity, \code{matched\_via} labels, playback, feedback, in-video search, and DRES submission complete the browser path; JSONL interaction events are written locally before best-effort DRES logging.
+
+\paragraph{Budgeted precision ladder.} The default uses approximate dense search and a small reranking head. Request fields can select exact search, larger HNSW effort, verification, or in-video search after a promising video is identified. H-EAGLE-lite, secondary SigLIP, and verification remain opt-in implemented branches, not measured defaults.
 
 \section{Task-Specific Live Pipelines}
 \label{sec:tasks}
 
-The five official modes share the candidate contract but differ in their entry point and final operator action. Figure~\ref{fig:task-lanes} shows the complete live routes; the short descriptions below clarify what is deliberately fast, what is stateful, and where precision escalation occurs.
+The five VBS routes share candidate identity, evidence, feedback, and submission primitives but choose different entry and operator policies. KIS-T/KIS-C/AVS use the Type-1 web backend, VQA the Type-2 backend, and KIS-V dedicated image/video endpoints; the inherited CLI Type-3 experiment is not an additional 2027 task. Figure~\ref{fig:task-lanes} summarizes the routes.
 
 \begin{figure*}[t]
 \centering
@@ -177,7 +184,7 @@ The five official modes share the candidate contract but differ in their entry p
 \node[lane, below=9mm of l1] (l2) {KIS-T};
 \node[pbox, right=4mm of l2] (t1) {text description};
 \node[pstage, right=3mm of t1] (t2) {CQR +\\HyDE};
-\node[pstage, right=3mm of t2] (t3) {dense + sparse\\lists};
+\node[pstage, right=3mm of t2] (t3) {dense + payload\\lists};
 \node[pstage, right=3mm of t3] (t4) {RRF + coherence\\+ diversity};
 \node[pstage, right=3mm of t4] (t5) {bounded VLM\\rerank head};
 \node[pbox, right=3mm of t5] (t6) {inspect /\\submit};
@@ -219,48 +226,33 @@ The five official modes share the candidate contract but differ in their entry p
 \label{fig:task-lanes}
 \end{figure*}
 
-\paragraph{KIS-V.} An uploaded clip is sampled at a bounded budget (currently at most eight readable positions), embedded with the primary visual encoder, and searched against the visual collection. Per-sample hits are merged and deduplicated by indexed point. The default path does not invoke HyDE, sparse search, or VLM reranking; the resulting card retains source video, frame, timestamp, and DRES actions.
+\paragraph{KIS-V.} A temporary uploaded clip is sampled at most eight readable positions. Each sample is dense-searched and merged by indexed point, preserving the strongest hit and query timestamp. The endpoint bypasses text expansion, payload-text matching, and VLM reranking; cards retain source video, frame, timestamp, and submission actions.
 
-\paragraph{KIS-T.} A text description enters the Type-1 route. CQR resolves references only when bounded session history exists; HyDE is one optional hypothetical description, not an open-ended paraphrase loop. Dense, secondary-vector, and payload-text lists are fused with RRF, then temporal coherence and scene diversity shape the candidate grid. A small VLM head can rerank the pool; exact search, a larger HNSW pool, and verification are explicit overrides.
+\paragraph{KIS-T.} Text enters Type-1 CQR/HyDE, then original, optional secondary, and payload lists are fused with RRF, coherence, and diversity. A small VLM head reranks the leading pool; exact search, larger HNSW, and verification are explicit overrides.
 
-\paragraph{KIS-C.} Conversational search is stateful policy around KIS-T, not a second index. The session stores the resolved query and short confirmed/rejected candidate descriptions. If the pool is ambiguous, the system asks one facet-specific clarification question and boosts the associated candidates. Positive/negative feedback performs a lightweight Rocchio-style vector update and records the action for the next turn; it does not add an unbounded agent loop.
+\paragraph{KIS-C.} KIS-C is stateful policy around KIS-T. Ambiguity averages distinct-video ratio and normalized top-1/top-2 margin; threshold $0.7$ gates one facet-specific clarification. The answer boosts its candidate pool, while Rocchio feedback and confirmed/rejected descriptions update the next CQR prompt. No autonomous planner is used.
 
-\paragraph{AVS.} AVS reuses broad KIS-T retrieval but optimizes the final list for multiple shots. Temporal coherence and scene/video diversification reduce near duplicates, after which the operator groups candidates by source video, browses within promising media, and chooses shots. The DRES client maintains a per-task submitted-video set and returns a soft duplicate warning rather than silently issuing a second submission; the official live judge remains the authority for AVS correctness.
+\paragraph{AVS.} AVS reuses broad KIS-T retrieval but optimizes cross-video coverage. Coherence/diversity reduce near duplicates; the operator groups, browses, and selects shots. A per-task set gives a soft duplicate warning, while DRES remains authoritative.
 
-\paragraph{VQA.} The question is decomposed into a bounded candidate search. A candidate reaches the VLM only after a real keyframe is loaded or its source video is decoded; the canonical frame index is preferred, with timestamp as a legacy fallback. The response must contain \code{found=true}, a non-empty answer, and finite confidence in $[0,1]$. Missing media, invalid JSON, timeout, unknown answer, invalid confidence, or identity mismatch returns \code{UNKNOWN/N/A} and score zero. For a valid answer, the same candidate ID, video ID, and frame index are returned to the API and UI; invalid outputs retain the candidate payload but do not populate answer identity.
+\paragraph{VQA.} VQA is an evidence-integrity layer. A candidate reaches the VLM only after a real keyframe/video frame is resolved inside the dataset root, preferring native frame index over timestamp. The parser requires \code{found=true}, nonempty answer, and confidence in $[0,1]$; missing media, invalid JSON, timeout, unknown answer, or invalid confidence returns \code{UNKNOWN/N/A} with zero score and no identity. Valid answers retain candidate, video, and evidence frame/timestamp. This fail-closed contract is scoped to the web route; CLI VQA remains a migration target.
 
-\screenshotplaceholder{Composite live UI capture}{\textbf{Left:} task selector, query controls, ranked keyframes, score/evidence metadata, and playback. \textbf{Right:} VQA answer, grounded/failed status, media name, frame index/timestamp, and the exact preview passed to the model. Add an AVS/DRES submission crop if space permits.}{ui-composite}
+\screenshotplaceholder{Composite live UI capture}{left: task/query/results; right: VQA grounding/evidence; optional AVS/DRES crop}{3}
 
 \section{Evaluation Protocol}
 \label{sec:evaluation}
 
-The paper separates the official live DRES outcome from a controlled offline replay. The repository currently has a thin REST client and JSONL interaction logging; before the event, login, current-task, submission, and log payloads must be checked against the exact VBS OpenAPI contract. During VBS, the record must preserve the DRES task/session IDs, mode, task start/end, every query and clarification, candidates shown, submissions in order, judge or ground-truth outcome, and model/index/configuration hashes. The live track reports official score/rank, time-to-first and time-to-correct submission, correct and false submissions, total submissions, and the ordered interaction trace. KIS-C retains its clarification transcript; AVS retains source-video identity and temporal ranges; VQA retains evidence identity.
+The paper separates the official live DRES outcome from controlled offline replay. Before competition, the REST client and JSONL log must be checked against the exact VBS OpenAPI contract; the hand-written wrapper is currently unverified. The live record stores task/session IDs, mode, timings, queries/clarifications, candidates, submissions, judge outcome, and model/index/configuration hashes. Reports retain score/rank, time-to-first/correct submission, submission counts, interaction trace, KIS-C clarification, AVS ranges, and VQA evidence identity. Identity parity, escalation logs, and grounded-answer/failure rates are the primary contract checks.
 
-Offline replay is diagnostic, not a VBS leaderboard score. It uses a frozen manifest, query split, relevance/evidence labels, index snapshot, model revisions, hardware, timeouts, configuration hash, and raw predictions. Known-item tasks report Recall@1/5/10/20, MRR, nDCG@10, target-video hit, and frame/interval hit. AVS reports unique-video coverage and duplicate rate only when a frozen accepted-shot annotation exists. VQA reports answer correctness, candidate localization, grounded-answer rate, evidence-identity parity, and p50/p95 latency. All tracks report query, retrieval, reranking, VLM, end-to-end, and human-action latency separately.
+Offline replay is diagnostic, not a VBS leaderboard score, and uses a frozen manifest, split, labels, index/model revisions, hardware, configuration, and raw predictions. Known-item tasks report Recall@1/5/10/20, MRR, nDCG@10, target-video and frame/interval hit; AVS reports unique-video coverage and duplicate rate when annotations exist; VQA reports answer correctness, localization, grounded-answer rate, identity parity, and p50/p95 latency. Query, retrieval, reranking, VLM, end-to-end, and human-action latency remain separate. The three questions are whether evidence survives each handoff, whether escalation buys quality for its added time, and whether grounding reduces invalid exposure without hiding failures.
 
-The primary ablation is the quality--latency frontier: dense-only versus sparse-only versus RRF, then RRF with HyDE, bounded VLM reranking, temporal coherence, diversification, and grounded verification. Exact search and larger HNSW settings are measured as alternatives to the live default. Operational failures—empty retrieval, media decode failure, malformed VLM response, timeout, provenance mismatch, and duplicate/wrong submission—are counted alongside quality metrics. No result cell is populated until the manifest and index revision are frozen.
-
-\begin{table}[t]
-\centering
-\caption{Minimal evidence required for the final evaluation.}
-\label{tab:evaluation-contract}
-\small
-\begin{tabular}{@{}P{1.55cm}P{5.0cm}@{}}
-\toprule
-Track & Frozen record and interpretation \\
-\midrule
-Live DRES & Official task/session IDs, score/rank, timing, ordered submissions, judge outcome, and interaction log; primary competition evidence. \\
-Offline replay & Manifest, labels, raw ranked outputs, ablations, latency, grounding, and failure logs; diagnostic evidence only. \\
-\bottomrule
-\end{tabular}
-\end{table}
+The ablation tests dense/payload/RRF, HyDE, reranking, temporal coherence, diversification, grounding, exact search, larger HNSW settings, and (when enabled) shot-level coarse-to-fine routing against the live default. Empty retrieval, decode failure, malformed response, timeout, provenance mismatch, and duplicate/wrong submission are counted with quality metrics. No result cell is populated until the manifest and index revision are frozen; this draft reports the protocol rather than invented numbers.
 
 \section{Limitations and Conclusion}
 \label{sec:conclusion}
 
-The current deployment still has a migration boundary between legacy Qdrant collections and the newer source-index schema, so optional enrichment fields cannot be treated as universal. Sequential VLM verification may dominate p95 latency, and provider/model revisions can change token semantics and response formatting. AVS and some KIS-C outcomes depend on operator decisions and live judging; offline recall cannot reproduce them. The final release should publish the manifest, index schema and version, configuration, model revisions, raw predictions, metric script, interaction trace, and failure logs.
+The source-index migration leaves optional enrichment fields non-universal, and official-keyframe native frame mapping still needs an audit for frame-accurate submission. VLM verification may dominate p95 latency and provider revisions can change outputs. Ambient audio, secondary embeddings, shot routing, and verification are opt-in; the DRES adapter is not yet validated against the live instance; and the legacy CLI VQA route has a different guarantee. AVS and some KIS-C outcomes depend on operators and live judging. The release should publish the manifest, schema/version, configuration, model revisions, raw predictions, metric script, interaction trace, and failure logs.
 
-TGLTW-RMIT presents a compact live-first design for VBS 2027: multimodal evidence is indexed offline, bounded dense/sparse retrieval supports the five task modes, and precision operations are visible operator choices. The central reliability safeguard is candidate-specific VQA grounding, which prevents unavailable or mismatched media from becoming a seemingly valid answer. The next milestone is a frozen replay and an on-site rehearsal that fills the evaluation record without changing the live configuration.
+TGLTW-RMIT's novelty is not a new embedding, rank-fusion rule, or VLM. It is the explicit composition boundary: a stable evidence object crosses multimodal indexing, bounded task routing, operator-visible escalation, grounded VQA, and submission/logging. This makes live quality, latency, and failure modes measurable as properties of one system. The next milestone is frozen replay and on-site rehearsal without changing the live configuration.
 
 \bibliographystyle{splncs04}
 \bibliography{references}

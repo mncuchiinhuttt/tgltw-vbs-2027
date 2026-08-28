@@ -2,6 +2,8 @@
 
 Mục này chứa mã nguồn bài báo LaTeX cho **TGLTW-RMIT VBS 2027** cùng công cụ Live Preview Server.
 
+Tên draft hiện tại: **Evidence-Carrying Live Search: Budgeted Multimodal Retrieval for Interactive Video Browsing**.
+
 ## 📂 Cấu trúc thư mục
 
 ```text
@@ -17,11 +19,14 @@ paper/
 
 ## Cấu trúc bản draft
 
-`main.tex` hiện được tổ chức theo dạng system paper: Introduction; Task and
-Dataset Setting; System Architecture; Task-Specific Retrieval; Experimental
-Methodology; Results; Ablation and Failure Analysis; Limitations and
-Reproducibility; Conclusion. Các bảng metric đang ghi `To be measured` cho tới
-khi query manifest, ground truth, index snapshot và hardware được freeze.
+`main.tex` hiện được tổ chức theo dạng system paper rút gọn: Introduction; VBS
+Setting and System-Level Delta; TGLTW-RMIT Architecture; Task-Specific Live
+Pipelines; Evaluation Protocol; Limitations and Conclusion. Novelty được framing
+ở ranh giới composition: evidence object có identity ổn định đi xuyên qua
+indexing, task routing, precision escalation, grounded VQA và submission/logging;
+paper không claim encoder hay rank-fusion rule mới. Các quantitative claims chỉ
+được điền sau khi query manifest, ground truth, index snapshot và hardware được
+freeze.
 
 `STRUCTURE_PLAN.md` giải thích evaluation tối thiểu cần chạy trước khi thay
 placeholder bằng số liệu: Recall/MRR/nDCG, VQA answer và grounding, latency
