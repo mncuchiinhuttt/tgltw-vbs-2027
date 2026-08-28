@@ -4,6 +4,7 @@ import os
 import re
 import cv2
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 from typing import Callable, List, Dict, Any, Optional
 from config import (
@@ -341,14 +342,11 @@ JSON:"""
         print(f"Reranking {len(candidate_frames)} candidates for Type 1 query...")
         use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
         questions = self.generate_verification_questions(query) if use_verify else []
-        scored = []
-        for hit in candidate_frames:
-            payload = hit["payload"]
 
-            # Since the raw image path might be needed, we assume image path can be loaded
-            # or generated. If we don't have local paths, we fallback to payload data text comparison
-            # or load image if we mock/simulate it. Let's write the code assuming image is loaded if available,
-            # or run on metadata.
+        def _score_single_hit(hit: Dict[str, Any]) -> Dict[str, Any]:
+            hit_copy = dict(hit)
+            payload = hit_copy["payload"]
+
             frame_description = f"Caption: {payload.get('caption', '')}. Narrative: {payload.get('scene_narrative', '')}. OCR: {payload.get('ocr_text', '')}."
 
             prompt = f"""
@@ -357,23 +355,32 @@ Frame info: {frame_description}
 Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
 Score:"""
 
-            # Text-only comparison as base/fallback, or vision if image is provided
             score_str = self.vlm.generate(None, prompt).strip()
             score = _parse_vlm_score(score_str)
             if score is None:
                 print(f"Warning: could not parse rerank score from VLM response: {score_str!r}. Defaulting to 0.0.")
                 score = 0.0
-                hit["rerank_score_valid"] = False
+                hit_copy["rerank_score_valid"] = False
             else:
-                hit["rerank_score_valid"] = True
+                hit_copy["rerank_score_valid"] = True
 
             if questions:
                 verification_ratio = self.verify_candidate(None, frame_description, questions)
-                hit["verification_ratio"] = verification_ratio
+                hit_copy["verification_ratio"] = verification_ratio
                 score = (1 - VERIFICATION_WEIGHT_TYPE1) * score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 
-            hit["rerank_score"] = score
-            scored.append(hit)
+            hit_copy["rerank_score"] = score
+            return hit_copy
+
+        if not candidate_frames:
+            return []
+
+        max_workers = min(len(candidate_frames), 8)
+        if max_workers > 1:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                scored = list(executor.map(_score_single_hit, candidate_frames))
+        else:
+            scored = [_score_single_hit(h) for h in candidate_frames]
 
         return sorted(scored, key=lambda x: x["rerank_score"], reverse=True)
 
@@ -421,28 +428,23 @@ Score:"""
         print(f"Executing Type 2 VQA reranking for query: '{query}'...")
         use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
         questions = self.generate_verification_questions(query) if use_verify else []
-        scored = []
 
-        for hit in candidate_frames:
-            payload = hit["payload"]
+        def _score_single_vqa_hit(hit: Dict[str, Any]) -> Dict[str, Any]:
+            hit_copy = dict(hit)
+            payload = hit_copy["payload"]
             evidence = resolve_candidate_evidence(dataset_dir, payload)
             frame_img = evidence["image"] if evidence is not None else None
-            hit["vqa_video_id"] = payload.get("source_file")
-            hit["vqa_frame_idx"] = evidence.get("frame_idx") if evidence is not None else None
-            hit["vqa_evidence_frame_idx"] = hit["vqa_frame_idx"]
-            hit["vqa_evidence_timestamp"] = evidence.get("timestamp") if evidence is not None else None
-            # Internal absolute path; the backend converts it to a validated
-            # dataset-relative reference before returning JSON to the client.
-            hit["vqa_evidence_path"] = evidence.get("path") if evidence is not None else None
-            hit["vqa_candidate_id"] = hit.get("id")
-            hit["vqa_evidence_available"] = frame_img is not None
-            hit["vqa_answer"] = "UNKNOWN"
-            hit["vqa_answer_valid"] = False
-            hit["vqa_evidence_reason"] = "frame_unavailable" if frame_img is None else ""
+            hit_copy["vqa_video_id"] = payload.get("source_file")
+            hit_copy["vqa_frame_idx"] = evidence.get("frame_idx") if evidence is not None else None
+            hit_copy["vqa_evidence_frame_idx"] = hit_copy["vqa_frame_idx"]
+            hit_copy["vqa_evidence_timestamp"] = evidence.get("timestamp") if evidence is not None else None
+            hit_copy["vqa_evidence_path"] = evidence.get("path") if evidence is not None else None
+            hit_copy["vqa_candidate_id"] = hit_copy.get("id")
+            hit_copy["vqa_evidence_available"] = frame_img is not None
+            hit_copy["vqa_answer"] = "UNKNOWN"
+            hit_copy["vqa_answer_valid"] = False
+            hit_copy["vqa_evidence_reason"] = "frame_unavailable" if frame_img is None else ""
 
-            # Bounding-box cropping is an optional precision hint. If the
-            # detector is unavailable or fails, the real full frame remains
-            # valid evidence and is sent to the VLM.
             crop_img = frame_img
             if frame_img is not None and self.detector is not None and sub_queries:
                 try:
@@ -452,14 +454,8 @@ Score:"""
                     detections = []
                 if detections:
                     best_det = max(detections, key=lambda x: x.get("conf", 0.0))
-                    print(
-                        f"Found object '{best_det.get('label', '')}' with conf "
-                        f"{best_det.get('conf', 0.0)}. Cropping bbox {best_det.get('bbox')}..."
-                    )
                     crop_img = self.crop_bounding_box(frame_img, best_det.get("bbox", []))
 
-            # No VLM call is made without a real frame. Invalid VLM output is
-            # also zero-scored instead of receiving the old neutral 0.5.
             vqa_score = 0.0
             if crop_img is not None:
                 vqa_prompt = f"""
@@ -473,32 +469,39 @@ The answer must be grounded in this frame; do not guess.
                     parsed = parse_grounded_vqa_response(self.vlm.generate(crop_img, vqa_prompt))
                     if parsed["valid"]:
                         vqa_score = parsed["confidence"]
-                        hit["vqa_answer"] = parsed["answer"]
-                        hit["vqa_answer_valid"] = True
-                        hit["vqa_evidence_reason"] = "grounded"
+                        hit_copy["vqa_answer"] = parsed["answer"]
+                        hit_copy["vqa_answer_valid"] = True
+                        hit_copy["vqa_evidence_reason"] = "grounded"
                     else:
-                        hit["vqa_evidence_reason"] = parsed["reason"]
+                        hit_copy["vqa_evidence_reason"] = parsed["reason"]
                 except Exception as exc:
                     print(f"VQA scoring failed for frame: {exc}")
-                    hit["vqa_evidence_reason"] = "vlm_error"
+                    hit_copy["vqa_evidence_reason"] = "vlm_error"
 
-            # Weighted fusion: original_rank (rrf_score), vqa_score, and
-            # (if enabled) the verification match ratio against crop_img -
-            # falls back to the original rrf/vqa-only split when disabled.
-            rrf_score = hit.get("rrf_score", 0.0)
-            hit["vqa_score"] = vqa_score
+            rrf_score = hit_copy.get("rrf_score", 0.0)
+            hit_copy["vqa_score"] = vqa_score
             if questions:
                 verification_ratio = self.verify_candidate(crop_img, "", questions) if crop_img is not None else 0.0
-                hit["verification_ratio"] = verification_ratio
-                hit["final_score"] = (
+                hit_copy["verification_ratio"] = verification_ratio
+                hit_copy["final_score"] = (
                     TYPE2_RRF_WEIGHT * rrf_score
                     + TYPE2_VQA_WEIGHT * vqa_score
                     + TYPE2_VERIFICATION_WEIGHT * verification_ratio
                 )
             else:
-                hit["final_score"] = 0.4 * rrf_score + 0.6 * vqa_score
-            scored.append(hit)
-            
+                hit_copy["final_score"] = 0.4 * rrf_score + 0.6 * vqa_score
+            return hit_copy
+
+        if not candidate_frames:
+            return []
+
+        max_workers = min(len(candidate_frames), 8)
+        if max_workers > 1:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                scored = list(executor.map(_score_single_vqa_hit, candidate_frames))
+        else:
+            scored = [_score_single_vqa_hit(h) for h in candidate_frames]
+
         return sorted(scored, key=lambda x: x["final_score"], reverse=True)
 
     def rerank_type3_temporal(

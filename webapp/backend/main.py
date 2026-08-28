@@ -60,14 +60,15 @@ def load_vlm():
 
 def load_embedder():
     import config
-    from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+    from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
     if config.EMBEDDING_OPTION == "local":
+        if "wemm" in str(config.VISUAL_EMBEDDING_MODEL_ID).lower():
+            return WeMMEmbedding4BEmbedder()
         return QwenVL8BEmbedder()
     elif config.EMBEDDING_OPTION == "cloud":
         return DashScopeCloudEmbedder()
     else:
         raise ValueError(f"Unknown embedding option: {config.EMBEDDING_OPTION}")
-
 def load_secondary_embedder():
     """None when disabled - see models/siglip_embedder.py."""
     import config
@@ -351,6 +352,9 @@ class InVideoSearchRequest(BaseModel):
     video_name: str
     dataset_dir: Optional[str] = None
 
+class InVideoRerankRequest(BaseModel):
+    query: str
+    top_k: int = 20
 # 4. Helper to Get DB Stats
 def get_qdrant_stats():
     try:
@@ -928,6 +932,103 @@ def browse_video(video_name: str):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Browse video failed: {str(e)}")
+@app.get("/api/video/{video_name}/timeline")
+def get_video_timeline(video_name: str, center_timestamp: Optional[float] = None, window_sec: float = 30.0):
+    """
+    In-Video Timeline Explorer (PraK V4 & NII-UIT inspired, VBS2026):
+    Returns all indexed frames for the specified video, sorted chronologically,
+    with an optional focus window around center_timestamp (+/- window_sec).
+    """
+    try:
+        _, searcher, _ = init_services(query_type=1)
+        points = searcher.get_all_points_for_video(video_name)
+        frames = []
+        for p in points:
+            payload = p.get("payload", {})
+            frame_idx = payload.get("frame_idx")
+            timestamp = payload.get("timestamp")
+            if timestamp is None and payload.get("pts_time") is not None:
+                timestamp = payload.get("pts_time")
+
+            if center_timestamp is not None and timestamp is not None:
+                if abs(timestamp - center_timestamp) > window_sec:
+                    continue
+
+            frames.append({
+                "id": p["id"],
+                "frame_idx": frame_idx,
+                "timestamp": timestamp,
+                "caption": payload.get("caption", ""),
+                "ocr_text": payload.get("ocr_text", ""),
+                "scene_narrative": payload.get("scene_narrative", ""),
+                "payload": payload,
+            })
+
+        frames.sort(key=lambda f: (f["frame_idx"] if f["frame_idx"] is not None else 0, f["timestamp"] if f["timestamp"] is not None else 0.0))
+        return {
+            "video_name": video_name,
+            "total_frames": len(frames),
+            "frames": frames,
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Timeline lookup failed: {str(e)}")
+
+@app.post("/api/video/{video_name}/rerank")
+def rerank_in_video(video_name: str, request: InVideoRerankRequest):
+    """
+    Sub-shot & In-Video Reranker (PraK V4 / Exquisitor inspired):
+    Scores all indexed frames inside this specific video against a target sub-query
+    using dense similarity + text token matching.
+    """
+    try:
+        import numpy as np
+        _, searcher, _ = init_services(query_type=1)
+        points = searcher.get_all_points_for_video(video_name)
+        if not points:
+            return {"video_name": video_name, "query": request.query, "results": []}
+
+        query_vector = searcher.embedder.embed_text(request.query)
+        scored_frames = []
+        for p in points:
+            point_vec = searcher.get_point_vector(p["id"])
+            dense_sim = 0.0
+            if point_vec is not None:
+                norm_q = np.linalg.norm(query_vector)
+                norm_p = np.linalg.norm(point_vec)
+                if norm_q > 0 and norm_p > 0:
+                    dense_sim = float(np.dot(query_vector, point_vec) / (norm_q * norm_p))
+
+            payload = p.get("payload", {})
+            text_corpus = f"{payload.get('caption', '')} {payload.get('ocr_text', '')} {payload.get('scene_narrative', '')}".lower()
+            text_sim = 0.0
+            tokens = [t.lower() for t in request.query.split() if len(t) > 2]
+            if tokens:
+                matched_tokens = sum(1 for t in tokens if t in text_corpus)
+                text_sim = matched_tokens / len(tokens)
+
+            combined_score = 0.7 * dense_sim + 0.3 * text_sim
+            scored_frames.append({
+                "id": p["id"],
+                "score": round(combined_score, 4),
+                "dense_score": round(dense_sim, 4),
+                "text_score": round(text_sim, 4),
+                "frame_idx": payload.get("frame_idx"),
+                "timestamp": payload.get("timestamp", payload.get("pts_time")),
+                "payload": payload,
+            })
+
+        scored_frames.sort(key=lambda x: x["score"], reverse=True)
+        return {
+            "video_name": video_name,
+            "query": request.query,
+            "results": scored_frames[:request.top_k]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"In-video reranking failed: {str(e)}")
 
 @app.post("/api/in-video-search")
 async def run_in_video_search(request: InVideoSearchRequest):
