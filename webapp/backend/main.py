@@ -22,7 +22,7 @@ import dres_client
 import interaction_log
 import vbs_audit_router
 import diagnostics_router
-# 1. Path Configuration
+import benchmark_router
 BACKEND_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = BACKEND_DIR.parent.parent
 DATASETS_DIR = WORKSPACE_ROOT / "datasets"
@@ -43,10 +43,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register VBS Audit & Diagnostics routers
+# Register VBS Audit, Diagnostics, and Benchmark routers
 app.include_router(vbs_audit_router.router)
 app.include_router(vbs_audit_router.sotuyen_router)
 app.include_router(diagnostics_router.router)
+app.include_router(benchmark_router.router)
+
 def load_vlm():
     import config
     from models.qwen_vlm import QwenVLM

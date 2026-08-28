@@ -24,8 +24,8 @@ import {
   MessageCircle,
   History,
   X,
+  BarChart3,
 } from "lucide-react"
-
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -40,8 +40,8 @@ import { ResultCard, type ResultHit } from "@/components/ResultCard"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
 import { AuditHistoryView } from "@/components/AuditHistoryView"
+import { RAGBenchmarkWorkspace } from "@/components/RAGBenchmarkWorkspace"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
-
 // -------------------------------------------------------------
 // NAVIGATION COMPONENT
 // -------------------------------------------------------------
@@ -50,11 +50,11 @@ function Navbar() {
   
   const navItems = [
     { path: "/", label: "Live Search", icon: SearchIcon },
+    { path: "/benchmark", label: "RAG Benchmark", icon: BarChart3 },
     { path: "/audit", label: "System Audit", icon: Layers },
     { path: "/history", label: "Audit History", icon: History },
     { path: "/database", label: "Vector Store", icon: Database }
   ]
-
   return (
     <nav className="vbs-nav sticky top-0 z-40">
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between gap-6">
@@ -1310,12 +1310,12 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<SearchView />} />
+            <Route path="/benchmark" element={<RAGBenchmarkWorkspace />} />
             <Route path="/audit" element={<VBSAuditWorkspace />} />
             <Route path="/history" element={<AuditHistoryView />} />
             <Route path="/database" element={<DatabaseView />} />
           </Routes>
         </div>
-        
         <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-200 bg-white/60 mt-12">
           <p className="font-semibold">Video Browser Showdown 2027 &bull; The Gays Lead The World &bull; RMIT University Vietnam</p>
           <p className="mt-1 text-[11px] text-slate-400">Interactive video retrieval &bull; DRES-enabled research system</p>

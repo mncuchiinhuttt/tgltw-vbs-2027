@@ -1,0 +1,145 @@
+[
+  {
+    "id": "rag-kist-01",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "vòng đua xe đạp Hồ Hoàn Kiếm cúp truyền hình chặng cuối",
+    "ground_truth": {
+      "video_name": "L23_V005.mp4",
+      "timestamp": 5.52,
+      "frame_id": 138
+    }
+  },
+  {
+    "id": "rag-kist-02",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "vườn cò Tư Sự trong chương trình Đôi Mắt MeKong",
+    "ground_truth": {
+      "video_name": "L29_V003.mp4",
+      "timestamp": 52.4,
+      "frame_id": 1310
+    }
+  },
+  {
+    "id": "rag-kist-03",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "thịt vịt xào củ cải muối món ngon mỗi ngày",
+    "ground_truth": {
+      "video_name": "L26_V203.mp4",
+      "timestamp": 302.08,
+      "frame_id": 7552
+    }
+  },
+  {
+    "id": "rag-kisc-01",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "tìm video dạy nấu ăn món bánh mì hạnh nhân",
+    "history": [
+      { "role": "user", "text": "tìm video làm bánh mì" },
+      { "role": "system", "text": "Có phải bạn muốn tìm bánh mì ngọt hạnh nhân hay bánh mì thịt xào?" },
+      { "role": "user", "text": "bánh mì hạnh nhân béo giòn ngọt món ngon mỗi ngày" }
+    ],
+    "system_answer": "bánh mì hạnh nhân béo giòn ngọt món ngon mỗi ngày",
+    "rejected": ["thịt vịt xào củ cải muối"],
+    "ground_truth": {
+      "video_name": "L26_V111.mp4",
+      "timestamp": 84.32,
+      "frame_id": 2108
+    }
+  },
+  {
+    "id": "rag-kisc-02",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "phóng sự Đôi Mắt Mê Kông tập 1 Vườn Cò Tư Sự",
+    "history": [
+      { "role": "user", "text": "chương trình khám phá thiên nhiên miền tây" },
+      { "role": "system", "text": "Chương trình khám phá vườn chim hay phóng sự thời sự 60 giây?" },
+      { "role": "user", "text": "chương trình Đôi Mắt Mekong tập 1 về vườn cò Tư Sự" }
+    ],
+    "system_answer": "chương trình Đôi Mắt Mekong tập 1 về vườn cò Tư Sự",
+    "rejected": ["thời sự 60 giây chiều"],
+    "ground_truth": {
+      "video_name": "L29_V003.mp4",
+      "timestamp": 192.0,
+      "frame_id": 4800
+    }
+  },
+  {
+    "id": "rag-vqa-01",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "Chuyên đề ôn thi tiếng Anh THPT trong video là gì?",
+    "ground_truth": {
+      "video_name": "L25_V050.mp4",
+      "timestamp": 1170.48,
+      "frame_id": 29262,
+      "answer": "Đảo ngữ",
+      "acceptable_answers": ["đảo ngữ", "chuyên đề đảo ngữ", "inversion", "đảo ngữ tiếng anh"]
+    }
+  },
+  {
+    "id": "rag-vqa-02",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "Món ăn trong video được chế biến từ loại thịt gia cầm nào?",
+    "ground_truth": {
+      "video_name": "L26_V203.mp4",
+      "timestamp": 302.08,
+      "frame_id": 7552,
+      "answer": "Thịt vịt",
+      "acceptable_answers": ["thịt vịt", "vịt", "thịt vịt xào"]
+    }
+  },
+  {
+    "id": "rag-vqa-03",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "Tên của tàu ngầm hạt nhân lặn dưới biển trong video là gì?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": ["UNKNOWN", "N/A", "UNKNOWN/N/A", "none"]
+    }
+  },
+  {
+    "id": "rag-avs-01",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "các món ăn trong chương trình Món Ngon Mỗi Ngày Vivu TV",
+    "ground_truth": {
+      "video_name": "L26_V203.mp4",
+      "timestamp": 302.08,
+      "frame_id": 7552,
+      "distinct_target_videos": ["L26_V203", "L26_V111", "L26_V136"]
+    }
+  },
+  {
+    "id": "rag-kisv-01",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "đua xe đạp vòng quanh bờ hồ",
+    "reference_media": "L23_V005.mp4",
+    "ground_truth": {
+      "video_name": "L23_V005.mp4",
+      "timestamp": 5.52,
+      "frame_id": 138
+    }
+  }
+]

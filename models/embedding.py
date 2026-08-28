@@ -92,7 +92,7 @@ class WeMMEmbedding4BEmbedder:
             model_id = local_path
 
         self.model_id = model_id
-        self.mrl_dim = mrl_dim
+        self.mrl_dim = mrl_dim or EMBEDDING_MRL_DIM or 2048
         self.device = "cpu"
         if torch.cuda.is_available():
             try:
@@ -141,8 +141,9 @@ class WeMMEmbedding4BEmbedder:
         if self._hf_loaded:
             with torch.no_grad():
                 inputs = self.processor(images=image, return_tensors="pt").to(self.device)
-                outputs = self.model(**inputs)
-                emb = outputs.last_hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                outputs = self.model(**inputs, output_hidden_states=True)
+                hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
+                emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
                 norm = np.linalg.norm(emb)
                 emb = emb / norm if norm > 0 else emb
                 return _apply_mrl_truncation(emb, self.mrl_dim)
@@ -154,8 +155,9 @@ class WeMMEmbedding4BEmbedder:
         if self._hf_loaded:
             with torch.no_grad():
                 inputs = self.processor(text=text, return_tensors="pt").to(self.device)
-                outputs = self.model(**inputs)
-                emb = outputs.last_hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                outputs = self.model(**inputs, output_hidden_states=True)
+                hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
+                emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
                 norm = np.linalg.norm(emb)
                 emb = emb / norm if norm > 0 else emb
                 return _apply_mrl_truncation(emb, self.mrl_dim)
