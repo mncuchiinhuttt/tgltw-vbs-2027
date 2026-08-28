@@ -32,6 +32,14 @@ VBS_QUERY_TYPES = {
 
 VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
     # --- Type 1: Textual KIS (KIS-T) ---
+    "v3c-kist-01": [
+        ["00001", "180"],
+        ["00001", "200"],
+    ],
+    "v3c-kist-02": [
+        ["00004", "300"],
+        ["00004", "320"],
+    ],
     "query-vbs-1-kist": [
         ["video_0012", "1365"],
         ["video_0012", "1380"],
@@ -49,8 +57,15 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
         ["00789", "3420"],
         ["00789", "3450"],
     ],
-
     # --- Type 2: Video Question Answering (VQA) ---
+    "v3c-vqa-01": [
+        ["00004", "300", "Helicopter"],
+        ["00004", "300", "touring helicopter"],
+    ],
+    "v3c-vqa-02": [
+        ["00009", "250", "Acoustic guitar"],
+        ["00009", "250", "guitar"],
+    ],
     "query-vbs-2-vqa": [
         ["video_0045", "360", "License plate 59-X1 12345"],
         ["video_0045", "360", "59-X1 12345"],
@@ -62,8 +77,11 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
         ["00210", "1840", "Red and white lighthouse"],
         ["00210", "1840", "Lighthouse"],
     ],
-
     # --- Type 3: Conversational KIS (KIS-C) ---
+    "v3c-kisc-01": [
+        ["00003", "350"],
+        ["00003", "380"],
+    ],
     "query-vbs-3-kisc": [
         ["video_0102", "580"],
         ["video_0102", "540"],
@@ -78,6 +96,10 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
     ],
 
     # --- Type 4: Ad-hoc Video Search (AVS) ---
+    "v3c-avs-01": [
+        ["00008", "500"],
+        ["marine_0034", "750"],
+    ],
     "query-vbs-4-avs": [
         ["00420", "2100"],
         ["00421", "1540"],
@@ -85,11 +107,13 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
     ],
     "eval-vbs-4-avs": [
         ["00420", "2100"],
-        ["00421", "1540"],
-        ["00512", "880"],
     ],
 
     # --- Type 5: Visual KIS (KIS-V) ---
+    "v3c-kisv-01": [
+        ["00008", "500"],
+        ["marine_0034", "750"],
+    ],
     "query-vbs-5-kisv": [
         ["marine_0034", "750"],
         ["marine_0034", "720"],

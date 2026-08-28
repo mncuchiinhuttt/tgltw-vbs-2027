@@ -1,0 +1,89 @@
+[
+  {
+    "id": "v3c-kist-01",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "a young BMX rider performing a flatland bike spin on the ground in front of a stone building with arches",
+    "ground_truth": {
+      "video_name": "00001.mp4",
+      "timestamp": 7.2,
+      "frame_id": 180
+    }
+  },
+  {
+    "id": "v3c-kist-02",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "a helicopter flying over tropical coastline and lush green mountain ridges",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "timestamp": 12.0,
+      "frame_id": 300
+    }
+  },
+  {
+    "id": "v3c-vqa-01",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What type of aircraft is seen touring over the tropical island landscape?",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "timestamp": 12.0,
+      "frame_id": 300,
+      "answer": "Helicopter"
+    }
+  },
+  {
+    "id": "v3c-vqa-02",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What musical instrument is being played by the musician in the live session?",
+    "ground_truth": {
+      "video_name": "00009.mp4",
+      "timestamp": 10.0,
+      "frame_id": 250,
+      "answer": "Acoustic guitar"
+    }
+  },
+  {
+    "id": "v3c-kisc-01",
+    "type": 3,
+    "type_name": "KIS-C",
+    "query": "find a traditional wedding ceremony with colorful decorations",
+    "history": [
+      { "role": "user", "text": "find a wedding celebration" },
+      { "role": "system", "text": "Is it a Western church wedding or traditional Hindu wedding ceremony?" },
+      { "role": "user", "text": "traditional Hindu wedding with peacock theme and golden garlands" }
+    ],
+    "system_answer": "traditional Hindu wedding with peacock theme and golden garlands",
+    "ground_truth": {
+      "video_name": "00003.mp4",
+      "timestamp": 14.0,
+      "frame_id": 350
+    }
+  },
+  {
+    "id": "v3c-avs-01",
+    "type": 4,
+    "type_name": "AVS",
+    "query": "find all shots showing scuba divers swimming underwater with marine life and fish",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": ["00008", "marine_0034"]
+    }
+  },
+  {
+    "id": "v3c-kisv-01",
+    "type": 5,
+    "type_name": "KIS-V",
+    "query": "visual match for underwater coral reef and scuba diver exploring deep sea",
+    "reference_media": "00008.mp4",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "timestamp": 20.0,
+      "frame_id": 500
+    }
+  }
+]
