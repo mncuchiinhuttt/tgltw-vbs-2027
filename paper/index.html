@@ -933,12 +933,40 @@
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             renderAllPdfPages();
         }
+
         function resetZoom() {
             pdfScale = 1.15;
             document.getElementById("zoomLevel").textContent = "115%";
             renderAllPdfPages();
         }
 
+        let zoomDebounceTimer = null;
+        function setupPdfMouseWheelZoom() {
+            const pdfContainer = document.getElementById("pdfScrollView");
+            if (!pdfContainer) return;
+
+            pdfContainer.addEventListener("wheel", (e) => {
+                // Ctrl + Mouse Wheel OR Trackpad Pinch-to-zoom (which natively sets e.ctrlKey = true)
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    
+                    // Smooth calibrated delta for mouse wheel and pinch
+                    const delta = -e.deltaY * 0.0025;
+                    const newScale = Math.max(0.6, Math.min(3.0, pdfScale + delta));
+                    
+                    if (Math.abs(newScale - pdfScale) > 0.01) {
+                        pdfScale = newScale;
+                        document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
+                        
+                        // Debounce re-rendering canvas slightly for ultra smooth 60fps zooming
+                        clearTimeout(zoomDebounceTimer);
+                        zoomDebounceTimer = setTimeout(() => {
+                            renderAllPdfPages();
+                        }, 40);
+                    }
+                }
+            }, { passive: false });
+        }
         function setupTextSelectionListener() {
             document.addEventListener("mouseup", () => {
                 setTimeout(() => {
@@ -1366,8 +1394,8 @@
             initAceEditor();
             setupResizers();
             setupTextSelectionListener();
+            setupPdfMouseWheelZoom();
             await loadFileTree();
-            await loadFile("main.tex");
 
             const savedAuthor = localStorage.getItem("latex_author_name");
             if (savedAuthor) {
