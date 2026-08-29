@@ -51,6 +51,7 @@ try:
     from models.qwen_vlm import QwenVLM
     from models.openai_vlm import OpenAIVLM
     from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
+    from models.siglip_embedder import SigLIPEmbedder
     from models.object_detector import ObjectDetector
 
     from search.query_processor import QueryProcessor
