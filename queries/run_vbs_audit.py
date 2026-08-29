@@ -174,30 +174,85 @@ def parse_query_type(query_item: Union[dict, str, Path]) -> int:
     return 1
 
 
-def extract_vqa_answer(vlm, query_text: str, best_candidate: dict, dataset_dir: str) -> str:
-    """Extract grounded textual answer for VQA query."""
+def load_submission_frame(dataset_dir: str, payload: dict) -> Optional[Any]:
+    """Load real candidate keyframe for grounded VQA answering."""
+    if not isinstance(payload, dict):
+        return None
+    source_file = payload.get("source_file") or payload.get("video_id") or ""
+    frame_idx = payload.get("frame_idx")
+    timestamp = payload.get("timestamp")
+
+    try:
+        from PIL import Image
+        import cv2
+    except ImportError:
+        return None
+
+    dataset_root = Path(dataset_dir).resolve() if dataset_dir else Path(".")
+    candidate_paths = [
+        payload.get("keyframe_path"),
+        payload.get("frame_path"),
+        source_file,
+    ]
+    for cp in candidate_paths:
+        if not cp or not isinstance(cp, str):
+            continue
+        p = Path(cp)
+        if not p.is_absolute():
+            p = dataset_root / p
+        if p.is_file():
+            try:
+                if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}:
+                    return Image.open(p).convert("RGB")
+                elif p.suffix.lower() in {".mp4", ".mkv", ".webm", ".avi"}:
+                    cap = cv2.VideoCapture(str(p))
+                    if cap.isOpened():
+                        if frame_idx is not None:
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_idx))
+                        elif timestamp is not None:
+                            fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, int(float(timestamp) * fps))
+                        ret, frame = cap.read()
+                        cap.release()
+                        if ret and frame is not None:
+                            return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            except Exception:
+                pass
+    return None
+
+
+def extract_vqa_answer(vlm: Any, query_text: str, best_candidate: dict, dataset_dir: str) -> str:
+    """Extract grounded textual answer for VQA query with fail-closed safety."""
     payload = best_candidate.get("payload", {})
     caption = payload.get("caption") or payload.get("text_blob") or ""
-    video_id = normalize_video_stem(payload.get("source_file") or payload.get("video_id") or "unknown")
+
+    # If VLM reranking already produced a valid candidate-specific answer, prefer it
+    if best_candidate.get("vqa_evidence_available") and best_candidate.get("vqa_answer_valid"):
+        ans = best_candidate.get("vqa_answer")
+        if ans and ans.upper() not in {"UNKNOWN", "N/A"}:
+            return str(ans).strip()
 
     if vlm is None:
         if "biển số" in query_text.lower() or "license plate" in query_text.lower():
             match = re.search(r"(\d{2}[A-Z\d]+[-.]?\d{3,5})", caption, re.IGNORECASE)
             if match:
                 return match.group(1)
-        return caption[:60].strip() or f"Answer at {video_id}"
+        return "N/A"
+
+    frame_img = load_submission_frame(dataset_dir, payload)
+    if frame_img is None:
+        return "N/A"
 
     prompt = (
-        f"Based on this video frame, answer the question concisely:\n"
-        f"Question: {query_text}\n"
-        f"Provide ONLY the direct factual answer (under 15 words). Do not explain."
+        f"Answer the following question about this image: {query_text}\n"
+        f"Respond strictly with concise answer (under 15 words). If the image does not answer it, reply with N/A."
     )
     try:
-        ans = vlm.answer_question(prompt, caption=caption)
-        return str(ans).strip()
+        ans = vlm.generate(frame_img, prompt)
+        cleaned = str(ans).strip()
+        return cleaned if cleaned and cleaned.upper() not in {"UNKNOWN", "N/A"} else "N/A"
     except Exception:
-        return caption[:60].strip() or f"Answer at {video_id}"
-
+        return "N/A"
 
 def run_single_query(
     query_info: Dict[str, Any],
@@ -369,18 +424,28 @@ def run_vbs_audit(
             with inp.open("r", encoding="utf-8") as f:
                 loaded = json.load(f)
                 if isinstance(loaded, list):
-                    queries = loaded
+                    raw_list = loaded
                 elif isinstance(loaded, dict):
-                    queries = loaded.get("queries", [loaded])
+                    raw_list = loaded.get("queries", [loaded])
+                else:
+                    raw_list = []
+                for q in raw_list:
+                    if isinstance(q, dict):
+                        item = dict(q)
+                        if "type" not in item:
+                            item["type"] = parse_query_type(item)
+                        queries.append(item)
         else:
-            q_type = parse_query_type(inp)
-            queries = [{"id": inp.stem, "query": inp.read_text(encoding="utf-8"), "type": q_type}]
+            q_text = inp.read_text(encoding="utf-8").strip()
+            q_type = parse_query_type({"query": q_text, "path": str(inp)})
+            queries = [{"id": inp.stem, "query": q_text, "type": q_type}]
     elif inp.is_dir():
         for q_file in sorted(inp.glob("*.txt")):
-            q_type = parse_query_type(q_file)
+            q_text = q_file.read_text(encoding="utf-8").strip()
+            q_type = parse_query_type({"query": q_text, "path": str(q_file)})
             queries.append({
                 "id": q_file.stem,
-                "query": q_file.read_text(encoding="utf-8"),
+                "query": q_text,
                 "type": q_type,
             })
     else:
@@ -466,10 +531,9 @@ def run_vbs_audit(
 
         zip_path = staging_dir / "submission.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for item in sub_csv_dir.rglob("*"):
-                if item.is_file() and not item.name.startswith("."):
-                    zf.write(item, arcname=item.relative_to(sub_csv_dir))
-
+            for csv_file in sorted(sub_csv_dir.glob("*.csv")):
+                if csv_file.is_file():
+                    zf.write(csv_file, arcname=csv_file.name)
         summary_json = staging_dir / "audit_benchmark_summary.json"
         with summary_json.open("w", encoding="utf-8") as f:
             json.dump({

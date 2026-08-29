@@ -7,18 +7,17 @@ Unit tests for VBS 2027 Audit and Benchmark Runner subsystems across the 5 VBS t
 4. AVS (Ad-hoc Video Search)
 5. KIS-V (Visual Known-Item Search)
 """
-
-from __future__ import annotations
-
+import csv
 import json
 import os
 import shutil
+import sys
 import tempfile
 import time
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
 # Path setups
 TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
@@ -93,11 +92,17 @@ class TestVBSAuditPriors(unittest.TestCase):
         stem = "query-vbs-1-kist"
         model_candidates = [["candidate_1", "100"]]
         
-        os.environ["VBS_DISABLE_AUDIT_PRIORS"] = "1"
-        self.assertFalse(is_audit_prior_active())
-        result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
-        self.assertEqual(result, [["candidate_1", "100"]])
-
+        orig_env = os.environ.get("VBS_DISABLE_AUDIT_PRIORS")
+        try:
+            os.environ["VBS_DISABLE_AUDIT_PRIORS"] = "1"
+            self.assertFalse(is_audit_prior_active())
+            result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
+            self.assertEqual(result, [["candidate_1", "100"]])
+        finally:
+            if orig_env is None:
+                os.environ.pop("VBS_DISABLE_AUDIT_PRIORS", None)
+            else:
+                os.environ["VBS_DISABLE_AUDIT_PRIORS"] = orig_env
     def test_get_audit_prior_details(self):
         details = get_audit_prior_details("query-vbs-1-kist")
         self.assertIsNotNone(details)
@@ -221,20 +226,34 @@ class TestVBSAuditRunnerEndToEnd(unittest.TestCase):
             startup_timeout_sec=5.0,
             query_timeout_sec=5.0,
         )
-
         self.assertTrue(zip_result.exists())
         self.assertEqual(zip_result.name, "submission.zip")
+
+        # Verify submission.zip only contains CSV files and no .details/ trace files
+        with zipfile.ZipFile(zip_result, "r") as zf:
+            names = zf.namelist()
+            self.assertTrue(len(names) > 0)
+            for name in names:
+                self.assertTrue(name.endswith(".csv"), f"Non-CSV file found in submission.zip: {name}")
+                self.assertNotIn(".details", name)
         
         for stem in ("query-vbs-1-kist", "query-vbs-2-vqa", "query-vbs-3-kisc", "query-vbs-4-avs", "query-vbs-5-kisv"):
             csv_path = self.output_dir / "submission" / f"{stem}.csv"
             self.assertTrue(csv_path.exists())
+            with csv_path.open("r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                rows = list(reader)
+                self.assertTrue(len(rows) > 0)
+                if stem == "query-vbs-2-vqa":
+                    self.assertEqual(len(rows[0]), 3, f"VQA CSV must have 3 columns: {rows[0]}")
+                else:
+                    self.assertEqual(len(rows[0]), 2, f"Standard CSV must have 2 columns: {rows[0]}")
 
             detail_path = self.output_dir / "submission" / ".details" / f"{stem}.json"
             self.assertTrue(detail_path.exists())
 
         summary_file = self.output_dir / "audit_benchmark_summary.json"
         self.assertTrue(summary_file.exists())
-
 
 if __name__ == "__main__":
     unittest.main()

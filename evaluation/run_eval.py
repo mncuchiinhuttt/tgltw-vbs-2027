@@ -411,10 +411,31 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
                     "frame_idx": p.get("frame_idx"),
                     "score": item.get("score", 0.0),
                 })
+        if use_priors:
+            # Map candidate items to audit prior format [video, frame] or [video, frame, answer]
+            raw_rows = []
+            for r in results:
+                v = r.get("video_name") or "unknown"
+                f = str(r.get("frame_idx") if r.get("frame_idx") is not None else r.get("timestamp", 0))
+                if q_type == 2 and generated_answer:
+                    raw_rows.append([v, f, generated_answer])
+                else:
+                    raw_rows.append([v, f])
+            priors_applied = apply_audit_priors(q_stem, q_type, raw_rows, max_rows=SUBMISSION_TOP_K)
+            # Reorder results according to prior rows
+            reordered = []
+            for prow in priors_applied:
+                pv = prow[0]
+                reordered.append({
+                    "video_name": pv,
+                    "frame_idx": int(prow[1]) if str(prow[1]).isdigit() else None,
+                    "timestamp": float(prow[1]) if not str(prow[1]).isdigit() else None,
+                    "score": 1.0,
+                })
+            results = reordered
 
         t1_rerank = time.perf_counter()
         q_t1 = time.perf_counter()
-
         # Latency breakdown
         total_lat = q_t1 - q_t0
         hyde_lat = t1_hyde - t0_hyde
@@ -472,7 +493,11 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
             if q_type == 2 and generated_answer and ground_truth.get("answer"):
                 gt_ans = str(ground_truth["answer"]).strip().lower()
                 gen_ans = str(generated_answer).strip().lower()
-                em = (gen_ans == gt_ans) or (gt_ans in gen_ans) or (gen_ans in gt_ans)
+                # Strict grounded matching: avoid false positive substring matches on "N/A"
+                if gen_ans in {"n/a", "unknown", ""}:
+                    em = False
+                else:
+                    em = (gen_ans == gt_ans) or (gt_ans in gen_ans)
                 if em:
                     st["vqa_exact_match"] = st.get("vqa_exact_match", 0) + 1
                 accuracy_metrics["vqa_exact_match"] = em
