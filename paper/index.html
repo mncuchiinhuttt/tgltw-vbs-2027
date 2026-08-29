@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AEGIS LaTeX Studio - RMIT Vietnam & VBS 2027</title>
+    <title>AEGIS LaTeX Studio - VBS 2027</title>
     
     <!-- Google Fonts: JetBrains Mono & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -173,10 +173,10 @@
                 <i data-lucide="panel-left" class="w-4 h-4"></i>
             </button>
 
-            <!-- RMIT Red Cyber Badge -->
-            <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-rmit-red/10 border border-rmit-red/30 shadow-inner">
+            <!-- AEGIS Cyber Badge -->
+            <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-rmit-red/15 border border-rmit-red/40 shadow-inner">
                 <span class="w-2 h-2 rounded-full bg-rmit-red animate-pulse"></span>
-                <span class="text-xs font-black tracking-wider text-white font-mono uppercase">RMIT VIETNAM</span>
+                <span class="text-xs font-black tracking-wider text-white font-mono uppercase">AEGIS STUDIO</span>
             </div>
 
             <div class="h-4 w-px bg-slate-800"></div>
@@ -837,9 +837,14 @@
             const container = document.getElementById("pdfScrollView");
             container.innerHTML = "";
 
+            const dpr = window.devicePixelRatio || 1;
+
             for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
                 const page = await currentPdfDoc.getPage(pageNum);
+                // Standard CSS display viewport
                 const viewport = page.getViewport({ scale: pdfScale });
+                // High-DPI physical rendering viewport
+                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
 
                 const pageWrapper = document.createElement("div");
                 pageWrapper.className = "pdf-page-container";
@@ -849,9 +854,11 @@
                 pageWrapper.style.height = `${viewport.height}px`;
 
                 const canvas = document.createElement("canvas");
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const ctx = canvas.getContext("2d");
+                canvas.width = Math.floor(renderViewport.width);
+                canvas.height = Math.floor(renderViewport.height);
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
+                const ctx = canvas.getContext("2d", { alpha: false });
 
                 const textLayerDiv = document.createElement("div");
                 textLayerDiv.className = "textLayer";
@@ -862,7 +869,11 @@
                 pageWrapper.appendChild(textLayerDiv);
                 container.appendChild(pageWrapper);
 
-                const renderContext = { canvasContext: ctx, viewport: viewport };
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: renderViewport,
+                    transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
+                };
                 await page.render(renderContext).promise;
 
                 const textContent = await page.getTextContent();
