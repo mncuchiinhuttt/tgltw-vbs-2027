@@ -223,7 +223,8 @@ def main():
                 "asr_avg_logprob": seg.get("avg_logprob"),
                 "asset_source": "v3c_asr" if official_transcripts else "local_asr",
             }
-            indexer.index_visual_point(str(uuid.uuid4()), speech_vector, payload)
+            speech_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-speech:{video_name}:{start_t:.2f}_{end_t:.2f}"))
+            indexer.index_visual_point(speech_point_id, speech_vector, payload)
         
         # Scene Boundary Detection
         if official_shots:
@@ -290,7 +291,8 @@ def main():
                     "timestamp_end": end_sec,
                     "caption": f"Ambient sounds from scene {scene_idx}"
                 }
-                indexer.index_audio_point(str(uuid.uuid4()), clap_vector, audio_payload)
+                clap_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-audio:{video_name}:scene_{scene_idx}:{start_sec:.2f}_{end_sec:.2f}"))
+                indexer.index_audio_point(clap_point_id, clap_vector, audio_payload)
 
             # Convert numpy frames to PIL for VLMs
             pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
@@ -490,7 +492,8 @@ def main():
             "text_blob": text_blob
         }
         
-        point_id = str(uuid.uuid4())
+        frame_key = str(payload.get("frame_idx") if payload.get("frame_idx") is not None else payload.get("timestamp", 0.0))
+        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-frame:{video_name}:{frame_key}"))
         indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
 
     indexer.flush()
@@ -519,7 +522,8 @@ def main():
                 "words": seg.get("words", []),
                 "asr_avg_logprob": seg.get("avg_logprob"),
             }
-            indexer.index_visual_point(str(uuid.uuid4()), speech_vector, payload)
+            speech_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-speech:{audio_name}:{start_t:.2f}_{end_t:.2f}"))
+            indexer.index_visual_point(speech_point_id, speech_vector, payload)
             
         # Ambient embeddings (CLAP) for segments
         duration = 10.0  # segments of 10s
@@ -538,7 +542,8 @@ def main():
                     "timestamp_end": end_sec,
                     "caption": f"Ambient audio segment: {start_sec:.2f}s - {end_sec:.2f}s"
                 }
-                indexer.index_audio_point(str(uuid.uuid4()), clap_vector, audio_payload)
+                clap_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-audio:{audio_name}:{start_sec:.2f}_{end_sec:.2f}"))
+                indexer.index_audio_point(clap_point_id, clap_vector, audio_payload)
         except Exception as e:
             print(f"Error processing standalone audio CLAP: {e}")
 

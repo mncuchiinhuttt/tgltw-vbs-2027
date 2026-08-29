@@ -497,13 +497,7 @@ The answer must be grounded in this frame; do not guess.
         if not candidate_frames:
             return []
 
-        max_workers = min(len(candidate_frames), 8)
-        if max_workers > 1:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                scored = list(executor.map(_score_single_vqa_hit, candidate_frames))
-        else:
-            scored = [_score_single_vqa_hit(h) for h in candidate_frames]
-
+        scored = [_score_single_vqa_hit(h) for h in candidate_frames]
         return sorted(scored, key=lambda x: x["final_score"], reverse=True)
 
     def rerank_type3_temporal(

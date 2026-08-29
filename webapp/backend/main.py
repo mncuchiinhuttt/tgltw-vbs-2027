@@ -437,11 +437,10 @@ def get_status():
 @app.post("/api/search")
 async def run_search(request: SearchRequest):
     """
-    Execute Type 1 (Textual-KIS), Type 2 (VQA), or Type 3 (Temporal-Alignment) search.
+    Execute Type 1 (Textual-KIS), Type 2 (VQA), Type 3 (Temporal-Alignment), or Type 4 (AVS) search.
     """
-    if request.type not in [1, 2, 3]:
-        raise HTTPException(status_code=400, detail="Invalid search type. Must be 1, 2, or 3.")
-    dataset_dir = _resolve_dataset_dir(request.dataset_dir)
+    if request.type not in [1, 2, 3, 4]:
+        raise HTTPException(status_code=400, detail="Invalid search type. Must be 1, 2, 3, or 4.")
 
     try:
         # Initialize services dynamically
@@ -575,15 +574,20 @@ async def run_search(request: SearchRequest):
                     "candidate_ids": summary_ids,
                 }
 
-            top_candidates = reranker.rerank_type1(resolved_query, candidates[:10], verify=request.verify)
+            rerank_k = getattr(config, "RERANK_TOP_K", 20)
+            submission_k = getattr(config, "SUBMISSION_TOP_K", 100)
+            top_candidates = reranker.rerank_with_tail(
+                lambda c: reranker.rerank_type1(resolved_query, c, verify=request.verify),
+                candidates, rerank_k, submission_k,
+            )
             top_candidates = [
                 c for c in top_candidates
-                if c.get("rerank_score", 0.0) >= config.RERANK_SCORE_THRESHOLD
+                if c.get("rerank_score", c.get("score", 0.0)) >= config.RERANK_SCORE_THRESHOLD
             ]
             for idx, c in enumerate(top_candidates):
                 results.append({
                     "rank": idx + 1,
-                    "score": c.get("rerank_score", 0.0),
+                    "score": c.get("rerank_score", c.get("score", 0.0)),
                     "id": c["id"],
                     "payload": c["payload"],
                     "matched_via": c.get("matched_via", [])
@@ -600,8 +604,13 @@ async def run_search(request: SearchRequest):
             # VBS's live 5-7 minute task clock. Now a manual action the
             # operator triggers explicitly via /api/in-video-search once
             # they've spotted a promising video in the initial results.
-            top_candidates = reranker.rerank_type2_vqa(
-                resolved_query, sub_queries, candidates[:10], dataset_dir, verify=request.verify
+            rerank_k = getattr(config, "RERANK_TOP_K", 20)
+            submission_k = getattr(config, "SUBMISSION_TOP_K", 100)
+            top_candidates = reranker.rerank_with_tail(
+                lambda c: reranker.rerank_type2_vqa(
+                    resolved_query, sub_queries, c, dataset_dir, verify=request.verify
+                ),
+                candidates, rerank_k, submission_k,
             )
             
             for idx, c in enumerate(top_candidates):
@@ -658,6 +667,17 @@ async def run_search(request: SearchRequest):
                     }
                 })
                 
+        elif request.type == 4:
+            # Type 4: AVS (Ad-hoc Video Search) - Maximize cross-video and cross-scene diversity
+            diverse_candidates = searcher.diversify_by_scene(candidates, top_k=getattr(config, "SUBMISSION_TOP_K", 100))
+            for idx, c in enumerate(diverse_candidates):
+                results.append({
+                    "rank": idx + 1,
+                    "score": c.get("score", c.get("rrf_score", 0.0)),
+                    "id": c["id"],
+                    "payload": c["payload"],
+                    "matched_via": c.get("matched_via", [])
+                })
         interaction_log.log_query(
             "search", resolved_query, [r.get("id") for r in results],
             dres_config=_dres_config(), session_id=_dres_session_id,
