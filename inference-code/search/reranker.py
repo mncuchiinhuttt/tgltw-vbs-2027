@@ -289,7 +289,11 @@ Output ONLY valid JSON matching this format:
 {{"questions": ["...", "..."]}}
 Query: "{query}"
 JSON:"""
-        raw_output = self.vlm.generate(None, prompt).strip()
+        try:
+            raw_output = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            print(f"Verification question generation failed, skipping verification: {exc}")
+            return []
         try:
             parsed = json.loads(_strip_json_fence(raw_output))
         except (TypeError, json.JSONDecodeError):
@@ -319,12 +323,16 @@ JSON:"""
             return 1.0
         matches = 0
         for q in questions:
-            if image is not None:
-                prompt = f"Looking at this image, answer this yes/no question: {q}\nAnswer only YES or NO."
-                response = self.vlm.generate(image, prompt).strip().upper()
-            else:
-                prompt = f"Frame info: {context_text}\nBased on this info, answer this yes/no question: {q}\nAnswer only YES or NO."
-                response = self.vlm.generate(None, prompt).strip().upper()
+            try:
+                if image is not None:
+                    prompt = f"Looking at this image, answer this yes/no question: {q}\nAnswer only YES or NO."
+                    response = self.vlm.generate(image, prompt).strip().upper()
+                else:
+                    prompt = f"Frame info: {context_text}\nBased on this info, answer this yes/no question: {q}\nAnswer only YES or NO."
+                    response = self.vlm.generate(None, prompt).strip().upper()
+            except Exception as exc:
+                print(f"Verification check failed for question {q!r}: {exc}")
+                continue
             if response.startswith("YES"):
                 matches += 1
         return matches / len(questions)
@@ -355,14 +363,24 @@ Frame info: {frame_description}
 Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
 Score:"""
 
-            score_str = self.vlm.generate(None, prompt).strip()
-            score = _parse_vlm_score(score_str)
-            if score is None:
-                print(f"Warning: could not parse rerank score from VLM response: {score_str!r}. Defaulting to 0.0.")
+            try:
+                score_str = self.vlm.generate(None, prompt).strip()
+            except Exception as exc:
+                print(f"VLM rerank failed for candidate, failing closed with score 0.0: {exc}")
+                score_str = None
+
+            if score_str is None:
                 score = 0.0
                 hit_copy["rerank_score_valid"] = False
+                hit_copy["rerank_error"] = "vlm_error"
             else:
-                hit_copy["rerank_score_valid"] = True
+                score = _parse_vlm_score(score_str)
+                if score is None:
+                    print(f"Warning: could not parse rerank score from VLM response: {score_str!r}. Defaulting to 0.0.")
+                    score = 0.0
+                    hit_copy["rerank_score_valid"] = False
+                else:
+                    hit_copy["rerank_score_valid"] = True
 
             if questions:
                 verification_ratio = self.verify_candidate(None, frame_description, questions)
