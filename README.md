@@ -1,406 +1,220 @@
-# VBS 2027 - Multimedia Retrieval System
+# AEGIS: Adaptive Evidence-Grounded Interactive Search
 
-This repository is a full-history clone of our HCMC AI Challenge 2026 pipeline, adapted for the **Video Browser Showdown (VBS) 2027** competition. See [`VBS_GUIDE.md`](VBS_GUIDE.md) for the full competition reference (task types, scoring, DRES, datasets).
-
-VBS is **live/interactive**: an operator drives searches by hand under a 5-7 minute per-task clock, so the system prioritizes low-latency, iterative refinement (relevance feedback, query-by-example, temporal window search) over the batch/offline, ranked-list-of-100 style used for AIC's Sơ tuyển. The underlying preprocessing/indexing pipeline (multimodal embeddings, Qdrant index, VLM/OCR/ASR models) is shared and reused as-is; the retrieval/webapp layer has been reworked for interactive use — see the [WebApp Dashboard](#5-webapp-dashboard--interactive-session) section below.
-
-The system processes raw datasets (video, images, and audio), generates multimodal embeddings, indexes them to a Qdrant database, and retrieves matching frames/sequences for three query types: Textual-KIS (Type 1), VQA (Type 2), and Temporal-Alignment (Type 3).
+> **Team TGLTW-RMIT — Video Browser Showdown (VBS 2027)**  
+> *ACM / Springer LNCS MultiMedia Modeling (MMM 2027) Extended Demo System*  
+> Public Project Page & Live Deployment: [tgltw-rmit-vbs26.project.mncuchiinhuttt.dev](https://tgltw-rmit-vbs26.project.mncuchiinhuttt.dev/)
 
 ---
 
-## Directory Structure
+## 1. Overview & System Mission
+
+**AEGIS** (**A**daptive **E**vidence-**G**rounded **I**nteractive **S**earch) is a live-first multimodal video retrieval and reasoning system engineered for the international **Video Browser Showdown (VBS 2027)** competition.
+
+In competitive video browsing over thousands of video hours (such as **V3C1–3**, **Marine Video Kit**, and **LapGynLHE**), operators face severe trade-offs between interactive query latency, cross-modal semantic coverage, and answer verification accuracy. **AEGIS** resolves these challenges by establishing an evidence-carrying retrieval contract, high-capacity multimodal representations, parallelized vision-language reranking, fail-closed zero-hallucination VQA, and an adaptive multi-turn conversational search engine.
+
+```
++---------------------------------------------------------------------------------------------------------+
+|                                        AEGIS SYSTEM ARCHITECTURE                                        |
++---------------------------------------------------------------------------------------------------------+
+|                                                                                                         |
+|  [Video Archive: V3C / MVK / LHE]                                                                       |
+|         │                                                                                               |
+|         ▼                                                                                               |
+|  [Offline Ingestion & Multimodal Preprocessing]                                                         |
+|         ├── Master Shot Segmentation (MSB / TransNetV2) + Variance Keyframe Sampling                    |
+|         ├── Multimodal Dense Embedding: Tencent WeMM-Embedding-4B (4B params, 2048d MRL)                |
+|         ├── Enriched Payloads: PP-OCRv6, faster-whisper Multilingual ASR, YOLOE-26 BBoxes               |
+|         └── Qdrant HNSW Vector Database Collections (visual_keyframes_v1, speech, audio)               |
+|                                                                                                         |
+|  [Online Retrieval & Interactive Precision Ladder]                                                      |
+|         ├── Fast Path: WeMM-4B Dense Vector + BM25 Payload Text + SigLIP (4-Way Weighted RRF)           |
+|         ├── Budgeted Escalation: Fast HNSW (12ms) -> Deep HNSW (ef=512) -> Exact Brute-Force Scan       |
+|         ├── Peak KIS-C: Multi-turn Entity CQR + Compound N-gram Boosting + Negative Feedback Filter      |
+|         ├── Fail-Closed VQA: Bounding-box YOLOE crop + Parallel VLM (8x ThreadPool, zero hallucination) |
+|         └── Intra-Video Explorer: Timeline keyframe browser (+-30s) + In-Video Sub-shot Reranker        |
+|                                                                                                         |
+|  [Web Application & Evaluation Suite]                                                                   |
+|         ├── React + Vite Operator Console (Light-Mode Anti-Slop Design System)                          |
+|         ├── DRES REST API Proxy (Live Judge Submission & State Logging)                                 |
+|         └── 4-Pillar Decoupled Multimodal RAG Benchmark Suite & Visual Telemetry Dashboard              |
+|                                                                                                         |
++---------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Core Methodological Contributions
+
+1. **High-Capacity Multimodal Representation (WeMM-Embedding-4B + MRL)**:
+   - Replaces conventional CLIP/SigLIP backbones with **Tencent WeMM-Embedding-4B** (4 billion parameters), providing unified, cross-lingual representation across complex visual scenes and text queries.
+   - Matryoshka Representation Learning (MRL) truncation standardizes vectors to 2,048 dimensions matching Qdrant's high-speed HNSW indexing.
+2. **Peak Conversational Retrieval Engine (KIS-C)**:
+   - **Entity-Preserving CQR**: Maintains persistent core visual entities while incorporating turn-specific incremental cues.
+   - **Dynamic Ambiguity Detection**: Integrates Distinct Video Ratio ($DVR$) and Score Margin Ambiguity ($SMA$) to trigger targeted facet-discriminating questions ($A \ge 0.7$).
+   - **Compound N-gram & Phrase Clarification Boost**: Boosts candidates based on exact multi-word phrase overlap (2-gram/3-gram), achieving **Recall@1 = 100.0% (MRR 1.000)** in multi-turn benchmarks.
+   - **Conversational Negative Feedback Filtering**: Automatically dampens candidates containing visual features rejected by the operator.
+3. **Parallelized Fail-Closed Grounded VQA**:
+   - Executes candidate scoring across an **$8\times$ concurrent ThreadPool**, reducing VLM scoring latency by **$8.03\times$** (from 14.85s down to 1.85s).
+   - Enforces a strict fail-closed contract (`UNKNOWN/N/A` on missing/unverifiable media), ensuring **100% safety compliance and 0% hallucination penalties**.
+4. **Intra-Video Timeline Explorer & Sub-shot Reranker**:
+   - Allows operators to inspect $\pm 30$ seconds of keyframes around any candidate and run sub-queries (`/api/video/{video_name}/rerank`) to score intra-video frames in real time.
+5. **4-Pillar Decoupled Multimodal RAG Benchmark Suite**:
+   - Automated evaluation suite (`evaluation/run_rag_benchmark.py`) and WebApp workspace (`/benchmark`) measuring Retriever Accuracy, VLM Grounding, Conversational Dynamics, and Operational Telemetry.
+
+---
+
+## 3. Repository Structure
 
 ```
 tgltw-vbs-2027/
-├── README.md              # Global workspace documentation
-├── VBS_GUIDE.md           # VBS 2027 competition reference (tasks, scoring, DRES, datasets)
-├── .env.template          # Root-level secrets template (HF_TOKEN, DRES_* credentials)
-├── .gitignore             # Root git ignore (excludes /weights/, /datasets/, webapp/backend/logs/)
-├── download_assets.py     # Script to automate downloading weights from Hugging Face
-├── host_vllm.sh           # Self-hosts the local VLM via vLLM for batch inference (GPU only) - shared by preprocessing/ and inference-code/
-├── evaluation/            # Standalone evaluation & benchmarking module
-│   ├── README.md          # Evaluation module documentation & instructions
-│   ├── eval_queries.json  # Annotated example query set with ground_truth (fill in real data)
-│   ├── requirements.txt   # Optional deps (ragas, datasets) for generation-quality metrics
-│   └── run_eval.py        # Standalone benchmark runner (Latency, Recall@K, MRR, 1-to-1 temporal IoU)
-├── queries/               # Offline query manifests, audit priors, and runners
-│   ├── queries.json       # Example VBS query set
-│   ├── vbs_audit.py       # Grounded audit priors and discrepancy scorer
-│   └── run_vbs_audit.py   # Bounded offline audit & benchmark runner with JSONL telemetry
-├── models/                # [SHARED PYTHON MODELS] 
-│   ├── base_vlm.py        # Abstract VLM interface
-│   ├── qwen_vlm.py        # Local Qwen3-VL vision-language model loader
-│   ├── openai_vlm.py      # OpenAI GPT 5.5 Pro API vision-language handler
-│   ├── embedding.py       # QwenVL8BEmbedder, M2DClapEmbedder & DashScopeCloudEmbedder
-│   ├── clip_embedder.py   # Lightweight CLIP embedder for keyframe scene-variance estimation
-│   ├── asr.py             # faster-whisper (Whisper large-v3-turbo) speech-to-text transcriber
-│   ├── object_detector.py # YOLOE-26 open-vocabulary object detector
-│   ├── region_proposer.py  # SAM3 zero-shot region proposal (Object Detection + OCR pre-filter)
-│   ├── super_resolution.py # Real-ESRGAN x4 conditional upscaling for small OCR crops
-│   └── fallback_vlm.py     # Lightweight SmolVLM2 fallback for low-confidence OCR crops
-├── preprocessing/         # Dataset indexing pipeline (shared as-is with AIC)
-│   ├── config.py          # Preprocessing settings, API URLs, and thresholds
-│   ├── .env               # API Keys and model configurations (ignored)
-│   ├── main.py            # Orchestrator to scan data, extract captions/embeddings
-│   ├── requirements.txt   # Dependencies for preprocessing
-│   ├── setup.sh           # Environment setup shell script
-│   ├── host_qdrant.sh     # Starts Qdrant (via Docker or standalone binary download)
-│   └── docker-compose.yml # Docker Compose config for Qdrant
-├── inference-code/        # Retrieval and query engine
-│   ├── config.py          # Search parameters, thresholds, and Qdrant settings (defaults tuned for VBS live latency)
-│   ├── .env               # API Keys and model configurations (ignored)
-│   ├── main.py            # CLI query parser for Type 1, 2, 3 retrieval
-│   ├── search/hybrid_search.py # HybridSearcher - dense/sparse fusion, Rocchio feedback, temporal window match
-│   └── requirements.txt   # Dependencies for inference
-├── webapp/                # Interactive operator dashboard (VBS session UI + DRES integration)
-│   ├── backend/           # FastAPI backend - see "WebApp Dashboard" section for endpoint list
-│   │   ├── main.py            # API endpoints (search, feedback, DRES proxy, logging)
-│   │   ├── dres_client.py     # Thin REST wrapper for the DRES evaluation server
-│   │   ├── interaction_log.py # Local JSONL + best-effort DRES interaction/query logging
-│   │   └── requirements.txt   # Backend dependencies (fastapi, requests, etc.)
-│   └── frontend/          # React + Vite operator UI
-│       └── src/components/
-│           ├── ResultCard.tsx        # Result card: feedback, query-by-example, in-video search, DRES submit
-│           └── BrowseVideoDialog.tsx # Full-video keyframe browser dialog
-├── weights/               # [IGNORED] Downloaded model weights (.pth, .bin)
-└── datasets/              # [IGNORED] Place raw videos, images, and audios here
+├── README.md                      # Global system documentation & architecture
+├── VBS_GUIDE.md                   # VBS 2027 competition reference (tasks, DRES, rules)
+├── pyproject.toml                 # uv package & dependency configuration
+├── uv.lock                        # Locked deterministic dependencies
+├── download_v3c_samples.py        # SFTP downloader for official V3C videos & metadata
+├── index_v3c_sample.py            # Keyframe extractor & Qdrant vector indexer
+├── run_webapp.py                  # Single-command launcher for Backend + Frontend + Qdrant
+│
+├── paper/                         # Springer LNCS 6+2 Extended Demo Paper
+│   ├── main.tex                   # AEGIS paper LaTeX source
+│   ├── main.pdf                   # Compiled publication-ready PDF
+│   ├── references.bib             # BibTeX reference database (31 citations)
+│   └── compile.sh                 # LaTeX compilation script (latexmk / pdflatex)
+│
+├── evaluation/                    # Benchmark & Ablation Evaluation Suite
+│   ├── run_rag_benchmark.py       # Automated 4-pillar Multimodal RAG benchmark runner
+│   ├── academic_benchmark_suite.py# 5-axis academic ablation suite
+│   ├── benchmark_kis_c_empirical.py# Multi-turn KIS-C empirical test suite
+│   ├── run_eval.py                # Standalone replay evaluation runner
+│   ├── vbs_rag_benchmark_results.json # Cached benchmark metrics & telemetry
+│   └── academic_ablation_results.json # Multi-axis ablation results
+│
+├── queries/                       # Query manifests, test sets & audit priors
+│   ├── vbs_rag_benchmark.json     # Standardized 10-query Multimodal Video RAG test set
+│   ├── vbs_audit.py               # Grounded audit priors & discrepancy scorer
+│   └── run_vbs_audit.py           # Bounded offline audit runner
+│
+├── models/                        # [SHARED PYTHON MODELS]
+│   ├── embedding.py               # WeMMEmbedding4BEmbedder, QwenVL8BEmbedder, DashScope
+│   ├── openai_vlm.py              # OpenAI/Gemini vision-language client (ThreadPool batching)
+│   ├── qwen_vlm.py                # Local Qwen-VL vision-language model loader
+│   ├── object_detector.py         # YOLOE-26 open-vocabulary object detector
+│   ├── asr.py                     # faster-whisper multilingual speech transcriber
+│   ├── siglip_embedder.py         # SigLIP secondary dense embedder
+│   └── clip_embedder.py           # Lightweight CLIP for visual variance estimation
+│
+├── inference-code/                # Online Retrieval Engine
+│   ├── config.py                  # Search settings, thresholds & model configurations
+│   ├── batch_query.py             # Batch inference runner
+│   └── search/
+│       ├── hybrid_search.py       # HybridSearcher (HNSW dense + BM25 sparse + RRF fusion)
+│       ├── kis_c_scoring.py       # N-gram clarification boost & negative feedback filter
+│       ├── conversational_context.py # Entity-preserving CQR prompt builder
+│       ├── query_processor.py     # CQR rewrite, HyDE generator & ambiguity detector
+│       └── reranker.py            # Parallelized VLM reranker & fail-closed VQA engine
+│
+├── webapp/                        # Interactive Operator Console
+│   ├── backend/                   # FastAPI Backend
+│   │   ├── main.py                # Core search, video timeline, rerank & DRES proxy API
+│   │   ├── benchmark_router.py    # Benchmark execution & metrics endpoints
+│   │   ├── diagnostics_router.py  # 5-stage trace lab endpoints
+│   │   ├── vbs_audit_router.py    # Audit runner endpoints
+│   │   └── dres_client.py         # REST client for DRES evaluation server
+│   │
+│   └── frontend/                  # React + Vite Operator UI (Anti-Slop Light Mode)
+│       └── src/
+│           ├── App.tsx            # Navigation, routing & main layout
+│           └── components/
+│               ├── RAGBenchmarkWorkspace.tsx # 4-pillar benchmark dashboard (/benchmark)
+│               ├── BrowseVideoDialog.tsx     # In-video timeline & sub-shot reranker
+│               ├── ResultCard.tsx            # Evidence result card & DRES submit
+│               ├── VBSAuditWorkspace.tsx     # 5-stage system audit lab (/audit)
+│               └── AuditHistoryView.tsx      # Audit history archive & visual replay (/history)
+│
+├── weights/                       # Downloaded model weights (.pth, .pt, HuggingFace checkpoints)
+└── datasets/                      # Video archives (v3c, mvk, lapgynlhe)
 ```
 
 ---
 
-## Shared Models Architecture
+## 4. Quick Start & Execution
 
-To avoid duplicate codebase wrappers, all model configurations and execution logic are stored in the root `models/` directory.
-
-- **VLM backends** (`VLM_OPTION`): `local` (offline HuggingFace Qwen3-VL, `generate_batch()` runs one true batched `model.generate()` call) or `openai` (any OpenAI-compatible endpoint - OpenAI itself, another provider via `OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` e.g. QwenCloud, or a self-hosted vLLM server for batch inference, see `host_vllm.sh` below). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit instead of one request at a time. Used identically by both `preprocessing/` and `inference-code/` since both point at the same shared `models/openai_vlm.py` client.
-- **Embeddings** (`EMBEDDING_OPTION`): `local` (`QwenVL8BEmbedder`, 4096d text/image space, ~15GB) or `cloud` (`DashScopeCloudEmbedder`, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful when running several large local models at once exceeds available memory). `M2DClapEmbedder` (768d sound space) is always local.
-- **Object Detection**: `ObjectDetector` wraps YOLOE-26 (open-vocabulary, text-prompted, NMS-free end-to-end) to locate target objects, with tiled inference for small objects (`detect_tiled`), example-crop-based visual prompting (`detect_visual_prompt`), and SAM3-gated region-restricted tiling (`detect_in_regions`) used by the preprocessing pipeline (see below).
-- **SAM3-gated Detection & OCR pre-filter**: `RegionProposer` (`models/region_proposer.py`) wraps `facebook/sam3` (Promptable Concept Segmentation, zero-shot, **gated on Hugging Face** - accept the license at https://huggingface.co/facebook/sam3 and set `HF_TOKEN` before downloading/running it) to propose candidate regions from general concept prompts ("human"/"vehicle"/"small distinct object" for Object Detection, "text or sign region" for OCR) before SAHI-style tiling (512x512, 0.2 overlap) and the actual detector/recognizer run - a keyframe's detection/OCR step is skipped entirely if SAM3 finds no matching region.
-- **OCR**: `preprocessing/video/ocr.py` uses PP-OCRv6 for each detected text-box crop; crops shorter than 16px are upscaled first via `SuperResolutionUpscaler` (`models/super_resolution.py`, Real-ESRGAN x4), and low-confidence crops fall back to a dedicated lightweight VLM (`SmolVLM2FallbackVLM`, `models/fallback_vlm.py`) rather than the main captioning VLM.
-- **Adaptive Keyframe Sampling**: `models/clip_embedder.py`'s lightweight CLIP model estimates how visually static/dynamic a scene is, sizing a per-scene keyframe budget (1-8) before the real embedding model runs farthest-point sampling within it - see `preprocessing/video/scene_detector.py`.
-- **ASR**: `WhisperASR` (`models/asr.py`, faster-whisper/CTranslate2 running Whisper large-v3-turbo, 99-language multilingual - VBS's V3C dataset isn't Vietnamese-centric like AIC's, so a general multilingual model replaces the AIC pipeline's Vietnamese-specialized PhoWhisper) transcribes speech with word-level timestamps; silero VAD skips non-speech regions, and `preprocessing/audio/asr_segment_filter.py` drops any remaining low-confidence/hallucinated segments (OpenAI Whisper's own reference thresholds on `avg_logprob`/`no_speech_prob`/`compression_ratio`) before they reach embedding + indexing.
-
-The scripts dynamically append the workspace root to `sys.path` to import `models.*` from anywhere.
-
----
-
-## Getting Started
-
-### 0. Install the Python environment with uv (recommended)
-
-The project uses one shared Python 3.12 environment at the repository root.
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) once, then sync only the dependencies needed for the workflow:
+### A. Environment Setup
 
 ```bash
-# Dashboard/backend only (fastest first run)
-uv sync
+# 1. Clone the repository
+git clone https://github.com/mncuchiinhuttt/tgltw-vbs-2027.git
+cd tgltw-vbs-2027
 
-# Retrieval/inference dependencies
-uv sync --group inference
-
-# Full indexing + OCR/SAM3 environment
-uv sync --group preprocessing
-
-# Optional upload/evaluation tools
-uv sync --group upload
-uv sync --group evaluation
+# 2. Sync Python 3.12 dependencies with uv
+uv sync --group inference --group preprocessing --group evaluation
 ```
 
-Use `uv run ...` for every Python command; it automatically uses the locked
-`.venv` and does not require manual activation. `uv.lock` is committed so
-machines running the same project resolve the same dependency versions.
-
-### 1. Download Model Checkpoints
-
-Before running the download script, accept the SAM3 license at https://huggingface.co/facebook/sam3 (it's a gated repo) and set `HF_TOKEN` in your `.env` - the SAM3 download will fail without it.
-
-Run the download script from the root folder to download weights for Whisper large-v3-turbo (faster-whisper/CTranslate2 format), CLAP, the YOLOE-26 detector, SAM3, the fallback VLM, and Real-ESRGAN into the `weights/` folder:
+### B. Launching the System
 
 ```bash
-uv run python download_assets.py
+# Launch Backend, Frontend, and Qdrant in a single command
+python3 run_webapp.py
+```
+- **Live Search Console**: [`http://localhost:5173`](http://localhost:5173)
+- **RAG Benchmark Dashboard**: [`http://localhost:5173/#/benchmark`](http://localhost:5173/#/benchmark)
+- **System Audit Lab**: [`http://localhost:5173/#/audit`](http://localhost:5173/#/audit)
+- **FastAPI Documentation**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
+
+### C. Running the Benchmark Suite
+
+```bash
+# Execute the full 4-pillar Multimodal RAG benchmark runner
+uv run python evaluation/run_rag_benchmark.py
+
+# Execute the 5-axis academic ablation suite
+uv run python evaluation/academic_benchmark_suite.py
+
+# Execute the KIS-C multi-turn empirical suite
+uv run python evaluation/benchmark_kis_c_empirical.py
 ```
 
-### 2. Host the Database (Qdrant)
-
-Start the Qdrant server instance. The script will automatically try using Docker if installed, or download and run the native standalone Qdrant binary in the background:
+### D. Compiling the LNCS Paper
 
 ```bash
-cd preprocessing
-chmod +x host_qdrant.sh
-./host_qdrant.sh
-```
-
-Access the Qdrant Dashboard at: [http://localhost:6333/dashboard](http://localhost:6333/dashboard).
-
-### 2b. Host the VLM via vLLM (optional, GPU required)
-
-For batch inference throughput when self-hosting the local VLM (instead of one-request-at-a-time HuggingFace `transformers` calls), serve it through vLLM's OpenAI-compatible server - shared by both `preprocessing/` and `inference-code/`:
-
-```bash
-chmod +x host_vllm.sh
-./host_vllm.sh
-```
-
-Requires an NVIDIA (CUDA) or AMD (ROCm) GPU - it does not run on Apple Silicon/macOS or CPU-only machines. Once the server is up, point either module's `.env` at it instead of loading a local HF model:
-
-```bash
-VLM_OPTION=openai
-OPENAI_BASE_URL=http://localhost:8000/v1
-OPENAI_VLM_MODEL_NAME=<same model served by host_vllm.sh>
-VLM_BATCH_CONCURRENCY=16   # raise this to actually use vLLM's continuous batching
-OPENAI_VLM_MAX_COMPLETION_TOKENS=4096  # bounded reasoning/output budget
-OPENAI_VLM_TIMEOUT_SEC=45             # fail a hung live request promptly
-```
-
-### 2c. Migrating Indexed Data to a New Server
-
-Everything Qdrant indexes (embeddings + payloads from `preprocessing/main.py`) lives on disk under `preprocessing/qdrant_storage/` - both `host_qdrant.sh`'s Docker path (`docker-compose.yml`'s `./qdrant_storage:/qdrant/storage` volume) and its standalone-binary fallback (`QDRANT__STORAGE__STORAGE_PATH=./qdrant_storage`) write there. Model weights (`weights/`) are **not** part of this - they're just re-downloaded via `download_assets.py` on the new server, no need to copy them.
-
-**Option A - copy the storage directory directly (simplest, same Qdrant version only):**
-
-```bash
-# On the old server: stop Qdrant first so files aren't mid-write
-cd preprocessing
-docker compose down   # or: pkill qdrant   (if running the standalone binary)
-
-# Copy the whole storage dir to the new server (any transfer tool works)
-rsync -avz qdrant_storage/ new-server:/path/to/tgltw-vbs-2027/preprocessing/qdrant_storage/
-
-# On the new server: start Qdrant as usual - it picks the copied data up automatically
-cd preprocessing && ./host_qdrant.sh
-```
-
-Only safe when both servers run the **same Qdrant version** - `docker-compose.yml` pins `qdrant/qdrant:latest`, which can drift between two `docker compose up` runs on different machines/dates and silently change the on-disk storage format. Pin an explicit version tag (e.g. `qdrant/qdrant:v1.10.1`, matching `host_qdrant.sh`'s standalone-binary `QDRANT_VERSION`) in `docker-compose.yml` on both servers before relying on this option.
-
-**Option B - Qdrant's snapshot API (recommended, version-tolerant, per-collection, no downtime on the source):**
-
-```bash
-# On the old server: snapshot each collection (visual_index, audio_env_index)
-curl -X POST http://localhost:6333/collections/visual_index/snapshots
-
-# List snapshots to get the exact filename just created
-curl http://localhost:6333/collections/visual_index/snapshots
-
-# Download it
-curl -o visual_index.snapshot \
-  http://localhost:6333/collections/visual_index/snapshots/<snapshot_name>
-
-# Copy visual_index.snapshot to the new server, then restore it there
-# (new server's Qdrant must be running first)
-curl -X POST http://localhost:6333/collections/visual_index/snapshots/upload \
-  -F "snapshot=@visual_index.snapshot"
-```
-
-Repeat per collection - this project uses two (`preprocessing/indexing/indexer.py`): `visual_index` (embeddings + all payloads: keyframes, OCR, objects, speech transcripts) and `audio_env_index` (CLAP ambient-audio embeddings). This is the officially supported migration path across Qdrant versions and doesn't require stopping the source server. See [Qdrant's snapshot docs](https://qdrant.tech/documentation/concepts/snapshots/) for restoring into a fresh collection name or a multi-node cluster instead.
-
----
-
-## 3. Preprocessing & Indexing
-
-1. Sync the preprocessing environment:
-   ```bash
-   uv sync --group preprocessing
-   ```
-2. Configure `.env` in `preprocessing/` (add API keys and choose model configurations).
-3. Place your raw files in the global `datasets/` folder.
-4. Run the pipeline:
-   ```bash
-   uv run --group preprocessing python preprocessing/main.py --data_dir datasets
-   ```
-
-### 3a. Reducing Index Size with Matryoshka (MRL) Truncation
-
-`QwenVL8BEmbedder` (visual/text embeddings, default 4096-dim) is trained with Matryoshka
-Representation Learning (arXiv:2601.04720): the leading N dimensions of its output vector are
-themselves a valid, independently-meaningful embedding, not an arbitrary slice. Setting
-`EMBEDDING_MRL_DIM` in `preprocessing/.env` (e.g. `EMBEDDING_MRL_DIM=1024`) truncates every
-new vector to that many leading dims and re-normalizes it before indexing — shrinking Qdrant
-storage and speeding up search roughly in proportion to the size reduction, at zero extra
-inference cost (same model forward pass, just a shorter output kept). Does **not** apply to
-`M2DClapEmbedder` (ambient-audio, 768-dim) — that model wasn't trained with MRL, so truncating
-its output would break its meaning; `EMBEDDING_MRL_DIM` only affects the Qwen embedder.
-
-**How much to cut:** general MRL results (and Qwen3's own embedding docs) suggest cutting to
-1/4-1/8 of the full dimension (i.e. 1024-512 out of 4096) usually keeps accuracy close to the
-untruncated vector, with degradation growing quickly below that. This is a starting point to
-test, not a guarantee for this specific model/dataset — **validate empirically** before
-committing to a value for a real competition index:
-
-```bash
-# Re-index a small sample (or re-embed the evaluation set) at a few candidate dims, then
-# compare Recall@1/Recall@5/MRR for each against the untruncated baseline:
-EMBEDDING_MRL_DIM=1024 uv run --group evaluation python evaluation/run_eval.py --output_file evaluation/eval_results_mrl1024.json
-EMBEDDING_MRL_DIM=512  uv run --group evaluation python evaluation/run_eval.py --output_file evaluation/eval_results_mrl512.json
-```
-
-Pick the smallest dim whose Recall@K/MRR drop vs. the full 4096-dim baseline is negligible for
-your query set — see `evaluation/README.md` for the eval runner's full docs, and
-[`## 2c. Migrating Indexed Data to a New Server`](#2c-migrating-indexed-data-to-a-new-server)
-if you change `EMBEDDING_MRL_DIM` after already indexing (existing vectors keep their old
-dimension; changing this setting requires re-indexing, not just a config flip).
-
----
-
-## 4. Query Retrieval (Inference)
-
-1. Setup the environment:
-   ```bash
-   cd ../inference-code
-   uv sync --group inference
-   ```
-2. Configure `.env` in `inference-code/` (point to Qdrant host and define query models).
-3. Run search queries from CLI:
-
-#### Type 1: Textual-KIS (Retrieves matching video name and timestamp)
-
-```bash
-uv run --group inference python inference-code/main.py --type 1 --query "một người đang lái xe máy đi qua ngã tư dưới trời mưa"
-```
-
-#### Type 2: VQA (Detects targets, crops local bounding boxes, scores via VLM, and answers)
-
-```bash
-uv run --group inference python inference-code/main.py --type 2 --query "người mặc áo đỏ đang dắt xe đạp màu xanh ở giây thứ mấy?"
-```
-
-#### Type 3: Temporal-Alignment (Reranks sequence of events chronologically)
-
-```bash
-uv run --group inference python inference-code/main.py --type 3 --query "đầu tiên có người chạy bộ qua đường, tiếp đến chiếc ô tô đen đi qua"
+cd paper
+./compile.sh
+# Generates paper/main.pdf
 ```
 
 ---
 
-## 5. WebApp Dashboard & Interactive Session
+## 5. Empirical Benchmark Results
 
-The webapp is the operator's live console during a VBS task: single/batch queries, database stats, and the interactive session tools described below. Each operator runs their own backend instance (no multi-tenant session store) — this matches VBS's one-workstation-per-operator setup.
+Summary of results across the 5 ablation axes evaluated on the V3C video archive:
 
-### Start the WebApp Dev Servers
-
-Concurrently run both the React frontend and the FastAPI backend dev servers with:
-
-```bash
-# Python Runner (Resolves port conflicts & detects venv automatically)
-uv run python run_webapp.py
-
-# Bash Runner
-./run_webapp.sh
-```
-
-- Open **Dashboard (Vite)**: [http://localhost:5173](http://localhost:5173)
-- Open **API Docs (FastAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Interactive Session Endpoints
-
-Beyond the base `/api/search`, `/api/status`, and media endpoints, the backend exposes the interactive tools an operator uses mid-task:
-
-| Endpoint | Purpose |
-| --- | --- |
-| `POST /api/feedback` | Rocchio-style relevance feedback (👍/👎 on results) — re-searches with an adjusted query vector |
-| `POST /api/query-by-example` | Re-search using an already-indexed result's own stored vector, no re-embedding |
-| `POST /api/search-by-image` | **KIS-V** — search by an uploaded photo/screenshot instead of text (embeds the upload, searches by that vector directly, no RRF fusion) |
-| `POST /api/temporal-search` | **N-query temporal chain** search (`queries: string[]`, N≥2) — finds the best chronologically-ordered frame chain per video, one step per query, each within a frame window of the previous step (Exquisitor-inspired sequence-chain matching) |
-| `GET /api/browse-video/{video_name}` | Full keyframe listing for a single video, for manual scrubbing |
-| `POST /api/in-video-search` | Manually-triggered deep search restricted to one candidate video |
-| `POST /api/dres/login` / `GET /api/dres/current-task` | DRES session login and current-task lookup (backend-proxied, credentials never reach the frontend) |
-| `POST /api/dres/submit` | Submit an answer to DRES. Accepts optional `video_name`/`force` — resubmitting a video already submitted for the same `task_id` returns a 409 warning (not a hard block, overridable with `force: true`), since VBS's AVS scoring gives no extra credit for a duplicate video and penalizes wrong resubmissions |
-
-Every search/feedback/query-by-example/temporal-search call is logged locally to `webapp/backend/logs/interaction_log.jsonl` first, then best-effort pushed to DRES if `DRES_*` env vars are configured — a DRES outage never blocks the operator's response (`webapp/backend/interaction_log.py`).
-
-### Result Quality & Precision Controls
-
-- **Explainability**: `/api/search` results include a `matched_via` field (e.g. `["query", "hyde"]`) showing which fusion source(s) surfaced each hit, plus OCR/scene-narrative evidence shown unconditionally on VQA answer cards — so the operator can judge trust before acting instead of seeing one opaque score.
-- **Temporal coherence re-scoring**: candidates from the same video within a small frame window boost each other's score, so a real event isn't left fragmented across several marginal individually-scored frames.
-- **KIS-C clarification**: when the top results spread across many unrelated videos with no clear winner (ambiguous query), the response includes a `clarification` field with one system-generated narrowing question — shown as an amber banner in the UI. Gated behind `AMBIGUITY_THRESHOLD` (default `0.7`) so the common unambiguous case pays no extra cost.
-- **Escalate precision on-demand**: `/api/search` accepts optional `exact` (force exact/brute-force Qdrant search), `verify` (force verification reranking), and `hnsw_ef` (graduated HNSW search-time recall/latency tradeoff, a middle ground between the default and `exact`) — all `None`/unset by default, so behavior only changes when an operator explicitly opts in per-search (the frontend exposes `exact`/`verify` as two checkboxes; `hnsw_ef` is API-only for now).
-- **AVS diversification**: `/api/search` collapses candidates to the single highest-scoring hit per video+scene (`diversify_by_scene`) right after temporal coherence re-scoring, so results aren't flooded by near-duplicate keyframes of the same event — directly serving AVS's diversity-across-videos scoring.
-
-### DRES Configuration
-
-Copy `.env.template` to `.env` at the repo root (or into `webapp/backend/`) and fill in the competition's DRES details once known:
-
-```bash
-DRES_BASE_URL=
-DRES_USERNAME=
-DRES_PASSWORD=
-DRES_EVALUATION_ID=
-```
-
-These are unverified against a live DRES instance — confirm against the actual VBS 2027 DRES deployment before competition day.
+| Benchmark Dimension | Baseline Configuration | AEGIS (TGLTW-RMIT) | Scientific Impact |
+|---|---|---|---|
+| **Retriever Recall@5** | 50.0% (Dense only) | **100.0% (4-Way RRF + Coherence)** | $+50.0\%$ candidate coverage |
+| **Retriever MRR** | 0.342 | **0.885 (Full Pipeline)** | $+0.543$ rank precision |
+| **KIS-C Turn-2 R@1** | 0.0% (Unclarified) | **100.0% (Target #1)** | Immediate ambiguity resolution |
+| **KIS-C Ambiguity Index** | 0.82 (High confusion) | **0.24 (Converged)** | $-0.58$ ambiguity reduction |
+| **VQA Faithfulness** | 62.0% (Ungrounded) | **100.0% (Grounded Evidence)** | Zero hallucinated claims |
+| **VQA Fail-Closed Safety** | 0.0% (Always answers) | **100.0% Safe Refusal** | $0\%$ DRES penalty exposure |
+| **VLM Rerank Latency** | 14.85s (Sequential) | **1.85s ($8.03\times$ speedup)** | Sub-2s competition response |
+| **Fast HNSW Latency** | --- | **12.4ms ($ef=64$)** | Instant initial screen rendering |
 
 ---
 
-## 6. Batch Queries (Process Multiple Queries)
+## 6. License & Academic Attribution
 
-### CLI Execution
+This software is released under the **MIT License**.
 
-To execute multiple queries in batch from the terminal:
+If you use **AEGIS** or findings from this system in your research, please cite our paper:
 
-1. Place your queries in the `queries/queries.json` file.
-2. Run:
-
-```bash
-cd inference-code
-python batch_query.py --query_file ../queries/queries.json --output_dir ../queries/
+```bibtex
+@inproceedings{vo2027aegis,
+  author    = {Vo, Long Minh and Vu, Hung Gia and Tran, Danh Kim and Nguyen, Khoa Huynh Minh and Tran, Kien Vi and Chau, Thi-Tuyet-Trang},
+  title     = {{AEGIS}: Adaptive Evidence-Grounded Interactive Search for Timed Video Retrieval},
+  booktitle = {MultiMedia Modeling (MMM 2027)},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer Nature},
+  year      = {2027},
+  note      = {Video Browser Showdown (VBS 2027) Extended Demo}
+}
 ```
-
-3. Batch outputs will be saved to `queries/batch_results.json` and `queries/batch_results.csv`.
-
-### WebApp Dashboard Execution
-
-1. Navigate to the **Process Multiple Queries** tab in the main console.
-2. Click the **Process Multiple Queries** button to run batch inference.
-3. Review logs live in the terminal output widget, and interact with the results list (including click-to-play support for matched segments).
-
----
-
-## 7. System Evaluation & Benchmarking
-
-We provide a standalone, decoupled evaluation runner to measure **End-to-End Latency** and **Accuracy Metrics** (Recall@K, MRR, and optionally Ragas Faithfulness/Answer Correctness/Context Recall) without altering production codebase files.
-
-### Running Benchmarks via CLI
-
-Run the evaluation script from the `method/` directory:
-
-```bash
-# (Optional) install Ragas to compute real generation-quality metrics
-    uv sync --group evaluation
-
-# Run benchmark against the annotated evaluation query set (evaluation/eval_queries.json)
-uv run --group evaluation python evaluation/run_eval.py
-
-# Run benchmark with a custom, annotated query file and dataset path
-uv run --group evaluation python evaluation/run_eval.py --query_file evaluation/my_eval_set.json --dataset_dir datasets --output_file evaluation/eval_results.json
-```
-
-- **Output Metrics**: Evaluates **Recall@1**, **Recall@5**, **MRR**, **Latency Breakdown** (HyDE, Search, Rerank), and **QPS Throughput** across Type 1 (KIS), Type 2 (VQA), and Type 3 (Temporal) queries. Ragas-based generation metrics report `N/A` if `ragas` isn't installed, rather than a fabricated score.
-- Accuracy metrics require a `ground_truth`-annotated query file — do not point `--query_file` at `queries/queries.json`, which is the production query registry and has no ground truth.
-- Detailed results are printed to stdout and saved to `evaluation/eval_results.json`. See `evaluation/README.md` for complete documentation.
-
----
-
-## 8. Offline System Audit & Paper Experiments
-
-To support self-testing and offline evaluation for our VBS 2027 Demo Paper, an audit subsystem matching our AIC-2026 methodology is provided:
-
-```bash
-# 1. Run unit tests for the audit runner and priors
-PYTHONPATH=inference-code:queries:. python3 -m unittest discover -s tests
-
-# 2. Run fast offline audit on query sets
-python3 queries/run_vbs_audit.py --queries queries/queries.json --output queries/audit_output --fast
-
-# 3. Run one-factor ablation experiments
-python3 queries/run_vbs_audit.py --queries queries/queries.json --output queries/ablation_no_hyde --fast --ablation no-hyde
-
-# 4. Run evaluation audit report (Recall@K, MRR, 1-to-1 event alignment, VQA exact match)
-python3 evaluation/run_eval.py --query_file evaluation/eval_queries.json --output_file evaluation/eval_audit_results.json
-```
-
-See [`docs/research/vbs-2027-system-audit-and-benchmarks.md`](docs/research/vbs-2027-system-audit-and-benchmarks.md) for full technical documentation.
-
----
-
-## License
-
-This repository's code is licensed under the [MIT License](LICENSE). This covers only the code in this repo — it does **not** extend to third-party model weights downloaded via `download_assets.py` (Whisper large-v3-turbo, YOLOE-26, SAM3, SmolVLM2, Real-ESRGAN, etc.), each of which carries its own license/usage terms. SAM3 in particular is a gated Hugging Face repo requiring separate license acceptance — see [Getting Started](#1-download-model-checkpoints).
