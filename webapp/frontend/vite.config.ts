@@ -14,6 +14,11 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     allowedHosts: ["tgltw.mncuchiinhuttt.dev"],
+    fs: {
+      strict: true,
+      allow: [path.resolve(__dirname, ".")],
+      deny: ["/etc/**", "/proc/**", "/sys/**", "/root/**"],
+    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8000",
