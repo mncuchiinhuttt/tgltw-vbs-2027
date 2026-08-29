@@ -430,13 +430,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 font-mono">
-                    <input type="text" id="sectionInput" placeholder="Section (e.g. Sec 3, Method)" class="flex-1 bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan" />
-                    <input type="text" id="pageInput" placeholder="Page" class="w-16 bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan text-center" />
-                </div>
-
-                <textarea id="commentTextInput" placeholder="Write feedback, revision requirements, or suggestions..." class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg p-2.5 text-xs min-h-[50px] resize-y focus:outline-none focus:border-cyber-cyan leading-relaxed"></textarea>
-                
+                <textarea id="commentTextInput" placeholder="Write feedback, instructions, or suggestions for the authors..." class="w-full bg-slate-900 text-slate-100 border border-slate-800 rounded-lg p-3 text-xs min-h-[90px] max-h-[220px] resize-y focus:outline-none focus:border-cyber-cyan leading-relaxed font-sans"></textarea>
                 <button onclick="submitComment()" class="w-full bg-rmit-red hover:bg-rmit-redDark active:scale-[0.99] text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-md glow-red transition font-mono uppercase tracking-wider">
                     <i data-lucide="send" class="w-3.5 h-3.5"></i>
                     <span>Post Comment</span>
@@ -953,7 +947,6 @@
                     // Smooth calibrated delta for mouse wheel and pinch
                     const delta = -e.deltaY * 0.0025;
                     const newScale = Math.max(0.6, Math.min(3.0, pdfScale + delta));
-                    
                     if (Math.abs(newScale - pdfScale) > 0.01) {
                         pdfScale = newScale;
                         document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
@@ -980,7 +973,6 @@
                             document.getElementById("activeQuoteText").textContent = activeSelectedQuote;
                             document.getElementById("activeQuotePreview").classList.remove("hidden");
                             document.getElementById("activeQuotePreview").classList.add("flex");
-                            document.getElementById("pageInput").value = activeSelectedPage;
                         }
                     }
                 }, 20);
@@ -1240,8 +1232,6 @@
         async function submitComment() {
             const author = document.getElementById("authorInput").value.trim() || "Advisor";
             const type = document.getElementById("typeSelect").value;
-            const section = document.getElementById("sectionInput").value.trim();
-            const page = document.getElementById("pageInput").value.trim();
             const text = document.getElementById("commentTextInput").value.trim();
 
             if (!text) {
@@ -1255,9 +1245,7 @@
                 id: "c-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
                 author,
                 type,
-                section,
-                page,
-                quote: activeSelectedQuote,
+                page: activeSelectedQuote ? activeSelectedPage : "",
                 text,
                 createdAt: new Date().toISOString(),
                 resolved: false
@@ -1272,8 +1260,6 @@
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById("commentTextInput").value = "";
-                    document.getElementById("sectionInput").value = "";
-                    clearActiveQuote();
                     await fetchComments();
                 } else {
                     alert("Failed to post comment");
