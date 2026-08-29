@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LaTeX Live Studio - TGLTW-RMIT VBS 2027</title>
+    <title>AEGIS LaTeX Studio - RMIT Vietnam & VBS 2027</title>
     
-    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <!-- Google Fonts: JetBrains Mono & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,17 +18,20 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ["Inter", "sans-serif"],
+                        sans: ["Outfit", "sans-serif"],
                         mono: ["JetBrains Mono", "monospace"],
                     },
                     colors: {
-                        brand: {
-                            50: "#f0f9ff",
-                            100: "#e0f2fe",
-                            400: "#38bdf8",
-                            500: "#0ea5e9",
-                            600: "#0284c7",
-                            700: "#0369a1",
+                        rmit: {
+                            red: "#E60028",
+                            redDark: "#B80020",
+                            blue: "#000054",
+                            yellow: "#FFC700",
+                        },
+                        cyber: {
+                            cyan: "#00F0FF",
+                            cyanDark: "#00B8C4",
+                            emerald: "#10B981",
                         }
                     }
                 }
@@ -59,11 +62,10 @@
             pointer-events: none;
         }
 
-        /* Fix Ace Editor Monospace Cursor Misalignment */
         #aceEditor {
-            font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            font-family: "JetBrains Mono", monospace !important;
             font-size: 13px !important;
-            line-height: 1.6 !important;
+            line-height: 1.65 !important;
             letter-spacing: normal !important;
         }
 
@@ -71,59 +73,43 @@
         #aceEditor .ace_line,
         #aceEditor .ace_cursor,
         #aceEditor .ace_gutter {
-            font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            font-family: "JetBrains Mono", monospace !important;
             letter-spacing: normal !important;
             font-variant-ligatures: none !important;
         }
 
-        /* Resizer Bars */
         .resizer-x {
-            width: 6px;
-            height: 100%;
-            background-color: #1e293b;
-            border-left: 1px solid #334155;
-            border-right: 1px solid #334155;
+            width: 4px;
             cursor: col-resize;
+            background: #1e293b;
+            transition: background 0.15s ease, width 0.15s ease;
             position: relative;
-            z-index: 20;
-            transition: background-color 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            z-index: 30;
             flex-shrink: 0;
         }
 
         .resizer-x:hover, .resizer-x.active {
-            background-color: #0284c7;
+            background: #00F0FF;
+            width: 6px;
         }
 
-        .resizer-x::after {
-            content: "";
-            width: 2px;
-            height: 18px;
-            background-color: #64748b;
-            border-radius: 1px;
+        .pdf-scroll-view {
+            background: #0B0F19;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 16px 16px;
         }
 
-        .resizer-x:hover::after, .resizer-x.active::after {
-            background-color: #ffffff;
-        }
-
-        /* PDF.js Page Styling */
         .pdf-page-container {
             position: relative;
             background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-            border-radius: 2px;
-            transition: outline 0.2s;
-        }
-
-        .pdf-page-container.highlighted {
-            outline: 3px solid #38bdf8;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .pdf-page-container canvas {
             display: block;
+            border-radius: 4px;
         }
 
         .textLayer {
@@ -138,246 +124,238 @@
         }
 
         .textLayer ::selection {
-            background: rgba(56, 189, 248, 0.7);
+            background: rgba(0, 240, 255, 0.7);
         }
-        /* Hide scrollbars for navbar */
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #090D16;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 3px;
+            background: #1E293B;
+            border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #334155;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 20px -5px rgba(230, 0, 40, 0.4);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 20px -5px rgba(0, 240, 255, 0.3);
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden font-sans select-none antialiased">
+<body class="bg-[#070A11] text-slate-100 h-screen flex flex-col overflow-hidden font-sans select-none antialiased">
 
-    <!-- Compact Responsive Header Navbar -->
-    <header class="bg-slate-900 border-b border-slate-800 px-2.5 h-11 flex items-center justify-between gap-2 z-30 shadow-md flex-shrink-0">
+    <!-- Top Navigation Bar (RMIT Cyber Style) -->
+    <header class="bg-[#090D16] border-b border-slate-800/80 px-3 h-12 flex items-center justify-between gap-3 z-30 shadow-lg flex-shrink-0">
         
-        <!-- Left Group: Files Toggle, Brand, View Switcher -->
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Files Sidebar Toggle -->
-            <button onclick="toggleLeftSidebar()" class="px-2 py-1 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-md border border-slate-700 transition flex items-center gap-1 text-xs font-medium" title="Toggle File Tree">
-                <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span class="hidden xs:inline">Files</span>
+        <!-- Left: Brand Logo & Title -->
+        <div class="flex items-center gap-2.5 min-w-0">
+            <!-- Sidebar Toggle -->
+            <button onclick="toggleLeftSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition" title="Toggle File Tree (Ctrl+B)">
+                <i data-lucide="panel-left" class="w-4 h-4"></i>
             </button>
 
-            <!-- Brand Logo -->
-            <div class="flex items-center gap-1 px-1">
-                <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
-                <span class="text-xs font-bold text-white tracking-tight">TGLTW-RMIT</span>
-                <span class="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 hidden sm:inline">VBS 2027</span>
+            <!-- RMIT Red Cyber Badge -->
+            <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-rmit-red/10 border border-rmit-red/30 shadow-inner">
+                <span class="w-2 h-2 rounded-full bg-rmit-red animate-pulse"></span>
+                <span class="text-xs font-black tracking-wider text-white font-mono uppercase">RMIT VIETNAM</span>
             </div>
 
-            <!-- View Modes (Split / Editor / PDF) -->
-            <div class="flex bg-slate-950 border border-slate-800 rounded-md p-0.5 ml-0.5">
-                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition" id="viewSplit" onclick="setViewMode('split')" title="Split View">
-                    <i data-lucide="columns" class="w-3 h-3"></i>
-                    <span class="hidden md:inline">Split</span>
-                </button>
-                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition" id="viewEditor" onclick="setViewMode('editor')" title="Editor View">
-                    <i data-lucide="code" class="w-3 h-3"></i>
-                    <span class="hidden md:inline">Code</span>
-                </button>
-                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition" id="viewPdf" onclick="setViewMode('pdf')" title="PDF View">
-                    <i data-lucide="file-check" class="w-3 h-3"></i>
-                    <span class="hidden md:inline">PDF</span>
-                </button>
-            </div>
-        </div>
+            <div class="h-4 w-px bg-slate-800"></div>
 
-        <!-- Center Group: Active File, Engine, Save, Recompile, Status -->
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Active File Tag -->
-            <div class="bg-slate-800/90 border border-slate-700/80 text-slate-300 text-[11px] px-2 py-0.5 rounded-md flex items-center gap-1 font-mono max-w-[130px] truncate" title="Current Active File">
-                <i data-lucide="file-code" class="w-3 h-3 text-sky-400 flex-shrink-0"></i>
-                <span id="navCurrentFileName" class="truncate">main.tex</span>
+            <div class="flex items-center gap-1.5 text-xs text-slate-300 truncate font-mono">
+                <span class="text-slate-500 font-semibold">VBS-2027</span>
+                <span class="text-slate-600">/</span>
+                <i data-lucide="file-code" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                <span id="navCurrentFileName" class="text-slate-100 font-semibold truncate">main.tex</span>
             </div>
 
-            <!-- Engine Dropdown -->
-            <div class="relative">
-                <select id="engineSelect" class="bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-[11px] rounded-md px-2 py-1 pr-5 cursor-pointer focus:outline-none focus:border-sky-500 appearance-none font-medium">
-                    <option value="latexmk" selected>latexmk</option>
+            <!-- Engine Selection -->
+            <div class="relative hidden sm:block">
+                <select id="engineSelect" class="bg-slate-900 text-slate-300 border border-slate-800 rounded-lg px-2 py-1 text-[11px] font-mono appearance-none pr-5 focus:outline-none focus:border-cyber-cyan cursor-pointer hover:border-slate-700">
+                    <option value="latexmk" selected>latexmk (auto)</option>
                     <option value="pdflatex">pdflatex</option>
                     <option value="xelatex">xelatex</option>
                 </select>
-                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none"></i>
-            </div>
-
-            <!-- Save Button & Status -->
-            <button onclick="saveCurrentFile()" class="btn-save bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-medium rounded-md px-2 py-1 flex items-center gap-1 transition" title="Save changes (Ctrl+S)">
-                <i data-lucide="save" class="w-3 h-3"></i>
-                <span>Save</span>
-            </button>
-            <span id="saveIndicator" class="text-[10px] text-slate-400 hidden lg:inline">Saved</span>
-
-            <!-- Recompile Button -->
-            <button id="compileBtn" onclick="triggerSaveAndCompile()" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1 shadow-sm transition" title="Save & Recompile (Ctrl+Enter)">
-                <i data-lucide="play" class="w-3 h-3 fill-current"></i>
-                <span>Recompile</span>
-            </button>
-
-            <!-- Status Indicator Badge -->
-            <div id="statusBadge" class="bg-slate-800/80 border border-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] text-slate-300">
-                <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                <span id="statusText" class="hidden sm:inline">Ready</span>
+                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-1.5 top-2 pointer-events-none"></i>
             </div>
         </div>
 
-        <!-- Right Group: AI Copilot, Review Comments, Logs, PDF Actions -->
+        <!-- Center: Action Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Save Button -->
+            <button onclick="saveCurrentFile()" id="saveBtn" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-semibold rounded-lg px-3 py-1.5 flex items-center gap-1.5 border border-slate-700 transition" title="Save File (Ctrl+S)">
+                <i data-lucide="save" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span id="saveIndicator">Save</span>
+            </button>
+
+            <!-- Recompile Button (RMIT Red Primary Action) -->
+            <button onclick="triggerSaveAndCompile()" id="compileBtn" class="bg-rmit-red hover:bg-rmit-redDark active:scale-95 text-white text-xs font-bold rounded-lg px-4 py-1.5 flex items-center gap-1.5 shadow-md glow-red transition" title="Recompile PDF (Ctrl+Enter)">
+                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                <span>Recompile</span>
+            </button>
+
+            <!-- Status Indicator -->
+            <div id="statusBadge" class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-[11px] font-mono text-slate-300">
+                <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="statusText" class="hidden md:inline">Ready</span>
+            </div>
+        </div>
+
+        <!-- Right: Utility Controls -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Advisor Comments -->
-            <button onclick="openRightPanelTab('comments')" id="headerCommentsBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1.5 shadow transition" title="Advisor Comments">
-                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                <span>Review Comments</span>
-                <span id="commentsCountBadge" class="bg-red-500 text-white text-[9px] font-bold px-1 rounded-full">0</span>
+            <!-- Review Comments Button -->
+            <button onclick="toggleRightSidebar()" id="headerCommentsBtn" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 transition" title="Advisor Comments">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                <span class="hidden sm:inline">Review</span>
+                <span id="commentsCountBadge" class="bg-rmit-red text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
             </button>
 
             <!-- Toggle Logs -->
-            <button onclick="toggleLogs()" id="logToggleBtn" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 text-[11px] p-1 rounded-md transition" title="Compilation Logs (Ctrl+L)">
-                <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+            <button onclick="toggleLogs()" id="logToggleBtn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg transition" title="Compilation Logs (Ctrl+L)">
+                <i data-lucide="terminal" class="w-4 h-4"></i>
             </button>
 
-            <div class="h-3.5 w-px bg-slate-800 mx-0.5"></div>
+            <div class="h-4 w-px bg-slate-800 mx-0.5"></div>
 
             <!-- Open in New Tab -->
-            <button onclick="openPdfNewTab()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 p-1 rounded-md transition" title="Open PDF in new tab">
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <button onclick="openPdfNewTab()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg transition" title="Open PDF in new tab">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
             </button>
 
             <!-- Download PDF -->
-            <button onclick="downloadPdf()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 p-1 rounded-md transition" title="Download PDF">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <button onclick="downloadPdf()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg transition" title="Download PDF document">
+                <i data-lucide="download" class="w-4 h-4"></i>
             </button>
         </div>
     </header>
 
-    <!-- Workspace -->
+    <!-- Main Workspace Container -->
     <div class="flex-1 flex relative overflow-hidden w-screen" id="workspaceContainer">
-        
-        <!-- LEFT SIDEBAR: FILE EXPLORER & UPLOAD -->
-        <div class="left-sidebar w-[220px] h-full bg-slate-950 border-r border-slate-800 flex flex-col relative z-20 min-w-[150px] max-w-[380px] flex-shrink-0" id="leftSidebar">
-            <!-- Sidebar Header & Action Toolbar -->
-            <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-200">
-                    <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>FILES</span>
-                </div>
 
+        <!-- 1. LEFT SIDEBAR: FILE EXPLORER & ASSET UPLOAD -->
+        <div class="left-sidebar w-[230px] h-full bg-[#080C14] border-r border-slate-800/80 flex flex-col relative z-20 min-w-[160px] max-w-[400px] flex-shrink-0" id="leftSidebar">
+            <!-- Sidebar Header -->
+            <div class="px-3 py-2.5 bg-[#0A0F1A] border-b border-slate-800 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5 font-mono">
+                    <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                    FILES & FIGURES
+                </span>
+                
                 <div class="flex items-center gap-1">
-                    <!-- Upload Button -->
-                    <button onclick="triggerUploadDialog()" class="text-slate-400 hover:text-sky-400 p-1 rounded hover:bg-slate-800 transition" title="Upload files / images">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    </button>
-                    <!-- New File Button -->
-                    <button onclick="promptCreateFile('file')" class="text-slate-400 hover:text-emerald-400 p-1 rounded hover:bg-slate-800 transition" title="New LaTeX / text file">
+                    <button onclick="createNewItem('file')" class="text-slate-400 hover:text-cyber-cyan p-1 rounded hover:bg-slate-800 transition" title="New TeX / Bib File">
                         <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <!-- New Folder Button -->
-                    <button onclick="promptCreateFile('dir')" class="text-slate-400 hover:text-amber-400 p-1 rounded hover:bg-slate-800 transition" title="New Folder">
+                    <button onclick="createNewItem('folder')" class="text-slate-400 hover:text-cyber-cyan p-1 rounded hover:bg-slate-800 transition" title="New Folder">
                         <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <!-- Refresh Tree Button -->
-                    <button onclick="loadFileTree()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition" title="Refresh files">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <button onclick="document.getElementById('fileUploadInput').click()" class="text-slate-400 hover:text-emerald-400 p-1 rounded hover:bg-slate-800 transition" title="Upload Files / Figures">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Hidden File Input for Upload -->
-            <input type="file" id="fileUploadInput" multiple class="hidden" onchange="handleFileSelected(event)">
+            <input type="file" id="fileUploadInput" multiple class="hidden" onchange="handleDirectFileUpload(event)">
 
             <!-- File Tree View Container -->
-            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1 text-xs select-none">
+            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5 text-xs select-none font-mono">
                 <div class="text-slate-500 text-center py-6 text-xs">Loading tree...</div>
             </div>
 
-            <!-- Drag & Drop Overlay Indicator -->
-            <div id="dragDropBanner" class="m-2 p-2 border-2 border-dashed border-sky-500/30 hover:border-sky-400 rounded-lg bg-sky-500/5 text-center cursor-pointer transition" onclick="triggerUploadDialog()">
-                <div class="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-300 text-[10.5px]">
-                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-400"></i>
-                    <span>Drag files here or <strong>browse</strong></span>
+            <!-- Upload Figures Drop Zone Footer -->
+            <div class="p-2.5 bg-[#0A0F1A] border-t border-slate-800/80">
+                <div onclick="document.getElementById('fileUploadInput').click()" class="border border-dashed border-slate-700/80 hover:border-cyber-cyan/60 hover:bg-cyber-cyan/5 rounded-lg p-2.5 text-center cursor-pointer transition flex flex-col items-center gap-1 group">
+                    <i data-lucide="image-plus" class="w-4 h-4 text-slate-500 group-hover:text-cyber-cyan transition"></i>
+                    <span class="text-[10px] text-slate-400 font-medium font-mono">Drop figures or click to upload</span>
                 </div>
             </div>
         </div>
 
         <!-- Resizer 0: Between Left Sidebar and Editor -->
-        <div class="resizer-x" id="resizerLeftSidebar" title="Drag to resize File Explorer"></div>
+        <div class="resizer-x" id="resizerTreeEditor" title="Drag to resize File Tree"></div>
 
-        <!-- Editor Pane -->
-        <div class="editor-pane flex-1 h-full flex flex-col bg-[#14171d] relative min-w-[200px]" id="editorPane">
-            <div class="px-3 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-sky-400"></i>
-                    <span id="currentFileName" class="font-mono text-slate-200 font-medium">main.tex</span>
+        <!-- 2. CENTER-LEFT: ACE LATEX CODE EDITOR -->
+        <div class="editor-pane flex-1 h-full flex flex-col bg-[#0A0F1A] relative min-w-[250px]" id="editorPane">
+            <!-- Editor Subheader -->
+            <div class="px-3.5 py-2 bg-[#090D16] border-b border-slate-800 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                    <span id="currentFileName" class="font-mono text-slate-200 font-semibold truncate">main.tex</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="text-[11px] text-slate-500 font-mono" id="editorModeBadge">LaTeX Syntax</span>
+                    <span class="text-[10px] text-slate-500 font-mono" id="editorModeBadge">LaTeX Syntax</span>
                 </div>
             </div>
-            <div id="aceEditor" class="flex-1 w-full h-full text-sm select-text"></div>
+
+            <!-- Ace Editor Target Container -->
+            <div id="aceEditor" class="flex-1 w-full h-full"></div>
         </div>
 
-        <!-- Resizer 1: Between Editor and PDF -->
-        <div class="resizer-x" id="resizerEditorPdf" title="Drag to resize (Double-click to reset 50/50)"></div>
+        <!-- Resizer 1: Between Editor and PDF Preview -->
+        <div class="resizer-x" id="resizerEditorPdf" title="Drag to resize Editor / Preview"></div>
 
-        <!-- PDF Preview Pane -->
-        <div class="preview-pane flex-1 h-full flex flex-col bg-slate-900 relative min-w-[200px]" id="previewPane">
-            <!-- PDF Toolbar -->
-            <div class="px-3 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span class="font-semibold text-slate-200">Preview</span>
-                    <span id="pdfPageInfo" class="text-slate-400 text-[11px]">Loading...</span>
+        <!-- 3. CENTER-RIGHT: PDF.JS REALTIME PREVIEW PANE -->
+        <div class="preview-pane flex-1 h-full flex flex-col bg-[#070A11] relative min-w-[250px]" id="previewPane">
+            <!-- Preview Controls Toolbar -->
+            <div class="px-3 py-2 bg-[#090D16] border-b border-slate-800 flex items-center justify-between text-xs text-slate-400 z-10 flex-shrink-0">
+                <div class="flex items-center gap-1.5 font-mono">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-rmit-red"></i>
+                    <span class="font-semibold text-slate-300">PDF Output</span>
+                    <span id="pdfPageInfo" class="text-[11px] text-slate-500 ml-1.5">Loading...</span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <button onclick="zoomPdf(-0.15)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-1 rounded transition" title="Zoom Out">
-                        <i data-lucide="zoom-out" class="w-3.5 h-3.5"></i>
+
+                <div class="flex items-center gap-1">
+                    <button onclick="adjustZoom(-0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom Out">
+                        <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <span id="zoomPercent" class="text-[11px] font-mono text-slate-300 w-10 text-center">100%</span>
-                    <button onclick="zoomPdf(0.15)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-1 rounded transition" title="Zoom In">
-                        <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    <span id="zoomLevel" class="text-[11px] font-mono w-10 text-center font-medium text-slate-300">100%</span>
+                    <button onclick="adjustZoom(0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom In">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <button onclick="resetZoom()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2 py-0.5 text-[11px] rounded flex items-center gap-1 transition" title="Fit Width">
-                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
-                        <span>Fit</span>
+                    <button onclick="resetZoom()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition ml-1" title="Reset Zoom">
+                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
             </div>
 
             <!-- PDF Scroll View -->
-            <div class="pdf-scroll-view flex-1 overflow-y-auto p-5 flex flex-col items-center gap-5 bg-slate-850 relative select-text" id="pdfScrollView">
-                <div id="pdfLoadingNotice" class="text-slate-400 mt-12 flex items-center gap-2 text-sm">
-                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-sky-400"></i>
+            <div class="pdf-scroll-view flex-1 overflow-y-auto p-6 flex flex-col items-center gap-6 relative select-text" id="pdfScrollView">
+                <div id="pdfLoadingNotice" class="text-slate-400 mt-16 flex items-center gap-2 text-sm font-mono">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyber-cyan"></i>
                     <span>Rendering PDF document...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Floating Selection Tooltip for Highlighting in PDF -->
-
         <!-- Resizer 2: Between PDF and Sidebar -->
         <div class="resizer-x" id="resizerPdfComments" title="Drag to resize Right Panel"></div>
 
-        <!-- Right Side Panel: Review Comments & Feedback -->
-        <div class="right-panel w-[420px] h-full bg-slate-950 border-l border-slate-800 flex flex-col relative z-20 min-w-[280px] max-w-[750px] flex-shrink-0" id="rightSidebar">
+        <!-- 4. RIGHT SIDEBAR: REVIEW COMMENTS & ADVISOR FEEDBACK (UNIFIED PANEL) -->
+        <div class="right-panel w-[380px] h-full bg-[#080C14] border-l border-slate-800/80 flex flex-col relative z-20 min-w-[280px] max-w-[650px] flex-shrink-0" id="rightSidebar">
             <!-- Sidebar Header -->
-            <div class="px-3.5 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2 text-xs font-semibold text-slate-100">
-                    <i data-lucide="message-square" class="w-4 h-4 text-indigo-400"></i>
-                    <span>Review Comments (<span id="panelCommentsCount">0</span>)</span>
+            <div class="px-3.5 py-2.5 bg-[#0A0F1A] border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-100 font-mono">
+                    <i data-lucide="message-square" class="w-4 h-4 text-cyber-cyan"></i>
+                    <span>REVIEW COMMENTS (<span id="panelCommentsCount">0</span>)</span>
                 </div>
 
                 <button onclick="toggleRightSidebar()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition" title="Close Panel">
@@ -386,14 +364,14 @@
             </div>
 
             <!-- Filter Chips Bar -->
-            <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <button class="filter-chip px-2.5 py-1 rounded text-xs bg-indigo-600 text-white font-medium transition" onclick="setCommentFilter('all', this)">
+            <div class="px-3 py-2 bg-[#090D16] border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar font-mono">
+                <button class="filter-chip px-2.5 py-1 rounded-lg text-xs bg-rmit-red text-white font-semibold transition shadow-sm" onclick="setCommentFilter('all', this)">
                     All (<span id="countAll">0</span>)
                 </button>
-                <button class="filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" onclick="setCommentFilter('open', this)">
+                <button class="filter-chip px-2.5 py-1 rounded-lg text-xs bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition" onclick="setCommentFilter('open', this)">
                     Open (<span id="countOpen">0</span>)
                 </button>
-                <button class="filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" onclick="setCommentFilter('resolved', this)">
+                <button class="filter-chip px-2.5 py-1 rounded-lg text-xs bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition" onclick="setCommentFilter('resolved', this)">
                     Resolved (<span id="countResolved">0</span>)
                 </button>
             </div>
@@ -403,107 +381,110 @@
                 <!-- Rendered dynamically -->
             </div>
 
-                <!-- Add Comment Form -->
-                <div class="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2 select-auto">
-                    <div class="text-xs font-bold text-sky-400 flex items-center justify-between">
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                            <span>Add Feedback / Comment</span>
-                        </div>
-                        <span class="text-[10px] text-slate-400 font-normal">Bôi đen chữ trong PDF để trích dẫn</span>
+            <!-- Unified Add Feedback / Comment Form -->
+            <div class="p-3 bg-[#0A0F1A] border-t border-slate-800 flex flex-col gap-2.5 select-auto">
+                <div class="text-xs font-bold text-cyber-cyan flex items-center justify-between font-mono">
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                        <span>ADD FEEDBACK / COMMENT</span>
                     </div>
+                    <span class="text-[10px] text-slate-500 font-normal">Select text in PDF to quote</span>
+                </div>
 
-                    <!-- Active Quoted Text from PDF Selection -->
-                    <div class="active-quote-preview hidden bg-sky-500/10 border-l-2 border-sky-400 p-2 rounded text-xs text-sky-200 items-center justify-between gap-2" id="activeQuotePreview">
-                        <div class="flex items-center gap-1.5 overflow-hidden">
-                            <i data-lucide="quote" class="w-3 h-3 text-sky-400 flex-shrink-0 mt-0.5"></i>
-                            <span class="active-quote-text truncate italic" id="activeQuoteText"></span>
-                        </div>
-                        <button onclick="clearActiveQuote()" class="text-slate-400 hover:text-slate-200 p-0.5 flex-shrink-0" title="Remove quote">
-                            <i data-lucide="x" class="w-3 h-3"></i>
-                        </button>
+                <!-- Active Quoted Text from PDF Selection -->
+                <div class="active-quote-preview hidden bg-cyber-cyan/10 border-l-2 border-cyber-cyan p-2 rounded-lg text-xs text-cyan-200 items-center justify-between gap-2" id="activeQuotePreview">
+                    <div class="flex items-center gap-1.5 overflow-hidden">
+                        <i data-lucide="quote" class="w-3 h-3 text-cyber-cyan flex-shrink-0 mt-0.5"></i>
+                        <span class="active-quote-text truncate italic" id="activeQuoteText"></span>
                     </div>
-                    
-                    <div class="flex gap-2">
-                        <div class="relative flex-1">
-                            <input type="text" id="authorInput" placeholder="Your Name (e.g. Advisor)" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                        </div>
-                        <div class="relative w-36">
-                            <select id="typeSelect" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs pr-6 appearance-none focus:outline-none focus:border-sky-500 cursor-pointer font-medium">
-                                <option value="suggestion">Suggestion</option>
-                                <option value="issue">Question / Issue</option>
-                                <option value="todo">Todo / Revision</option>
-                                <option value="praise">Praise</option>
-                            </select>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2 pointer-events-none"></i>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <input type="text" id="sectionInput" placeholder="Section (e.g. Sec 2, Intro)" class="flex-1 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                        <input type="text" id="pageInput" placeholder="Page" class="w-16 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                    </div>
-
-                    <textarea id="commentTextInput" placeholder="Write feedback, instructions, or suggestions for this section..." class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2 text-xs min-h-[45px] resize-y focus:outline-none focus:border-sky-500"></textarea>
-                    
-                    <button onclick="submitComment()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow transition">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        <span>Post Comment</span>
+                    <button onclick="clearActiveQuote()" class="text-slate-400 hover:text-white p-0.5 flex-shrink-0" title="Remove quote">
+                        <i data-lucide="x" class="w-3 h-3"></i>
                     </button>
                 </div>
+                
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="authorInput" placeholder="Your Name / Role (e.g. Advisor)" class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan font-mono" />
+                    </div>
+                    <div class="relative w-36">
+                        <select id="typeSelect" class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2 py-1.5 text-xs pr-6 appearance-none focus:outline-none focus:border-cyber-cyan cursor-pointer font-medium font-mono">
+                            <option value="suggestion">Suggestion</option>
+                            <option value="issue">Question / Issue</option>
+                            <option value="todo">Todo / Revision</option>
+                            <option value="praise">Praise</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 absolute right-2 top-2 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 font-mono">
+                    <input type="text" id="sectionInput" placeholder="Section (e.g. Sec 3, Method)" class="flex-1 bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan" />
+                    <input type="text" id="pageInput" placeholder="Page" class="w-16 bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan text-center" />
+                </div>
+
+                <textarea id="commentTextInput" placeholder="Write feedback, revision requirements, or suggestions..." class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg p-2.5 text-xs min-h-[50px] resize-y focus:outline-none focus:border-cyber-cyan leading-relaxed"></textarea>
+                
+                <button onclick="submitComment()" class="w-full bg-rmit-red hover:bg-rmit-redDark active:scale-[0.99] text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-md glow-red transition font-mono uppercase tracking-wider">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>Post Comment</span>
+                </button>
             </div>
         </div>
-        <!-- Image Preview Modal -->
-        <div id="imagePreviewModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-            <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full p-4 flex flex-col gap-3 shadow-2xl animate-in zoom-in-95">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
-                        <span id="imageModalTitle" class="text-xs font-mono font-bold text-slate-200"></span>
-                    </div>
-                    <button onclick="closeImageModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition">
+
+        <!-- 5. COMPILATION LOGS OVERLAY DRAWER -->
+        <div id="logsDrawer" class="absolute bottom-0 left-0 right-0 h-56 bg-[#060910]/95 backdrop-blur-xl border-t border-slate-800 z-40 flex flex-col transition-transform duration-200 translate-y-full shadow-2xl">
+            <div class="px-3.5 py-2 bg-[#090D16] border-b border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs font-mono font-bold text-slate-300">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyber-cyan"></i>
+                    <span>COMPILATION LOGS & ERRORS</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearLogs()" class="text-slate-400 hover:text-slate-200 text-xs px-2 py-0.5 rounded hover:bg-slate-800 font-mono transition">Clear</button>
+                    <button onclick="toggleLogs()" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
-
-                <div class="flex-1 flex items-center justify-center bg-slate-950/80 p-4 rounded-lg border border-slate-800/80 max-h-[60vh] overflow-hidden">
-                    <img id="imageModalImg" src="" alt="Preview" class="max-w-full max-h-[50vh] object-contain rounded">
-                </div>
-
-                <div class="flex items-center justify-between pt-1">
-                    <span id="imageModalInfo" class="text-[11px] text-slate-400 font-mono"></span>
-
-                    <div class="flex items-center gap-2">
-                        <button onclick="insertImageToLatex()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
-                            <i data-lucide="file-input" class="w-3.5 h-3.5"></i>
-                            <span>Insert Figure into LaTeX</span>
-                        </button>
-                        <button onclick="copyImagePath()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            <span id="copyImgBtnText">Copy Path</span>
-                        </button>
-                    </div>
-                </div>
             </div>
+            <pre id="logContent" class="flex-1 overflow-y-auto p-3.5 text-xs font-mono text-slate-300 leading-relaxed select-text whitespace-pre-wrap"></pre>
         </div>
 
-        <!-- Terminal Logs Drawer -->
-        <div id="logDrawer" class="absolute bottom-0 left-0 right-0 bg-slate-950 border-t-2 border-slate-800 max-h-[70%] h-[240px] flex flex-col transition-transform duration-200 translate-y-full shadow-2xl z-40 select-text">
-            <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-xs font-semibold text-slate-200">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-sky-400"></i>
-                    <span>Compilation Log / Terminal Output</span>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#0A0F1A] border border-slate-700 rounded-xl max-w-2xl w-full p-4 flex flex-col gap-3 shadow-2xl animate-in zoom-in-95">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div class="flex items-center gap-2 font-mono">
+                    <i data-lucide="image" class="w-4 h-4 text-cyber-cyan"></i>
+                    <span id="imageModalTitle" class="text-xs font-bold text-slate-200"></span>
                 </div>
+                <button onclick="closeImageModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center bg-[#060910] p-4 rounded-lg border border-slate-800 max-h-[60vh] overflow-hidden">
+                <img id="imageModalImg" src="" alt="Preview" class="max-w-full max-h-[50vh] object-contain rounded">
+            </div>
+
+            <div class="flex items-center justify-between pt-1 font-mono">
+                <span id="imageModalInfo" class="text-[11px] text-slate-500"></span>
+
                 <div class="flex items-center gap-2">
-                    <button onclick="clearLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-[11px] border border-slate-700 transition">Clear</button>
-                    <button onclick="toggleLogs()" class="text-slate-400 hover:text-slate-200 p-0.5 rounded hover:bg-slate-800 transition">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    <button onclick="insertImageToLatex()" class="bg-rmit-red hover:bg-rmit-redDark text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+                        <i data-lucide="file-input" class="w-3.5 h-3.5"></i>
+                        <span>Insert into LaTeX</span>
+                    </button>
+                    <button onclick="copyImagePath()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span id="copyImgBtnText">Copy Path</span>
                     </button>
                 </div>
             </div>
-            <div id="logContent" class="flex-1 overflow-y-auto p-3 font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">No compilation logs yet. Click 'Recompile' or press Ctrl+Enter to build.</div>
         </div>
     </div>
+
+    <!-- Application JavaScript Engine -->
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -514,18 +495,16 @@
         let allComments = [];
         let currentCommentFilter = "all";
 
-        // PDF.js State
-        let currentPdfDoc = null;
         let pdfScale = 1.15;
+        let currentPdfDoc = null;
+
+        let isLogsOpen = false;
         let activeSelectedQuote = "";
         let activeSelectedPage = "1";
-        // Image Modal State
         let currentModalImagePath = "";
 
         function refreshIcons() {
-            if (window.lucide) {
-                lucide.createIcons();
-            }
+            lucide.createIcons();
         }
 
         function initAceEditor() {
@@ -533,62 +512,23 @@
             editor.setTheme("ace/theme/tomorrow_night_eighties");
             editor.session.setMode("ace/mode/latex");
             editor.setOptions({
-                fontFamily: "'JetBrains Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: "13px",
                 wrap: true,
                 showPrintMargin: false,
+                highlightActiveLine: true,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
                 tabSize: 2,
-                useSoftTabs: true,
-                useWorker: false
+                useSoftTabs: true
             });
 
-            if (document.fonts) {
-                document.fonts.ready.then(() => {
-                    editor.renderer.updateFull();
-                    editor.resize();
-                });
-            }
-
-            editor.on("change", () => {
+            editor.session.on("change", () => {
                 if (!isDirty) {
                     isDirty = true;
-                    const ind = document.getElementById("saveIndicator");
-                    ind.textContent = "Unsaved *";
-                    ind.className = "text-[10px] text-amber-400 font-medium hidden lg:inline";
+                    document.getElementById("saveIndicator").textContent = "Save *";
                 }
             });
-        }
-
-        function setViewMode(mode) {
-            document.querySelectorAll(".view-btn").forEach(b => {
-                b.className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition";
-            });
-            
-            const editorPane = document.getElementById("editorPane");
-            const previewPane = document.getElementById("previewPane");
-            const resizer1 = document.getElementById("resizerEditorPdf");
-
-            if (mode === "split") {
-                document.getElementById("viewSplit").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
-                editorPane.style.display = "flex";
-                previewPane.style.display = "flex";
-                resizer1.style.display = "flex";
-            } else if (mode === "editor") {
-                document.getElementById("viewEditor").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
-                editorPane.style.display = "flex";
-                previewPane.style.display = "none";
-                resizer1.style.display = "none";
-            } else if (mode === "pdf") {
-                document.getElementById("viewPdf").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
-                editorPane.style.display = "none";
-                previewPane.style.display = "flex";
-                resizer1.style.display = "none";
-            }
-            if (editor) {
-                editor.resize();
-                editor.renderer.updateFull();
-            }
-            refreshIcons();
         }
 
         function setupResizers() {
@@ -597,40 +537,40 @@
             const editorPane = document.getElementById("editorPane");
             const previewPane = document.getElementById("previewPane");
             const rightSidebar = document.getElementById("rightSidebar");
-            
-            const resizer0 = document.getElementById("resizerLeftSidebar");
+
+            const resizer0 = document.getElementById("resizerTreeEditor");
             const resizer1 = document.getElementById("resizerEditorPdf");
             const resizer2 = document.getElementById("resizerPdfComments");
 
             let isDragging0 = false;
-            resizer0.addEventListener("mousedown", () => {
-                isDragging0 = true;
-                resizer0.classList.add("active");
-                document.body.classList.add("is-resizing");
-            });
-
             let isDragging1 = false;
-            resizer1.addEventListener("mousedown", () => {
-                isDragging1 = true;
-                resizer1.classList.add("active");
-                document.body.classList.add("is-resizing");
-            });
-
             let isDragging2 = false;
-            resizer2.addEventListener("mousedown", () => {
-                isDragging2 = true;
-                resizer2.classList.add("active");
+
+            resizer0.addEventListener("mousedown", (e) => {
+                isDragging0 = true;
                 document.body.classList.add("is-resizing");
+                resizer0.classList.add("active");
             });
 
-            window.addEventListener("mousemove", (e) => {
+            resizer1.addEventListener("mousedown", (e) => {
+                isDragging1 = true;
+                document.body.classList.add("is-resizing");
+                resizer1.classList.add("active");
+            });
+
+            resizer2.addEventListener("mousedown", (e) => {
+                isDragging2 = true;
+                document.body.classList.add("is-resizing");
+                resizer2.classList.add("active");
+            });
+
+            document.addEventListener("mousemove", (e) => {
                 const workspaceRect = workspace.getBoundingClientRect();
 
                 if (isDragging0) {
-                    const newWidth = e.clientX - workspaceRect.left;
-                    if (newWidth >= 140 && newWidth <= 420) {
-                        leftSidebar.style.width = `${newWidth}px`;
-                        if (editor) editor.resize();
+                    const newTreeWidth = e.clientX - workspaceRect.left;
+                    if (newTreeWidth >= 140 && newTreeWidth <= 450) {
+                        leftSidebar.style.width = `${newTreeWidth}px`;
                     }
                 }
 
@@ -645,47 +585,45 @@
                 }
 
                 if (isDragging2) {
-                    const newSidebarWidth = workspaceRect.right - e.clientX;
-                    if (newSidebarWidth >= 260 && newSidebarWidth <= 750) {
-                        rightSidebar.style.width = `${newSidebarWidth}px`;
-                        if (editor) editor.resize();
+                    const newRightWidth = workspaceRect.right - e.clientX;
+                    if (newRightWidth >= 240 && newRightWidth <= 750) {
+                        rightSidebar.style.width = `${newRightWidth}px`;
                     }
                 }
             });
 
-            window.addEventListener("mouseup", () => {
-                if (isDragging0) {
+            document.addEventListener("mouseup", () => {
+                if (isDragging0 || isDragging1 || isDragging2) {
                     isDragging0 = false;
-                    resizer0.classList.remove("active");
-                    document.body.classList.remove("is-resizing");
-                }
-                if (isDragging1) {
                     isDragging1 = false;
-                    resizer1.classList.remove("active");
-                    document.body.classList.remove("is-resizing");
-                }
-                if (isDragging2) {
                     isDragging2 = false;
-                    resizer2.classList.remove("active");
                     document.body.classList.remove("is-resizing");
-                }
-                if (editor) {
-                    editor.resize();
-                    editor.renderer.updateFull();
+                    resizer0.classList.remove("active");
+                    resizer1.classList.remove("active");
+                    resizer2.classList.remove("active");
+                    if (editor) editor.resize();
                 }
             });
         }
 
         function toggleLeftSidebar() {
             const sidebar = document.getElementById("leftSidebar");
-            const resizer0 = document.getElementById("resizerLeftSidebar");
+            const resizer0 = document.getElementById("resizerTreeEditor");
             sidebar.classList.toggle("hidden");
             resizer0.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
             if (editor) editor.resize();
             refreshIcons();
         }
 
-        // FILE EXPLORER & TREE FUNCTIONS
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById("rightSidebar");
+            const resizer2 = document.getElementById("resizerPdfComments");
+            sidebar.classList.toggle("hidden");
+            resizer2.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
+            if (editor) editor.resize();
+            refreshIcons();
+        }
+
         async function loadFileTree() {
             const container = document.getElementById("fileTreeContainer");
             try {
@@ -704,246 +642,154 @@
                 return;
             }
 
-            const ul = document.createElement("div");
+            const ul = document.createElement("ul");
             ul.className = "flex flex-col gap-0.5";
 
-            items.forEach(item => {
-                const node = createFileTreeNode(item);
-                ul.appendChild(node);
+            items.forEach((item) => {
+                const li = document.createElement("li");
+                li.className = "flex flex-col";
+
+                if (item.type === "directory") {
+                    const header = document.createElement("div");
+                    header.className = "flex items-center justify-between px-2 py-1 rounded-md hover:bg-slate-800/80 cursor-pointer text-slate-300 group";
+                    header.innerHTML = `
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-transform folder-chevron"></i>
+                            <i data-lucide="folder" class="w-3.5 h-3.5 text-sky-400 flex-shrink-0"></i>
+                            <span class="truncate font-semibold text-slate-200">${escapeHtml(item.name)}</span>
+                        </div>
+                    `;
+
+                    const childrenDiv = document.createElement("div");
+                    childrenDiv.className = "ml-3.5 pl-2 border-l border-slate-800 hidden";
+                    renderFileTree(item.children, childrenDiv);
+
+                    header.onclick = () => {
+                        const isHidden = childrenDiv.classList.contains("hidden");
+                        const chevron = header.querySelector(".folder-chevron");
+                        if (isHidden) {
+                            childrenDiv.classList.remove("hidden");
+                            chevron.style.transform = "rotate(90deg)";
+                        } else {
+                            childrenDiv.classList.add("hidden");
+                            chevron.style.transform = "none";
+                        }
+                    };
+
+                    li.appendChild(header);
+                    li.appendChild(childrenDiv);
+                } else {
+                    const isCurrent = currentFile === item.path;
+                    const fileRow = document.createElement("div");
+                    fileRow.className = `flex items-center justify-between px-2 py-1 rounded-md cursor-pointer transition group ${
+                        isCurrent ? "bg-rmit-red/15 text-white font-semibold border-l-2 border-rmit-red" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                    }`;
+
+                    let iconName = "file";
+                    let iconColor = "text-slate-500";
+                    if (item.name.endsWith(".tex")) { iconName = "file-code"; iconColor = "text-cyber-cyan"; }
+                    else if (item.name.endsWith(".bib")) { iconName = "book-open"; iconColor = "text-emerald-400"; }
+                    else if (item.name.endsWith(".cls") || item.name.endsWith(".bst") || item.name.endsWith(".sty")) { iconName = "settings"; iconColor = "text-purple-400"; }
+                    else if (item.name.endsWith(".pdf")) { iconName = "file-text"; iconColor = "text-rmit-red"; }
+                    else if (/\.(png|jpg|jpeg|svg|webp)$/i.test(item.name)) { iconName = "image"; iconColor = "text-yellow-400"; }
+
+                    fileRow.innerHTML = `
+                        <div class="flex items-center gap-1.5 min-w-0" onclick="loadFile('${item.path}')">
+                            <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} flex-shrink-0"></i>
+                            <span class="truncate">${escapeHtml(item.name)}</span>
+                        </div>
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                            <button onclick="renameItem('${item.path}')" class="p-0.5 hover:text-cyber-cyan text-slate-500 rounded" title="Rename">
+                                <i data-lucide="edit-2" class="w-3 h-3"></i>
+                            </button>
+                            ${item.path !== 'main.tex' ? `
+                            <button onclick="deleteFileOrDir('${item.path}', false)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete">
+                                <i data-lucide="trash" class="w-3 h-3"></i>
+                            </button>` : ""}
+                        </div>
+                    `;
+
+                    li.appendChild(fileRow);
+                }
+
+                ul.appendChild(li);
             });
 
             container.appendChild(ul);
             refreshIcons();
         }
 
-        function createFileTreeNode(item) {
-            const el = document.createElement("div");
-            el.className = "flex flex-col";
+        function createNewItem(type) {
+            const promptMsg = type === "folder" ? "Enter new folder name (e.g. figures, sections):" : "Enter new file name (e.g. section1.tex, references.bib):";
+            const input = prompt(promptMsg);
+            if (!input || !input.trim()) return;
 
-            if (item.type === "dir") {
-                const header = document.createElement("div");
-                header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800/80 cursor-pointer text-slate-300 text-[11.5px] font-medium group transition";
-                
-                header.innerHTML = `
-                    <div class="flex items-center gap-1.5 overflow-hidden">
-                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 folder-chevron transition-transform"></i>
-                        <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
-                        <span class="truncate">${escapeHtml(item.name)}</span>
-                    </div>
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
-                        <button onclick="promptUploadToFolder('${item.path}')" class="p-0.5 hover:text-sky-400 text-slate-500 rounded" title="Upload into folder">
-                            <i data-lucide="upload" class="w-3 h-3"></i>
-                        </button>
-                        <button onclick="deleteFileOrDir('${item.path}', true)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete folder">
-                            <i data-lucide="trash" class="w-3 h-3"></i>
-                        </button>
-                    </div>
-                `;
-
-                const childrenDiv = document.createElement("div");
-                childrenDiv.className = "pl-3.5 flex flex-col gap-0.5 hidden";
-
-                if (item.children && item.children.length > 0) {
-                    item.children.forEach(child => {
-                        childrenDiv.appendChild(createFileTreeNode(child));
-                    });
+            fetch("/api/file/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: input.trim(), type: type })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadFileTree();
+                    if (type === "file") loadFile(input.trim());
                 } else {
-                    childrenDiv.innerHTML = `<div class="text-slate-600 text-[10.5px] py-0.5 pl-3">empty</div>`;
+                    alert("Error: " + data.error);
                 }
-
-                header.onclick = () => {
-                    const isHidden = childrenDiv.classList.contains("hidden");
-                    const chevron = header.querySelector(".folder-chevron");
-                    if (isHidden) {
-                        childrenDiv.classList.remove("hidden");
-                        chevron.classList.add("rotate-90");
-                    } else {
-                        childrenDiv.classList.add("hidden");
-                        chevron.classList.remove("rotate-90");
-                    }
-                    refreshIcons();
-                };
-
-                el.appendChild(header);
-                el.appendChild(childrenDiv);
-
-            } else {
-                // File Node
-                const isActive = item.path === currentFile;
-                const fileRow = document.createElement("div");
-                fileRow.className = `flex items-center justify-between px-2 py-1 rounded cursor-pointer text-[11.5px] group transition ${isActive ? "bg-sky-500/20 text-sky-300 font-semibold border-l-2 border-sky-400" : "text-slate-300 hover:bg-slate-800/80 hover:text-white"}`;
-                
-                const iconInfo = getFileIconInfo(item);
-                
-                fileRow.innerHTML = `
-                    <div class="flex items-center gap-1.5 overflow-hidden">
-                        <i data-lucide="${iconInfo.icon}" class="w-3.5 h-3.5 ${iconInfo.color} flex-shrink-0"></i>
-                        <span class="truncate font-mono">${escapeHtml(item.name)}</span>
-                    </div>
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
-                        <button onclick="renameFilePrompt('${item.path}')" class="p-0.5 hover:text-sky-400 text-slate-500 rounded" title="Rename">
-                            <i data-lucide="edit-2" class="w-3 h-3"></i>
-                        </button>
-                        ${item.path !== 'main.tex' ? `
-                        <button onclick="deleteFileOrDir('${item.path}', false)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete">
-                            <i data-lucide="trash" class="w-3 h-3"></i>
-                        </button>` : ""}
-                    </div>
-                `;
-
-                fileRow.onclick = () => handleFileClick(item);
-                el.appendChild(fileRow);
-            }
-
-            return el;
+            })
+            .catch(err => alert("Failed to create item: " + err.message));
         }
 
-        function getFileIconInfo(item) {
-            const ext = (item.ext || "").toLowerCase();
-            if (ext === ".tex") return { icon: "file-code", color: "text-sky-400" };
-            if (ext === ".bib") return { icon: "book-marked", color: "text-amber-400" };
-            if (ext === ".cls" || ext === ".sty" || ext === ".bst") return { icon: "settings-2", color: "text-purple-400" };
-            if (item.isImage) return { icon: "image", color: "text-emerald-400" };
-            if (item.isPdf) return { icon: "file-text", color: "text-rose-400" };
-            if (ext === ".md" || ext === ".txt") return { icon: "file-text", color: "text-slate-400" };
-            return { icon: "file", color: "text-slate-400" };
+        function renameItem(oldPath) {
+            const newName = prompt(`Rename "${oldPath}" to:`, oldPath);
+            if (!newName || newName.trim() === oldPath) return;
+
+            fetch("/api/file/rename", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldPath, newPath: newName.trim() })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadFileTree();
+                    if (currentFile === oldPath) loadFile(newName.trim());
+                } else {
+                    alert("Rename failed: " + data.error);
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
         }
 
-        function handleFileClick(item) {
-            if (item.isImage) {
-                openImageModal(item.path, item.size);
-            } else if (item.isPdf) {
-                loadPdfDocument(item.path);
-            } else {
-                loadFile(item.path);
-            }
+        function deleteFileOrDir(path, isDir) {
+            const confirmMsg = isDir ? `Delete folder "${path}" and ALL its contents?` : `Delete file "${path}"?`;
+            if (!confirm(confirmMsg)) return;
+
+            fetch(`/api/file?path=${encodeURIComponent(path)}`, { method: "DELETE" })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadFileTree();
+                    if (currentFile === path) loadFile("main.tex");
+                } else {
+                    alert("Delete failed: " + data.error);
+                }
+            })
+            .catch(err => alert("Delete error: " + err.message));
         }
 
-        // IMAGE PREVIEW MODAL & INSERT TO LATEX
-        function openImageModal(path, sizeBytes) {
-            currentModalImagePath = path;
-            const modal = document.getElementById("imagePreviewModal");
-            const img = document.getElementById("imageModalImg");
-            const title = document.getElementById("imageModalTitle");
-            const info = document.getElementById("imageModalInfo");
-
-            title.textContent = path;
-            img.src = `/api/raw?path=${encodeURIComponent(path)}&t=${Date.now()}`;
-            const sizeKb = (sizeBytes / 1024).toFixed(1);
-            info.textContent = `Path: ${path} | Size: ${sizeKb} KB`;
-
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-            refreshIcons();
-        }
-
-        function closeImageModal() {
-            const modal = document.getElementById("imagePreviewModal");
-            modal.classList.remove("flex");
-            modal.classList.add("hidden");
-        }
-
-        function insertImageToLatex() {
-            if (!currentModalImagePath) return;
-            const relPath = currentModalImagePath;
-            const baseName = relPath.split("/").pop().replace(/\.[^/.]+$/, "");
-            const figureSnippet = `\\begin{figure}[htbp]
-  \\centering
-  \\includegraphics[width=0.85\\linewidth]{${relPath}}
-  \\caption{System architecture and multimodal retrieval workflow.}
-  \\label{fig:${baseName}}
-\\end{figure}
-`;
-            if (editor) {
-                editor.insert(figureSnippet);
-                editor.focus();
-            }
-            closeImageModal();
-            const ind = document.getElementById("saveIndicator");
-            ind.textContent = `Figure snippet inserted!`;
-            ind.className = "text-[10px] text-emerald-400 font-bold hidden lg:inline";
-        }
-
-        function copyImagePath() {
-            navigator.clipboard.writeText(currentModalImagePath);
-            const btnText = document.getElementById("copyImgBtnText");
-            btnText.textContent = "Copied!";
-            setTimeout(() => { btnText.textContent = "Copy Path"; }, 1500);
-        }
-
-        // FILE UPLOAD HANDLING
-        let targetUploadFolder = "";
-
-        function triggerUploadDialog() {
-            targetUploadFolder = "";
-            document.getElementById("fileUploadInput").click();
-        }
-
-        function promptUploadToFolder(folderPath) {
-            targetUploadFolder = folderPath;
-            document.getElementById("fileUploadInput").click();
-        }
-
-        async function handleFileSelected(e) {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+        async function handleDirectFileUpload(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
 
             const payloadFiles = [];
             for (const file of files) {
                 const b64 = await readFileAsBase64(file);
-                payloadFiles.push({
-                    name: file.name,
-                    data: b64
-                });
+                payloadFiles.push({ name: file.name, data: b64 });
             }
 
             try {
-                const res = await fetch("/api/upload", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        folder: targetUploadFolder,
-                        files: payloadFiles
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await loadFileTree();
-                    alert(`Uploaded ${data.uploaded.length} file(s) successfully.`);
-                } else {
-                    alert("Upload failed: " + data.error);
-                }
-            } catch (err) {
-                alert("Upload error: " + err.message);
-            } finally {
-                e.target.value = "";
-                targetUploadFolder = "";
-            }
-        }
-
-        function readFileAsBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Drag and Drop Upload Support
-        window.addEventListener("dragover", (e) => {
-            e.preventDefault();
-        });
-
-        window.addEventListener("drop", async (e) => {
-            e.preventDefault();
-            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-                const files = Array.from(e.dataTransfer.files);
-                const payloadFiles = [];
-                for (const file of files) {
-                    const b64 = await readFileAsBase64(file);
-                    payloadFiles.push({ name: file.name, data: b64 });
-                }
                 const res = await fetch("/api/upload", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -953,104 +799,23 @@
                 if (data.success) {
                     await loadFileTree();
                     alert(`Uploaded ${data.uploaded.length} file(s) into figures/ folder.`);
-                }
-            }
-        });
-
-        // CREATE FILE / FOLDER
-        async function promptCreateFile(type) {
-            const promptMsg = type === "dir" ? "Enter new folder path (e.g. figures or sections):" : "Enter new file name (e.g. sections/intro.tex or extra.bib):";
-            const input = prompt(promptMsg);
-            if (!input) return;
-
-            try {
-                const res = await fetch("/api/file/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ path: input.trim(), type: type })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await loadFileTree();
-                    if (type === "file") {
-                        loadFile(input.trim());
-                    }
                 } else {
-                    alert("Error: " + data.error);
+                    alert("Upload failed: " + data.error);
                 }
             } catch (err) {
-                alert("Failed to create: " + err.message);
+                alert("Upload error: " + err.message);
             }
         }
 
-        async function renameFilePrompt(oldPath) {
-            const newPath = prompt(`Rename ${oldPath} to:`, oldPath);
-            if (!newPath || newPath === oldPath) return;
-
-            try {
-                const res = await fetch("/api/file/rename", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ oldPath, newPath: newPath.trim() })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await loadFileTree();
-                    if (currentFile === oldPath) {
-                        loadFile(newPath.trim());
-                    }
-                } else {
-                    alert("Rename failed: " + data.error);
-                }
-            } catch (err) {
-                alert("Error: " + err.message);
-            }
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(",")[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
-        async function deleteFileOrDir(path, isDir) {
-            const confirmMsg = isDir ? `Delete folder "${path}" and ALL its contents?` : `Delete file "${path}"?`;
-            if (!confirm(confirmMsg)) return;
-
-            try {
-                const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`, {
-                    method: "DELETE"
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await loadFileTree();
-                    if (currentFile === path) {
-                        loadFile("main.tex");
-                    }
-                } else {
-                    alert("Delete failed: " + data.error);
-                }
-            } catch (err) {
-                alert("Delete error: " + err.message);
-            }
-        }
-
-        function openRightPanelTab(tab) {
-            const sidebar = document.getElementById("rightSidebar");
-            const resizer2 = document.getElementById("resizerPdfComments");
-            sidebar.classList.remove("hidden");
-            resizer2.style.display = "flex";
-            switchRightPanelTab(tab);
-            if (editor) editor.resize();
-        }
-
-        function toggleRightSidebar() {
-            const sidebar = document.getElementById("rightSidebar");
-            const resizer2 = document.getElementById("resizerPdfComments");
-            sidebar.classList.toggle("hidden");
-            resizer2.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
-            if (editor) {
-                editor.resize();
-                editor.renderer.updateFull();
-            }
-            refreshIcons();
-        }
-
-        // PDF.js Rendering
         async function loadPdfDocument(targetPdfFile = "main.pdf") {
             const pdfName = targetPdfFile.endsWith(".pdf") ? targetPdfFile : targetPdfFile.replace(/\.[^.]+$/, ".pdf");
             const pdfUrl = `/pdf?file=${encodeURIComponent(pdfName)}&t=${Date.now()}`;
@@ -1063,7 +828,7 @@
                 document.getElementById("pdfPageInfo").textContent = `${currentPdfDoc.numPages} Page${currentPdfDoc.numPages > 1 ? "s" : ""}`;
                 await renderAllPdfPages();
             } catch (err) {
-                container.innerHTML = `<div class="text-red-400 p-8 text-center text-sm">Failed to render PDF (${err.message}).<br>Click 'Recompile' to build the PDF.</div>`;
+                container.innerHTML = `<div class="text-red-400 p-8 text-center text-sm font-mono">Failed to render PDF (${err.message}).<br>Click 'Recompile' to build.</div>`;
             }
         }
 
@@ -1084,27 +849,20 @@
                 pageWrapper.style.height = `${viewport.height}px`;
 
                 const canvas = document.createElement("canvas");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
                 const ctx = canvas.getContext("2d");
-                canvas.width = Math.floor(viewport.width * window.devicePixelRatio);
-                canvas.height = Math.floor(viewport.height * window.devicePixelRatio);
-                canvas.style.width = `${viewport.width}px`;
-                canvas.style.height = `${viewport.height}px`;
-                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-                pageWrapper.appendChild(canvas);
 
                 const textLayerDiv = document.createElement("div");
                 textLayerDiv.className = "textLayer";
                 textLayerDiv.style.width = `${viewport.width}px`;
                 textLayerDiv.style.height = `${viewport.height}px`;
-                pageWrapper.appendChild(textLayerDiv);
 
+                pageWrapper.appendChild(canvas);
+                pageWrapper.appendChild(textLayerDiv);
                 container.appendChild(pageWrapper);
 
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
+                const renderContext = { canvasContext: ctx, viewport: viewport };
                 await page.render(renderContext).promise;
 
                 const textContent = await page.getTextContent();
@@ -1115,79 +873,40 @@
                     textDivs: []
                 }).promise;
             }
-
-            document.getElementById("zoomPercent").textContent = `${Math.round(pdfScale * 100 / 1.15)}%`;
-            refreshIcons();
         }
 
-        function zoomPdf(delta) {
-            pdfScale = Math.max(0.5, Math.min(3.0, pdfScale + delta));
+        function adjustZoom(delta) {
+            pdfScale = Math.max(0.6, Math.min(2.5, pdfScale + delta));
+            document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             renderAllPdfPages();
         }
 
         function resetZoom() {
             pdfScale = 1.15;
+            document.getElementById("zoomLevel").textContent = "115%";
             renderAllPdfPages();
         }
 
-        function scrollToPdfPage(pageNum) {
-            const el = document.getElementById(`pdf-page-${pageNum}`);
-            if (el) {
-                el.scrollIntoView({ behavior: "smooth", block: "center" });
-                el.classList.add("highlighted");
-                setTimeout(() => el.classList.remove("highlighted"), 2000);
-            }
-        }
-
         function setupTextSelectionListener() {
-            const popover = document.getElementById("selectionPopover");
-
-            document.addEventListener("mouseup", (e) => {
-                if (popover.contains(e.target)) return;
-
+            document.addEventListener("mouseup", () => {
                 setTimeout(() => {
                     const selection = window.getSelection();
                     const text = selection ? selection.toString().trim() : "";
-
-                    if (text.length > 2) {
-                        const range = selection.getRangeAt(0);
-                        const rect = range.getBoundingClientRect();
+                    if (text && text.length > 3) {
+                        activeSelectedQuote = text;
                         const pageContainer = selection.anchorNode ? (selection.anchorNode.nodeType === 3 ? selection.anchorNode.parentElement : selection.anchorNode).closest(".pdf-page-container") : null;
-
                         if (pageContainer) {
-                            activeSelectedQuote = text;
                             activeSelectedPage = pageContainer.getAttribute("data-page") || "1";
-
-                            popover.style.left = `${Math.max(10, Math.min(window.innerWidth - 300, rect.left + (rect.width / 2) - 140))}px`;
-                            popover.style.top = `${Math.max(60, rect.top - 44)}px`;
-                            popover.classList.remove("hidden");
-                            popover.classList.add("flex");
-                            refreshIcons();
-                            return;
+                            document.getElementById("activeQuoteText").textContent = activeSelectedQuote;
+                            document.getElementById("activeQuotePreview").classList.remove("hidden");
+                            document.getElementById("activeQuotePreview").classList.add("flex");
+                            document.getElementById("pageInput").value = activeSelectedPage;
                         }
                     }
-                    popover.classList.remove("flex");
-                    popover.classList.add("hidden");
-                }, 10);
+                }, 20);
             });
         }
 
-        function applySelectionToComment() {
-            const popover = document.getElementById("selectionPopover");
-            popover.classList.remove("flex");
-            popover.classList.add("hidden");
-
-            openRightPanelTab("comments");
-
-            document.getElementById("activeQuoteText").textContent = activeSelectedQuote;
-            document.getElementById("activeQuotePreview").classList.remove("hidden");
-            document.getElementById("activeQuotePreview").classList.add("flex");
-            document.getElementById("pageInput").value = activeSelectedPage;
-
-            const commentInput = document.getElementById("commentTextInput");
-            commentInput.focus();
-            refreshIcons();
-        }
         function clearActiveQuote() {
             activeSelectedQuote = "";
             document.getElementById("activeQuoteText").textContent = "";
@@ -1195,37 +914,31 @@
             document.getElementById("activeQuotePreview").classList.add("hidden");
         }
 
-        // File Management in Editor
         async function loadFile(filename) {
             if (isDirty) {
-                const confirmSwitch = confirm("You have unsaved changes. Save before switching?");
-                if (confirmSwitch) {
+                if (confirm(`Save unsaved changes in ${currentFile} before switching?`)) {
                     await saveCurrentFile();
                 }
             }
 
-            currentFile = filename;
-            document.getElementById("currentFileName").textContent = filename;
-            document.getElementById("navCurrentFileName").textContent = filename.split("/").pop();
-            
-            const badge = document.getElementById("editorModeBadge");
-            if (filename.endsWith(".bib")) {
-                editor.session.setMode("ace/mode/bibtex");
-                badge.textContent = "BibTeX Bibliography";
-            } else {
-                editor.session.setMode("ace/mode/latex");
-                badge.textContent = "LaTeX Syntax";
+            if (/\.(png|jpg|jpeg|svg|webp)$/i.test(filename)) {
+                openImageModal(filename);
+                return;
             }
+
+            currentFile = filename;
+            document.getElementById("currentFileName").textContent = filename.split("/").pop();
+            document.getElementById("navCurrentFileName").textContent = filename.split("/").pop();
+
+            if (filename.endsWith(".bib")) editor.session.setMode("ace/mode/bibtex");
+            else editor.session.setMode("ace/mode/latex");
 
             try {
                 const res = await fetch(`/api/file?name=${encodeURIComponent(filename)}`);
                 const data = await res.json();
                 editor.setValue(data.content, -1);
                 isDirty = false;
-                const ind = document.getElementById("saveIndicator");
-                ind.textContent = "Saved";
-                ind.className = "text-[10px] text-slate-400 hidden lg:inline";
-                editor.renderer.updateFull();
+                document.getElementById("saveIndicator").textContent = "Save";
                 await loadFileTree();
             } catch (err) {
                 alert("Failed to load file: " + err.message);
@@ -1233,10 +946,9 @@
         }
 
         async function saveCurrentFile() {
-            if (!editor) return;
+            const saveBtn = document.getElementById("saveBtn");
+            saveBtn.textContent = "Saving...";
             const content = editor.getValue();
-            const saveBtn = document.querySelector(".btn-save span");
-            saveBtn.textContent = "...";
 
             try {
                 const res = await fetch("/api/file", {
@@ -1247,11 +959,7 @@
                 const data = await res.json();
                 if (data.success) {
                     isDirty = false;
-                    const ind = document.getElementById("saveIndicator");
-                    ind.textContent = "Saved";
-                    ind.className = "text-[10px] text-slate-400 hidden lg:inline";
-                } else {
-                    alert("Error saving: " + (data.error || "Unknown error"));
+                    document.getElementById("saveIndicator").textContent = "Save";
                 }
             } catch (err) {
                 alert("Save failed: " + err.message);
@@ -1272,7 +980,6 @@
             const statusText = document.getElementById("statusText");
 
             compileBtn.classList.add("opacity-70", "pointer-events-none");
-            compileBtn.querySelector("span").textContent = "...";
             statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
             statusText.textContent = "Compiling...";
 
@@ -1295,53 +1002,37 @@
                     statusText.textContent = `Success (${duration}s)`;
                     await loadPdfDocument();
                 } else {
-                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-400";
+                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-rmit-red";
                     statusText.textContent = `Failed (${duration}s)`;
                     openLogs();
                 }
             } catch (err) {
-                statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-400";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-rmit-red";
                 statusText.textContent = "Error";
                 openLogs();
             } finally {
                 isCompiling = false;
                 compileBtn.classList.remove("opacity-70", "pointer-events-none");
-                compileBtn.querySelector("span").textContent = "Recompile";
                 refreshIcons();
             }
         }
-        // Logs Handling
+
         function renderLogs(rawText) {
             const logContent = document.getElementById("logContent");
-            if (!rawText.trim()) {
-                logContent.textContent = "Compilation finished with no output.";
-                return;
-            }
-
-            const lines = rawText.split("\n");
-            logContent.innerHTML = lines.map(line => {
-                const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                if (escaped.includes("! LaTeX Error") || escaped.includes("Fatal error") || escaped.includes("Emergency stop") || escaped.startsWith("! ")) {
-                    return `<span class="text-red-400 font-bold">${escaped}</span>`;
-                } else if (escaped.includes("LaTeX Warning") || escaped.includes("Warning:")) {
-                    return `<span class="text-amber-400">${escaped}</span>`;
-                } else if (escaped.includes("Output written on") || escaped.includes("All targets") || escaped.includes("Latexmk: All targets")) {
-                    return `<span class="text-emerald-400 font-bold">${escaped}</span>`;
-                }
-                return escaped;
-            }).join("\n");
-
-            logContent.scrollTop = logContent.scrollHeight;
+            logContent.textContent = rawText.trim() || "Compilation finished with no output.";
         }
 
         function toggleLogs() {
-            const drawer = document.getElementById("logDrawer");
-            drawer.classList.toggle("translate-y-full");
+            const drawer = document.getElementById("logsDrawer");
+            isLogsOpen = !isLogsOpen;
+            drawer.style.transform = isLogsOpen ? "translateY(0)" : "translateY(100%)";
             refreshIcons();
         }
 
         function openLogs() {
-            document.getElementById("logDrawer").classList.remove("translate-y-full");
+            const drawer = document.getElementById("logsDrawer");
+            isLogsOpen = true;
+            drawer.style.transform = "translateY(0)";
             refreshIcons();
         }
 
@@ -1359,12 +1050,9 @@
             const a = document.createElement("a");
             a.href = `/pdf?file=${encodeURIComponent(pdfName)}&download=1`;
             a.download = pdfName;
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
         }
 
-        // Comments System
         async function fetchComments() {
             try {
                 const res = await fetch("/api/comments");
@@ -1375,33 +1063,11 @@
             }
         }
 
-        function setCommentFilter(filter, element) {
-            currentCommentFilter = filter;
-            document.querySelectorAll(".filter-chip").forEach(c => {
-                c.className = "filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition";
-            });
-            element.className = "filter-chip px-2.5 py-1 rounded text-xs bg-sky-500 text-slate-950 font-bold border border-sky-500 transition";
-            renderComments();
-        }
-
-        function getTagConfig(type) {
-            switch(type) {
-                case "issue":
-                    return { icon: "alert-circle", class: "bg-red-500/15 text-red-400 border-red-500/30" };
-                case "todo":
-                    return { icon: "check-square", class: "bg-purple-500/15 text-purple-400 border-purple-500/30" };
-                case "praise":
-                    return { icon: "thumbs-up", class: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
-                default:
-                    return { icon: "lightbulb", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" };
-            }
-        }
-
         function renderComments() {
             const list = document.getElementById("commentsList");
             const countBadge = document.getElementById("commentsCountBadge");
             const panelBadge = document.getElementById("panelCommentsCount");
-            
+
             const openCount = allComments.filter(c => !c.resolved).length;
             const resolvedCount = allComments.filter(c => c.resolved).length;
 
@@ -1418,53 +1084,53 @@
             });
 
             if (filtered.length === 0) {
-                list.innerHTML = `<div class="text-slate-500 text-center py-8 text-xs">No comments found</div>`;
+                list.innerHTML = `<div class="text-slate-500 text-center py-10 text-xs font-mono">No comments found</div>`;
                 return;
             }
+
             list.innerHTML = filtered.map(c => {
                 const tag = getTagConfig(c.type);
                 const timeAgo = formatTimeAgo(c.createdAt);
                 
                 const quoteHtml = c.quote ? `
-                    <div class="bg-sky-500/10 border-l-2 border-sky-400 px-2.5 py-1.5 rounded-r text-xs text-sky-200 italic flex items-start gap-1.5">
-                        <i data-lucide="quote" class="w-3 h-3 text-sky-400 flex-shrink-0 mt-0.5"></i>
+                    <div class="bg-cyber-cyan/10 border-l-2 border-cyber-cyan px-2.5 py-1.5 rounded-r text-xs text-cyan-200 italic flex items-start gap-1.5">
+                        <i data-lucide="quote" class="w-3 h-3 text-cyber-cyan flex-shrink-0 mt-0.5"></i>
                         <span>${escapeHtml(c.quote)}</span>
                     </div>
                 ` : "";
 
                 return `
-                    <div class="bg-slate-900 border ${c.resolved ? "border-slate-800 opacity-60" : "border-slate-800 hover:border-slate-700"} rounded-lg p-3 flex flex-col gap-2 transition cursor-pointer" onclick="if('${c.page}') scrollToPdfPage('${c.page}')">
+                    <div class="bg-[#0A0F1A] border ${c.resolved ? "border-slate-800 opacity-60" : "border-slate-800 hover:border-slate-700"} rounded-xl p-3 flex flex-col gap-2 transition cursor-pointer shadow-sm" onclick="if('${c.page}') scrollToPdfPage('${c.page}')">
                         <div class="flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-cyber-cyan font-mono">
                                 <i data-lucide="user" class="w-3.5 h-3.5"></i>
                                 <span>${escapeHtml(c.author || "Advisor")}</span>
                             </div>
-                            <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded border flex items-center gap-1 ${tag.class}">
+                            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded border flex items-center gap-1 font-mono ${tag.class}">
                                 <i data-lucide="${tag.icon}" class="w-3 h-3"></i>
-                                <span>${escapeHtml(c.type || "suggestion")}</span>
+                                <span>${tag.label}</span>
                             </span>
-                        </div>
-
-                        <div class="flex items-center gap-3 text-[11px] text-slate-400">
-                            ${c.section ? `<span class="flex items-center gap-1"><i data-lucide="bookmark" class="w-3 h-3 text-slate-500"></i> ${escapeHtml(c.section)}</span>` : ""}
-                            ${c.page ? `<span class="flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3 text-slate-500"></i> Page ${escapeHtml(c.page)}</span>` : ""}
-                            <span class="flex items-center gap-1 text-slate-500"><i data-lucide="clock" class="w-3 h-3"></i> ${timeAgo}</span>
                         </div>
 
                         ${quoteHtml}
 
-                        <div class="text-xs text-slate-200 leading-relaxed ${c.resolved ? "line-through text-slate-500" : ""}">${escapeHtml(c.text)}</div>
+                        <p class="text-xs text-slate-200 leading-relaxed">${escapeHtml(c.text)}</p>
 
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]" onclick="event.stopPropagation()">
-                            <label class="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" ${c.resolved ? "checked" : ""} onchange="toggleResolveComment('${c.id}', this.checked)" class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0" />
-                                <span>${c.resolved ? "Resolved" : "Mark resolved"}</span>
-                            </label>
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono">
+                            <div class="flex items-center gap-2">
+                                ${c.section ? `<span>§ ${escapeHtml(c.section)}</span>` : ""}
+                                ${c.page ? `<span>Page ${c.page}</span>` : ""}
+                                <span>${timeAgo}</span>
+                            </div>
 
-                            <button onclick="deleteComment('${c.id}')" class="text-red-400 hover:text-red-300 flex items-center gap-1 text-[11px] opacity-75 hover:opacity-100 transition">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                <span>Delete</span>
-                            </button>
+                            <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                                <button onclick="toggleCommentResolved('${c.id}', ${!c.resolved})" class="px-2 py-0.5 rounded ${c.resolved ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'} transition">
+                                    ${c.resolved ? 'Reopen' : 'Resolve'}
+                                </button>
+                                <button onclick="deleteComment('${c.id}')" class="p-1 text-slate-500 hover:text-rmit-red rounded transition" title="Delete">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1473,22 +1139,49 @@
             refreshIcons();
         }
 
+        function getTagConfig(type) {
+            switch (type) {
+                case "issue": return { label: "Issue", icon: "alert-circle", class: "bg-rmit-red/15 text-rmit-red border-rmit-red/30" };
+                case "todo": return { label: "Revision", icon: "check-square", class: "bg-purple-500/15 text-purple-400 border-purple-500/30" };
+                case "praise": return { label: "Praise", icon: "thumbs-up", class: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
+                default: return { label: "Suggestion", icon: "lightbulb", class: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" };
+            }
+        }
+
+        function setCommentFilter(filter, el) {
+            currentCommentFilter = filter;
+            document.querySelectorAll(".filter-chip").forEach(btn => {
+                btn.className = "filter-chip px-2.5 py-1 rounded-lg text-xs bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition font-mono";
+            });
+            el.className = "filter-chip px-2.5 py-1 rounded-lg text-xs bg-rmit-red text-white font-semibold transition shadow-sm font-mono";
+            renderComments();
+        }
+
         async function submitComment() {
             const author = document.getElementById("authorInput").value.trim() || "Advisor";
             const type = document.getElementById("typeSelect").value;
             const section = document.getElementById("sectionInput").value.trim();
             const page = document.getElementById("pageInput").value.trim();
             const text = document.getElementById("commentTextInput").value.trim();
-            const quote = activeSelectedQuote;
 
             if (!text) {
-                alert("Please enter comment text.");
+                alert("Please write a comment text");
                 return;
             }
 
             localStorage.setItem("latex_author_name", author);
 
-            const payload = { author, type, section, page, quote, text };
+            const payload = {
+                id: "c-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
+                author,
+                type,
+                section,
+                page,
+                quote: activeSelectedQuote,
+                text,
+                createdAt: new Date().toISOString(),
+                resolved: false
+            };
 
             try {
                 const res = await fetch("/api/comments", {
@@ -1500,7 +1193,6 @@
                 if (data.success) {
                     document.getElementById("commentTextInput").value = "";
                     document.getElementById("sectionInput").value = "";
-                    document.getElementById("pageInput").value = "";
                     clearActiveQuote();
                     await fetchComments();
                 } else {
@@ -1511,7 +1203,7 @@
             }
         }
 
-        async function toggleResolveComment(id, resolved) {
+        async function toggleCommentResolved(id, resolved) {
             try {
                 await fetch("/api/comments", {
                     method: "PATCH",
@@ -1525,7 +1217,6 @@
         }
 
         async function deleteComment(id) {
-            if (!confirm("Delete this comment?")) return;
             try {
                 await fetch(`/api/comments?id=${encodeURIComponent(id)}`, { method: "DELETE" });
                 await fetchComments();
@@ -1534,20 +1225,72 @@
             }
         }
 
-        function escapeHtml(str) {
-            if (!str) return "";
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        function scrollToPdfPage(pageNum) {
+            const pageEl = document.getElementById(`pdf-page-${pageNum}`);
+            if (pageEl) {
+                pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                pageEl.classList.add("ring-2", "ring-cyber-cyan");
+                setTimeout(() => pageEl.classList.remove("ring-2", "ring-cyber-cyan"), 2000);
+            }
+        }
+
+        function openImageModal(imgPath) {
+            currentModalImagePath = imgPath;
+            const modal = document.getElementById("imagePreviewModal");
+            const title = document.getElementById("imageModalTitle");
+            const img = document.getElementById("imageModalImg");
+            const info = document.getElementById("imageModalInfo");
+
+            title.textContent = imgPath;
+            img.src = `/raw?path=${encodeURIComponent(imgPath)}&t=${Date.now()}`;
+            info.textContent = `Asset: ${imgPath}`;
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            refreshIcons();
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById("imagePreviewModal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
+        }
+
+        function copyImagePath() {
+            navigator.clipboard.writeText(currentModalImagePath);
+            const btn = document.getElementById("copyImgBtnText");
+            btn.textContent = "Copied!";
+            setTimeout(() => { btn.textContent = "Copy Path"; }, 1500);
+        }
+
+        function insertImageToLatex() {
+            const latexSnippet = `
+\\begin{figure}[t]
+\\centering
+\\includegraphics[width=0.85\\textwidth]{${currentModalImagePath}}
+\\caption{System architecture overview and feature map.}
+\\label{fig:${currentModalImagePath.split("/").pop().replace(/\\.[^.]+$/, "")}}
+\\end{figure}
+`;
+            editor.insert(latexSnippet);
+            closeImageModal();
         }
 
         function formatTimeAgo(isoString) {
-            if (!isoString) return "recently";
-            const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
-            if (diff < 60) return "just now";
-            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-            return new Date(isoString).toLocaleDateString();
+            if (!isoString) return "";
+            const sec = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+            if (sec < 60) return "just now";
+            if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+            if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+            return `${Math.floor(sec / 86400)}d ago`;
         }
 
+        function escapeHtml(str) {
+            return String(str || "").replace(/[&<>"']/g, m => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+            }[m]));
+        }
+
+        // Global Keyboard Shortcuts
         document.addEventListener("keydown", (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "s") {
                 e.preventDefault();
@@ -1556,6 +1299,10 @@
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                 e.preventDefault();
                 triggerSaveAndCompile();
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
+                e.preventDefault();
+                toggleLeftSidebar();
             }
             if ((e.ctrlKey || e.metaKey) && (e.key === "l" || e.key === "L")) {
                 e.preventDefault();
@@ -1569,7 +1316,7 @@
             setupTextSelectionListener();
             await loadFileTree();
             await loadFile("main.tex");
-            
+
             const savedAuthor = localStorage.getItem("latex_author_name");
             if (savedAuthor) {
                 document.getElementById("authorInput").value = savedAuthor;
