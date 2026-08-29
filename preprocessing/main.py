@@ -493,7 +493,7 @@ def main():
         }
         
         frame_key = str(payload.get("frame_idx") if payload.get("frame_idx") is not None else payload.get("timestamp", 0.0))
-        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-frame:{video_name}:{frame_key}"))
+        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-frame:{img_name}:{frame_key}"))
         indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
 
     indexer.flush()

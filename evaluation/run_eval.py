@@ -48,6 +48,7 @@ try:
         VLM_OPTION, EMBEDDING_OPTION, DETECTOR_OPTION, SUBMISSION_TOP_K, RERANK_TOP_K,
         SECONDARY_EMBEDDER_ENABLED, VISUAL_EMBEDDING_MODEL_ID,
     )
+    from models.siglip_embedder import SigLIPEmbedder
     from models.qwen_vlm import QwenVLM
     from models.openai_vlm import OpenAIVLM
     from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
@@ -382,8 +383,8 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
             # 2. Ambiguity Scoring
             ambiguity = searcher.compute_ambiguity_score(candidates)
             print(f"  ├─ KIS-C Ambiguity Index    : {ambiguity:.3f}")
-            st["ambiguity_sum"] = st.get("ambiguity_sum", 0.0) + ambiguity
-
+            st_kisc = stats_by_type.setdefault(q_type, {"count": 0, "total_latency": 0.0, "latencies": [], "recall_1": 0, "recall_5": 0, "recall_10": 0, "recall_20": 0, "recall_50": 0, "recall_100": 0, "rr_sum": 0.0})
+            st_kisc["ambiguity_sum"] = st_kisc.get("ambiguity_sum", 0.0) + ambiguity
             # 3. Clarification Answer Boost
             system_answer = str(q_info.get("system_answer") or "").strip()
             if system_answer:
@@ -460,11 +461,20 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
             def is_match(res):
                 if canonical_video_id(res.get("video_name")) != gt_video:
                     return False
-                if gt_frame_id is not None and res.get("frame_idx") is not None:
-                    return abs(int(res["frame_idx"]) - int(gt_frame_id)) <= FRAME_MATCH_TOLERANCE
-                if gt_time is not None and res.get("timestamp") is not None:
-                    return abs(float(res["timestamp"]) - float(gt_time)) <= TIMESTAMP_TOLERANCE_SEC
-                return True
+                res_fidx = res.get("frame_idx")
+                res_ts = res.get("timestamp")
+                # Both frame_id coordinates present
+                if gt_frame_id is not None and res_fidx is not None:
+                    return abs(int(res_fidx) - int(gt_frame_id)) <= FRAME_MATCH_TOLERANCE
+                # Both timestamp coordinates present
+                if gt_time is not None and res_ts is not None:
+                    return abs(float(res_ts) - float(gt_time)) <= TIMESTAMP_TOLERANCE_SEC
+                # Cross-coordinate matching with 25 FPS standard
+                if gt_time is not None and res_fidx is not None:
+                    return abs(float(res_fidx) / 25.0 - float(gt_time)) <= TIMESTAMP_TOLERANCE_SEC
+                if gt_frame_id is not None and res_ts is not None:
+                    return abs(float(res_ts) * 25.0 - float(gt_frame_id)) <= FRAME_MATCH_TOLERANCE
+                return False
 
             match_rank = next((i for i, r in enumerate(results) if is_match(r)), -1)
             reciprocal_rank = 1.0 / (match_rank + 1) if match_rank >= 0 else 0.0
