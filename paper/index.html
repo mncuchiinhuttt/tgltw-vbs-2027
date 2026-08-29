@@ -877,11 +877,17 @@
             const container = document.getElementById("pdfScrollView");
             container.innerHTML = "";
 
-            const scale = pdfScale * 1.5;
+            // DPR multiplier for razor-sharp rendering on Retina and 4K displays
+            const dpr = Math.max(2, window.devicePixelRatio || 2);
 
             for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
                 const page = await currentPdfDoc.getPage(pageNum);
-                const viewport = page.getViewport({ scale: scale });
+                
+                // 1. CSS display viewport (controls on-screen dimensions)
+                const viewport = page.getViewport({ scale: pdfScale });
+                
+                // 2. High-resolution canvas viewport (double or triple resolution pixels)
+                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
 
                 const pageWrapper = document.createElement("div");
                 pageWrapper.className = "pdf-page-container";
@@ -891,11 +897,11 @@
                 pageWrapper.style.height = `${viewport.height}px`;
 
                 const canvas = document.createElement("canvas");
-                canvas.width = Math.floor(viewport.width);
-                canvas.height = Math.floor(viewport.height);
+                canvas.width = Math.floor(renderViewport.width);
+                canvas.height = Math.floor(renderViewport.height);
                 canvas.style.width = `${viewport.width}px`;
                 canvas.style.height = `${viewport.height}px`;
-                const ctx = canvas.getContext("2d");
+                const ctx = canvas.getContext("2d", { alpha: false });
 
                 const textLayerDiv = document.createElement("div");
                 textLayerDiv.className = "textLayer";
@@ -908,7 +914,7 @@
 
                 const renderContext = {
                     canvasContext: ctx,
-                    viewport: viewport
+                    viewport: renderViewport
                 };
                 await page.render(renderContext).promise;
 
@@ -921,8 +927,6 @@
                 }).promise;
             }
         }
-
-        function adjustZoom(delta) {
             pdfScale = Math.max(0.6, Math.min(2.5, pdfScale + delta));
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             renderAllPdfPages();
