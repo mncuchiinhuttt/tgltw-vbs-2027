@@ -48,6 +48,7 @@ app.include_router(vbs_audit_router.router)
 app.include_router(vbs_audit_router.sotuyen_router)
 app.include_router(diagnostics_router.router)
 app.include_router(benchmark_router.router)
+from search.reranker import rerank_with_tail
 
 def load_vlm():
     import config
@@ -442,6 +443,7 @@ async def run_search(request: SearchRequest):
     if request.type not in [1, 2, 3, 4]:
         raise HTTPException(status_code=400, detail="Invalid search type. Must be 1, 2, 3, or 4.")
 
+    dataset_dir = _resolve_dataset_dir(request.dataset_dir)
     try:
         # Initialize services dynamically
         query_proc, searcher, reranker = init_services(query_type=request.type)
@@ -576,7 +578,7 @@ async def run_search(request: SearchRequest):
 
             rerank_k = getattr(config, "RERANK_TOP_K", 20)
             submission_k = getattr(config, "SUBMISSION_TOP_K", 100)
-            top_candidates = reranker.rerank_with_tail(
+            top_candidates = rerank_with_tail(
                 lambda c: reranker.rerank_type1(resolved_query, c, verify=request.verify),
                 candidates, rerank_k, submission_k,
             )
@@ -606,7 +608,7 @@ async def run_search(request: SearchRequest):
             # they've spotted a promising video in the initial results.
             rerank_k = getattr(config, "RERANK_TOP_K", 20)
             submission_k = getattr(config, "SUBMISSION_TOP_K", 100)
-            top_candidates = reranker.rerank_with_tail(
+            top_candidates = rerank_with_tail(
                 lambda c: reranker.rerank_type2_vqa(
                     resolved_query, sub_queries, c, dataset_dir, verify=request.verify
                 ),

@@ -164,7 +164,7 @@ function SearchView() {
   const [currentTask, setCurrentTask] = useState<any>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
 
-  const queryType = taskMode === "vqa" ? 2 : 1
+  const queryType = taskMode === "vqa" ? 2 : taskMode === "kis-c" ? 3 : taskMode === "avs" ? 4 : taskMode === "kis-v" ? 5 : 1
   const isVisualTask = taskMode === "kis-v"
   const isConversationalTask = taskMode === "kis-c"
   const isAvsTask = taskMode === "avs"

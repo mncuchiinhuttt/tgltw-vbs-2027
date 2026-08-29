@@ -89,14 +89,14 @@ def test_webapp_rerank_with_tail_invoked():
         mock_query_proc.classify_query_intent.return_value = "visual"
 
         mock_reranker = MagicMock()
-        mock_reranker.rerank_with_tail.side_effect = lambda fn, c, rk, sk: c[:rk]
+        mock_rerank_with_tail = MagicMock(side_effect=lambda fn, c, rk, sk: c[:rk])
 
-        with patch.object(backend_main, "init_services", return_value=(mock_query_proc, mock_searcher, mock_reranker)):
+        with patch.object(backend_main, "init_services", return_value=(mock_query_proc, mock_searcher, mock_reranker)), \
+             patch.object(backend_main, "rerank_with_tail", mock_rerank_with_tail):
             req = SearchRequest(query="a red boat on water", type=1, session_id="s1")
             resp = await backend_main.run_search(req)
 
-            assert mock_reranker.rerank_with_tail.called
-            _, args, kwargs = mock_reranker.rerank_with_tail.mock_calls[0]
+            assert mock_rerank_with_tail.called
+            _, args, kwargs = mock_rerank_with_tail.mock_calls[0]
             assert args[2] >= 20, f"RERANK_TOP_K should be at least 20, got {args[2]}"
-
     asyncio.run(_test())
