@@ -382,7 +382,7 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
             # 2. Ambiguity Scoring
             ambiguity = searcher.compute_ambiguity_score(candidates)
             print(f"  ├─ KIS-C Ambiguity Index    : {ambiguity:.3f}")
-            st["ambiguity_sum"] = st.get("ambiguity_sum", 0.0) + ambiguity
+            stats_by_type[q_type]["ambiguity_sum"] += ambiguity
 
             # 3. Clarification Answer Boost
             system_answer = str(q_info.get("system_answer") or "").strip()
