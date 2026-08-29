@@ -1142,6 +1142,27 @@ def get_video(video_name: str):
     video_path = _resolve_media_path(video_name)
     return FileResponse(str(video_path))
 
+@app.get("/api/media/{file_path:path}")
+def get_media_file(file_path: str):
+    """
+    Serve a media file from the dataset directory by its dataset-relative
+    path, or by bare video/image id (resolved through the audit router's
+    recursive lookup). Backs the audit workspaces' candidate thumbnails,
+    which reference /api/media/{src_file} and /api/media/{video_id}.mp4.
+    Must stay registered after /api/media/frame and /api/media/video.
+    """
+    if not file_path.strip():
+        raise HTTPException(status_code=400, detail="media file path is required")
+    if "/" not in file_path and "\\" not in file_path and file_path.lower().endswith((".mp4", ".jpg", ".jpeg", ".png")):
+        # Bare id: the file usually lives in a nested dataset subfolder, so
+        # resolve it the same way vbs_audit_router builds thumbnail URLs.
+        stem = file_path.rsplit(".", 1)[0]
+        src_rel = vbs_audit_router.resolve_video_src_file(stem)
+        media_path = _resolve_media_path(src_rel)
+    else:
+        media_path = _resolve_media_path(file_path)
+    return FileResponse(str(media_path))
+
 # 5b. DRES Integration (VBS_GUIDE.md section 6) - proxied through this
 # backend so DRES_USERNAME/DRES_PASSWORD never reach the frontend.
 
