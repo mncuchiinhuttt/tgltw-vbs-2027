@@ -138,42 +138,43 @@ def main():
         text_blob = f"{title} {desc} {tags}".strip()
 
         print(f"\n[{idx}/{len(video_files)}] Processing {vid_path.name} ('{title[:40]}')...", flush=True)
-        kfs = extract_video_keyframes(vid_path, sample_interval_sec=5.0, max_frames=4)
+        kfs = extract_video_keyframes(vid_path, sample_interval_sec=2.5, max_frames=25)
         print(f"  Extracted {len(kfs)} keyframes.", flush=True)
 
         if not kfs:
             continue
 
         # Compute embeddings in batches
+        # Compute embeddings in batches of keyframes
+        images = [kf["image"] for kf in kfs]
+        try:
+            embeddings = embedder.embed_images_batch(images)
+        except Exception as e:
+            print(f"  [ERROR] Batch embedding failed: {e}")
+            continue
+
         points: List[PointStruct] = []
-        for kf in kfs:
-            try:
-                emb = embedder.embed_image(kf["image"])
-                point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"v3c_{v_id}_{kf['frame_idx']}"))
-
-                payload = {
-                    "video_id": v_id,
-                    "source_file": kf["source_file"],
-                    "frame_idx": kf["frame_idx"],
-                    "timestamp": kf["timestamp"],
-                    "caption": title,
-                    "text_blob": text_blob,
-                    "modality": "visual",
-                }
-
-                points.append(PointStruct(
-                    id=point_id,
-                    vector=emb.tolist(),
-                    payload=payload,
-                ))
-            except Exception as e:
-                print(f"  [ERROR] Failed to embed frame {kf['frame_idx']}: {e}")
+        for kf, emb in zip(kfs, embeddings):
+            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"v3c_{v_id}_{kf['frame_idx']}"))
+            payload = {
+                "video_id": v_id,
+                "source_file": kf["source_file"],
+                "frame_idx": kf["frame_idx"],
+                "timestamp": kf["timestamp"],
+                "caption": title,
+                "text_blob": text_blob,
+                "modality": "visual",
+            }
+            points.append(PointStruct(
+                id=point_id,
+                vector=emb.tolist() if isinstance(emb, np.ndarray) else emb,
+                payload=payload,
+            ))
 
         if points:
             client.upsert(collection_name=VISUAL_COLLECTION_NAME, points=points)
             total_points += len(points)
-            print(f"  Upserted {len(points)} vectors to '{VISUAL_COLLECTION_NAME}'. (Total indexed: {total_points})")
-    elapsed = time.monotonic() - t0_start
+            print(f"  Upserted {len(points)} vectors to '{VISUAL_COLLECTION_NAME}'. (Total indexed: {total_points})", flush=True)
     print(f"\n=== Indexing Completed in {elapsed:.1f}s ===")
     print(f"Total Keyframe Points in Qdrant: {total_points}")
 

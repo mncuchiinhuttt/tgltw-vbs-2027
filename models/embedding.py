@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 from PIL import Image
-from typing import Union
+from typing import Union, List, Optional, Any, Dict
 from config import (
     VISUAL_EMBEDDING_MODEL_ID, QWEN_EMBEDDING_MODEL_ID, M2D_CLAP_MODEL_ID,
     OPENAI_API_KEY, OPENAI_BASE_URL, DASHSCOPE_EMBEDDING_MODEL_NAME,
@@ -133,31 +133,43 @@ class WeMMEmbedding4BEmbedder:
                     self._embedder = qwen3_vl_embedding.Qwen3VLEmbedder(model_name_or_path=qwen_path)
                     self._embedder.model.to(self.device)
 
-    def embed_image(self, image: Union[Image.Image, np.ndarray]) -> np.ndarray:
-        if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
-        image = image.convert("RGB")
+    def embed_images_batch(self, images: List[Union[Image.Image, np.ndarray]]) -> List[np.ndarray]:
+        """Embed a list of images in a single batched tensor forward pass."""
+        if not images:
+            return []
+        pil_images = []
+        for img in images:
+            if isinstance(img, np.ndarray):
+                img = Image.fromarray(img)
+            pil_images.append(img.convert("RGB"))
 
         if self._hf_loaded:
             try:
-                messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": "a video keyframe"}]}]
-                text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-                inputs = self.processor(text=[text], images=[image], padding=True, return_tensors="pt").to(self.device)
+                texts = []
+                for img in pil_images:
+                    messages = [{"role": "user", "content": [{"type": "image", "image": img}, {"type": "text", "text": "a video keyframe"}]}]
+                    texts.append(self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=False))
+                inputs = self.processor(text=texts, images=pil_images, padding=True, return_tensors="pt").to(self.device)
                 with torch.no_grad():
                     outputs = self.model(**inputs, output_hidden_states=True)
                     hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
-                    emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
-                    norm = np.linalg.norm(emb)
-                    emb = emb / norm if norm > 0 else emb
-                    return _apply_mrl_truncation(emb, self.mrl_dim)
-            except Exception as e:
+                    embs = hidden_state.mean(dim=1).float().cpu().numpy()
+                    results = []
+                    for emb in embs:
+                        norm = np.linalg.norm(emb)
+                        emb = emb / norm if norm > 0 else emb
+                        results.append(_apply_mrl_truncation(emb, self.mrl_dim))
+                    return results
+            except Exception:
                 pass
 
-        if hasattr(self, "_embedder"):
-            embeddings = self._embedder.process([{"image": image}])
-            return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
-        raise RuntimeError("Visual embedding model failed to process image.")
+        results = []
+        for img in pil_images:
+            results.append(self.embed_image(img))
+        return results
 
+    def embed_image(self, image: Union[Image.Image, np.ndarray]) -> np.ndarray:
+        return self.embed_images_batch([image])[0]
     def embed_text(self, text: str) -> np.ndarray:
         if self._hf_loaded:
             try:
