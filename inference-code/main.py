@@ -139,19 +139,22 @@ def main():
             candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
         )
 
-        # Answer generation using VLM on the best match only - generating a
-        # distinct per-frame answer for up to 100 candidates would be far too
-        # expensive, and the question is about the same fact regardless of
-        # which candidate location it's paired with, so the single best-effort
-        # answer travels with every ranked location guess.
-        answer_prompt = f"Answer the following question about this image: {args.query}. Be concise."
-        answer = vlm.generate(None, answer_prompt).strip()
-
+        # Precise reranking already records candidate-specific grounded VQA answers
+        # for frames sent to the VLM. Preserve those answers; never copy rank 1's
+        # answer onto unrelated ranked locations or hallucinate text-only answers.
         print(f"\n=== FINAL RESULTS ({len(ranked)} ranked answers) ===")
         for rank, item in enumerate(ranked, start=1):
             payload = item["payload"]
-            print(f"{rank}. {payload.get('source_file', 'unknown')}, {frame_id_of(payload)}, {answer}")
-
+            item_answer = item.get("vqa_answer")
+            if item.get("vqa_evidence_available") is not True or not item.get("vqa_answer_valid", False):
+                item_answer = None
+            if not isinstance(item_answer, str):
+                item_answer = None
+            else:
+                item_answer = " ".join(item_answer.split())
+                if not item_answer or item_answer.upper() in {"UNKNOWN", "N/A"}:
+                    item_answer = None
+            print(f"{rank}. {payload.get('source_file', 'unknown')}, {frame_id_of(payload)}, {item_answer or 'N/A'}")
     elif args.type == 3:
         # Type 3: Temporal-alignment
         # Output format: <Tên file video>, <Frame ID_1>, ..., <Frame ID_N>
