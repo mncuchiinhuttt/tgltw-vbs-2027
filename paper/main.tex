@@ -305,10 +305,17 @@ Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & ---
 \end{table}
 
 \subsection{Key Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}: (1) \emph{Multimodal Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 from 50.0\% to 100.0\%, while VLM reranking raises R@1 to 80.0\% (MRR 0.885); (2) \emph{Conversational Precision}: In KIS-C, entity CQR with compound $n$-gram phrase boosting and negative feedback filtering resolves ambiguity (0.82 $\to$ 0.24) and elevates targets directly to Rank \#1 (MRR 1.000, 100\% R@1); (3) \emph{Hallucination Elimination}: Fail-closed contract achieves 100\% safety compliance with 0\% hallucination; (4) \emph{Sub-2s Latency}: Multi-threaded ThreadPool achieves an $8.03\times$ latency speedup (1.85s), enabling real-time interaction.
+As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
+\begin{enumerate}
+    \item \textbf{Multimodal Fusion Lift}: 4-way weighted RRF and temporal coherence raise Recall@5 from 50.0\% to 100.0\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885).
+    \item \textbf{Conversational Precision}: In multi-turn KIS-C, entity-preserving CQR with compound $n$-gram phrase boosting and negative feedback filtering resolves initial ambiguity (0.82 $\to$ 0.24) and elevates targets directly to \textbf{Rank \#1} (MRR 1.000, 100\% Recall@1).
+    \item \textbf{Hallucination Elimination}: Fail-closed contract prevents ungrounded predictions, achieving 100\% safety compliance with 0\% hallucination.
+    \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool achieves an $8.03\times$ latency reduction (from 14.85s down to 1.85s), enabling real-time interaction.
+\end{enumerate}
 
 \section{Conclusion}
 \label{sec:conclusion}
+
 Team TGLTW-RMIT's AEGIS demonstrates an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By unifying 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system provides both sub-second responsiveness and verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
 
 \bibliographystyle{splncs04}
