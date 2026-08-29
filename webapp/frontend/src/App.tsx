@@ -66,12 +66,12 @@ function Navbar() {
           <div className="min-w-0 text-left">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 m-0">
-                The Gays Lead The World
+                AEGIS <span className="text-xs font-semibold text-slate-400 font-normal">| TGLTW-RMIT</span>
               </h1>
               <span className="vbs-badge">VBS 2027</span>
             </div>
             <p className="hidden sm:block text-[11px] text-slate-500 font-semibold tracking-wide uppercase mt-0.5">
-              Interactive video retrieval console
+              Adaptive Evidence-Grounded Interactive Search
             </p>
           </div>
         </Link>
