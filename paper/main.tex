@@ -136,7 +136,7 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 \subsection{Offline Indexing and Multimodal Representation}
 The offline ingestion pipeline consumes official V3C Master Shot Boundaries (\code{msb.tar.gz}) and Video Metadata (\code{info.tar.gz}) supplemented by TransNetV2~\cite{soucek2020transnetv2}. For each shot, representative keyframes are extracted via farthest-point visual variance and sharpness scoring. 
 
-Each keyframe is encoded with **Tencent WeMM-Embedding-4B**~\cite{wemm2025}, producing unified 2,048-dimensional multimodal vectors with MRL truncation. Speech transcripts extracted via faster-whisper~\cite{radford2022whisper}, bounding boxes from YOLOE-26, and on-screen text from PP-OCRv6 are joined into a composite full-text \code{text\_blob} field. Vectors and payloads are stored in Qdrant collections (\code{visual\_keyframes\_v1} with 177k+ points, \code{speech\_segments\_v1}, and \code{audio\_segments\_v1}).
+Each keyframe is encoded with Tencent WeMM-Embedding-4B~\cite{wemm2025}, producing unified 2,048-dimensional multimodal vectors with MRL truncation. Speech transcripts extracted via faster-whisper~\cite{radford2022whisper}, bounding boxes from YOLOE-26, and on-screen text from PP-OCRv6 are joined into a composite full-text \code{text\_blob} field. Vectors and payloads are stored in Qdrant collections (\code{visual\_keyframes\_v1} with 177k+ points, \code{speech\_segments\_v1}, and \code{audio\_segments\_v1}).
 
 \subsection{Hybrid Retrieval and Fusion}
 Online text queries undergo contextual query rewriting (CQR) and optional hypothetical document expansion (HyDE). Dense vector search on WeMM-4B, secondary SigLIP dense search~\cite{zhai2023sigmoid}, and lexical payload full-text search are fused via weighted Reciprocal Rank Fusion (RRF):
@@ -148,7 +148,9 @@ where $k=60$, followed by temporal coherence boosting across adjacent keyframes 
 \section{Task-Specific Execution Lanes}
 \label{sec:tasks}
 
-\begin{figure*}[t]
+The five official VBS 2027 task routes share candidate identity, media evidence, feedback, and submission primitives, but implement distinct entry and operator policies. As illustrated in Figure~\ref{fig:task-lanes}, KIS-V bypasses text expansion, KIS-T uses hybrid search with parallelized reranking, KIS-C adds multi-turn phrase boosting and negative feedback filtering, AVS enforces cross-video diversity, and VQA enforces fail-closed grounded verification.
+
+\begin{figure}[htbp]
 \centering
 \resizebox{0.99\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -216,7 +218,7 @@ where $k=60$, followed by temporal coherence boosting across adjacent keyframes 
 }
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
 \label{fig:task-lanes}
-\end{figure*}
+\end{figure}
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
 \paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy:
