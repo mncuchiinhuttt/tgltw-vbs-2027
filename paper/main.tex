@@ -245,33 +245,31 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
-
-\subsection{Rigorous Multi-Axis Ablation Suite}
-To evaluate the individual contributions of our architectural components, we execute an automated, multi-dimensional ablation suite on the V3C video archive.
+To evaluate the individual contributions of our architectural components, we execute an automated ablation suite on the V3C video archive.
 
 \begin{table}[t]
 \centering
-\caption{Ablation Study 1 \& 2: Component-level retrieval fusion and multi-turn conversational progression on the V3C video collection.}
+\caption{Ablation Study 1 \& 2: Retrieval fusion and multi-turn KIS-C progression.}
 \label{tab:ablation-retrieval-kisc}
-\resizebox{0.98\textwidth}{!}{%
+\resizebox{0.93\textwidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
-\textbf{Pipeline Configuration / Stage} & \textbf{R@1 (\%)} & \textbf{R@5 (\%)} & \textbf{R@10 (\%)} & \textbf{MRR} & \textbf{p50 Latency (s)} \\
+\textbf{Pipeline Configuration / Stage} & \textbf{R@1 (\%)} & \textbf{R@5 (\%)} & \textbf{R@10 (\%)} & \textbf{MRR} & \textbf{p50 Lat (s)} \\
 \midrule
 \multicolumn{6}{l}{\emph{Ablation 1: Multimodal Retrieval \& Fusion Components}} \\
-(M1) Dense Only (WeMM-Embedding-4B) & 20.0 & 50.0 & 70.0 & 0.342 & 0.038 \\
+(M1) Dense Only (WeMM-4B) & 20.0 & 50.0 & 70.0 & 0.342 & 0.038 \\
 (M2) Dense + Sparse BM25 Payload & 30.0 & 70.0 & 80.0 & 0.468 & 0.052 \\
 (M3) Dense + BM25 + SigLIP Secondary & 40.0 & 80.0 & 90.0 & 0.541 & 0.076 \\
 (M4) + 4-Way Weighted RRF Fusion & 50.0 & 90.0 & 100.0 & 0.655 & 0.084 \\
-(M5) + Temporal Coherence \& Diversification & 60.0 & 100.0 & 100.0 & 0.748 & 0.091 \\
-(M6) + Parallel VLM Reranking (Full Pipeline) & \textbf{80.0} & \textbf{100.0} & \textbf{100.0} & \textbf{0.885} & 1.480 \\
+(M5) + Temporal Coherence \& Diversify & 60.0 & 100.0 & 100.0 & 0.748 & 0.091 \\
+(M6) + Parallel VLM Rerank (Full Engine) & \textbf{80.0} & \textbf{100.0} & \textbf{100.0} & \textbf{0.885} & 1.480 \\
 \midrule
 \multicolumn{6}{l}{\emph{Ablation 2: Conversational KIS-C Multi-Turn Dynamics}} \\
-(C1) Turn 1: Initial Vague Query & 0.0 & 40.0 (R@3) & 60.0 & 0.285 & 0.088 (Amb: 0.82) \\
-(C2) Turn 2: Naive History Concatenation & 30.0 & 60.0 (R@3) & 80.0 & 0.472 & 0.092 (Amb: 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & 60.0 & 80.0 (R@3) & 100.0 & 0.715 & 0.110 (Amb: 0.58) \\
-(C4) Turn 2: + Compound N-gram Clarification Boost & 90.0 & 100.0 (R@3) & 100.0 & 0.945 & 0.115 (Amb: 0.42) \\
-(C5) Turn 3: + Negative Feedback Filtering \& Rocchio & \textbf{100.0} & \textbf{100.0 (R@3)} & \textbf{100.0} & \textbf{1.000} & \textbf{0.120 (Amb: 0.24)} \\
+(C1) Turn 1: Initial Vague Query & 0.0 & 40.0 (R@3) & 60.0 & 0.285 & 0.088 (Amb 0.82) \\
+(C2) Turn 2: Naive History Concat & 30.0 & 60.0 (R@3) & 80.0 & 0.472 & 0.092 (Amb 0.74) \\
+(C3) Turn 2: + Entity-Preserving CQR & 60.0 & 80.0 (R@3) & 100.0 & 0.715 & 0.110 (Amb 0.58) \\
+(C4) Turn 2: + Compound N-gram Boost & 90.0 & 100.0 (R@3) & 100.0 & 0.945 & 0.115 (Amb 0.42) \\
+(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{100.0} & \textbf{100.0 (R@3)} & \textbf{100.0} & \textbf{1.000} & \textbf{0.120 (Amb 0.24)} \\
 \bottomrule
 \end{tabular}%
 }
@@ -279,21 +277,20 @@ To evaluate the individual contributions of our architectural components, we exe
 
 \begin{table}[t]
 \centering
-\caption{Ablation Study 3, 4 \& 5: VQA Grounding Faithfulness, Multi-threaded Concurrency Scaling, and Precision Ladder Effort.}
+\caption{Ablation Study 3, 4 \& 5: VQA Grounding, Concurrency, and Precision Ladder.}
 \label{tab:ablation-vqa-scaling}
-\resizebox{0.98\textwidth}{!}{%
+\resizebox{0.93\textwidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Ablation Dimension \& Setting} & \textbf{Primary Metric} & \textbf{Faithfulness / Recall} & \textbf{Hallucination Rate} & \textbf{Latency / Speedup} \\
+\textbf{Ablation Dimension \& Setting} & \textbf{Primary Metric} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
 \midrule
 \multicolumn{5}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
-Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & Faithfulness: 62.0\% & 38.0\% (Hazardous) & 1.42s \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & Faithfulness: 86.0\% & 14.0\% & 1.55s \\
-\textbf{AEGIS Fail-Closed Grounded Contract} & \textbf{Exact Match: 100.0\%} & \textbf{Faithfulness: 100.0\%} & \textbf{0.0\% (Zero Error)} & 1.62s (100\% Safe) \\
+Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & 62.0\% & 38.0\% (Hazardous) & 1.42s \\
+Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & 86.0\% & 14.0\% & 1.55s \\
+AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 100.0\%} & \textbf{100.0\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
 \midrule
-\multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Candidate Scoring)}} \\
+\multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
 Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
-Parallel Execution ($N=2$ workers) & Throughput: 1.31 QPS & --- & --- & 7.62s ($1.95\times$) \\
 Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & --- & --- & 3.98s ($3.73\times$) \\
 Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$ speedup)} \\
 \midrule
@@ -308,20 +305,12 @@ Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & ---
 \end{table}
 
 \subsection{Key Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
-\begin{enumerate}
-    \item \textbf{Multimodal Fusion Lift}: Progressing from dense-only embedding (M1) to 4-way RRF and temporal coherence (M5) improves Recall@5 from 50.0\% to 100.0\%, while VLM reranking raises R@1 to 80.0\% (MRR 0.885).
-    \item \textbf{Conversational Precision}: In KIS-C multi-turn scenarios, entity-preserving CQR combined with compound $n$-gram clarification boosting and negative feedback filtering resolves initial ambiguity (0.82 $\to$ 0.24) and elevates the target item directly to **Rank \#1** (MRR 1.000, 100\% Recall@1).
-    \item \textbf{Hallucination Elimination}: The fail-closed contract prevents ungrounded predictions on corrupted or absent media, achieving 100\% safety compliance with 0\% hallucination.
-    \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool evaluation achieves an **$8.03\times$ latency reduction** (from 14.85s down to 1.85s), enabling real-time competition interaction.
-\end{enumerate}
+As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}: (1) \emph{Multimodal Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 from 50.0\% to 100.0\%, while VLM reranking raises R@1 to 80.0\% (MRR 0.885); (2) \emph{Conversational Precision}: In KIS-C, entity CQR with compound $n$-gram phrase boosting and negative feedback filtering resolves ambiguity (0.82 $\to$ 0.24) and elevates targets directly to Rank \#1 (MRR 1.000, 100\% R@1); (3) \emph{Hallucination Elimination}: Fail-closed contract achieves 100\% safety compliance with 0\% hallucination; (4) \emph{Sub-2s Latency}: Multi-threaded ThreadPool achieves an $8.03\times$ latency speedup (1.85s), enabling real-time interaction.
 
 \section{Conclusion}
 \label{sec:conclusion}
-
 Team TGLTW-RMIT's AEGIS demonstrates an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By unifying 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system provides both sub-second responsiveness and verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
 
 \bibliographystyle{splncs04}
 \bibliography{references}
-
 \end{document}
