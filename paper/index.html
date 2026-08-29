@@ -837,14 +837,11 @@
             const container = document.getElementById("pdfScrollView");
             container.innerHTML = "";
 
-            const dpr = window.devicePixelRatio || 1;
+            const scale = pdfScale * 1.5;
 
             for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
                 const page = await currentPdfDoc.getPage(pageNum);
-                // Standard CSS display viewport
-                const viewport = page.getViewport({ scale: pdfScale });
-                // High-DPI physical rendering viewport
-                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
+                const viewport = page.getViewport({ scale: scale });
 
                 const pageWrapper = document.createElement("div");
                 pageWrapper.className = "pdf-page-container";
@@ -854,11 +851,11 @@
                 pageWrapper.style.height = `${viewport.height}px`;
 
                 const canvas = document.createElement("canvas");
-                canvas.width = Math.floor(renderViewport.width);
-                canvas.height = Math.floor(renderViewport.height);
+                canvas.width = Math.floor(viewport.width);
+                canvas.height = Math.floor(viewport.height);
                 canvas.style.width = `${viewport.width}px`;
                 canvas.style.height = `${viewport.height}px`;
-                const ctx = canvas.getContext("2d", { alpha: false });
+                const ctx = canvas.getContext("2d");
 
                 const textLayerDiv = document.createElement("div");
                 textLayerDiv.className = "textLayer";
@@ -871,8 +868,7 @@
 
                 const renderContext = {
                     canvasContext: ctx,
-                    viewport: renderViewport,
-                    transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
+                    viewport: viewport
                 };
                 await page.render(renderContext).promise;
 
