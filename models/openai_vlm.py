@@ -35,25 +35,28 @@ class OpenAIVLM(BaseVLM):
             "messages": messages,
         }
         if OPENAI_VLM_MAX_COMPLETION_TOKENS:
-            kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+            kwargs["max_completion_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
 
         try:
             return self.client.chat.completions.create(**kwargs)
+        except TypeError as exc:
+            # Older OpenAI-compatible SDKs/endpoints don't support max_completion_tokens
+            if "max_completion_tokens" in str(exc).lower() or "unexpected" in str(exc).lower():
+                retry_kwargs = dict(kwargs)
+                retry_kwargs.pop("max_completion_tokens", None)
+                if OPENAI_VLM_MAX_COMPLETION_TOKENS:
+                    retry_kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+                return self.client.chat.completions.create(**retry_kwargs)
+            raise
         except Exception as exc:
-            if "max_tokens" in str(exc).lower():
-                try:
-                    retry_kwargs = dict(kwargs)
-                    retry_kwargs.pop("max_tokens", None)
-                    retry_kwargs["max_completion_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
-                    return self.client.chat.completions.create(**retry_kwargs)
-                except Exception:
-                    pass
+            if "max_completion_tokens" in str(exc).lower():
+                retry_kwargs = dict(kwargs)
+                retry_kwargs.pop("max_completion_tokens", None)
+                if OPENAI_VLM_MAX_COMPLETION_TOKENS:
+                    retry_kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+                return self.client.chat.completions.create(**retry_kwargs)
             print(f"[OpenAIVLM Error]: {exc}")
-            class MockChoice:
-                message = type("MockMsg", (), {"content": '{"is_match": true, "answer": "Grounded answer", "score": 0.95}'})()
-            class MockResponse:
-                choices = [MockChoice()]
-            return MockResponse()
+            raise
     def _image_to_base64_budget(self, image: Union[Image.Image, str], min_pixels: int, max_pixels: int) -> str:
         """
         Like _image_to_base64 below, but with an explicit pixel-budget

@@ -18,6 +18,7 @@ from config import (
 )
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
+from models.siglip_embedder import SigLIPEmbedder
 from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
 from config import (
     VISUAL_EMBEDDING_MODEL_ID,
@@ -160,39 +161,21 @@ def main():
                 candidates, RERANK_TOP_K, SUBMISSION_TOP_K,
             )
 
-            if ranked:
-                best_payload = ranked[0]["payload"]
-                best_video = best_payload.get("source_file", "unknown")
-                best_timestamp = best_payload.get("timestamp", 0.0)
-
-                # Answer generation - grounded on the best match's actual
-                # frame only. Generating a distinct per-frame answer for up
-                # to 100 candidates would be far too expensive, and the
-                # question is about the same fact regardless of which
-                # candidate location it's paired with, so this single
-                # best-effort answer travels with every ranked location guess.
-                frame_img = None
-                frame_path = os.path.join(args.dataset_dir, best_video)
-                if os.path.exists(frame_path):
-                    if frame_path.lower().endswith(('.jpg', '.jpeg', '.png')):
-                        frame_img = Image.open(frame_path).convert("RGB")
-                    else:
-                        cap = cv2.VideoCapture(frame_path)
-                        fps = cap.get(cv2.CAP_PROP_FPS)
-                        if fps > 0:
-                            cap.set(cv2.CAP_PROP_POS_FRAMES, int(best_timestamp * fps))
-                            ret, frame = cap.read()
-                            if ret:
-                                frame_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                        cap.release()
-
-                answer_prompt = f"Answer the following question about this image: {q_text}. Be concise."
-                answer = vlm.generate(frame_img, answer_prompt).strip()
-
-                output_data["results"] = [
-                    f"{item['payload'].get('source_file', 'unknown')}, {frame_id_of(item['payload'])}, {answer}"
-                    for item in ranked
-                ]
+            output_data["results"] = []
+            for item in ranked:
+                payload = item.get("payload", {})
+                item_answer = item.get("vqa_answer")
+                if item.get("vqa_evidence_available") is not True or not item.get("vqa_answer_valid", False):
+                    item_answer = None
+                if not isinstance(item_answer, str):
+                    item_answer = None
+                else:
+                    item_answer = " ".join(item_answer.split())
+                    if not item_answer or item_answer.upper() in {"UNKNOWN", "N/A"}:
+                        item_answer = None
+                output_data["results"].append(
+                    f"{payload.get('source_file', 'unknown')}, {frame_id_of(payload)}, {item_answer or 'N/A'}"
+                )
 
         elif q_type == 3:
             # No head/tail split needed - rerank_type3_temporal calls the VLM

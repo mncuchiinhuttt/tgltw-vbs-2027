@@ -36,23 +36,26 @@ class SmolVLM2FallbackVLM(BaseVLM):
         self.processor = AutoProcessor.from_pretrained(model_id)
         print("Fallback VLM loaded successfully.")
 
-    def _prepare_image(self, image: Union[Image.Image, str]) -> Image.Image:
+    def _prepare_image(self, image: Optional[Union[Image.Image, str]]) -> Optional[Image.Image]:
+        if image is None:
+            return None
         if isinstance(image, str):
             return Image.open(image).convert("RGB")
         return image.convert("RGB")
 
-    def generate(self, image: Union[Image.Image, str], prompt: str) -> str:
+    def generate(self, image: Optional[Union[Image.Image, str]], prompt: str) -> str:
         img = self._prepare_image(image)
+        content: List[Dict[str, Any]] = []
+        if img is not None:
+            content.append({"type": "image", "image": img})
+        content.append({"type": "text", "text": prompt})
+
         messages = [
             {
                 "role": "user",
-                "content": [
-                    {"type": "image", "image": img},
-                    {"type": "text", "text": prompt},
-                ],
+                "content": content,
             }
         ]
-        text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=img, padding=True, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
