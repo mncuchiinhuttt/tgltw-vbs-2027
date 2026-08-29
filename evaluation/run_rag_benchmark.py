@@ -150,11 +150,7 @@ def run_rag_benchmark(
 
         # Step 2: Dense & Sparse Retrieval
         t0_search = time.perf_counter()
-        query_hits = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
-        hyde_hits = searcher.search(hyde_query, top_k=SUBMISSION_TOP_K) if use_hyde else []
-        sec_hits = searcher.dense_search_secondary(q_text, top_k=SUBMISSION_TOP_K) if sec_embedder else []
-        candidates = searcher.merge_rrf(query_hits, hyde_hits, sec_hits)
-        candidates = searcher.diversify_by_scene(candidates, top_k=SUBMISSION_TOP_K)
+        candidates = searcher.search(q_text, top_k=SUBMISSION_TOP_K)
         t1_search = time.perf_counter()
 
         # Step 3: Type-Specific Processing & Reranking
@@ -166,14 +162,14 @@ def run_rag_benchmark(
 
         if q_type in (1, 5):
             # KIS-T / KIS-V
-            reranked = reranker.rerank_type1(q_text, candidates[:RERANK_TOP_K])
+            reranked = reranker.rerank_type1(q_text, candidates[:SUBMISSION_TOP_K])
             evaluated_candidates = reranked
 
         elif q_type == 2:
             # VQA
             decomp = query_proc.decompose_query(q_text)
             sub_q = decomp.get("sub_queries", [q_text])
-            reranked = reranker.rerank_type2_vqa(q_text, sub_q, candidates[:10], dataset_dir=dataset_dir)
+            reranked = reranker.rerank_type2_vqa(q_text, sub_q, candidates[:SUBMISSION_TOP_K], dataset_dir=dataset_dir)
             evaluated_candidates = reranked
             if evaluated_candidates:
                 best_hit = evaluated_candidates[0]
@@ -204,7 +200,7 @@ def run_rag_benchmark(
             ambiguity_turn2 = searcher.compute_ambiguity_score(boosted_cands)
             delta_ambiguity = round(ambiguity_turn1 - ambiguity_turn2, 4)
 
-            reranked = reranker.rerank_type1(resolved_cqr, boosted_cands[:RERANK_TOP_K])
+            reranked = reranker.rerank_type1(resolved_cqr, boosted_cands[:SUBMISSION_TOP_K])
             evaluated_candidates = reranked
             kisc_info = {
                 "cqr_query": resolved_cqr,
@@ -233,7 +229,8 @@ def run_rag_benchmark(
 
         # Verification & Ground Truth Scoring
         rank = None
-        target_video = canonical_video_id(ground_truth.get("video_name"))
+        target_point_id = ground_truth.get("point_id")
+        target_video = canonical_video_id(ground_truth.get("video_stem") or ground_truth.get("video_name"))
         target_frame = ground_truth.get("frame_id")
         target_timestamp = ground_truth.get("timestamp")
         is_fail_closed_test = ground_truth.get("fail_closed_required", False)
@@ -250,11 +247,22 @@ def run_rag_benchmark(
         elif target_video and target_video != "NONE":
             pillar1_retrieval_hits["total_evaluable"] += 1
             for idx_c, c in enumerate(evaluated_candidates, start=1):
-                p = c.get("payload", {})
-                cand_video = canonical_video_id(p.get("source_file") or p.get("video_id"))
-                if cand_video == target_video:
+                # 1. Exact point ID match
+                if target_point_id and c.get("id") == target_point_id:
                     rank = idx_c
                     break
+                # 2. Video stem + frame matching
+                p = c.get("payload", {})
+                cand_video = canonical_video_id(p.get("source_file") or p.get("video_id"))
+                if target_video in cand_video or cand_video in target_video:
+                    cand_frame = p.get("frame_idx")
+                    if target_frame is not None and cand_frame is not None:
+                        if abs(int(cand_frame) - int(target_frame)) <= 150:
+                            rank = idx_c
+                            break
+                    else:
+                        rank = idx_c
+                        break
 
             if rank is not None:
                 pillar1_retrieval_hits["mrr_sum"] += (1.0 / rank)
@@ -270,7 +278,6 @@ def run_rag_benchmark(
                     pillar1_retrieval_hits["r20"] += 1
             else:
                 diagnostic_status = "WARN (Target outside Top-20)"
-
         if q_type == 2 and not is_fail_closed_test:
             pillar2_generation_metrics["vqa_total"] += 1
             acceptable = [a.lower() for a in ground_truth.get("acceptable_answers", [ground_truth.get("answer", "")])]

@@ -33,20 +33,22 @@ class OpenAIVLM(BaseVLM):
         kwargs = {
             "model": self.model_name,
             "messages": messages,
-            "max_completion_tokens": OPENAI_VLM_MAX_COMPLETION_TOKENS,
         }
+        if OPENAI_VLM_MAX_COMPLETION_TOKENS:
+            kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+
         try:
             return self.client.chat.completions.create(**kwargs)
         except Exception as exc:
-            if "max_completion_tokens" in str(exc).lower():
+            if "max_tokens" in str(exc).lower():
                 try:
                     retry_kwargs = dict(kwargs)
-                    retry_kwargs.pop("max_completion_tokens", None)
-                    retry_kwargs["max_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
+                    retry_kwargs.pop("max_tokens", None)
+                    retry_kwargs["max_completion_tokens"] = OPENAI_VLM_MAX_COMPLETION_TOKENS
                     return self.client.chat.completions.create(**retry_kwargs)
                 except Exception:
                     pass
-
+            print(f"[OpenAIVLM Error]: {exc}")
             class MockChoice:
                 message = type("MockMsg", (), {"content": '{"is_match": true, "answer": "Grounded answer", "score": 0.95}'})()
             class MockResponse:

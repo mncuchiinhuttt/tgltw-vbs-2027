@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Load env variables from .env file if it exists
+_ROOT_DIR = Path(__file__).resolve().parent.parent
+_INFERENCE_DIR = Path(__file__).resolve().parent
+load_dotenv(_INFERENCE_DIR / ".env")
+load_dotenv(_ROOT_DIR / ".env")
 load_dotenv()
-
 # API Keys & Endpoints
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # Leave blank for OpenAI's default endpoint, or point at any OpenAI-compatible

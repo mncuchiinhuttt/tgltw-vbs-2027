@@ -441,9 +441,10 @@ class HybridSearcher:
         vector search, so it has no exact/HNSW setting to override.
         """
         dense_hits = self.dense_search(query, top_k, exact=exact, hnsw_ef=hnsw_ef)
-        sparse_hits = self.sparse_search(query, top_k)
-        return self.merge_rrf(dense_hits, sparse_hits)
-
+        if len(query.split()) <= 20:
+            sparse_hits = self.sparse_search(query, top_k)
+            return self.merge_rrf(dense_hits, sparse_hits)
+        return dense_hits
     def get_all_points_for_video(self, video_name: str, limit: int = 10000) -> list:
         """
         Fetches every indexed visual point for a single video, not just

@@ -369,7 +369,9 @@ Score:"""
                 hit_copy["verification_ratio"] = verification_ratio
                 score = (1 - VERIFICATION_WEIGHT_TYPE1) * score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 
+            rrf_score = float(hit_copy.get("rrf_score", 0.0))
             hit_copy["rerank_score"] = score
+            hit_copy["final_score"] = 0.4 * rrf_score + 0.6 * score
             return hit_copy
 
         if not candidate_frames:
@@ -382,7 +384,7 @@ Score:"""
         else:
             scored = [_score_single_hit(h) for h in candidate_frames]
 
-        return sorted(scored, key=lambda x: x["rerank_score"], reverse=True)
+        return sorted(scored, key=lambda x: (x.get("final_score", 0.0), x.get("rerank_score", 0.0), x.get("rrf_score", 0.0)), reverse=True)
 
     def crop_bounding_box(self, image: Image.Image, bbox: List[float]) -> Image.Image:
         """

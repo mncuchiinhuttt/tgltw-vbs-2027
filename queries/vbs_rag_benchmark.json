@@ -6,7 +6,9 @@
     "category": "Textual Known-Item Search",
     "query": "vòng đua xe đạp Hồ Hoàn Kiếm cúp truyền hình chặng cuối",
     "ground_truth": {
-      "video_name": "L23_V005.mp4",
+      "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
+      "video_name": "Videos_L23_a/video/L23_V005.mp4",
+      "video_stem": "L23_V005",
       "timestamp": 5.52,
       "frame_id": 138
     }
@@ -18,7 +20,9 @@
     "category": "Textual Known-Item Search",
     "query": "vườn cò Tư Sự trong chương trình Đôi Mắt MeKong",
     "ground_truth": {
-      "video_name": "L29_V003.mp4",
+      "point_id": "000047da-5fa0-58ed-a1b8-afe00c1547bd",
+      "video_name": "Videos_L29_a/video/L29_V003.mp4",
+      "video_stem": "L29_V003",
       "timestamp": 52.4,
       "frame_id": 1310
     }
@@ -30,7 +34,9 @@
     "category": "Textual Known-Item Search",
     "query": "thịt vịt xào củ cải muối món ngon mỗi ngày",
     "ground_truth": {
-      "video_name": "L26_V203.mp4",
+      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+      "video_name": "Videos_L26_c/video/L26_V203.mp4",
+      "video_stem": "L26_V203",
       "timestamp": 302.08,
       "frame_id": 7552
     }
@@ -49,7 +55,9 @@
     "system_answer": "bánh mì hạnh nhân béo giòn ngọt món ngon mỗi ngày",
     "rejected": ["thịt vịt xào củ cải muối"],
     "ground_truth": {
-      "video_name": "L26_V111.mp4",
+      "point_id": "0002e187-427c-5b0e-a207-d53ee24b2af5",
+      "video_name": "Videos_L26_b/video/L26_V111.mp4",
+      "video_stem": "L26_V111",
       "timestamp": 84.32,
       "frame_id": 2108
     }
@@ -68,7 +76,9 @@
     "system_answer": "chương trình Đôi Mắt Mekong tập 1 về vườn cò Tư Sự",
     "rejected": ["thời sự 60 giây chiều"],
     "ground_truth": {
-      "video_name": "L29_V003.mp4",
+      "point_id": "00021072-08cc-5bba-8d03-578343c3b014",
+      "video_name": "Videos_L29_a/video/L29_V003.mp4",
+      "video_stem": "L29_V003",
       "timestamp": 192.0,
       "frame_id": 4800
     }
@@ -80,7 +90,9 @@
     "category": "Visual Question Answering (Grounded)",
     "query": "Chuyên đề ôn thi tiếng Anh THPT trong video là gì?",
     "ground_truth": {
-      "video_name": "L25_V050.mp4",
+      "point_id": "0000dc4e-3e47-5671-a04c-662a0e7582da",
+      "video_name": "Videos_L25_a/video/L25_V050.mp4",
+      "video_stem": "L25_V050",
       "timestamp": 1170.48,
       "frame_id": 29262,
       "answer": "Đảo ngữ",
@@ -94,7 +106,9 @@
     "category": "Visual Question Answering (Grounded)",
     "query": "Món ăn trong video được chế biến từ loại thịt gia cầm nào?",
     "ground_truth": {
-      "video_name": "L26_V203.mp4",
+      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+      "video_name": "Videos_L26_c/video/L26_V203.mp4",
+      "video_stem": "L26_V203",
       "timestamp": 302.08,
       "frame_id": 7552,
       "answer": "Thịt vịt",
@@ -123,7 +137,9 @@
     "category": "Ad-hoc Video Search (Cross-Video Diversity)",
     "query": "các món ăn trong chương trình Món Ngon Mỗi Ngày Vivu TV",
     "ground_truth": {
-      "video_name": "L26_V203.mp4",
+      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+      "video_name": "Videos_L26_c/video/L26_V203.mp4",
+      "video_stem": "L26_V203",
       "timestamp": 302.08,
       "frame_id": 7552,
       "distinct_target_videos": ["L26_V203", "L26_V111", "L26_V136"]
@@ -135,9 +151,11 @@
     "type_name": "KIS-V",
     "category": "Visual Query Search",
     "query": "đua xe đạp vòng quanh bờ hồ",
-    "reference_media": "L23_V005.mp4",
+    "reference_media": "Videos_L23_a/video/L23_V005.mp4",
     "ground_truth": {
-      "video_name": "L23_V005.mp4",
+      "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
+      "video_name": "Videos_L23_a/video/L23_V005.mp4",
+      "video_stem": "L23_V005",
       "timestamp": 5.52,
       "frame_id": 138
     }

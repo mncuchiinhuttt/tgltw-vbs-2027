@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-28 19:49:39 UTC",
+  "timestamp": "2026-08-29 07:55:34 UTC",
   "total_queries": 10,
-  "overall_rag_score": 22.8,
+  "overall_rag_score": 27.6,
   "pillar1_retrieval": {
-    "recall_1": 0.0,
-    "recall_5": 33.3,
-    "recall_10": 33.3,
-    "mrr": 0.1111,
+    "recall_1": 11.1,
+    "recall_5": 22.2,
+    "recall_10": 22.2,
+    "mrr": 0.1481,
     "evaluable_items": 9
   },
   "pillar2_generation": {
@@ -17,22 +17,22 @@
   },
   "pillar3_conversational": {
     "kisc_turn_2_recall_1": 0.0,
-    "mean_ambiguity_reduction": -0.013,
+    "mean_ambiguity_reduction": 0.024,
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 8.842,
-    "p50_latency_sec": 10.362,
-    "p95_latency_sec": 11.807,
-    "mean_hyde_sec": 1.118,
-    "mean_search_sec": 4.625,
-    "mean_rerank_sec": 3.099
+    "mean_latency_sec": 21.372,
+    "p50_latency_sec": 28.266,
+    "p95_latency_sec": 38.711,
+    "mean_hyde_sec": 2.207,
+    "mean_search_sec": 2.668,
+    "mean_rerank_sec": 16.497
   },
   "system_config": {
     "vlm_option": "openai",
     "embedding_option": "local",
-    "visual_embedder": "WeMMEmbedding4BEmbedder",
-    "visual_model_id": "tencent/WeMM-Embedding-4B",
+    "visual_embedder": "QwenVL8BEmbedder",
+    "visual_model_id": "Qwen/Qwen3-VL-Embedding-2B",
     "secondary_embedder": "Disabled"
   },
   "queries": [
@@ -43,7 +43,9 @@
       "category": "Textual Known-Item Search",
       "query": "v\u00f2ng \u0111ua xe \u0111\u1ea1p H\u1ed3 Ho\u00e0n Ki\u1ebfm c\u00fap truy\u1ec1n h\u00ecnh ch\u1eb7ng cu\u1ed1i",
       "ground_truth": {
-        "video_name": "L23_V005.mp4",
+        "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
+        "video_name": "Videos_L23_a/video/L23_V005.mp4",
+        "video_stem": "L23_V005",
         "timestamp": 5.52,
         "frame_id": 138
       },
@@ -53,34 +55,34 @@
       "kisc_info": {},
       "status": "PASS",
       "latency": {
-        "total_sec": 11.759,
-        "hyde_sec": 2.123,
-        "search_sec": 5.571,
-        "rerank_sec": 4.065
+        "total_sec": 38.711,
+        "hyde_sec": 4.075,
+        "search_sec": 2.051,
+        "rerank_sec": 32.585
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "6eaf902c-fe9a-5bcf-8ce3-09fc84b28915",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V444.mp4",
-          "frame_idx": 3840,
-          "timestamp": 153.6,
-          "caption": "S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 15082020 . S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI | M\u00d3N NGO"
+          "id": "906df450-9c2a-514f-a82e-9d19e90938e7",
+          "score": 0.6087,
+          "video_name": "Videos_L23_a/video/L23_V005.mp4",
+          "frame_idx": 5500,
+          "timestamp": 220.0,
+          "caption": "DI\u1ec4N BI\u1ebeN V\u00d2NG \u0110UA CU\u1ed0I C\u00d9NG - CH\u1eb6NG 5 V\u00d2NG \u0110UA H\u1ed2 HO\u00c0N KI\u1ebeM  C\u00daP TRUY\u1ec0N H\u00ccNH TP.HCM 2024 "
         },
         {
           "rank": 2,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "96509447-e95f-5366-9ba0-f2f2ce9c7064",
+          "score": 0.6079,
+          "video_name": "Videos_L23_a/video/L23_V005.mp4",
+          "frame_idx": 4878,
+          "timestamp": 195.12,
+          "caption": "DI\u1ec4N BI\u1ebeN V\u00d2NG \u0110UA CU\u1ed0I C\u00d9NG - CH\u1eb6NG 5 V\u00d2NG \u0110UA H\u1ed2 HO\u00c0N KI\u1ebeM  C\u00daP TRUY\u1ec0N H\u00ccNH TP.HCM 2024 "
         },
         {
           "rank": 3,
           "id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
-          "score": 0.95,
+          "score": 0.6066,
           "video_name": "Videos_L23_a/video/L23_V005.mp4",
           "frame_idx": 138,
           "timestamp": 5.52,
@@ -88,21 +90,21 @@
         },
         {
           "rank": 4,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "08b375bf-78e5-5628-8bc3-5b9b1d3fa104",
+          "score": 0.6062,
+          "video_name": "Videos_L23_a/video/L23_V005.mp4",
+          "frame_idx": 2375,
+          "timestamp": 95.0,
+          "caption": "DI\u1ec4N BI\u1ebeN V\u00d2NG \u0110UA CU\u1ed0I C\u00d9NG - CH\u1eb6NG 5 V\u00d2NG \u0110UA H\u1ed2 HO\u00c0N KI\u1ebeM  C\u00daP TRUY\u1ec0N H\u00ccNH TP.HCM 2024 "
         },
         {
           "rank": 5,
-          "id": "9ba5c3d5-5522-5616-9169-92a0e8d2cc93",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V404.mp4",
-          "frame_idx": 4224,
-          "timestamp": 168.96,
-          "caption": "CANH C\u00c1 B\u1ed0NG M\u00da  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 06122020 . CANH C\u00c1 B\u1ed0NG M\u00da | M\u00d3N NGON M\u1ed6I NG\u00c0Y"
+          "id": "0a87b16d-845a-5c49-a158-26e8c7891677",
+          "score": 0.6062,
+          "video_name": "Videos_L23_a/video/L23_V005.mp4",
+          "frame_idx": 1250,
+          "timestamp": 50.0,
+          "caption": "DI\u1ec4N BI\u1ebeN V\u00d2NG \u0110UA CU\u1ed0I C\u00d9NG - CH\u1eb6NG 5 V\u00d2NG \u0110UA H\u1ed2 HO\u00c0N KI\u1ebeM  C\u00daP TRUY\u1ec0N H\u00ccNH TP.HCM 2024 "
         }
       ]
     },
@@ -113,66 +115,68 @@
       "category": "Textual Known-Item Search",
       "query": "v\u01b0\u1eddn c\u00f2 T\u01b0 S\u1ef1 trong ch\u01b0\u01a1ng tr\u00ecnh \u0110\u00f4i M\u1eaft MeKong",
       "ground_truth": {
-        "video_name": "L29_V003.mp4",
+        "point_id": "000047da-5fa0-58ed-a1b8-afe00c1547bd",
+        "video_name": "Videos_L29_a/video/L29_V003.mp4",
+        "video_stem": "L29_V003",
         "timestamp": 52.4,
         "frame_id": 1310
       },
-      "rank": 3,
+      "rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 10.696,
-        "hyde_sec": 1.24,
-        "search_sec": 5.489,
-        "rerank_sec": 3.967
+        "total_sec": 28.266,
+        "hyde_sec": 2.336,
+        "search_sec": 4.45,
+        "rerank_sec": 21.48
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "34cc0115-1d2c-5293-8fe6-fce0e2f310f6",
-          "score": 0.95,
-          "video_name": "Videos_L26_d/video/L26_V350.mp4",
-          "frame_idx": 4736,
-          "timestamp": 189.44,
-          "caption": "TH\u01a0M NGON \u0110\u1eacM \u0110\u00c0 V\u1edaI SALAD B\u00cd \u0110\u1ece  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . TH\u01a0M NGON \u0110\u1eacM \u0110\u00c0 V\u1edaI SALAD "
+          "id": "4d553219-cb70-5c75-a4f3-b3fe168ce17a",
+          "score": 0.611,
+          "video_name": "Videos_L29_a/video/L29_V003.mp4",
+          "frame_idx": 25800,
+          "timestamp": 1032.0,
+          "caption": "\u0110\u00f4i M\u1eaft MeKong  T\u1eadp 1  V\u01b0\u1eddn c\u00f2 T\u01b0 S\u1ef1 . B\u1ea1n \u0111\u00e3 t\u1eebng nghe v\u1ec1 V\u01b0\u1eddn C\u00f2 T\u01b0 S\u1ef1 ch\u01b0a? N\u0103m 1992, \u0111"
         },
         {
           "rank": 2,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
-        },
-        {
-          "rank": 3,
           "id": "1bc460ed-4130-567c-ad9d-4e95e4820a80",
-          "score": 0.95,
+          "score": 0.6096,
           "video_name": "Videos_L29_a/video/L29_V003.mp4",
           "frame_idx": 25950,
           "timestamp": 1038.0,
           "caption": "\u0110\u00f4i M\u1eaft MeKong  T\u1eadp 1  V\u01b0\u1eddn c\u00f2 T\u01b0 S\u1ef1 . B\u1ea1n \u0111\u00e3 t\u1eebng nghe v\u1ec1 V\u01b0\u1eddn C\u00f2 T\u01b0 S\u1ef1 ch\u01b0a? N\u0103m 1992, \u0111"
         },
         {
+          "rank": 3,
+          "id": "b8f860ff-0490-570f-8cab-cddb7947d103",
+          "score": 0.6095,
+          "video_name": "Videos_L29_a/video/L29_V003.mp4",
+          "frame_idx": 3150,
+          "timestamp": 126.0,
+          "caption": "\u0110\u00f4i M\u1eaft MeKong  T\u1eadp 1  V\u01b0\u1eddn c\u00f2 T\u01b0 S\u1ef1 . B\u1ea1n \u0111\u00e3 t\u1eebng nghe v\u1ec1 V\u01b0\u1eddn C\u00f2 T\u01b0 S\u1ef1 ch\u01b0a? N\u0103m 1992, \u0111"
+        },
+        {
           "rank": 4,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "3472a87f-21b6-5406-9122-032e854111f1",
+          "score": 0.6063,
+          "video_name": "Videos_L29_a/video/L29_V015.mp4",
+          "frame_idx": 4860,
+          "timestamp": 194.4,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 15  282024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 22g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n "
         },
         {
           "rank": 5,
-          "id": "0e8cae1a-ae86-544a-9be0-ab608b4ad1c0",
-          "score": 0.95,
-          "video_name": "Videos_L26_d/video/L26_V366.mp4",
-          "frame_idx": 4864,
-          "timestamp": 194.56,
-          "caption": "M\u00c1T GI\u00d2N TR\u1eccN V\u1eca V\u1edaI SALAD G\u00c0 N\u01af\u1edaNG  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . M\u00c1T GI\u00d2N TR\u1eccN V\u1eca V\u1edaI SAL"
+          "id": "553d1d85-3602-5ea3-a0db-5e4272d74901",
+          "score": 0.6062,
+          "video_name": "Videos_L29_a/video/L29_V019.mp4",
+          "frame_idx": 23895,
+          "timestamp": 955.8,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 19  3082024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 22g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         }
       ]
     },
@@ -183,66 +187,68 @@
       "category": "Textual Known-Item Search",
       "query": "th\u1ecbt v\u1ecbt x\u00e0o c\u1ee7 c\u1ea3i mu\u1ed1i m\u00f3n ngon m\u1ed7i ng\u00e0y",
       "ground_truth": {
-        "video_name": "L26_V203.mp4",
+        "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+        "video_name": "Videos_L26_c/video/L26_V203.mp4",
+        "video_stem": "L26_V203",
         "timestamp": 302.08,
         "frame_id": 7552
       },
-      "rank": 3,
+      "rank": 1,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
       "status": "PASS",
       "latency": {
-        "total_sec": 10.362,
-        "hyde_sec": 1.376,
-        "search_sec": 4.939,
-        "rerank_sec": 4.047
+        "total_sec": 37.327,
+        "hyde_sec": 2.332,
+        "search_sec": 6.666,
+        "rerank_sec": 28.328
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "a4eb7571-e2c6-56c1-a5c7-0813becda910",
-          "score": 0.95,
-          "video_name": "Videos_L26_d/video/L26_V342.mp4",
-          "frame_idx": 5035,
-          "timestamp": 201.4,
-          "caption": "CH\u00c1O H\u1ea0T SEN N\u1ea4U B\u00d2 VI\u00caN_V\u1eca NGON V\u1eb8N TO\u00c0N  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . CH\u00c1O H\u1ea0T SEN N\u1ea4U B"
-        },
-        {
-          "rank": 2,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
-        },
-        {
-          "rank": 3,
           "id": "00011b42-657c-5d79-a069-9291500e8c32",
-          "score": 0.95,
+          "score": 0.6066,
           "video_name": "Videos_L26_c/video/L26_V203.mp4",
           "frame_idx": 7552,
           "timestamp": 302.08,
           "caption": "B\u1eaeT VI NGON C\u01a0M C\u00d9NG TH\u1ecaT V\u1ecaT X\u00c0O C\u1ee6 C\u1ea2I MU\u1ed0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i "
         },
         {
+          "rank": 2,
+          "id": "04042ffa-87bb-5360-8941-ea28a1be1fcb",
+          "score": 0.6065,
+          "video_name": "Videos_L26_c/video/L26_V203.mp4",
+          "frame_idx": 5888,
+          "timestamp": 235.52,
+          "caption": "B\u1eaeT VI NGON C\u01a0M C\u00d9NG TH\u1ecaT V\u1ecaT X\u00c0O C\u1ee6 C\u1ea2I MU\u1ed0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i "
+        },
+        {
+          "rank": 3,
+          "id": "06b2bd54-e3fd-50ca-a2f7-20a34ba0167c",
+          "score": 0.6063,
+          "video_name": "Videos_L26_c/video/L26_V203.mp4",
+          "frame_idx": 4096,
+          "timestamp": 163.84,
+          "caption": "B\u1eaeT VI NGON C\u01a0M C\u00d9NG TH\u1ecaT V\u1ecaT X\u00c0O C\u1ee6 C\u1ea2I MU\u1ed0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i "
+        },
+        {
           "rank": 4,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "06cd1fbb-6eb6-540e-adfc-d83edfb87acb",
+          "score": 0.6062,
+          "video_name": "Videos_L26_c/video/L26_V203.mp4",
+          "frame_idx": 4214,
+          "timestamp": 168.56,
+          "caption": "B\u1eaeT VI NGON C\u01a0M C\u00d9NG TH\u1ecaT V\u1ecaT X\u00c0O C\u1ee6 C\u1ea2I MU\u1ed0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i "
         },
         {
           "rank": 5,
-          "id": "87aa2d58-2698-597f-b401-99d53b9a168b",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V477.mp4",
-          "frame_idx": 4464,
-          "timestamp": 178.56,
-          "caption": "T\u00d4M CHI\u00caN M\u1eb6T NGUY\u1ec6T  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 15052020. . T\u00d4M CHI\u00caN M\u1eb6T NGUY\u1ec6T | M\u00d3N NG"
+          "id": "07e984e8-58f8-54a4-bd96-3f629690cc34",
+          "score": 0.6062,
+          "video_name": "Videos_L26_c/video/L26_V203.mp4",
+          "frame_idx": 6995,
+          "timestamp": 279.8,
+          "caption": "B\u1eaeT VI NGON C\u01a0M C\u00d9NG TH\u1ecaT V\u1ecaT X\u00c0O C\u1ee6 C\u1ea2I MU\u1ed0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i "
         }
       ]
     },
@@ -253,7 +259,9 @@
       "category": "Conversational Known-Item Search",
       "query": "t\u00ecm video d\u1ea1y n\u1ea5u \u0103n m\u00f3n b\u00e1nh m\u00ec h\u1ea1nh nh\u00e2n",
       "ground_truth": {
-        "video_name": "L26_V111.mp4",
+        "point_id": "0002e187-427c-5b0e-a207-d53ee24b2af5",
+        "video_name": "Videos_L26_b/video/L26_V111.mp4",
+        "video_stem": "L26_V111",
         "timestamp": 84.32,
         "frame_id": 2108
       },
@@ -261,63 +269,63 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "{\"is_match\": true, \"answer\": \"Grounded answer\", \"score\": 0.95}",
-        "ambiguity_turn1": 0.8,
-        "ambiguity_turn2": 0.788,
-        "delta_ambiguity": 0.0117
+        "cqr_query": "t\u00ecm video d\u1ea1y n\u1ea5u \u0103n l\u00e0m m\u00f3n b\u00e1nh m\u00ec ng\u1ecdt h\u1ea1nh nh\u00e2n b\u00e9o gi\u00f2n ng\u1ecdt",
+        "ambiguity_turn1": 0.692,
+        "ambiguity_turn2": 0.7,
+        "delta_ambiguity": -0.008
       },
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 11.807,
-        "hyde_sec": 1.201,
-        "search_sec": 5.16,
-        "rerank_sec": 5.445
+        "total_sec": 27.403,
+        "hyde_sec": 2.779,
+        "search_sec": 1.766,
+        "rerank_sec": 22.858
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "29e8807a-a0c5-5019-ac20-985ac6b4305c",
-          "score": 0.95,
-          "video_name": "Videos_L26_c/video/L26_V207.mp4",
-          "frame_idx": 3560,
-          "timestamp": 142.4,
-          "caption": "SAKE CHI\u00caN GI\u00d2N 2 V\u1eca  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50"
+          "id": "96a18e16-2eca-512d-874d-7c5895173d2e",
+          "score": 0.6056,
+          "video_name": "Videos_L26_b/video/L26_V111.mp4",
+          "frame_idx": 7504,
+          "timestamp": 300.16,
+          "caption": "B\u00e9o B\u00e9o Gi\u00f2n Ng\u1ecdt B\u00e1nh M\u00ec H\u1ea1nh Nh\u00e2n  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t"
         },
         {
           "rank": 2,
-          "id": "1b679866-ee0a-578c-a128-32e7a438efc6",
-          "score": 0.95,
-          "video_name": "Videos_L26_a/video/L26_V003.mp4",
-          "frame_idx": 3105,
-          "timestamp": 124.2,
-          "caption": "\u1ee8C G\u00c0 NH\u1ed2I PH\u00d4 MAI M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50 h\u00e0"
+          "id": "d262b7b0-f670-5ef3-8faf-798e45379aba",
+          "score": 0.6055,
+          "video_name": "Videos_L26_b/video/L26_V111.mp4",
+          "frame_idx": 7564,
+          "timestamp": 302.56,
+          "caption": "B\u00e9o B\u00e9o Gi\u00f2n Ng\u1ecdt B\u00e1nh M\u00ec H\u1ea1nh Nh\u00e2n  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t"
         },
         {
           "rank": 3,
-          "id": "fa5b56df-e8f2-551e-9886-d72184bf8036",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V466.mp4",
-          "frame_idx": 4709,
-          "timestamp": 188.36,
-          "caption": "C\u00c1 NG\u1eea \u0110\u1ea0I D\u01af\u01a0NG L\u00daC L\u1eaeC  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 26062020 . C\u00c1 NG\u1eea \u0110\u1ea0I D\u01af\u01a0NG L\u00daC L\u1eaeC |"
+          "id": "4c44656d-58a4-58ef-b002-7ff522832f8f",
+          "score": 0.6048,
+          "video_name": "Videos_L26_b/video/L26_V111.mp4",
+          "frame_idx": 744,
+          "timestamp": 29.76,
+          "caption": "B\u00e9o B\u00e9o Gi\u00f2n Ng\u1ecdt B\u00e1nh M\u00ec H\u1ea1nh Nh\u00e2n  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t"
         },
         {
           "rank": 4,
-          "id": "04a306d0-4940-5d8e-9932-a25a84ede54f",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V465.mp4",
-          "frame_idx": 4813,
-          "timestamp": 192.52,
-          "caption": "CH\u1ea2 B\u00d2 CHI\u00caN   M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 27062020 . CH\u1ea2 B\u00d2 CHI\u00caN | M\u00d3N NGON M\u1ed6I NG\u00c0Y | VI"
+          "id": "e9c3cfd5-76fd-5947-aae2-393ae279747e",
+          "score": 0.6034,
+          "video_name": "Videos_L26_b/video/L26_V111.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "B\u00e9o B\u00e9o Gi\u00f2n Ng\u1ecdt B\u00e1nh M\u00ec H\u1ea1nh Nh\u00e2n  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t"
         },
         {
           "rank": 5,
-          "id": "f96702f5-ed82-54f3-9be8-057e8d9a3a49",
-          "score": 0.95,
-          "video_name": "Videos_L21_a/video/L21_V031.mp4",
-          "frame_idx": 21780,
-          "timestamp": 871.2,
-          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 31082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 31/08/2024 "
+          "id": "f00daa52-f5da-5ec1-90b8-106c76d247b7",
+          "score": 0.3044,
+          "video_name": "Videos_L26_e/video/L26_V407.mp4",
+          "frame_idx": 7680,
+          "timestamp": 307.2,
+          "caption": "PANCAKE H\u1ea0NH NH\u00c2N \u0110\u1eacU \u0110\u1ece  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 29112020 . PANCAKE H\u1ea0NH NH\u00c2N \u0110\u1eacU \u0110\u1ece |"
         }
       ]
     },
@@ -328,7 +336,9 @@
       "category": "Conversational Known-Item Search",
       "query": "ph\u00f3ng s\u1ef1 \u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng t\u1eadp 1 V\u01b0\u1eddn C\u00f2 T\u01b0 S\u1ef1",
       "ground_truth": {
-        "video_name": "L29_V003.mp4",
+        "point_id": "00021072-08cc-5bba-8d03-578343c3b014",
+        "video_name": "Videos_L29_a/video/L29_V003.mp4",
+        "video_stem": "L29_V003",
         "timestamp": 192.0,
         "frame_id": 4800
       },
@@ -336,63 +346,63 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "{\"is_match\": true, \"answer\": \"Grounded answer\", \"score\": 0.95}",
+        "cqr_query": "Ch\u01b0\u01a1ng tr\u00ecnh kh\u00e1m ph\u00e1 thi\u00ean nhi\u00ean mi\u1ec1n T\u00e2y v\u1edbi ph\u00f3ng s\u1ef1 \u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng t\u1eadp 1 v\u1ec1 V\u01b0\u1eddn C\u00f2 T\u01b0 S\u1ef1",
         "ambiguity_turn1": 0.75,
-        "ambiguity_turn2": 0.789,
-        "delta_ambiguity": -0.0385
+        "ambiguity_turn2": 0.694,
+        "delta_ambiguity": 0.0559
       },
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 11.64,
-        "hyde_sec": 1.292,
-        "search_sec": 4.855,
-        "rerank_sec": 5.493
+        "total_sec": 28.671,
+        "hyde_sec": 3.323,
+        "search_sec": 1.991,
+        "rerank_sec": 23.357
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "0ecd7599-c9b2-5b56-80d6-236fc9a66f0d",
-          "score": 0.95,
+          "id": "11685872-2a89-564f-8a4a-a6f241decf30",
+          "score": 0.3087,
           "video_name": "Videos_L29_a/video/L29_V010.mp4",
-          "frame_idx": 21600,
-          "timestamp": 864.0,
+          "frame_idx": 5670,
+          "timestamp": 226.8,
           "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 10  762024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         },
         {
           "rank": 2,
-          "id": "0f2e45c4-b7c2-5a18-802f-200d4b2f780b",
-          "score": 0.95,
-          "video_name": "Videos_L29_a/video/L29_V010.mp4",
-          "frame_idx": 17022,
-          "timestamp": 680.88,
-          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 10  762024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
+          "id": "31d56e49-b2dd-59d0-9328-22bdc7118932",
+          "score": 0.3058,
+          "video_name": "Videos_L29_a/video/L29_V007.mp4",
+          "frame_idx": 15119,
+          "timestamp": 604.8,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 7  1752024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         },
         {
           "rank": 3,
-          "id": "7a11a1f5-5fc7-59ef-afab-b02d2a7ead20",
-          "score": 0.95,
-          "video_name": "Videos_L26_a/video/L26_V073.mp4",
-          "frame_idx": 6338,
-          "timestamp": 253.52,
-          "caption": "\u0110\u00f9i D\u00ea Quay_Ch\u00edn ng\u1ecdt b\u00ean trong v\u00e0ng th\u01a1m b\u00ean ngo\u00e0i  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngo"
+          "id": "33696ad4-9fd0-5471-965b-33b1fe33d9fc",
+          "score": 0.3056,
+          "video_name": "Videos_L29_a/video/L29_V010.mp4",
+          "frame_idx": 14846,
+          "timestamp": 593.84,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 10  762024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         },
         {
           "rank": 4,
-          "id": "b983ad66-9c1e-5f57-90bf-0ceb655ded54",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V444.mp4",
-          "frame_idx": 4843,
-          "timestamp": 193.72,
-          "caption": "S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 15082020 . S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI | M\u00d3N NGO"
+          "id": "39a0d10a-92ec-5e21-b186-b3894f6e23e8",
+          "score": 0.3055,
+          "video_name": "Videos_L29_a/video/L29_V010.mp4",
+          "frame_idx": 14715,
+          "timestamp": 588.6,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 10  762024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         },
         {
           "rank": 5,
-          "id": "bfa77516-2c4a-5195-a517-5bfa88b40993",
-          "score": 0.95,
-          "video_name": "Videos_L25_a/video/L25_V052.mp4",
-          "frame_idx": 49649,
-          "timestamp": 1656.65,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n To\u00e1n  Chuy\u00ean \u0111\u1ec1 5  To\u00e1n s\u1ed1 ph\u1ee9c v\u00e0 \u1ee9ng d\u1ee5ng h\u00ecnh h\u1ecdc trong "
+          "id": "581d00c3-15d6-52a5-bb23-8caecaad6e37",
+          "score": 0.3053,
+          "video_name": "Videos_L29_a/video/L29_V010.mp4",
+          "frame_idx": 2066,
+          "timestamp": 82.64,
+          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 10  762024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 222g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
         }
       ]
     },
@@ -403,7 +413,9 @@
       "category": "Visual Question Answering (Grounded)",
       "query": "Chuy\u00ean \u0111\u1ec1 \u00f4n thi ti\u1ebfng Anh THPT trong video l\u00e0 g\u00ec?",
       "ground_truth": {
-        "video_name": "L25_V050.mp4",
+        "point_id": "0000dc4e-3e47-5671-a04c-662a0e7582da",
+        "video_name": "Videos_L25_a/video/L25_V050.mp4",
+        "video_stem": "L25_V050",
         "timestamp": 1170.48,
         "frame_id": 29262,
         "answer": "\u0110\u1ea3o ng\u1eef",
@@ -420,56 +432,56 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 8.277,
-        "hyde_sec": 1.36,
-        "search_sec": 5.617,
-        "rerank_sec": 1.3
+        "total_sec": 7.117,
+        "hyde_sec": 2.335,
+        "search_sec": 1.856,
+        "rerank_sec": 2.926
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "eb67f213-24de-5298-8a34-a975bf54faf0",
-          "score": 0.0092,
-          "video_name": "Videos_L28_a/video/L28_V003.mp4",
-          "frame_idx": 15284,
-          "timestamp": 611.36,
-          "caption": "T\u1ea3n M\u1ea1n M\u00ea K\u00f4ng, \u0110\u1ebfn V\u00e0 \u1ede L\u1ea1i  T\u1eacP 3  252024 . \"T\u1ea3n m\u1ea1n M\u00ea K\u00f4ng, \u0111\u1ebfn v\u00e0 \u1edf l\u1ea1i\" ph\u00e1t s\u00f3ng l"
+          "id": "1b9d9b52-d820-556e-9218-d9fd2a3fe427",
+          "score": 0.0066,
+          "video_name": "Videos_L21_a/video/L21_V028.mp4",
+          "frame_idx": 5982,
+          "timestamp": 199.4,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 28082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 28/08/2024 "
         },
         {
           "rank": 2,
-          "id": "440e9b1f-e361-5618-a240-a7ce6545ac8c",
-          "score": 0.0066,
-          "video_name": "Videos_L26_c/video/L26_V239.mp4",
-          "frame_idx": 3747,
-          "timestamp": 149.88,
-          "caption": "SALAD T\u00d4M THANH M\u00c1T  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50 "
+          "id": "65f7e847-9ab9-5dda-83c6-b2dd65802922",
+          "score": 0.0065,
+          "video_name": "Videos_L21_a/video/L21_V017.mp4",
+          "frame_idx": 1432,
+          "timestamp": 57.28,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 17082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 17/08/2024 "
         },
         {
           "rank": 3,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.0066,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "416eb550-bb64-5456-92ca-e649ce7c984d",
+          "score": 0.0063,
+          "video_name": "Videos_L25_a/video/L25_V032.mp4",
+          "frame_idx": 129,
+          "timestamp": 5.16,
+          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n Anh v\u0103n  Chuy\u00ean \u0111\u1ec1 7  C\u00e2u t\u01b0\u1eddng thu\u1eadt . #thoisuthanhnien #t"
         },
         {
           "rank": 4,
-          "id": "27b25c0c-164c-5b96-9e9b-f1053f659822",
-          "score": 0.0065,
-          "video_name": "Videos_L30_a/video/L30_V032.mp4",
-          "frame_idx": 5394,
-          "timestamp": 215.76,
-          "caption": "Lan t\u1ecfa n\u0103ng l\u01b0\u1ee3ng t\u00edch c\u1ef1c 2024 B\u1ec7nh t\u1eadt kh\u00f4ng \u0111\u00e1nh g\u1ee5c gi\u1ea5c m\u01a1 \u0111\u1ea1i h\u1ecdc . Ng\u00e0y nh\u1eadn tin b"
+          "id": "5f087ea3-a646-5997-9fac-3d418e30daae",
+          "score": 0.0063,
+          "video_name": "Videos_L25_a/video/L25_V032.mp4",
+          "frame_idx": 279,
+          "timestamp": 11.16,
+          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n Anh v\u0103n  Chuy\u00ean \u0111\u1ec1 7  C\u00e2u t\u01b0\u1eddng thu\u1eadt . #thoisuthanhnien #t"
         },
         {
           "rank": 5,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.0065,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "e0c967a6-9139-5d6e-b5cc-602f15de20e2",
+          "score": 0.0062,
+          "video_name": "Videos_L21_a/video/L21_V028.mp4",
+          "frame_idx": 6017,
+          "timestamp": 200.567,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 28082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 28/08/2024 "
         }
       ]
     },
@@ -480,7 +492,9 @@
       "category": "Visual Question Answering (Grounded)",
       "query": "M\u00f3n \u0103n trong video \u0111\u01b0\u1ee3c ch\u1ebf bi\u1ebfn t\u1eeb lo\u1ea1i th\u1ecbt gia c\u1ea7m n\u00e0o?",
       "ground_truth": {
-        "video_name": "L26_V203.mp4",
+        "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+        "video_name": "Videos_L26_c/video/L26_V203.mp4",
+        "video_stem": "L26_V203",
         "timestamp": 302.08,
         "frame_id": 7552,
         "answer": "Th\u1ecbt v\u1ecbt",
@@ -496,56 +510,56 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 7.351,
-        "hyde_sec": 1.25,
-        "search_sec": 4.752,
-        "rerank_sec": 1.348
+        "total_sec": 7.122,
+        "hyde_sec": 2.513,
+        "search_sec": 2.165,
+        "rerank_sec": 2.444
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "a4eb7571-e2c6-56c1-a5c7-0813becda910",
+          "id": "932ac867-8c6c-53f7-acfd-7a194298f404",
           "score": 0.0066,
-          "video_name": "Videos_L26_d/video/L26_V342.mp4",
-          "frame_idx": 5035,
-          "timestamp": 201.4,
-          "caption": "CH\u00c1O H\u1ea0T SEN N\u1ea4U B\u00d2 VI\u00caN_V\u1eca NGON V\u1eb8N TO\u00c0N  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . CH\u00c1O H\u1ea0T SEN N\u1ea4U B"
+          "video_name": "Videos_L26_e/video/L26_V422.mp4",
+          "frame_idx": 2280,
+          "timestamp": 91.2,
+          "caption": "C\u01a0M CHANH \u1ea4N \u0110\u1ed8  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV  04102020 . C\u01a0M CHANH \u1ea4N \u0110\u1ed8 | M\u00d3N NGON M\u1ed6I NG\u00c0"
         },
         {
           "rank": 2,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.0066,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "5f87d253-e64c-5828-94c5-f490c1d728ea",
+          "score": 0.0065,
+          "video_name": "Videos_L26_c/video/L26_V246.mp4",
+          "frame_idx": 3072,
+          "timestamp": 122.88,
+          "caption": "GI\u00d2 HEO HON D\u1eeaA N\u01af\u1edaC  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50"
         },
         {
           "rank": 3,
-          "id": "1b679866-ee0a-578c-a128-32e7a438efc6",
-          "score": 0.0065,
-          "video_name": "Videos_L26_a/video/L26_V003.mp4",
-          "frame_idx": 3105,
-          "timestamp": 124.2,
-          "caption": "\u1ee8C G\u00c0 NH\u1ed2I PH\u00d4 MAI M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50 h\u00e0"
+          "id": "195f4a93-7dc1-5ec9-9f5a-522ca2966543",
+          "score": 0.0063,
+          "video_name": "Videos_L26_b/video/L26_V119.mp4",
+          "frame_idx": 3869,
+          "timestamp": 154.76,
+          "caption": "G\u00e0 Cari xanh ng\u1ecdt ng\u1ecdt cay cay th\u01a1m n\u1ed3ng h\u01b0\u01a1ng Th\u00e1i  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngo"
         },
         {
           "rank": 4,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.0065,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "a1d05cad-1352-5f2c-a273-423f37a1bbf3",
+          "score": 0.0063,
+          "video_name": "Videos_L26_e/video/L26_V459.mp4",
+          "frame_idx": 3361,
+          "timestamp": 134.48,
+          "caption": "G\u00c0 N\u01af\u1edaNG L\u1eecA TR\u1ea0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 11072020 . G\u00c0 N\u01af\u1edaNG L\u1eecA TR\u1ea0I | M\u00d3N NGON M\u1ed6I "
         },
         {
           "rank": 5,
-          "id": "f310ea97-7ce3-5d83-b4c1-22b6ad0a7d33",
-          "score": 0.0063,
-          "video_name": "Videos_L30_a/video/L30_V037.mp4",
-          "frame_idx": 3228,
-          "timestamp": 129.12,
-          "caption": "Lan t\u1ecfa n\u0103ng l\u01b0\u1ee3ng t\u00edch c\u1ef1c 2024 V\u01b0\u1ee3t qua b\u1ea1o b\u1ec7nh, lan t\u1ecfa n\u0103ng l\u01b0\u1ee3ng t\u00edch c\u1ef1c . Ng\u00f4 V\u0103n "
+          "id": "dafeb4f1-d34b-593a-8f32-4bb2a2400d18",
+          "score": 0.0062,
+          "video_name": "Videos_L26_e/video/L26_V441.mp4",
+          "frame_idx": 1408,
+          "timestamp": 56.32,
+          "caption": "\u1ebeCH CHI\u00caN B\u1ece T\u1eceI  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 22082020 . \u1ebeCH CHI\u00caN B\u1ece T\u1eceI | M\u00d3N NGON M\u1ed6I NG"
         }
       ]
     },
@@ -574,56 +588,56 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 7.315,
-        "hyde_sec": 1.34,
-        "search_sec": 4.608,
-        "rerank_sec": 1.367
+        "total_sec": 6.571,
+        "hyde_sec": 2.375,
+        "search_sec": 1.86,
+        "rerank_sec": 2.336
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "2012c6cf-b7df-5335-b87c-fa2cf3ed2e41",
+          "id": "d2c10e79-f6f4-533f-a97d-a3e0d5b22912",
           "score": 0.0066,
-          "video_name": "Videos_L26_e/video/L26_V461.mp4",
-          "frame_idx": 2304,
-          "timestamp": 92.16,
-          "caption": "C\u00c1 CHI\u00caN X\u1ed0T N\u1ea4M  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 05072020 . C\u00c1 CHI\u00caN X\u1ed0T N\u1ea4M | M\u00d3N NGON M\u1ed6I NG"
+          "video_name": "Videos_L21_a/video/L21_V019.mp4",
+          "frame_idx": 22808,
+          "timestamp": 760.267,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19/08/2024 "
         },
         {
           "rank": 2,
-          "id": "f9e48587-cff3-5907-ad3f-e950304ce361",
-          "score": 0.0066,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 23999,
-          "timestamp": 800.8,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "d6034c2b-f1ec-54bd-96df-d20403db88be",
+          "score": 0.0065,
+          "video_name": "Videos_L21_a/video/L21_V019.mp4",
+          "frame_idx": 24297,
+          "timestamp": 809.9,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19/08/2024 "
         },
         {
           "rank": 3,
-          "id": "b6e6e1fc-3023-5b0e-9331-4d9e8ccc4e1f",
-          "score": 0.0065,
-          "video_name": "Videos_L26_c/video/L26_V278.mp4",
-          "frame_idx": 300,
-          "timestamp": 12.0,
-          "caption": "C\u00c1 B\u00d3P KHO T\u1ed8 TH\u1ecaT BA R\u1eccI  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac "
+          "id": "75767ad4-83d1-509d-9252-0c21940cd6bd",
+          "score": 0.0063,
+          "video_name": "Videos_L21_a/video/L21_V019.mp4",
+          "frame_idx": 23217,
+          "timestamp": 773.9,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19/08/2024 "
         },
         {
           "rank": 4,
-          "id": "8947f8c1-c268-5137-9fcd-12552e52cb31",
-          "score": 0.0065,
-          "video_name": "Videos_L25_a/video/L25_V040.mp4",
-          "frame_idx": 24149,
-          "timestamp": 805.805,
-          "caption": "B\u00cd QUY\u1ebeT \u00d4N THI THPT 2024  M\u00f4n V\u1eadt l\u00fd  Chuy\u00ean \u0111\u1ec1 6  C\u00e1c lo\u1ea1i m\u00e1y \u0111i\u1ec7n - S\u1ef1 truy\u1ec1n t\u1ea3i \u0111i\u1ec7n"
+          "id": "fa630f57-688e-5deb-9cc9-504f8024d0de",
+          "score": 0.0063,
+          "video_name": "Videos_L21_a/video/L21_V019.mp4",
+          "frame_idx": 22940,
+          "timestamp": 764.667,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19/08/2024 "
         },
         {
           "rank": 5,
-          "id": "6daab771-8c43-5ac6-9aa0-094e27cf608c",
-          "score": 0.0063,
-          "video_name": "Videos_L26_c/video/L26_V205.mp4",
-          "frame_idx": 2572,
-          "timestamp": 102.88,
-          "caption": "B\u00d2 N\u01af\u1edaNG L\u00c1 C\u00c1CH  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50 h\u00e0n"
+          "id": "5004f7c2-ddd8-54a5-81f9-5224a4e8effb",
+          "score": 0.0062,
+          "video_name": "Videos_L21_a/video/L21_V019.mp4",
+          "frame_idx": 23318,
+          "timestamp": 777.267,
+          "caption": "60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19082024 - HTV Tin T\u1ee9c M\u1edbi Nh\u1ea5t 2024 . 60 Gi\u00e2y S\u00e1ng - Ng\u00e0y 19/08/2024 "
         }
       ]
     },
@@ -634,7 +648,9 @@
       "category": "Ad-hoc Video Search (Cross-Video Diversity)",
       "query": "c\u00e1c m\u00f3n \u0103n trong ch\u01b0\u01a1ng tr\u00ecnh M\u00f3n Ngon M\u1ed7i Ng\u00e0y Vivu TV",
       "ground_truth": {
-        "video_name": "L26_V203.mp4",
+        "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
+        "video_name": "Videos_L26_c/video/L26_V203.mp4",
+        "video_stem": "L26_V203",
         "timestamp": 302.08,
         "frame_id": 7552,
         "distinct_target_videos": [
@@ -649,20 +665,20 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 3.126,
+        "total_sec": 2.061,
         "hyde_sec": 0.0,
-        "search_sec": 3.126,
+        "search_sec": 2.061,
         "rerank_sec": 0.0
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "01c8076b-f582-5de0-9ade-f960fbcf03ce",
+          "id": "7936262a-0709-5873-a535-dc7aad0f7a89",
           "score": 0.0,
-          "video_name": "Videos_L26_d/video/L26_V323.mp4",
-          "frame_idx": 5543,
-          "timestamp": 221.72,
-          "caption": "B\u00c1NH TR\u1ee8NG PH\u00d4 MAI RAU C\u1ee6 B\u00c9O NG\u1eacY GI\u00d2N TH\u01a0M  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . B\u00c1NH TR\u1ee8NG PH\u00d4 "
+          "video_name": "Videos_L26_e/video/L26_V435.mp4",
+          "frame_idx": 6144,
+          "timestamp": 245.76,
+          "caption": "CH\u1ea2 M\u1ef0C B\u00c1NH XE CHI\u00caN GI\u00d2N  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 05092020 . CH\u1ea2 M\u1ef0C B\u00c1NH XE CHI\u00caN GI"
         },
         {
           "rank": 2,
@@ -675,12 +691,12 @@
         },
         {
           "rank": 3,
-          "id": "e2143ad7-f3e4-524d-a59f-16110b33ab85",
+          "id": "959f57e5-dfab-535f-803e-4a326a9f05bc",
           "score": 0.0,
-          "video_name": "Videos_L26_c/video/L26_V269.mp4",
-          "frame_idx": 3235,
-          "timestamp": 129.4,
-          "caption": "G\u1eceI HOA CHU\u1ed0I TH\u1ecaT G\u00c0 CHAY  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac"
+          "video_name": "Videos_L26_e/video/L26_V490.mp4",
+          "frame_idx": 6200,
+          "timestamp": 248.0,
+          "caption": "PANCAKE \u0110\u1eacU XANH C\u1ed0T D\u1eeaA  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV  18042020 . PANCAKE \u0110\u1eacU XANH C\u1ed0T D\u1eeaA "
         },
         {
           "rank": 4,
@@ -693,12 +709,12 @@
         },
         {
           "rank": 5,
-          "id": "009a4dd6-1f51-53da-be1f-c5f34e5e442c",
+          "id": "8c87ca24-9f3a-5627-bb91-b31822cc6515",
           "score": 0.0,
-          "video_name": "Videos_L26_e/video/L26_V401.mp4",
-          "frame_idx": 5600,
-          "timestamp": 224.0,
-          "caption": "SANDWICH K\u1eb8P CH\u1ea2 T\u00d4M CHO BU\u1ed4I S\u00c1NG \u0110\u1ea6Y N\u0102NG L\u01af\u1ee2NG  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . SANDWICH K"
+          "video_name": "Videos_L26_b/video/L26_V122.mp4",
+          "frame_idx": 6400,
+          "timestamp": 256.0,
+          "caption": "Salad Cam \u0110\u1eadu \u0110\u1ecf T\u01b0\u01a1i Gi\u00f2n Thanh M\u00e1t  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1"
         }
       ]
     },
@@ -709,7 +725,9 @@
       "category": "Visual Query Search",
       "query": "\u0111ua xe \u0111\u1ea1p v\u00f2ng quanh b\u1edd h\u1ed3",
       "ground_truth": {
-        "video_name": "L23_V005.mp4",
+        "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
+        "video_name": "Videos_L23_a/video/L23_V005.mp4",
+        "video_stem": "L23_V005",
         "timestamp": 5.52,
         "frame_id": 138
       },
@@ -719,56 +737,56 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 6.091,
+        "total_sec": 30.472,
         "hyde_sec": 0.0,
-        "search_sec": 2.129,
-        "rerank_sec": 3.962
+        "search_sec": 1.817,
+        "rerank_sec": 28.655
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "b1ce6a24-d349-5e10-8291-19553dae0d03",
-          "score": 0.95,
-          "video_name": "Videos_L26_b/video/L26_V106.mp4",
-          "frame_idx": 4795,
-          "timestamp": 191.8,
-          "caption": "C\u00c1 THU X\u1ed0T XO\u00c0I  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t s\u00f3ng l\u00fac 11g50 h\u00e0ng"
+          "id": "9671f348-fa26-574c-a257-bab4ef73e9f1",
+          "score": 0.6065,
+          "video_name": "Videos_L23_a/video/L23_V005.mp4",
+          "frame_idx": 4625,
+          "timestamp": 185.0,
+          "caption": "DI\u1ec4N BI\u1ebeN V\u00d2NG \u0110UA CU\u1ed0I C\u00d9NG - CH\u1eb6NG 5 V\u00d2NG \u0110UA H\u1ed2 HO\u00c0N KI\u1ebeM  C\u00daP TRUY\u1ec0N H\u00ccNH TP.HCM 2024 "
         },
         {
           "rank": 2,
-          "id": "3fb3c3c0-93f8-5e62-aefd-5f3876c40cdb",
-          "score": 0.95,
-          "video_name": "Videos_L29_a/video/L29_V019.mp4",
-          "frame_idx": 8265,
-          "timestamp": 330.6,
-          "caption": "\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng  T\u1eacP 19  3082024 . \"\u0110\u00f4i M\u1eaft M\u00ea K\u00f4ng\" ph\u00e1t s\u00f3ng l\u00fac 22g45 th\u1ee9 S\u00e1u h\u00e0ng tu\u1ea7n"
+          "id": "50668483-d919-577b-832a-cbc0cea49e2f",
+          "score": 0.6063,
+          "video_name": "Videos_L23_a/video/L23_V002.mp4",
+          "frame_idx": 3379,
+          "timestamp": 135.2,
+          "caption": "RIKUNOV QU\u00c1 M\u1ea0NH M\u1ebc \u1ede NH\u1eeeNG M\u00c9T CU\u1ed0I  DI\u1ec4N BI\u1ebeN NH\u1eeeNG V\u00d2NG \u0110UA CU\u1ed0I - CH\u1eb6NG 2 C\u00daP TRUY\u1ec0N H"
         },
         {
           "rank": 3,
-          "id": "6eaf902c-fe9a-5bcf-8ce3-09fc84b28915",
-          "score": 0.95,
-          "video_name": "Videos_L26_e/video/L26_V444.mp4",
-          "frame_idx": 3840,
-          "timestamp": 153.6,
-          "caption": "S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV 15082020 . S\u00d2 L\u00d4NG N\u01af\u1edaNG B\u01a0 T\u1eceI | M\u00d3N NGO"
+          "id": "6961ed1c-34b6-5872-848a-f31723e70383",
+          "score": 0.6062,
+          "video_name": "Videos_L23_a/video/L23_V018.mp4",
+          "frame_idx": 2077,
+          "timestamp": 83.08,
+          "caption": "MARTIN LAAS KH\u1eb2NG \u0110\u1ecaNH S\u1ee8C M\u1ea0NH L\u1ea6N N\u1eeeA T\u1ea0I V\u00d2NG \u0110UA H\u1ed2 XU\u00c2N H\u01af\u01a0NG - \u0110\u00c0 L\u1ea0T DI\u1ec4N BI\u1ebeN NH\u1eeeN"
         },
         {
           "rank": 4,
-          "id": "2f3f67c2-caef-537b-8953-79f041cc8244",
-          "score": 0.95,
-          "video_name": "Videos_L26_d/video/L26_V334.mp4",
-          "frame_idx": 5790,
-          "timestamp": 231.6,
-          "caption": "G\u1eceI C\u00d3C TAI HEO_GI\u00d2N R\u1ee4M CHUA CHUA  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . G\u1eceI C\u00d3C TAI HEO_GI\u00d2N R\u1ee4M "
+          "id": "2003960d-54f2-5f25-b21f-d8f069556350",
+          "score": 0.6062,
+          "video_name": "Videos_L23_a/video/L23_V018.mp4",
+          "frame_idx": 3100,
+          "timestamp": 124.0,
+          "caption": "MARTIN LAAS KH\u1eb2NG \u0110\u1ecaNH S\u1ee8C M\u1ea0NH L\u1ea6N N\u1eeeA T\u1ea0I V\u00d2NG \u0110UA H\u1ed2 XU\u00c2N H\u01af\u01a0NG - \u0110\u00c0 L\u1ea0T DI\u1ec4N BI\u1ebeN NH\u1eeeN"
         },
         {
           "rank": 5,
-          "id": "41067d40-96d8-5658-b76a-ec33773ef2c7",
-          "score": 0.95,
-          "video_name": "Videos_L26_b/video/L26_V137.mp4",
-          "frame_idx": 5888,
-          "timestamp": 235.52,
-          "caption": "C\u00c1NH G\u00c0 N\u01af\u1edaNG CAY \u0110\u1eadm \u0111\u00e0 vui mi\u1ec7ng  M\u00d3N NGON M\u1ed6I NG\u00c0Y  VIVU TV . \"M\u00f3n ngon m\u1ed7i ng\u00e0y\" ph\u00e1t "
+          "id": "8e0daeb5-e86a-526c-b78f-b61bc8e01aec",
+          "score": 0.6061,
+          "video_name": "Videos_L23_a/video/L23_V018.mp4",
+          "frame_idx": 2926,
+          "timestamp": 117.04,
+          "caption": "MARTIN LAAS KH\u1eb2NG \u0110\u1ecaNH S\u1ee8C M\u1ea0NH L\u1ea6N N\u1eeeA T\u1ea0I V\u00d2NG \u0110UA H\u1ed2 XU\u00c2N H\u01af\u01a0NG - \u0110\u00c0 L\u1ea0T DI\u1ec4N BI\u1ebeN NH\u1eeeN"
         }
       ]
     }
