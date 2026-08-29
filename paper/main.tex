@@ -145,6 +145,9 @@ Online text queries undergo contextual query rewriting (CQR) and optional hypoth
 \end{equation}
 where $k=60$, followed by temporal coherence boosting across adjacent keyframes and scene diversification to prevent video clustering.
 
+\section{Task-Specific Execution Lanes}
+\label{sec:tasks}
+
 \begin{figure*}[t]
 \centering
 \resizebox{0.99\textwidth}{!}{%
@@ -214,10 +217,6 @@ where $k=60$, followed by temporal coherence boosting across adjacent keyframes 
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
 \label{fig:task-lanes}
 \end{figure*}
-
-\section{Task-Specific Execution Lanes}
-\label{sec:tasks}
-
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
 \paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy:
