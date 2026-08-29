@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Live Studio & AI Assistant - TGLTW-RMIT VBS 2027</title>
+    
+    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                    colors: {
+                        brand: {
+                            50: "#f0f9ff",
+                            100: "#e0f2fe",
+                            400: "#38bdf8",
+                            500: "#0ea5e9",
+                            600: "#0284c7",
+                            700: "#0369a1",
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Marked.js for AI Markdown rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+
+    <!-- Ace Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-latex.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-bibtex.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/theme-tomorrow_night_eighties.js"></script>
+    
+    <!-- PDF.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+    
+    <style>
+        body.is-resizing {
+            cursor: col-resize !important;
+            user-select: none;
+        }
+
+        body.is-resizing .pdf-scroll-view {
+            pointer-events: none;
+        }
+
+        /* Fix Ace Editor Monospace Cursor Misalignment */
+        #aceEditor {
+            font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            font-size: 13px !important;
+            line-height: 1.6 !important;
+            letter-spacing: normal !important;
+        }
+
+        #aceEditor .ace_text-layer,
+        #aceEditor .ace_line,
+        #aceEditor .ace_cursor,
+        #aceEditor .ace_gutter {
+            font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            letter-spacing: normal !important;
+            font-variant-ligatures: none !important;
+        }
+
+        /* Resizer Bars */
+        .resizer-x {
+            width: 6px;
+            height: 100%;
+            background-color: #1e293b;
+            border-left: 1px solid #334155;
+            border-right: 1px solid #334155;
+            cursor: col-resize;
+            position: relative;
+            z-index: 20;
+            transition: background-color 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .resizer-x:hover, .resizer-x.active {
+            background-color: #0284c7;
+        }
+
+        .resizer-x::after {
+            content: "";
+            width: 2px;
+            height: 18px;
+            background-color: #64748b;
+            border-radius: 1px;
+        }
+
+        .resizer-x:hover::after, .resizer-x.active::after {
+            background-color: #ffffff;
+        }
+
+        /* PDF.js Page Styling */
+        .pdf-page-container {
+            position: relative;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+            border-radius: 2px;
+            transition: outline 0.2s;
+        }
+
+        .pdf-page-container.highlighted {
+            outline: 3px solid #38bdf8;
+        }
+
+        .pdf-page-container canvas {
+            display: block;
+        }
+
+        .textLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            opacity: 0.25;
+            line-height: 1.0;
+        }
+
+        .textLayer ::selection {
+            background: rgba(56, 189, 248, 0.7);
+        }
+
+        /* AI Markdown Styles */
+        .ai-prose {
+            font-size: 12.5px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+        .ai-prose p { margin-bottom: 8px; }
+        .ai-prose p:last-child { margin-bottom: 0; }
+        .ai-prose ul, .ai-prose ol { margin-left: 16px; margin-bottom: 8px; }
+        .ai-prose li { margin-bottom: 4px; }
+        .ai-prose strong { color: #f8fafc; font-weight: 600; }
+        .ai-prose h1, .ai-prose h2, .ai-prose h3 { color: #38bdf8; font-weight: 700; margin-top: 8px; margin-bottom: 4px; }
+        .ai-prose code {
+            font-family: "JetBrains Mono", monospace;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #7dd3fc;
+        }
+        .ai-prose pre {
+            background: #090d16;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        .ai-prose pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 11.5px;
+            display: block;
+        }
+
+        /* Hide scrollbars for navbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden font-sans select-none antialiased">
+
+    <!-- Compact Responsive Header Navbar -->
+    <header class="bg-slate-900 border-b border-slate-800 px-2.5 h-11 flex items-center justify-between gap-2 z-30 shadow-md flex-shrink-0">
+        
+        <!-- Left Group: Files Toggle, Brand, View Switcher -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+            <!-- Files Sidebar Toggle -->
+            <button onclick="toggleLeftSidebar()" class="px-2 py-1 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-md border border-slate-700 transition flex items-center gap-1 text-xs font-medium" title="Toggle File Tree">
+                <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="hidden xs:inline">Files</span>
+            </button>
+
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-1 px-1">
+                <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
+                <span class="text-xs font-bold text-white tracking-tight">TGLTW-RMIT</span>
+                <span class="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 hidden sm:inline">VBS 2027</span>
+            </div>
+
+            <!-- View Modes (Split / Editor / PDF) -->
+            <div class="flex bg-slate-950 border border-slate-800 rounded-md p-0.5 ml-0.5">
+                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition" id="viewSplit" onclick="setViewMode('split')" title="Split View">
+                    <i data-lucide="columns" class="w-3 h-3"></i>
+                    <span class="hidden md:inline">Split</span>
+                </button>
+                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition" id="viewEditor" onclick="setViewMode('editor')" title="Editor View">
+                    <i data-lucide="code" class="w-3 h-3"></i>
+                    <span class="hidden md:inline">Code</span>
+                </button>
+                <button class="view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition" id="viewPdf" onclick="setViewMode('pdf')" title="PDF View">
+                    <i data-lucide="file-check" class="w-3 h-3"></i>
+                    <span class="hidden md:inline">PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Group: Active File, Engine, Save, Recompile, Status -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+            <!-- Active File Tag -->
+            <div class="bg-slate-800/90 border border-slate-700/80 text-slate-300 text-[11px] px-2 py-0.5 rounded-md flex items-center gap-1 font-mono max-w-[130px] truncate" title="Current Active File">
+                <i data-lucide="file-code" class="w-3 h-3 text-sky-400 flex-shrink-0"></i>
+                <span id="navCurrentFileName" class="truncate">main.tex</span>
+            </div>
+
+            <!-- Engine Dropdown -->
+            <div class="relative">
+                <select id="engineSelect" class="bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-[11px] rounded-md px-2 py-1 pr-5 cursor-pointer focus:outline-none focus:border-sky-500 appearance-none font-medium">
+                    <option value="latexmk" selected>latexmk</option>
+                    <option value="pdflatex">pdflatex</option>
+                    <option value="xelatex">xelatex</option>
+                </select>
+                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none"></i>
+            </div>
+
+            <!-- Save Button & Status -->
+            <button onclick="saveCurrentFile()" class="btn-save bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-medium rounded-md px-2 py-1 flex items-center gap-1 transition" title="Save changes (Ctrl+S)">
+                <i data-lucide="save" class="w-3 h-3"></i>
+                <span>Save</span>
+            </button>
+            <span id="saveIndicator" class="text-[10px] text-slate-400 hidden lg:inline">Saved</span>
+
+            <!-- Recompile Button -->
+            <button id="compileBtn" onclick="triggerSaveAndCompile()" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1 shadow-sm transition" title="Save & Recompile (Ctrl+Enter)">
+                <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                <span>Recompile</span>
+            </button>
+
+            <!-- Status Indicator Badge -->
+            <div id="statusBadge" class="bg-slate-800/80 border border-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] text-slate-300">
+                <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                <span id="statusText" class="hidden sm:inline">Ready</span>
+            </div>
+        </div>
+
+        <!-- Right Group: AI Copilot, Review Comments, Logs, PDF Actions -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+            <!-- Toggle AI Assistant -->
+            <button onclick="openRightPanelTab('ai')" id="headerAiBtn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1 shadow transition" title="AI Assistant">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>AI Assistant</span>
+            </button>
+
+            <!-- Toggle Advisor Comments -->
+            <button onclick="openRightPanelTab('comments')" id="headerCommentsBtn" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-[11px] font-medium rounded-md px-2 py-1 flex items-center gap-1 transition" title="Advisor Comments">
+                <i data-lucide="message-square" class="w-3 h-3"></i>
+                <span class="hidden sm:inline">Review</span>
+                <span id="commentsCountBadge" class="bg-red-500 text-white text-[9px] font-bold px-1 rounded-full">0</span>
+            </button>
+
+            <!-- Toggle Logs -->
+            <button onclick="toggleLogs()" id="logToggleBtn" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 text-[11px] p-1 rounded-md transition" title="Compilation Logs (Ctrl+L)">
+                <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <div class="h-3.5 w-px bg-slate-800 mx-0.5"></div>
+
+            <!-- Open in New Tab -->
+            <button onclick="openPdfNewTab()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 p-1 rounded-md transition" title="Open PDF in new tab">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <!-- Download PDF -->
+            <button onclick="downloadPdf()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 p-1 rounded-md transition" title="Download PDF">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Workspace -->
+    <div class="flex-1 flex relative overflow-hidden w-screen" id="workspaceContainer">
+        
+        <!-- LEFT SIDEBAR: FILE EXPLORER & UPLOAD -->
+        <div class="left-sidebar w-[220px] h-full bg-slate-950 border-r border-slate-800 flex flex-col relative z-20 min-w-[150px] max-w-[380px] flex-shrink-0" id="leftSidebar">
+            <!-- Sidebar Header & Action Toolbar -->
+            <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+                    <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>FILES</span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <!-- Upload Button -->
+                    <button onclick="triggerUploadDialog()" class="text-slate-400 hover:text-sky-400 p-1 rounded hover:bg-slate-800 transition" title="Upload files / images">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <!-- New File Button -->
+                    <button onclick="promptCreateFile('file')" class="text-slate-400 hover:text-emerald-400 p-1 rounded hover:bg-slate-800 transition" title="New LaTeX / text file">
+                        <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <!-- New Folder Button -->
+                    <button onclick="promptCreateFile('dir')" class="text-slate-400 hover:text-amber-400 p-1 rounded hover:bg-slate-800 transition" title="New Folder">
+                        <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <!-- Refresh Tree Button -->
+                    <button onclick="loadFileTree()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition" title="Refresh files">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden File Input for Upload -->
+            <input type="file" id="fileUploadInput" multiple class="hidden" onchange="handleFileSelected(event)">
+
+            <!-- File Tree View Container -->
+            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1 text-xs select-none">
+                <div class="text-slate-500 text-center py-6 text-xs">Loading tree...</div>
+            </div>
+
+            <!-- Drag & Drop Overlay Indicator -->
+            <div id="dragDropBanner" class="m-2 p-2 border-2 border-dashed border-sky-500/30 hover:border-sky-400 rounded-lg bg-sky-500/5 text-center cursor-pointer transition" onclick="triggerUploadDialog()">
+                <div class="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-300 text-[10.5px]">
+                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span>Drag files here or <strong>browse</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resizer 0: Between Left Sidebar and Editor -->
+        <div class="resizer-x" id="resizerLeftSidebar" title="Drag to resize File Explorer"></div>
+
+        <!-- Editor Pane -->
+        <div class="editor-pane flex-1 h-full flex flex-col bg-[#14171d] relative min-w-[200px]" id="editorPane">
+            <div class="px-3 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span id="currentFileName" class="font-mono text-slate-200 font-medium">main.tex</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="askAiWithEditorSelection()" class="text-indigo-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition" title="Send selected code to AI Assistant">
+                        <i data-lucide="sparkles" class="w-3 h-3"></i>
+                        <span>Ask AI about selection</span>
+                    </button>
+                    <span class="text-[11px] text-slate-500 font-mono" id="editorModeBadge">LaTeX Syntax</span>
+                </div>
+            </div>
+            <div id="aceEditor" class="flex-1 w-full h-full text-sm select-text"></div>
+        </div>
+
+        <!-- Resizer 1: Between Editor and PDF -->
+        <div class="resizer-x" id="resizerEditorPdf" title="Drag to resize (Double-click to reset 50/50)"></div>
+
+        <!-- PDF Preview Pane -->
+        <div class="preview-pane flex-1 h-full flex flex-col bg-slate-900 relative min-w-[200px]" id="previewPane">
+            <!-- PDF Toolbar -->
+            <div class="px-3 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="font-semibold text-slate-200">Preview</span>
+                    <span id="pdfPageInfo" class="text-slate-400 text-[11px]">Loading...</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="zoomPdf(-0.15)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-1 rounded transition" title="Zoom Out">
+                        <i data-lucide="zoom-out" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <span id="zoomPercent" class="text-[11px] font-mono text-slate-300 w-10 text-center">100%</span>
+                    <button onclick="zoomPdf(0.15)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-1 rounded transition" title="Zoom In">
+                        <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="resetZoom()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2 py-0.5 text-[11px] rounded flex items-center gap-1 transition" title="Fit Width">
+                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
+                        <span>Fit</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PDF Scroll View -->
+            <div class="pdf-scroll-view flex-1 overflow-y-auto p-5 flex flex-col items-center gap-5 bg-slate-850 relative select-text" id="pdfScrollView">
+                <div id="pdfLoadingNotice" class="text-slate-400 mt-12 flex items-center gap-2 text-sm">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-sky-400"></i>
+                    <span>Rendering PDF document...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Selection Tooltip for Highlighting in PDF -->
+        <div id="selectionPopover" class="fixed bg-slate-900 border border-sky-500 shadow-2xl rounded-lg p-1.5 hidden items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-1">
+            <button onclick="applySelectionToComment()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1.5 shadow transition">
+                <i data-lucide="message-square-plus" class="w-3.5 h-3.5"></i>
+                <span>Add Comment</span>
+            </button>
+            <button onclick="applySelectionToAi()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1.5 shadow transition">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Ask AI</span>
+            </button>
+        </div>
+
+        <!-- Resizer 2: Between PDF and Sidebar -->
+        <div class="resizer-x" id="resizerPdfComments" title="Drag to resize Right Panel"></div>
+
+        <!-- Right Side Panel: Tab Switcher (AI Copilot / Advisor Review) -->
+        <div class="right-panel w-[420px] h-full bg-slate-950 border-l border-slate-800 flex flex-col relative z-20 min-w-[280px] max-w-[750px] flex-shrink-0" id="rightSidebar">
+            <!-- Sidebar Header & Tab Buttons -->
+            <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                    <button id="tabBtnAi" onclick="switchRightPanelTab('ai')" class="px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                        <span>AI Assistant</span>
+                    </button>
+                    <button id="tabBtnComments" onclick="switchRightPanelTab('comments')" class="px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                        <span>Review (<span id="panelCommentsCount">0</span>)</span>
+                    </button>
+                </div>
+
+                <button onclick="toggleRightSidebar()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition" title="Close Panel">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+            <!-- TAB 1: AI ASSISTANT CHAT PANEL -->
+            <div id="panelAiView" class="flex-1 flex flex-col overflow-hidden">
+                <!-- AI Quick Actions Banner -->
+                <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center gap-1.5 overflow-hidden">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-medium text-slate-300 truncate">AI Assistant</span>
+                    </div>
+                    <button onclick="clearAiChat()" class="text-[11px] text-slate-400 hover:text-red-400 flex items-center gap-1 transition">
+                        <i data-lucide="trash" class="w-3 h-3"></i>
+                        <span>Clear</span>
+                    </button>
+                </div>
+
+                <!-- Chat History Messages List -->
+                <div id="aiChatMessages" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-3.5 select-text">
+                    <!-- Welcome AI message -->
+                    <div class="flex gap-2.5 items-start">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+                        </div>
+                        <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 leading-relaxed shadow-sm">
+                            <p class="font-semibold text-sky-400 mb-1 flex items-center gap-1.5">
+                                <span>AI Assistant</span>
+                            </p>
+                            <p class="mb-2">Tôi là trợ lý AI chuyên về viết và chỉnh sửa bài báo khoa học theo chuẩn <strong>Springer LNCS (MMM / VBS 2027)</strong>.</p>
+                            <p class="text-slate-400 text-[11.5px]">Bạn có thể yêu cầu:</p>
+                            <ul class="list-disc ml-4 mt-1 text-slate-400 text-[11.5px] space-y-1">
+                                <li>Nâng cấp văn phong học thuật (academic tone).</li>
+                                <li>Viết / Sửa Abstract, Introduction, System Architecture.</li>
+                                <li>Tạo bảng dữ liệu LaTeX, công thức toán học hoặc citations.</li>
+                                <li>Bôi đen một đoạn bất kỳ rồi bấm <em>Ask AI</em> để sửa riêng đoạn đó.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active AI Context Snippet (if selected from PDF or Editor) -->
+                <div id="aiContextPreview" class="hidden mx-3 mb-2 bg-indigo-950/40 border border-indigo-500/30 p-2 rounded-lg text-xs flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 overflow-hidden text-indigo-300">
+                        <i data-lucide="quote" class="w-3 h-3 text-indigo-400 flex-shrink-0"></i>
+                        <span class="truncate italic" id="aiContextText"></span>
+                    </div>
+                    <button onclick="clearAiContextSnippet()" class="text-slate-400 hover:text-slate-200 p-0.5" title="Remove context">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Suggestion Chips -->
+                <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-900/40 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap text-[11px]">
+                    <button onclick="sendQuickAiPrompt('Nâng cấp và trau chuốt văn phong học thuật cho đoạn này')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
+                        <i data-lucide="wand-2" class="w-3 h-3 text-purple-400"></i>
+                        <span>Polish Writing</span>
+                    </button>
+                    <button onclick="sendQuickAiPrompt('Đánh giá phê bình học thuật (academic review/critique) và chỉ ra điểm cần hoàn thiện của bài báo này')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
+                        <i data-lucide="search" class="w-3 h-3 text-sky-400"></i>
+                        <span>Critique Paper</span>
+                    </button>
+                    <button onclick="sendQuickAiPrompt('Viết 3 bullet points đóng góp chính (Key Contributions) thật nổi bật cho phần Introduction')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
+                        <i data-lucide="award" class="w-3 h-3 text-amber-400"></i>
+                        <span>Contributions</span>
+                    </button>
+                    <button onclick="sendQuickAiPrompt('Tạo một bảng LaTeX chuẩn booktabs so sánh các tính năng của hệ thống')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
+                        <i data-lucide="table" class="w-3 h-3 text-emerald-400"></i>
+                        <span>Make Table</span>
+                    </button>
+                </div>
+
+                <!-- AI Input Form -->
+                <div class="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
+                    <div class="relative">
+                        <textarea id="aiInputText" placeholder="Hỏi AI Assistant hoặc yêu cầu sửa bài (Enter để gửi, Shift+Enter xuống dòng)..." class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2.5 text-xs min-h-[55px] max-h-[140px] resize-y focus:outline-none focus:border-indigo-500 leading-relaxed pr-10"></textarea>
+                        
+                        <button id="aiSendBtn" onclick="submitAiMessage()" class="absolute right-2 bottom-2.5 bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded-md shadow transition flex items-center justify-center">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: ADVISOR REVIEW & COMMENTS PANEL -->
+            <div id="panelCommentsView" class="flex-1 flex flex-col overflow-hidden hidden">
+                <!-- Filters -->
+                <div class="px-4 py-2 bg-slate-900/60 border-b border-slate-800/80 flex gap-1.5">
+                    <button class="filter-chip px-2.5 py-1 rounded text-xs bg-sky-500 text-slate-950 font-bold border border-sky-500 transition" onclick="setCommentFilter('all', this)">
+                        All (<span id="countAll">0</span>)
+                    </button>
+                    <button class="filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" onclick="setCommentFilter('open', this)">
+                        Open (<span id="countOpen">0</span>)
+                    </button>
+                    <button class="filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" onclick="setCommentFilter('resolved', this)">
+                        Resolved (<span id="countResolved">0</span>)
+                    </button>
+                </div>
+
+                <!-- Comments List -->
+                <div class="comments-list flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 select-text" id="commentsList">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Add Comment Form -->
+                <div class="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2 select-auto">
+                    <div class="text-xs font-bold text-sky-400 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            <span>Add Feedback / Comment</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-normal">Bôi đen chữ trong PDF để trích dẫn</span>
+                    </div>
+
+                    <!-- Active Quoted Text from PDF Selection -->
+                    <div class="active-quote-preview hidden bg-sky-500/10 border-l-2 border-sky-400 p-2 rounded text-xs text-sky-200 items-center justify-between gap-2" id="activeQuotePreview">
+                        <div class="flex items-center gap-1.5 overflow-hidden">
+                            <i data-lucide="quote" class="w-3 h-3 text-sky-400 flex-shrink-0 mt-0.5"></i>
+                            <span class="active-quote-text truncate italic" id="activeQuoteText"></span>
+                        </div>
+                        <button onclick="clearActiveQuote()" class="text-slate-400 hover:text-slate-200 p-0.5 flex-shrink-0" title="Remove quote">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <input type="text" id="authorInput" placeholder="Your Name (e.g. Advisor)" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                        </div>
+                        <div class="relative w-36">
+                            <select id="typeSelect" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs pr-6 appearance-none focus:outline-none focus:border-sky-500 cursor-pointer font-medium">
+                                <option value="suggestion">Suggestion</option>
+                                <option value="issue">Question / Issue</option>
+                                <option value="todo">Todo / Revision</option>
+                                <option value="praise">Praise</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input type="text" id="sectionInput" placeholder="Section (e.g. Sec 2, Intro)" class="flex-1 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                        <input type="text" id="pageInput" placeholder="Page" class="w-16 bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+
+                    <textarea id="commentTextInput" placeholder="Write feedback, instructions, or suggestions for this section..." class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2 text-xs min-h-[45px] resize-y focus:outline-none focus:border-sky-500"></textarea>
+                    
+                    <button onclick="submitComment()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow transition">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        <span>Post Comment</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div id="imagePreviewModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full p-4 flex flex-col gap-3 shadow-2xl animate-in zoom-in-95">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
+                        <span id="imageModalTitle" class="text-xs font-mono font-bold text-slate-200"></span>
+                    </div>
+                    <button onclick="closeImageModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 flex items-center justify-center bg-slate-950/80 p-4 rounded-lg border border-slate-800/80 max-h-[60vh] overflow-hidden">
+                    <img id="imageModalImg" src="" alt="Preview" class="max-w-full max-h-[50vh] object-contain rounded">
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <span id="imageModalInfo" class="text-[11px] text-slate-400 font-mono"></span>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="insertImageToLatex()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+                            <i data-lucide="file-input" class="w-3.5 h-3.5"></i>
+                            <span>Insert Figure into LaTeX</span>
+                        </button>
+                        <button onclick="copyImagePath()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span id="copyImgBtnText">Copy Path</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Logs Drawer -->
+        <div id="logDrawer" class="absolute bottom-0 left-0 right-0 bg-slate-950 border-t-2 border-slate-800 max-h-[70%] h-[240px] flex flex-col transition-transform duration-200 translate-y-full shadow-2xl z-40 select-text">
+            <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-xs font-semibold text-slate-200">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span>Compilation Log / Terminal Output</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-[11px] border border-slate-700 transition">Clear</button>
+                    <button onclick="toggleLogs()" class="text-slate-400 hover:text-slate-200 p-0.5 rounded hover:bg-slate-800 transition">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="logContent" class="flex-1 overflow-y-auto p-3 font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">No compilation logs yet. Click 'Recompile' or press Ctrl+Enter to build.</div>
+        </div>
+    </div>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+        let editor = null;
+        let isCompiling = false;
+        let isDirty = false;
+        let currentFile = "main.tex";
+        let allComments = [];
+        let currentCommentFilter = "all";
+
+        // PDF.js State
+        let currentPdfDoc = null;
+        let pdfScale = 1.15;
+        let activeSelectedQuote = "";
+        let activeSelectedPage = "1";
+
+        // AI Copilot State
+        let aiChatHistory = [];
+        let activeAiContextSnippet = "";
+        let isAiThinking = false;
+
+        // Image Modal State
+        let currentModalImagePath = "";
+
+        function refreshIcons() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        function initAceEditor() {
+            editor = ace.edit("aceEditor");
+            editor.setTheme("ace/theme/tomorrow_night_eighties");
+            editor.session.setMode("ace/mode/latex");
+            editor.setOptions({
+                fontFamily: "'JetBrains Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                fontSize: "13px",
+                wrap: true,
+                showPrintMargin: false,
+                tabSize: 2,
+                useSoftTabs: true,
+                useWorker: false
+            });
+
+            if (document.fonts) {
+                document.fonts.ready.then(() => {
+                    editor.renderer.updateFull();
+                    editor.resize();
+                });
+            }
+
+            editor.on("change", () => {
+                if (!isDirty) {
+                    isDirty = true;
+                    const ind = document.getElementById("saveIndicator");
+                    ind.textContent = "Unsaved *";
+                    ind.className = "text-[10px] text-amber-400 font-medium hidden lg:inline";
+                }
+            });
+        }
+
+        function setViewMode(mode) {
+            document.querySelectorAll(".view-btn").forEach(b => {
+                b.className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-slate-400 hover:text-slate-200 flex items-center gap-1 transition";
+            });
+            
+            const editorPane = document.getElementById("editorPane");
+            const previewPane = document.getElementById("previewPane");
+            const resizer1 = document.getElementById("resizerEditorPdf");
+
+            if (mode === "split") {
+                document.getElementById("viewSplit").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
+                editorPane.style.display = "flex";
+                previewPane.style.display = "flex";
+                resizer1.style.display = "flex";
+            } else if (mode === "editor") {
+                document.getElementById("viewEditor").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
+                editorPane.style.display = "flex";
+                previewPane.style.display = "none";
+                resizer1.style.display = "none";
+            } else if (mode === "pdf") {
+                document.getElementById("viewPdf").className = "view-btn px-2 py-0.5 text-[11px] font-medium rounded text-sky-400 bg-slate-800 flex items-center gap-1 transition";
+                editorPane.style.display = "none";
+                previewPane.style.display = "flex";
+                resizer1.style.display = "none";
+            }
+            if (editor) {
+                editor.resize();
+                editor.renderer.updateFull();
+            }
+            refreshIcons();
+        }
+
+        function setupResizers() {
+            const workspace = document.getElementById("workspaceContainer");
+            const leftSidebar = document.getElementById("leftSidebar");
+            const editorPane = document.getElementById("editorPane");
+            const previewPane = document.getElementById("previewPane");
+            const rightSidebar = document.getElementById("rightSidebar");
+            
+            const resizer0 = document.getElementById("resizerLeftSidebar");
+            const resizer1 = document.getElementById("resizerEditorPdf");
+            const resizer2 = document.getElementById("resizerPdfComments");
+
+            let isDragging0 = false;
+            resizer0.addEventListener("mousedown", () => {
+                isDragging0 = true;
+                resizer0.classList.add("active");
+                document.body.classList.add("is-resizing");
+            });
+
+            let isDragging1 = false;
+            resizer1.addEventListener("mousedown", () => {
+                isDragging1 = true;
+                resizer1.classList.add("active");
+                document.body.classList.add("is-resizing");
+            });
+
+            let isDragging2 = false;
+            resizer2.addEventListener("mousedown", () => {
+                isDragging2 = true;
+                resizer2.classList.add("active");
+                document.body.classList.add("is-resizing");
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                const workspaceRect = workspace.getBoundingClientRect();
+
+                if (isDragging0) {
+                    const newWidth = e.clientX - workspaceRect.left;
+                    if (newWidth >= 140 && newWidth <= 420) {
+                        leftSidebar.style.width = `${newWidth}px`;
+                        if (editor) editor.resize();
+                    }
+                }
+
+                if (isDragging1) {
+                    const leftOffset = leftSidebar.classList.contains("hidden") ? 0 : leftSidebar.offsetWidth;
+                    const newEditorWidth = e.clientX - workspaceRect.left - leftOffset;
+                    if (newEditorWidth >= 180 && newEditorWidth <= (workspaceRect.width - leftOffset - 220)) {
+                        editorPane.style.flex = "none";
+                        editorPane.style.width = `${newEditorWidth}px`;
+                        if (editor) editor.resize();
+                    }
+                }
+
+                if (isDragging2) {
+                    const newSidebarWidth = workspaceRect.right - e.clientX;
+                    if (newSidebarWidth >= 260 && newSidebarWidth <= 750) {
+                        rightSidebar.style.width = `${newSidebarWidth}px`;
+                        if (editor) editor.resize();
+                    }
+                }
+            });
+
+            window.addEventListener("mouseup", () => {
+                if (isDragging0) {
+                    isDragging0 = false;
+                    resizer0.classList.remove("active");
+                    document.body.classList.remove("is-resizing");
+                }
+                if (isDragging1) {
+                    isDragging1 = false;
+                    resizer1.classList.remove("active");
+                    document.body.classList.remove("is-resizing");
+                }
+                if (isDragging2) {
+                    isDragging2 = false;
+                    resizer2.classList.remove("active");
+                    document.body.classList.remove("is-resizing");
+                }
+                if (editor) {
+                    editor.resize();
+                    editor.renderer.updateFull();
+                }
+            });
+        }
+
+        function toggleLeftSidebar() {
+            const sidebar = document.getElementById("leftSidebar");
+            const resizer0 = document.getElementById("resizerLeftSidebar");
+            sidebar.classList.toggle("hidden");
+            resizer0.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
+            if (editor) editor.resize();
+            refreshIcons();
+        }
+
+        // FILE EXPLORER & TREE FUNCTIONS
+        async function loadFileTree() {
+            const container = document.getElementById("fileTreeContainer");
+            try {
+                const res = await fetch("/api/tree");
+                const data = await res.json();
+                renderFileTree(data.tree, container);
+            } catch (err) {
+                container.innerHTML = `<div class="text-red-400 p-2 text-xs">Error loading files: ${err.message}</div>`;
+            }
+        }
+
+        function renderFileTree(items, container) {
+            container.innerHTML = "";
+            if (!items || items.length === 0) {
+                container.innerHTML = `<div class="text-slate-500 text-center py-4 text-xs">Folder is empty</div>`;
+                return;
+            }
+
+            const ul = document.createElement("div");
+            ul.className = "flex flex-col gap-0.5";
+
+            items.forEach(item => {
+                const node = createFileTreeNode(item);
+                ul.appendChild(node);
+            });
+
+            container.appendChild(ul);
+            refreshIcons();
+        }
+
+        function createFileTreeNode(item) {
+            const el = document.createElement("div");
+            el.className = "flex flex-col";
+
+            if (item.type === "dir") {
+                const header = document.createElement("div");
+                header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800/80 cursor-pointer text-slate-300 text-[11.5px] font-medium group transition";
+                
+                header.innerHTML = `
+                    <div class="flex items-center gap-1.5 overflow-hidden">
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 folder-chevron transition-transform"></i>
+                        <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
+                        <span class="truncate">${escapeHtml(item.name)}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
+                        <button onclick="promptUploadToFolder('${item.path}')" class="p-0.5 hover:text-sky-400 text-slate-500 rounded" title="Upload into folder">
+                            <i data-lucide="upload" class="w-3 h-3"></i>
+                        </button>
+                        <button onclick="deleteFileOrDir('${item.path}', true)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete folder">
+                            <i data-lucide="trash" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                `;
+
+                const childrenDiv = document.createElement("div");
+                childrenDiv.className = "pl-3.5 flex flex-col gap-0.5 hidden";
+
+                if (item.children && item.children.length > 0) {
+                    item.children.forEach(child => {
+                        childrenDiv.appendChild(createFileTreeNode(child));
+                    });
+                } else {
+                    childrenDiv.innerHTML = `<div class="text-slate-600 text-[10.5px] py-0.5 pl-3">empty</div>`;
+                }
+
+                header.onclick = () => {
+                    const isHidden = childrenDiv.classList.contains("hidden");
+                    const chevron = header.querySelector(".folder-chevron");
+                    if (isHidden) {
+                        childrenDiv.classList.remove("hidden");
+                        chevron.classList.add("rotate-90");
+                    } else {
+                        childrenDiv.classList.add("hidden");
+                        chevron.classList.remove("rotate-90");
+                    }
+                    refreshIcons();
+                };
+
+                el.appendChild(header);
+                el.appendChild(childrenDiv);
+
+            } else {
+                // File Node
+                const isActive = item.path === currentFile;
+                const fileRow = document.createElement("div");
+                fileRow.className = `flex items-center justify-between px-2 py-1 rounded cursor-pointer text-[11.5px] group transition ${isActive ? "bg-sky-500/20 text-sky-300 font-semibold border-l-2 border-sky-400" : "text-slate-300 hover:bg-slate-800/80 hover:text-white"}`;
+                
+                const iconInfo = getFileIconInfo(item);
+                
+                fileRow.innerHTML = `
+                    <div class="flex items-center gap-1.5 overflow-hidden">
+                        <i data-lucide="${iconInfo.icon}" class="w-3.5 h-3.5 ${iconInfo.color} flex-shrink-0"></i>
+                        <span class="truncate font-mono">${escapeHtml(item.name)}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
+                        <button onclick="renameFilePrompt('${item.path}')" class="p-0.5 hover:text-sky-400 text-slate-500 rounded" title="Rename">
+                            <i data-lucide="edit-2" class="w-3 h-3"></i>
+                        </button>
+                        ${item.path !== 'main.tex' ? `
+                        <button onclick="deleteFileOrDir('${item.path}', false)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete">
+                            <i data-lucide="trash" class="w-3 h-3"></i>
+                        </button>` : ""}
+                    </div>
+                `;
+
+                fileRow.onclick = () => handleFileClick(item);
+                el.appendChild(fileRow);
+            }
+
+            return el;
+        }
+
+        function getFileIconInfo(item) {
+            const ext = (item.ext || "").toLowerCase();
+            if (ext === ".tex") return { icon: "file-code", color: "text-sky-400" };
+            if (ext === ".bib") return { icon: "book-marked", color: "text-amber-400" };
+            if (ext === ".cls" || ext === ".sty" || ext === ".bst") return { icon: "settings-2", color: "text-purple-400" };
+            if (item.isImage) return { icon: "image", color: "text-emerald-400" };
+            if (item.isPdf) return { icon: "file-text", color: "text-rose-400" };
+            if (ext === ".md" || ext === ".txt") return { icon: "file-text", color: "text-slate-400" };
+            return { icon: "file", color: "text-slate-400" };
+        }
+
+        function handleFileClick(item) {
+            if (item.isImage) {
+                openImageModal(item.path, item.size);
+            } else if (item.isPdf) {
+                loadPdfDocument(item.path);
+            } else {
+                loadFile(item.path);
+            }
+        }
+
+        // IMAGE PREVIEW MODAL & INSERT TO LATEX
+        function openImageModal(path, sizeBytes) {
+            currentModalImagePath = path;
+            const modal = document.getElementById("imagePreviewModal");
+            const img = document.getElementById("imageModalImg");
+            const title = document.getElementById("imageModalTitle");
+            const info = document.getElementById("imageModalInfo");
+
+            title.textContent = path;
+            img.src = `/api/raw?path=${encodeURIComponent(path)}&t=${Date.now()}`;
+            const sizeKb = (sizeBytes / 1024).toFixed(1);
+            info.textContent = `Path: ${path} | Size: ${sizeKb} KB`;
+
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            refreshIcons();
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById("imagePreviewModal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
+        }
+
+        function insertImageToLatex() {
+            if (!currentModalImagePath) return;
+            const relPath = currentModalImagePath;
+            const baseName = relPath.split("/").pop().replace(/\.[^/.]+$/, "");
+            const figureSnippet = `\\begin{figure}[htbp]
+  \\centering
+  \\includegraphics[width=0.85\\linewidth]{${relPath}}
+  \\caption{System architecture and multimodal retrieval workflow.}
+  \\label{fig:${baseName}}
+\\end{figure}
+`;
+            if (editor) {
+                editor.insert(figureSnippet);
+                editor.focus();
+            }
+            closeImageModal();
+            const ind = document.getElementById("saveIndicator");
+            ind.textContent = `Figure snippet inserted!`;
+            ind.className = "text-[10px] text-emerald-400 font-bold hidden lg:inline";
+        }
+
+        function copyImagePath() {
+            navigator.clipboard.writeText(currentModalImagePath);
+            const btnText = document.getElementById("copyImgBtnText");
+            btnText.textContent = "Copied!";
+            setTimeout(() => { btnText.textContent = "Copy Path"; }, 1500);
+        }
+
+        // FILE UPLOAD HANDLING
+        let targetUploadFolder = "";
+
+        function triggerUploadDialog() {
+            targetUploadFolder = "";
+            document.getElementById("fileUploadInput").click();
+        }
+
+        function promptUploadToFolder(folderPath) {
+            targetUploadFolder = folderPath;
+            document.getElementById("fileUploadInput").click();
+        }
+
+        async function handleFileSelected(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const payloadFiles = [];
+            for (const file of files) {
+                const b64 = await readFileAsBase64(file);
+                payloadFiles.push({
+                    name: file.name,
+                    data: b64
+                });
+            }
+
+            try {
+                const res = await fetch("/api/upload", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        folder: targetUploadFolder,
+                        files: payloadFiles
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await loadFileTree();
+                    alert(`Uploaded ${data.uploaded.length} file(s) successfully.`);
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (err) {
+                alert("Upload error: " + err.message);
+            } finally {
+                e.target.value = "";
+                targetUploadFolder = "";
+            }
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Drag and Drop Upload Support
+        window.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+
+        window.addEventListener("drop", async (e) => {
+            e.preventDefault();
+            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+                const files = Array.from(e.dataTransfer.files);
+                const payloadFiles = [];
+                for (const file of files) {
+                    const b64 = await readFileAsBase64(file);
+                    payloadFiles.push({ name: file.name, data: b64 });
+                }
+                const res = await fetch("/api/upload", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ folder: "figures", files: payloadFiles })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await loadFileTree();
+                    alert(`Uploaded ${data.uploaded.length} file(s) into figures/ folder.`);
+                }
+            }
+        });
+
+        // CREATE FILE / FOLDER
+        async function promptCreateFile(type) {
+            const promptMsg = type === "dir" ? "Enter new folder path (e.g. figures or sections):" : "Enter new file name (e.g. sections/intro.tex or extra.bib):";
+            const input = prompt(promptMsg);
+            if (!input) return;
+
+            try {
+                const res = await fetch("/api/file/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: input.trim(), type: type })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await loadFileTree();
+                    if (type === "file") {
+                        loadFile(input.trim());
+                    }
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                alert("Failed to create: " + err.message);
+            }
+        }
+
+        async function renameFilePrompt(oldPath) {
+            const newPath = prompt(`Rename ${oldPath} to:`, oldPath);
+            if (!newPath || newPath === oldPath) return;
+
+            try {
+                const res = await fetch("/api/file/rename", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ oldPath, newPath: newPath.trim() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await loadFileTree();
+                    if (currentFile === oldPath) {
+                        loadFile(newPath.trim());
+                    }
+                } else {
+                    alert("Rename failed: " + data.error);
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        async function deleteFileOrDir(path, isDir) {
+            const confirmMsg = isDir ? `Delete folder "${path}" and ALL its contents?` : `Delete file "${path}"?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`, {
+                    method: "DELETE"
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await loadFileTree();
+                    if (currentFile === path) {
+                        loadFile("main.tex");
+                    }
+                } else {
+                    alert("Delete failed: " + data.error);
+                }
+            } catch (err) {
+                alert("Delete error: " + err.message);
+            }
+        }
+
+        // Right Sidebar Tab Controls
+        function switchRightPanelTab(tab) {
+            const aiView = document.getElementById("panelAiView");
+            const commentsView = document.getElementById("panelCommentsView");
+            const tabBtnAi = document.getElementById("tabBtnAi");
+            const tabBtnComments = document.getElementById("tabBtnComments");
+
+            if (tab === "ai") {
+                aiView.classList.remove("hidden");
+                commentsView.classList.add("hidden");
+                tabBtnAi.className = "px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition";
+                tabBtnComments.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition";
+            } else {
+                aiView.classList.add("hidden");
+                commentsView.classList.remove("hidden");
+                tabBtnAi.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition";
+                tabBtnComments.className = "px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition";
+            }
+            refreshIcons();
+        }
+
+        function openRightPanelTab(tab) {
+            const sidebar = document.getElementById("rightSidebar");
+            const resizer2 = document.getElementById("resizerPdfComments");
+            sidebar.classList.remove("hidden");
+            resizer2.style.display = "flex";
+            switchRightPanelTab(tab);
+            if (editor) editor.resize();
+        }
+
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById("rightSidebar");
+            const resizer2 = document.getElementById("resizerPdfComments");
+            sidebar.classList.toggle("hidden");
+            resizer2.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
+            if (editor) {
+                editor.resize();
+                editor.renderer.updateFull();
+            }
+            refreshIcons();
+        }
+
+        // PDF.js Rendering
+        async function loadPdfDocument(targetPdfFile = "main.pdf") {
+            const pdfName = targetPdfFile.endsWith(".pdf") ? targetPdfFile : targetPdfFile.replace(/\.[^.]+$/, ".pdf");
+            const pdfUrl = `/pdf?file=${encodeURIComponent(pdfName)}&t=${Date.now()}`;
+            const container = document.getElementById("pdfScrollView");
+            document.getElementById("pdfPageInfo").textContent = "Loading...";
+
+            try {
+                const loadingTask = pdfjsLib.getDocument({ url: pdfUrl });
+                currentPdfDoc = await loadingTask.promise;
+                document.getElementById("pdfPageInfo").textContent = `${currentPdfDoc.numPages} Page${currentPdfDoc.numPages > 1 ? "s" : ""}`;
+                await renderAllPdfPages();
+            } catch (err) {
+                container.innerHTML = `<div class="text-red-400 p-8 text-center text-sm">Failed to render PDF (${err.message}).<br>Click 'Recompile' to build the PDF.</div>`;
+            }
+        }
+
+        async function renderAllPdfPages() {
+            if (!currentPdfDoc) return;
+            const container = document.getElementById("pdfScrollView");
+            container.innerHTML = "";
+
+            for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
+                const page = await currentPdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: pdfScale });
+
+                const pageWrapper = document.createElement("div");
+                pageWrapper.className = "pdf-page-container";
+                pageWrapper.id = `pdf-page-${pageNum}`;
+                pageWrapper.setAttribute("data-page", pageNum);
+                pageWrapper.style.width = `${viewport.width}px`;
+                pageWrapper.style.height = `${viewport.height}px`;
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = Math.floor(viewport.width * window.devicePixelRatio);
+                canvas.height = Math.floor(viewport.height * window.devicePixelRatio);
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+                pageWrapper.appendChild(canvas);
+
+                const textLayerDiv = document.createElement("div");
+                textLayerDiv.className = "textLayer";
+                textLayerDiv.style.width = `${viewport.width}px`;
+                textLayerDiv.style.height = `${viewport.height}px`;
+                pageWrapper.appendChild(textLayerDiv);
+
+                container.appendChild(pageWrapper);
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+
+                const textContent = await page.getTextContent();
+                await pdfjsLib.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
+                    viewport: viewport,
+                    textDivs: []
+                }).promise;
+            }
+
+            document.getElementById("zoomPercent").textContent = `${Math.round(pdfScale * 100 / 1.15)}%`;
+            refreshIcons();
+        }
+
+        function zoomPdf(delta) {
+            pdfScale = Math.max(0.5, Math.min(3.0, pdfScale + delta));
+            renderAllPdfPages();
+        }
+
+        function resetZoom() {
+            pdfScale = 1.15;
+            renderAllPdfPages();
+        }
+
+        function scrollToPdfPage(pageNum) {
+            const el = document.getElementById(`pdf-page-${pageNum}`);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("highlighted");
+                setTimeout(() => el.classList.remove("highlighted"), 2000);
+            }
+        }
+
+        function setupTextSelectionListener() {
+            const popover = document.getElementById("selectionPopover");
+
+            document.addEventListener("mouseup", (e) => {
+                if (popover.contains(e.target)) return;
+
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    const text = selection ? selection.toString().trim() : "";
+
+                    if (text.length > 2) {
+                        const range = selection.getRangeAt(0);
+                        const rect = range.getBoundingClientRect();
+                        const pageContainer = selection.anchorNode ? (selection.anchorNode.nodeType === 3 ? selection.anchorNode.parentElement : selection.anchorNode).closest(".pdf-page-container") : null;
+
+                        if (pageContainer) {
+                            activeSelectedQuote = text;
+                            activeSelectedPage = pageContainer.getAttribute("data-page") || "1";
+
+                            popover.style.left = `${Math.max(10, Math.min(window.innerWidth - 300, rect.left + (rect.width / 2) - 140))}px`;
+                            popover.style.top = `${Math.max(60, rect.top - 44)}px`;
+                            popover.classList.remove("hidden");
+                            popover.classList.add("flex");
+                            refreshIcons();
+                            return;
+                        }
+                    }
+                    popover.classList.remove("flex");
+                    popover.classList.add("hidden");
+                }, 10);
+            });
+        }
+
+        function applySelectionToComment() {
+            const popover = document.getElementById("selectionPopover");
+            popover.classList.remove("flex");
+            popover.classList.add("hidden");
+
+            openRightPanelTab("comments");
+
+            document.getElementById("activeQuoteText").textContent = activeSelectedQuote;
+            document.getElementById("activeQuotePreview").classList.remove("hidden");
+            document.getElementById("activeQuotePreview").classList.add("flex");
+            document.getElementById("pageInput").value = activeSelectedPage;
+
+            const commentInput = document.getElementById("commentTextInput");
+            commentInput.focus();
+            refreshIcons();
+        }
+
+        function applySelectionToAi() {
+            const popover = document.getElementById("selectionPopover");
+            popover.classList.remove("flex");
+            popover.classList.add("hidden");
+
+            openRightPanelTab("ai");
+
+            activeAiContextSnippet = activeSelectedQuote;
+            document.getElementById("aiContextText").textContent = `"${activeSelectedQuote}" (Page ${activeSelectedPage})`;
+            document.getElementById("aiContextPreview").classList.remove("hidden");
+            document.getElementById("aiContextPreview").classList.add("flex");
+
+            const aiInput = document.getElementById("aiInputText");
+            aiInput.focus();
+            refreshIcons();
+        }
+
+        function askAiWithEditorSelection() {
+            if (!editor) return;
+            const selectedText = editor.getSelectedText().trim();
+            if (!selectedText) {
+                alert("Vui lòng bôi đen một đoạn code / văn bản trong Editor để gửi cho AI Assistant.");
+                return;
+            }
+            openRightPanelTab("ai");
+            activeAiContextSnippet = selectedText;
+            document.getElementById("aiContextText").textContent = `Editor snippet: "${selectedText.slice(0, 70)}..."`;
+            document.getElementById("aiContextPreview").classList.remove("hidden");
+            document.getElementById("aiContextPreview").classList.add("flex");
+            document.getElementById("aiInputText").focus();
+            refreshIcons();
+        }
+
+        function clearActiveQuote() {
+            activeSelectedQuote = "";
+            document.getElementById("activeQuoteText").textContent = "";
+            document.getElementById("activeQuotePreview").classList.remove("flex");
+            document.getElementById("activeQuotePreview").classList.add("hidden");
+        }
+
+        function clearAiContextSnippet() {
+            activeAiContextSnippet = "";
+            document.getElementById("aiContextText").textContent = "";
+            document.getElementById("aiContextPreview").classList.remove("flex");
+            document.getElementById("aiContextPreview").classList.add("hidden");
+        }
+
+        // File Management in Editor
+        async function loadFile(filename) {
+            if (isDirty) {
+                const confirmSwitch = confirm("You have unsaved changes. Save before switching?");
+                if (confirmSwitch) {
+                    await saveCurrentFile();
+                }
+            }
+
+            currentFile = filename;
+            document.getElementById("currentFileName").textContent = filename;
+            document.getElementById("navCurrentFileName").textContent = filename.split("/").pop();
+            
+            const badge = document.getElementById("editorModeBadge");
+            if (filename.endsWith(".bib")) {
+                editor.session.setMode("ace/mode/bibtex");
+                badge.textContent = "BibTeX Bibliography";
+            } else {
+                editor.session.setMode("ace/mode/latex");
+                badge.textContent = "LaTeX Syntax";
+            }
+
+            try {
+                const res = await fetch(`/api/file?name=${encodeURIComponent(filename)}`);
+                const data = await res.json();
+                editor.setValue(data.content, -1);
+                isDirty = false;
+                const ind = document.getElementById("saveIndicator");
+                ind.textContent = "Saved";
+                ind.className = "text-[10px] text-slate-400 hidden lg:inline";
+                editor.renderer.updateFull();
+                await loadFileTree();
+            } catch (err) {
+                alert("Failed to load file: " + err.message);
+            }
+        }
+
+        async function saveCurrentFile() {
+            if (!editor) return;
+            const content = editor.getValue();
+            const saveBtn = document.querySelector(".btn-save span");
+            saveBtn.textContent = "...";
+
+            try {
+                const res = await fetch("/api/file", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: currentFile, content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    isDirty = false;
+                    const ind = document.getElementById("saveIndicator");
+                    ind.textContent = "Saved";
+                    ind.className = "text-[10px] text-slate-400 hidden lg:inline";
+                } else {
+                    alert("Error saving: " + (data.error || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Save failed: " + err.message);
+            } finally {
+                saveBtn.textContent = "Save";
+            }
+        }
+
+        async function triggerSaveAndCompile() {
+            if (isCompiling) return;
+            await saveCurrentFile();
+
+            isCompiling = true;
+            const targetFile = currentFile.endsWith(".tex") ? currentFile : "main.tex";
+            const engine = document.getElementById("engineSelect").value || "latexmk";
+            const compileBtn = document.getElementById("compileBtn");
+            const statusDot = document.getElementById("statusDot");
+            const statusText = document.getElementById("statusText");
+
+            compileBtn.classList.add("opacity-70", "pointer-events-none");
+            compileBtn.querySelector("span").textContent = "...";
+            statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
+            statusText.textContent = "Compiling...";
+
+            const startTime = performance.now();
+
+            try {
+                const res = await fetch("/api/compile", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ file: targetFile, engine: engine })
+                });
+
+                const data = await res.json();
+                const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+                renderLogs(data.stdout + "\n" + (data.stderr || ""));
+
+                if (data.success) {
+                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+                    statusText.textContent = `Success (${duration}s)`;
+                    await loadPdfDocument();
+                } else {
+                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-400";
+                    statusText.textContent = `Failed (${duration}s)`;
+                    openLogs();
+                }
+            } catch (err) {
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-400";
+                statusText.textContent = "Error";
+                openLogs();
+            } finally {
+                isCompiling = false;
+                compileBtn.classList.remove("opacity-70", "pointer-events-none");
+                compileBtn.querySelector("span").textContent = "Recompile";
+                refreshIcons();
+            }
+        }
+
+        // AI Copilot Chat Handling
+        function sendQuickAiPrompt(text) {
+            document.getElementById("aiInputText").value = text;
+            submitAiMessage();
+        }
+
+        async function submitAiMessage() {
+            if (isAiThinking) return;
+            const input = document.getElementById("aiInputText");
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = "";
+            const contextSnippet = activeAiContextSnippet;
+            clearAiContextSnippet();
+
+            appendAiMessageBubble("user", message, contextSnippet);
+            
+            const loadingId = "ai-loading-" + Date.now();
+            appendAiLoadingBubble(loadingId);
+
+            isAiThinking = true;
+            const sendBtn = document.getElementById("aiSendBtn");
+            sendBtn.innerHTML = "<i data-lucide=\"loader-2\" class=\"w-3.5 h-3.5 animate-spin\"></i>";
+            refreshIcons();
+
+            const fileContent = editor ? editor.getValue() : "";
+
+            try {
+                const res = await fetch("/api/ai/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: message,
+                        selectedText: contextSnippet,
+                        currentFile: currentFile,
+                        fileContent: fileContent,
+                        history: aiChatHistory
+                    })
+                });
+
+                const data = await res.json();
+                removeAiElement(loadingId);
+
+                if (data.success) {
+                    appendAiMessageBubble("assistant", data.reply);
+                    aiChatHistory.push({ role: "user", content: message });
+                    aiChatHistory.push({ role: "assistant", content: data.reply });
+                    if (aiChatHistory.length > 12) {
+                        aiChatHistory = aiChatHistory.slice(-12);
+                    }
+                } else {
+                    appendAiMessageBubble("assistant", `⚠️ **Lỗi:** ${data.error || "Không thể kết nối đến AI Assistant"}`);
+                }
+            } catch (err) {
+                removeAiElement(loadingId);
+                appendAiMessageBubble("assistant", `⚠️ **Lỗi kết nối:** ${err.message}`);
+            } finally {
+                isAiThinking = false;
+                sendBtn.innerHTML = "<i data-lucide=\"send\" class=\"w-3.5 h-3.5\"></i>";
+                refreshIcons();
+            }
+        }
+
+        function appendAiMessageBubble(role, content, snippet = "") {
+            const container = document.getElementById("aiChatMessages");
+            const div = document.createElement("div");
+            div.className = "flex gap-2.5 items-start";
+
+            if (role === "user") {
+                const snippetHtml = snippet ? `
+                    <div class="mb-2 bg-indigo-950/70 border-l-2 border-indigo-400 px-2 py-1 rounded text-[11px] text-indigo-300 italic truncate">
+                        ❝ ${escapeHtml(snippet)} ❞
+                    </div>
+                ` : "";
+
+                div.innerHTML = `
+                    <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="user" class="w-3.5 h-3.5 text-slate-300"></i>
+                    </div>
+                    <div class="flex-1 bg-indigo-600/20 border border-indigo-500/30 rounded-xl p-3 text-xs text-slate-200 shadow-sm">
+                        ${snippetHtml}
+                        <div class="whitespace-pre-wrap leading-relaxed">${escapeHtml(content)}</div>
+                    </div>
+                `;
+            } else {
+                const renderedHtml = marked.parse(content);
+                div.innerHTML = `
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+                    </div>
+                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 shadow-sm ai-prose">
+                        ${renderedHtml}
+                    </div>
+                `;
+
+                div.querySelectorAll("pre code").forEach((codeBlock) => {
+                    const pre = codeBlock.parentElement;
+                    const rawCode = codeBlock.innerText;
+                    
+                    const btnBar = document.createElement("div");
+                    btnBar.className = "flex items-center justify-end gap-1.5 mb-1.5 pb-1 border-b border-slate-800";
+                    btnBar.innerHTML = `
+                        <button class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10.5px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 transition" title="Paste directly into LaTeX Editor">
+                            <i data-lucide="file-input" class="w-3 h-3"></i>
+                            <span>Apply to Editor</span>
+                        </button>
+                        <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] px-2 py-0.5 rounded flex items-center gap-1 border border-slate-700 transition" title="Copy code">
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                            <span>Copy</span>
+                        </button>
+                    `;
+
+                    const applyBtn = btnBar.querySelectorAll("button")[0];
+                    const copyBtn = btnBar.querySelectorAll("button")[1];
+
+                    applyBtn.onclick = () => applyCodeToEditor(rawCode);
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(rawCode);
+                        copyBtn.innerHTML = "<i data-lucide=\"check\" class=\"w-3 h-3 text-emerald-400\"></i> Copied!";
+                        setTimeout(() => {
+                            copyBtn.innerHTML = "<i data-lucide=\"copy\" class=\"w-3 h-3\"></i> Copy";
+                            refreshIcons();
+                        }, 1800);
+                    };
+
+                    pre.insertBefore(btnBar, codeBlock);
+                });
+            }
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            refreshIcons();
+        }
+
+        function applyCodeToEditor(code) {
+            if (!editor) return;
+            const selectedText = editor.getSelectedText();
+            if (selectedText) {
+                editor.session.replace(editor.getSelectionRange(), code);
+            } else {
+                editor.insert(code);
+            }
+            editor.focus();
+            
+            const ind = document.getElementById("saveIndicator");
+            ind.textContent = "AI code inserted!";
+            ind.className = "text-[10px] text-sky-400 font-bold hidden lg:inline";
+        }
+
+        function appendAiLoadingBubble(id) {
+            const container = document.getElementById("aiChatMessages");
+            const div = document.createElement("div");
+            div.id = id;
+            div.className = "flex gap-2.5 items-start animate-pulse";
+            div.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-sky-400"></i>
+                    <span>AI Assistant đang phân tích và soạn nội dung bài báo...</span>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            refreshIcons();
+        }
+
+        function removeAiElement(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function clearAiChat() {
+            aiChatHistory = [];
+            clearAiContextSnippet();
+            const container = document.getElementById("aiChatMessages");
+            container.innerHTML = `
+                <div class="flex gap-2.5 items-start">
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+                    </div>
+                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 leading-relaxed shadow-sm">
+                        <p class="font-semibold text-sky-400 mb-1">Chat cleared. AI Assistant is ready for your paper requests!</p>
+                    </div>
+                </div>
+            `;
+            refreshIcons();
+        }
+
+        // Logs Handling
+        function renderLogs(rawText) {
+            const logContent = document.getElementById("logContent");
+            if (!rawText.trim()) {
+                logContent.textContent = "Compilation finished with no output.";
+                return;
+            }
+
+            const lines = rawText.split("\n");
+            logContent.innerHTML = lines.map(line => {
+                const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                if (escaped.includes("! LaTeX Error") || escaped.includes("Fatal error") || escaped.includes("Emergency stop") || escaped.startsWith("! ")) {
+                    return `<span class="text-red-400 font-bold">${escaped}</span>`;
+                } else if (escaped.includes("LaTeX Warning") || escaped.includes("Warning:")) {
+                    return `<span class="text-amber-400">${escaped}</span>`;
+                } else if (escaped.includes("Output written on") || escaped.includes("All targets") || escaped.includes("Latexmk: All targets")) {
+                    return `<span class="text-emerald-400 font-bold">${escaped}</span>`;
+                }
+                return escaped;
+            }).join("\n");
+
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        function toggleLogs() {
+            const drawer = document.getElementById("logDrawer");
+            drawer.classList.toggle("translate-y-full");
+            refreshIcons();
+        }
+
+        function openLogs() {
+            document.getElementById("logDrawer").classList.remove("translate-y-full");
+            refreshIcons();
+        }
+
+        function clearLogs() {
+            document.getElementById("logContent").textContent = "";
+        }
+
+        function openPdfNewTab() {
+            const pdfName = (currentFile.endsWith(".tex") ? currentFile : "main.tex").replace(/\.tex$/, ".pdf");
+            window.open(`/pdf?file=${encodeURIComponent(pdfName)}&t=${Date.now()}`, "_blank");
+        }
+
+        function downloadPdf() {
+            const pdfName = (currentFile.endsWith(".tex") ? currentFile : "main.tex").replace(/\.tex$/, ".pdf");
+            const a = document.createElement("a");
+            a.href = `/pdf?file=${encodeURIComponent(pdfName)}&download=1`;
+            a.download = pdfName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Comments System
+        async function fetchComments() {
+            try {
+                const res = await fetch("/api/comments");
+                allComments = await res.json();
+                renderComments();
+            } catch (err) {
+                console.error("Failed to load comments:", err);
+            }
+        }
+
+        function setCommentFilter(filter, element) {
+            currentCommentFilter = filter;
+            document.querySelectorAll(".filter-chip").forEach(c => {
+                c.className = "filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition";
+            });
+            element.className = "filter-chip px-2.5 py-1 rounded text-xs bg-sky-500 text-slate-950 font-bold border border-sky-500 transition";
+            renderComments();
+        }
+
+        function getTagConfig(type) {
+            switch(type) {
+                case "issue":
+                    return { icon: "alert-circle", class: "bg-red-500/15 text-red-400 border-red-500/30" };
+                case "todo":
+                    return { icon: "check-square", class: "bg-purple-500/15 text-purple-400 border-purple-500/30" };
+                case "praise":
+                    return { icon: "thumbs-up", class: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
+                default:
+                    return { icon: "lightbulb", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" };
+            }
+        }
+
+        function renderComments() {
+            const list = document.getElementById("commentsList");
+            const countBadge = document.getElementById("commentsCountBadge");
+            const panelBadge = document.getElementById("panelCommentsCount");
+            
+            const openCount = allComments.filter(c => !c.resolved).length;
+            const resolvedCount = allComments.filter(c => c.resolved).length;
+
+            document.getElementById("countAll").textContent = allComments.length;
+            document.getElementById("countOpen").textContent = openCount;
+            document.getElementById("countResolved").textContent = resolvedCount;
+            countBadge.textContent = openCount;
+            panelBadge.textContent = openCount;
+
+            const filtered = allComments.filter(c => {
+                if (currentCommentFilter === "open") return !c.resolved;
+                if (currentCommentFilter === "resolved") return c.resolved;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 px-4 text-slate-500 flex flex-col items-center">
+                        <i data-lucide="message-square" class="w-8 h-8 mb-2 opacity-50"></i>
+                        <div class="text-xs font-medium">No comments in this view.</div>
+                        <div class="text-[11px] mt-1 text-slate-600">Select text in PDF to add feedback.</div>
+                    </div>
+                `;
+                refreshIcons();
+                return;
+            }
+
+            list.innerHTML = filtered.map(c => {
+                const tag = getTagConfig(c.type);
+                const timeAgo = formatTimeAgo(c.createdAt);
+                
+                const quoteHtml = c.quote ? `
+                    <div class="bg-sky-500/10 border-l-2 border-sky-400 px-2.5 py-1.5 rounded-r text-xs text-sky-200 italic flex items-start gap-1.5">
+                        <i data-lucide="quote" class="w-3 h-3 text-sky-400 flex-shrink-0 mt-0.5"></i>
+                        <span>${escapeHtml(c.quote)}</span>
+                    </div>
+                ` : "";
+
+                return `
+                    <div class="bg-slate-900 border ${c.resolved ? "border-slate-800 opacity-60" : "border-slate-800 hover:border-slate-700"} rounded-lg p-3 flex flex-col gap-2 transition cursor-pointer" onclick="if('${c.page}') scrollToPdfPage('${c.page}')">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                <span>${escapeHtml(c.author || "Advisor")}</span>
+                            </div>
+                            <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded border flex items-center gap-1 ${tag.class}">
+                                <i data-lucide="${tag.icon}" class="w-3 h-3"></i>
+                                <span>${escapeHtml(c.type || "suggestion")}</span>
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                            ${c.section ? `<span class="flex items-center gap-1"><i data-lucide="bookmark" class="w-3 h-3 text-slate-500"></i> ${escapeHtml(c.section)}</span>` : ""}
+                            ${c.page ? `<span class="flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3 text-slate-500"></i> Page ${escapeHtml(c.page)}</span>` : ""}
+                            <span class="flex items-center gap-1 text-slate-500"><i data-lucide="clock" class="w-3 h-3"></i> ${timeAgo}</span>
+                        </div>
+
+                        ${quoteHtml}
+
+                        <div class="text-xs text-slate-200 leading-relaxed ${c.resolved ? "line-through text-slate-500" : ""}">${escapeHtml(c.text)}</div>
+
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]" onclick="event.stopPropagation()">
+                            <label class="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+                                <input type="checkbox" ${c.resolved ? "checked" : ""} onchange="toggleResolveComment('${c.id}', this.checked)" class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0" />
+                                <span>${c.resolved ? "Resolved" : "Mark resolved"}</span>
+                            </label>
+
+                            <button onclick="deleteComment('${c.id}')" class="text-red-400 hover:text-red-300 flex items-center gap-1 text-[11px] opacity-75 hover:opacity-100 transition">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            refreshIcons();
+        }
+
+        async function submitComment() {
+            const author = document.getElementById("authorInput").value.trim() || "Advisor";
+            const type = document.getElementById("typeSelect").value;
+            const section = document.getElementById("sectionInput").value.trim();
+            const page = document.getElementById("pageInput").value.trim();
+            const text = document.getElementById("commentTextInput").value.trim();
+            const quote = activeSelectedQuote;
+
+            if (!text) {
+                alert("Please enter comment text.");
+                return;
+            }
+
+            localStorage.setItem("latex_author_name", author);
+
+            const payload = { author, type, section, page, quote, text };
+
+            try {
+                const res = await fetch("/api/comments", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("commentTextInput").value = "";
+                    document.getElementById("sectionInput").value = "";
+                    document.getElementById("pageInput").value = "";
+                    clearActiveQuote();
+                    await fetchComments();
+                } else {
+                    alert("Failed to post comment");
+                }
+            } catch (err) {
+                alert("Error posting comment: " + err.message);
+            }
+        }
+
+        async function toggleResolveComment(id, resolved) {
+            try {
+                await fetch("/api/comments", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, resolved })
+                });
+                await fetchComments();
+            } catch (err) {
+                console.error("Failed to update comment status", err);
+            }
+        }
+
+        async function deleteComment(id) {
+            if (!confirm("Delete this comment?")) return;
+            try {
+                await fetch(`/api/comments?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+                await fetchComments();
+            } catch (err) {
+                alert("Failed to delete comment");
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function formatTimeAgo(isoString) {
+            if (!isoString) return "recently";
+            const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
+            if (diff < 60) return "just now";
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return new Date(isoString).toLocaleDateString();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+                saveCurrentFile();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                triggerSaveAndCompile();
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === "l" || e.key === "L")) {
+                e.preventDefault();
+                toggleLogs();
+            }
+        });
+
+        document.getElementById("aiInputText")?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submitAiMessage();
+            }
+        });
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            initAceEditor();
+            setupResizers();
+            setupTextSelectionListener();
+            await loadFileTree();
+            await loadFile("main.tex");
+            
+            const savedAuthor = localStorage.getItem("latex_author_name");
+            if (savedAuthor) {
+                document.getElementById("authorInput").value = savedAuthor;
+            }
+
+            fetchComments();
+            loadPdfDocument("main.pdf");
+            refreshIcons();
+        });
+    </script>
+</body>
+</html>
