@@ -1,126 +1,119 @@
 [
   {
-    "id": "rag-kist-01",
+    "id": "vbs-kist-01",
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "vòng đua xe đạp Hồ Hoàn Kiếm cúp truyền hình chặng cuối",
+    "query": "a young BMX rider performing a flatland bike spin on the ground in front of a stone building with arches",
     "ground_truth": {
-      "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
-      "video_name": "Videos_L23_a/video/L23_V005.mp4",
-      "video_stem": "L23_V005",
-      "timestamp": 5.52,
-      "frame_id": 138
+      "video_name": "00001.mp4",
+      "video_stem": "00001",
+      "timestamp": 7.2,
+      "frame_id": 180
     }
   },
   {
-    "id": "rag-kist-02",
+    "id": "vbs-kist-02",
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "vườn cò Tư Sự trong chương trình Đôi Mắt MeKong",
+    "query": "a helicopter flying over tropical coastline and lush green mountain ridges",
     "ground_truth": {
-      "point_id": "000047da-5fa0-58ed-a1b8-afe00c1547bd",
-      "video_name": "Videos_L29_a/video/L29_V003.mp4",
-      "video_stem": "L29_V003",
-      "timestamp": 52.4,
-      "frame_id": 1310
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 12.0,
+      "frame_id": 300
     }
   },
   {
-    "id": "rag-kist-03",
+    "id": "vbs-kist-03",
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "thịt vịt xào củ cải muối món ngon mỗi ngày",
+    "query": "a musician playing acoustic guitar on a wooden stage under warm stage lights",
     "ground_truth": {
-      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
-      "video_name": "Videos_L26_c/video/L26_V203.mp4",
-      "video_stem": "L26_V203",
-      "timestamp": 302.08,
-      "frame_id": 7552
+      "video_name": "00009.mp4",
+      "video_stem": "00009",
+      "timestamp": 10.0,
+      "frame_id": 250
     }
   },
   {
-    "id": "rag-kisc-01",
+    "id": "vbs-kisc-01",
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "tìm video dạy nấu ăn món bánh mì hạnh nhân",
+    "query": "find a traditional wedding ceremony with colorful decorations",
     "history": [
-      { "role": "user", "text": "tìm video làm bánh mì" },
-      { "role": "system", "text": "Có phải bạn muốn tìm bánh mì ngọt hạnh nhân hay bánh mì thịt xào?" },
-      { "role": "user", "text": "bánh mì hạnh nhân béo giòn ngọt món ngon mỗi ngày" }
+      { "role": "user", "text": "find a wedding celebration" },
+      { "role": "system", "text": "Is it a Western church wedding or traditional Hindu wedding ceremony?" },
+      { "role": "user", "text": "traditional Hindu wedding with peacock theme and golden garlands" }
     ],
-    "system_answer": "bánh mì hạnh nhân béo giòn ngọt món ngon mỗi ngày",
-    "rejected": ["thịt vịt xào củ cải muối"],
+    "system_answer": "traditional Hindu wedding with peacock theme and golden garlands",
+    "rejected": ["Western church wedding with white flowers"],
     "ground_truth": {
-      "point_id": "0002e187-427c-5b0e-a207-d53ee24b2af5",
-      "video_name": "Videos_L26_b/video/L26_V111.mp4",
-      "video_stem": "L26_V111",
-      "timestamp": 84.32,
-      "frame_id": 2108
+      "video_name": "00003.mp4",
+      "video_stem": "00003",
+      "timestamp": 14.0,
+      "frame_id": 350
     }
   },
   {
-    "id": "rag-kisc-02",
+    "id": "vbs-kisc-02",
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "phóng sự Đôi Mắt Mê Kông tập 1 Vườn Cò Tư Sự",
+    "query": "people in water exploring marine life and coral reefs",
     "history": [
-      { "role": "user", "text": "chương trình khám phá thiên nhiên miền tây" },
-      { "role": "system", "text": "Chương trình khám phá vườn chim hay phóng sự thời sự 60 giây?" },
-      { "role": "user", "text": "chương trình Đôi Mắt Mekong tập 1 về vườn cò Tư Sự" }
+      { "role": "user", "text": "people swimming in water" },
+      { "role": "system", "text": "Are they surfing on ocean waves or scuba diving underwater near coral reef?" },
+      { "role": "user", "text": "scuba diver swimming with tropical fish near coral reef" }
     ],
-    "system_answer": "chương trình Đôi Mắt Mekong tập 1 về vườn cò Tư Sự",
-    "rejected": ["thời sự 60 giây chiều"],
+    "system_answer": "scuba diver swimming with tropical fish near coral reef",
+    "rejected": ["surfer riding ocean waves on surfboard"],
     "ground_truth": {
-      "point_id": "00021072-08cc-5bba-8d03-578343c3b014",
-      "video_name": "Videos_L29_a/video/L29_V003.mp4",
-      "video_stem": "L29_V003",
-      "timestamp": 192.0,
-      "frame_id": 4800
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500
     }
   },
   {
-    "id": "rag-vqa-01",
+    "id": "vbs-vqa-01",
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "Chuyên đề ôn thi tiếng Anh THPT trong video là gì?",
+    "query": "What type of aircraft is seen touring over the tropical island landscape?",
     "ground_truth": {
-      "point_id": "0000dc4e-3e47-5671-a04c-662a0e7582da",
-      "video_name": "Videos_L25_a/video/L25_V050.mp4",
-      "video_stem": "L25_V050",
-      "timestamp": 1170.48,
-      "frame_id": 29262,
-      "answer": "Đảo ngữ",
-      "acceptable_answers": ["đảo ngữ", "chuyên đề đảo ngữ", "inversion", "đảo ngữ tiếng anh"]
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 12.0,
+      "frame_id": 300,
+      "answer": "Helicopter",
+      "acceptable_answers": ["helicopter", "chopper", "a helicopter"]
     }
   },
   {
-    "id": "rag-vqa-02",
+    "id": "vbs-vqa-02",
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "Món ăn trong video được chế biến từ loại thịt gia cầm nào?",
+    "query": "What musical instrument is being played by the musician in the live session?",
     "ground_truth": {
-      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
-      "video_name": "Videos_L26_c/video/L26_V203.mp4",
-      "video_stem": "L26_V203",
-      "timestamp": 302.08,
-      "frame_id": 7552,
-      "answer": "Thịt vịt",
-      "acceptable_answers": ["thịt vịt", "vịt", "thịt vịt xào"]
+      "video_name": "00009.mp4",
+      "video_stem": "00009",
+      "timestamp": 10.0,
+      "frame_id": 250,
+      "answer": "Acoustic guitar",
+      "acceptable_answers": ["acoustic guitar", "guitar", "an acoustic guitar"]
     }
   },
   {
-    "id": "rag-vqa-03",
+    "id": "vbs-vqa-03",
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Fail-Closed Safety)",
-    "query": "Tên của tàu ngầm hạt nhân lặn dưới biển trong video là gì?",
+    "query": "What is the color of the military submarine underwater in the video?",
     "ground_truth": {
       "video_name": "none",
       "timestamp": 0.0,
@@ -131,33 +124,31 @@
     }
   },
   {
-    "id": "rag-avs-01",
+    "id": "vbs-avs-01",
     "type": 4,
     "type_name": "AVS",
     "category": "Ad-hoc Video Search (Cross-Video Diversity)",
-    "query": "các món ăn trong chương trình Món Ngon Mỗi Ngày Vivu TV",
+    "query": "find all shots showing scuba divers swimming underwater with marine life and fish",
     "ground_truth": {
-      "point_id": "00011b42-657c-5d79-a069-9291500e8c32",
-      "video_name": "Videos_L26_c/video/L26_V203.mp4",
-      "video_stem": "L26_V203",
-      "timestamp": 302.08,
-      "frame_id": 7552,
-      "distinct_target_videos": ["L26_V203", "L26_V111", "L26_V136"]
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": ["00008", "marine_0034"]
     }
   },
   {
-    "id": "rag-kisv-01",
+    "id": "vbs-kisv-01",
     "type": 5,
     "type_name": "KIS-V",
     "category": "Visual Query Search",
-    "query": "đua xe đạp vòng quanh bờ hồ",
-    "reference_media": "Videos_L23_a/video/L23_V005.mp4",
+    "query": "visual match for underwater coral reef and scuba diver exploring deep sea",
+    "reference_media": "00008.mp4",
     "ground_truth": {
-      "point_id": "0001a701-51d5-5f72-9d4a-43882a1c3c96",
-      "video_name": "Videos_L23_a/video/L23_V005.mp4",
-      "video_stem": "L23_V005",
-      "timestamp": 5.52,
-      "frame_id": 138
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500
     }
   }
 ]
