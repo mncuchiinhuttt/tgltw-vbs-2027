@@ -51,8 +51,8 @@
 
 \begin{document}
 
-\title{Evidence-Carrying Live Search: High-Capacity Multimodal Retrieval and Grounded Verification for Interactive Video Browsing}
-\titlerunning{Evidence-Carrying Live Search}
+\title{AEGIS: Adaptive Evidence-Grounded Interactive Search for Timed Video Retrieval}
+\titlerunning{AEGIS: Adaptive Evidence-Grounded Interactive Search}
 
 \author{Long Minh Vo\inst{1,2}\orcidID{0009-0002-8449-7669} \and
 Hung Gia Vu\inst{1}\orcidID{0009-0009-5704-0162} \and
@@ -71,7 +71,7 @@ CBT's Science, Engineering and Technology Club, Ben Tre High School for Gifted S
 \maketitle
 
 \begin{abstract}
-Interactive video retrieval in timed competition environments presents severe trade-offs between retrieval latency, semantic coverage, and answer faithfulness. In this paper, we present TGLTW-RMIT, a live-first multimodal video retrieval system designed for the Video Browser Showdown (VBS 2027). TGLTW-RMIT is built around high-capacity multimodal representations (Tencent WeMM-Embedding-4B with Matryoshka Representation Learning), parallelized vision-language reranking, strict fail-closed Visual Question Answering (VQA), and a peak Conversational Known-Item Search (KIS-C) engine. By unifying dense vector search over Hierarchical Navigable Small World (HNSW) graphs with payload text lexical gates, multi-turn entity tracking, compound $n$-gram clarification boosting, and conversational negative feedback filtering, the system resolves complex visual ambiguities in real time. Furthermore, an intra-video timeline exploration module with sub-shot reranking allows operators to pinpoint exact frames in long videos. Comprehensive empirical ablations on the multi-thousand-hour V3C corpus demonstrate sub-2s parallelized VLM scoring, 100\% fail-closed safety rate without hallucinations, and 100\% multi-turn KIS-C Recall@1 (MRR 1.000). Source code, paper, and live demo are accessible on the public \projectpage.
+Interactive video retrieval in timed competition environments presents severe trade-offs between retrieval latency, semantic coverage, and answer faithfulness. In this paper, we present \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a live-first multimodal video retrieval system developed by team TGLTW-RMIT for the Video Browser Showdown (VBS 2027). AEGIS is built around high-capacity multimodal representations (Tencent WeMM-Embedding-4B with Matryoshka Representation Learning), parallelized vision-language reranking, strict fail-closed Visual Question Answering (VQA), and a peak Conversational Known-Item Search (KIS-C) engine. By unifying dense vector search over Hierarchical Navigable Small World (HNSW) graphs with payload text lexical gates, multi-turn entity tracking, compound $n$-gram clarification boosting, and conversational negative feedback filtering, the system resolves complex visual ambiguities in real time. Furthermore, an intra-video timeline exploration module with sub-shot reranking allows operators to pinpoint exact frames in long videos. Comprehensive empirical ablations on the multi-thousand-hour V3C corpus demonstrate sub-2s parallelized VLM scoring, 100\% fail-closed safety rate without hallucinations, and 100\% multi-turn KIS-C Recall@1 (MRR 1.000). Source code, paper, and live demo are accessible on the public \projectpage.
 \keywords{Interactive Video Retrieval \and Video Browser Showdown \and Conversational Search \and Grounded VQA \and Multimodal RAG}
 \end{abstract}
 
@@ -82,7 +82,7 @@ The Video Browser Showdown (VBS) evaluates exploratory and interactive video ret
 
 Recent winning systems, such as PraK V4~\cite{jackl2026prak}, NII-UIT~\cite{tran2026niiuit}, and Exquisitor~\cite{khan2026exquisitor}, demonstrate that competitive success requires both sub-second query latency and high-precision discrimination across visually confusing scenes. However, existing pipelines often suffer from three critical bottlenecks: (1) \emph{Index Dilution and Semantic Drift}: flat keyframe indexing over millions of frames causes repetitive hits from identical videos to crowd out relevant candidates; (2) \emph{Conversational Degradation}: multi-turn KIS-C queries lose persistent entity constraints and fail to penalize operator-rejected attributes; and (3) \emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s delays, while ungrounded VQA models invent plausible answers on missing or corrupt video frames, incurring heavy submission penalties.
 
-To address these challenges, we introduce TGLTW-RMIT, an evidence-carrying multimodal retrieval architecture engineered for VBS 2027. The core technical contributions of our system are:
+To address these challenges, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), an evidence-carrying multimodal retrieval architecture engineered for VBS 2027. The core technical contributions of our system are:
 \begin{enumerate}
     \item \textbf{High-Capacity Multimodal Representation with MRL}: We integrate the 4-billion-parameter Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (MRL), generating unified 2,048-dimensional dense vectors indexed via Hierarchical Navigable Small World (HNSW)~\cite{malkov2018efficient} on Qdrant~\cite{qdrant}.
     \item \textbf{Peak Conversational Retrieval Engine (KIS-C)}: We establish an entity-preserving multi-turn CQR pipeline coupled with dynamic ambiguity detection (Distinct Video Ratio + Score Margin Ambiguity), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative feedback filtering that immediately dampens rejected visual features.
@@ -95,7 +95,7 @@ To address these challenges, we introduce TGLTW-RMIT, an evidence-carrying multi
 
 VBS retrieval combines semantic vector representations with fast human-in-the-loop interaction and DRES server submission~\cite{sauter2024performance,rossetto2021vitrivr}. Regional challenge systems provide precedents for OCR/ASR evidence, query expansion, and reweighting~\cite{doan2025kpi,le2025fustar,phat2025revimm,buitran2025query}. 
 
-\paragraph{System-Level Delta.} Relative to traditional dual-encoder retrieval, TGLTW-RMIT establishes four operational invariants: (1) \emph{Provenance Preservation}: every retrieved hit retains its canonical source video, native frame index, timestamp, and metadata payload across all fusion stages; (2) \emph{Budgeted Precision Ladder}: operators can interactively escalate search effort from default fast HNSW ($\sim$12ms) to deep HNSW ($ef=512$) or exact brute-force search without backend restarts; (3) \emph{Multi-threaded VLM Verification}: candidate scoring runs in parallel, cutting p95 rerank latency by $8\times$; and (4) \emph{Fail-Closed Zero-Hallucination VQA}: unverified visual evidence yields explicit zero-score refusal, preventing DRES penalty points.
+\paragraph{System-Level Delta.} Relative to traditional dual-encoder retrieval, AEGIS establishes four operational invariants: (1) \emph{Provenance Preservation}: every retrieved hit retains its canonical source video, native frame index, timestamp, and metadata payload across all fusion stages; (2) \emph{Budgeted Precision Ladder}: operators can interactively escalate search effort from default fast HNSW ($\sim$12ms) to deep HNSW ($ef=512$) or exact brute-force search without backend restarts; (3) \emph{Multi-threaded VLM Verification}: candidate scoring runs in parallel, cutting p95 rerank latency by $8\times$; and (4) \emph{Fail-Closed Zero-Hallucination VQA}: unverified visual evidence yields explicit zero-score refusal, preventing DRES penalty points.
 
 \begin{figure*}[t]
 \centering
@@ -126,11 +126,11 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 \node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live interaction path}}] {};
 \end{tikzpicture}%
 }
-\caption{TGLTW-RMIT's live-first architecture. Offline processing indexes WeMM-4B dense embeddings and enriched payloads into Qdrant HNSW collections, while the online path performs parallelized hybrid retrieval, conversational clarification, and bounded VLM verification.}
+\caption{AEGIS's live-first architecture. Offline processing indexes WeMM-4B dense embeddings and enriched payloads into Qdrant HNSW collections, while the online path performs parallelized hybrid retrieval, conversational clarification, and bounded VLM verification.}
 \label{fig:system-pipeline}
 \end{figure*}
 
-\section{TGLTW-RMIT Architecture}
+\section{AEGIS System Architecture}
 \label{sec:architecture}
 
 \subsection{Offline Indexing and Multimodal Representation}
@@ -289,7 +289,7 @@ To evaluate the individual contributions of our architectural components, we exe
 \multicolumn{5}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
 Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & Faithfulness: 62.0\% & 38.0\% (Hazardous) & 1.42s \\
 Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & Faithfulness: 86.0\% & 14.0\% & 1.55s \\
-TGLTW-RMIT Fail-Closed Grounded Contract & \textbf{Exact Match: 100.0\%} & \textbf{Faithfulness: 100.0\%} & \textbf{0.0\% (Zero Error)} & 1.62s (100\% Safe) \\
+\textbf{AEGIS Fail-Closed Grounded Contract} & \textbf{Exact Match: 100.0\%} & \textbf{Faithfulness: 100.0\%} & \textbf{0.0\% (Zero Error)} & 1.62s (100\% Safe) \\
 \midrule
 \multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Candidate Scoring)}} \\
 Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
@@ -319,7 +319,7 @@ As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablatio
 \section{Conclusion}
 \label{sec:conclusion}
 
-TGLTW-RMIT demonstrates an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By unifying 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system provides both sub-second responsiveness and verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
+AEGIS demonstrates an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By unifying 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system provides both sub-second responsiveness and verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
 
 \bibliographystyle{splncs04}
 \bibliography{references}
