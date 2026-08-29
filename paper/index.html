@@ -927,11 +927,12 @@
                 }).promise;
             }
         }
+
+        function adjustZoom(delta) {
             pdfScale = Math.max(0.6, Math.min(2.5, pdfScale + delta));
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             renderAllPdfPages();
         }
-
         function resetZoom() {
             pdfScale = 1.15;
             document.getElementById("zoomLevel").textContent = "115%";
