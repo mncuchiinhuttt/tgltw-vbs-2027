@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LaTeX Live Studio & AI Assistant - TGLTW-RMIT VBS 2027</title>
+    <title>LaTeX Live Studio - TGLTW-RMIT VBS 2027</title>
     
     <!-- Google Fonts: JetBrains Mono & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,9 +38,6 @@
 
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Marked.js for AI Markdown rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
 
     <!-- Ace Editor CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
@@ -143,44 +140,6 @@
         .textLayer ::selection {
             background: rgba(56, 189, 248, 0.7);
         }
-
-        /* AI Markdown Styles */
-        .ai-prose {
-            font-size: 12.5px;
-            line-height: 1.6;
-            color: #cbd5e1;
-        }
-        .ai-prose p { margin-bottom: 8px; }
-        .ai-prose p:last-child { margin-bottom: 0; }
-        .ai-prose ul, .ai-prose ol { margin-left: 16px; margin-bottom: 8px; }
-        .ai-prose li { margin-bottom: 4px; }
-        .ai-prose strong { color: #f8fafc; font-weight: 600; }
-        .ai-prose h1, .ai-prose h2, .ai-prose h3 { color: #38bdf8; font-weight: 700; margin-top: 8px; margin-bottom: 4px; }
-        .ai-prose code {
-            font-family: "JetBrains Mono", monospace;
-            background: rgba(15, 23, 42, 0.6);
-            padding: 1px 4px;
-            border-radius: 4px;
-            font-size: 11px;
-            color: #7dd3fc;
-        }
-        .ai-prose pre {
-            background: #090d16;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            padding: 8px;
-            margin: 8px 0;
-            overflow-x: auto;
-            position: relative;
-        }
-        .ai-prose pre code {
-            background: transparent;
-            padding: 0;
-            color: #e2e8f0;
-            font-size: 11.5px;
-            display: block;
-        }
-
         /* Hide scrollbars for navbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -279,16 +238,10 @@
 
         <!-- Right Group: AI Copilot, Review Comments, Logs, PDF Actions -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Toggle AI Assistant -->
-            <button onclick="openRightPanelTab('ai')" id="headerAiBtn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1 shadow transition" title="AI Assistant">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
-                <span>AI Assistant</span>
-            </button>
-
-            <!-- Toggle Advisor Comments -->
-            <button onclick="openRightPanelTab('comments')" id="headerCommentsBtn" class="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-[11px] font-medium rounded-md px-2 py-1 flex items-center gap-1 transition" title="Advisor Comments">
-                <i data-lucide="message-square" class="w-3 h-3"></i>
-                <span class="hidden sm:inline">Review</span>
+            <!-- Advisor Comments -->
+            <button onclick="openRightPanelTab('comments')" id="headerCommentsBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold rounded-md px-2.5 py-1 flex items-center gap-1.5 shadow transition" title="Advisor Comments">
+                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                <span>Review Comments</span>
                 <span id="commentsCountBadge" class="bg-red-500 text-white text-[9px] font-bold px-1 rounded-full">0</span>
             </button>
 
@@ -371,10 +324,6 @@
                     <span id="currentFileName" class="font-mono text-slate-200 font-medium">main.tex</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="askAiWithEditorSelection()" class="text-indigo-400 hover:text-indigo-300 text-[11px] flex items-center gap-1 transition" title="Send selected code to AI Assistant">
-                        <i data-lucide="sparkles" class="w-3 h-3"></i>
-                        <span>Ask AI about selection</span>
-                    </button>
                     <span class="text-[11px] text-slate-500 font-mono" id="editorModeBadge">LaTeX Syntax</span>
                 </div>
             </div>
@@ -418,16 +367,6 @@
         </div>
 
         <!-- Floating Selection Tooltip for Highlighting in PDF -->
-        <div id="selectionPopover" class="fixed bg-slate-900 border border-sky-500 shadow-2xl rounded-lg p-1.5 hidden items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-1">
-            <button onclick="applySelectionToComment()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1.5 shadow transition">
-                <i data-lucide="message-square-plus" class="w-3.5 h-3.5"></i>
-                <span>Add Comment</span>
-            </button>
-            <button onclick="applySelectionToAi()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1.5 shadow transition">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                <span>Ask AI</span>
-            </button>
-        </div>
 
         <!-- Resizer 2: Between PDF and Sidebar -->
         <div class="resizer-x" id="resizerPdfComments" title="Drag to resize Right Panel"></div>
@@ -436,15 +375,9 @@
         <div class="right-panel w-[420px] h-full bg-slate-950 border-l border-slate-800 flex flex-col relative z-20 min-w-[280px] max-w-[750px] flex-shrink-0" id="rightSidebar">
             <!-- Sidebar Header & Tab Buttons -->
             <div class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-                    <button id="tabBtnAi" onclick="switchRightPanelTab('ai')" class="px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
-                        <span>AI Assistant</span>
-                    </button>
-                    <button id="tabBtnComments" onclick="switchRightPanelTab('comments')" class="px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition">
-                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                        <span>Review (<span id="panelCommentsCount">0</span>)</span>
-                    </button>
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-200">
+                    <i data-lucide="message-square" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Review Comments (<span id="panelCommentsCount">0</span>)</span>
                 </div>
 
                 <button onclick="toggleRightSidebar()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition" title="Close Panel">
@@ -452,92 +385,6 @@
                 </button>
             </div>
 
-            <!-- TAB 1: AI ASSISTANT CHAT PANEL -->
-            <div id="panelAiView" class="flex-1 flex flex-col overflow-hidden">
-                <!-- AI Quick Actions Banner -->
-                <div class="px-3 py-2 bg-slate-900/60 border-b border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                    <div class="flex items-center gap-1.5 overflow-hidden">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span class="font-medium text-slate-300 truncate">AI Assistant</span>
-                    </div>
-                    <button onclick="clearAiChat()" class="text-[11px] text-slate-400 hover:text-red-400 flex items-center gap-1 transition">
-                        <i data-lucide="trash" class="w-3 h-3"></i>
-                        <span>Clear</span>
-                    </button>
-                </div>
-
-                <!-- Chat History Messages List -->
-                <div id="aiChatMessages" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-3.5 select-text">
-                    <!-- Welcome AI message -->
-                    <div class="flex gap-2.5 items-start">
-                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
-                        </div>
-                        <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 leading-relaxed shadow-sm">
-                            <p class="font-semibold text-sky-400 mb-1 flex items-center gap-1.5">
-                                <span>AI Assistant</span>
-                            </p>
-                            <p class="mb-2">Tôi là trợ lý AI chuyên về viết và chỉnh sửa bài báo khoa học theo chuẩn <strong>Springer LNCS (MMM / VBS 2027)</strong>.</p>
-                            <p class="text-slate-400 text-[11.5px]">Bạn có thể yêu cầu:</p>
-                            <ul class="list-disc ml-4 mt-1 text-slate-400 text-[11.5px] space-y-1">
-                                <li>Nâng cấp văn phong học thuật (academic tone).</li>
-                                <li>Viết / Sửa Abstract, Introduction, System Architecture.</li>
-                                <li>Tạo bảng dữ liệu LaTeX, công thức toán học hoặc citations.</li>
-                                <li>Bôi đen một đoạn bất kỳ rồi bấm <em>Ask AI</em> để sửa riêng đoạn đó.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Active AI Context Snippet (if selected from PDF or Editor) -->
-                <div id="aiContextPreview" class="hidden mx-3 mb-2 bg-indigo-950/40 border border-indigo-500/30 p-2 rounded-lg text-xs flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-1.5 overflow-hidden text-indigo-300">
-                        <i data-lucide="quote" class="w-3 h-3 text-indigo-400 flex-shrink-0"></i>
-                        <span class="truncate italic" id="aiContextText"></span>
-                    </div>
-                    <button onclick="clearAiContextSnippet()" class="text-slate-400 hover:text-slate-200 p-0.5" title="Remove context">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                </div>
-
-                <!-- Quick Suggestion Chips -->
-                <div class="px-3 py-1.5 border-t border-slate-800/80 bg-slate-900/40 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap text-[11px]">
-                    <button onclick="sendQuickAiPrompt('Nâng cấp và trau chuốt văn phong học thuật cho đoạn này')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
-                        <i data-lucide="wand-2" class="w-3 h-3 text-purple-400"></i>
-                        <span>Polish Writing</span>
-                    </button>
-                    <button onclick="sendQuickAiPrompt('Đánh giá phê bình học thuật (academic review/critique) và chỉ ra điểm cần hoàn thiện của bài báo này')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
-                        <i data-lucide="search" class="w-3 h-3 text-sky-400"></i>
-                        <span>Critique Paper</span>
-                    </button>
-                    <button onclick="sendQuickAiPrompt('Viết 3 bullet points đóng góp chính (Key Contributions) thật nổi bật cho phần Introduction')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
-                        <i data-lucide="award" class="w-3 h-3 text-amber-400"></i>
-                        <span>Contributions</span>
-                    </button>
-                    <button onclick="sendQuickAiPrompt('Tạo một bảng LaTeX chuẩn booktabs so sánh các tính năng của hệ thống')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded-full transition flex items-center gap-1">
-                        <i data-lucide="table" class="w-3 h-3 text-emerald-400"></i>
-                        <span>Make Table</span>
-                    </button>
-                </div>
-
-                <!-- AI Input Form -->
-                <div class="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
-                    <div class="relative">
-                        <textarea id="aiInputText" placeholder="Hỏi AI Assistant hoặc yêu cầu sửa bài (Enter để gửi, Shift+Enter xuống dòng)..." class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2.5 text-xs min-h-[55px] max-h-[140px] resize-y focus:outline-none focus:border-indigo-500 leading-relaxed pr-10"></textarea>
-                        
-                        <button id="aiSendBtn" onclick="submitAiMessage()" class="absolute right-2 bottom-2.5 bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded-md shadow transition flex items-center justify-center">
-                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: ADVISOR REVIEW & COMMENTS PANEL -->
-            <div id="panelCommentsView" class="flex-1 flex flex-col overflow-hidden hidden">
-                <!-- Filters -->
-                <div class="px-4 py-2 bg-slate-900/60 border-b border-slate-800/80 flex gap-1.5">
-                    <button class="filter-chip px-2.5 py-1 rounded text-xs bg-sky-500 text-slate-950 font-bold border border-sky-500 transition" onclick="setCommentFilter('all', this)">
-                        All (<span id="countAll">0</span>)
                     </button>
                     <button class="filter-chip px-2.5 py-1 rounded text-xs bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" onclick="setCommentFilter('open', this)">
                         Open (<span id="countOpen">0</span>)
@@ -669,12 +516,6 @@
         let pdfScale = 1.15;
         let activeSelectedQuote = "";
         let activeSelectedPage = "1";
-
-        // AI Copilot State
-        let aiChatHistory = [];
-        let activeAiContextSnippet = "";
-        let isAiThinking = false;
-
         // Image Modal State
         let currentModalImagePath = "";
 
@@ -1185,27 +1026,6 @@
             }
         }
 
-        // Right Sidebar Tab Controls
-        function switchRightPanelTab(tab) {
-            const aiView = document.getElementById("panelAiView");
-            const commentsView = document.getElementById("panelCommentsView");
-            const tabBtnAi = document.getElementById("tabBtnAi");
-            const tabBtnComments = document.getElementById("tabBtnComments");
-
-            if (tab === "ai") {
-                aiView.classList.remove("hidden");
-                commentsView.classList.add("hidden");
-                tabBtnAi.className = "px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition";
-                tabBtnComments.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition";
-            } else {
-                aiView.classList.add("hidden");
-                commentsView.classList.remove("hidden");
-                tabBtnAi.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition";
-                tabBtnComments.className = "px-3 py-1 text-xs font-semibold rounded-md text-white bg-indigo-600 flex items-center gap-1.5 transition";
-            }
-            refreshIcons();
-        }
-
         function openRightPanelTab(tab) {
             const sidebar = document.getElementById("rightSidebar");
             const resizer2 = document.getElementById("resizerPdfComments");
@@ -1365,52 +1185,11 @@
             commentInput.focus();
             refreshIcons();
         }
-
-        function applySelectionToAi() {
-            const popover = document.getElementById("selectionPopover");
-            popover.classList.remove("flex");
-            popover.classList.add("hidden");
-
-            openRightPanelTab("ai");
-
-            activeAiContextSnippet = activeSelectedQuote;
-            document.getElementById("aiContextText").textContent = `"${activeSelectedQuote}" (Page ${activeSelectedPage})`;
-            document.getElementById("aiContextPreview").classList.remove("hidden");
-            document.getElementById("aiContextPreview").classList.add("flex");
-
-            const aiInput = document.getElementById("aiInputText");
-            aiInput.focus();
-            refreshIcons();
-        }
-
-        function askAiWithEditorSelection() {
-            if (!editor) return;
-            const selectedText = editor.getSelectedText().trim();
-            if (!selectedText) {
-                alert("Vui lòng bôi đen một đoạn code / văn bản trong Editor để gửi cho AI Assistant.");
-                return;
-            }
-            openRightPanelTab("ai");
-            activeAiContextSnippet = selectedText;
-            document.getElementById("aiContextText").textContent = `Editor snippet: "${selectedText.slice(0, 70)}..."`;
-            document.getElementById("aiContextPreview").classList.remove("hidden");
-            document.getElementById("aiContextPreview").classList.add("flex");
-            document.getElementById("aiInputText").focus();
-            refreshIcons();
-        }
-
         function clearActiveQuote() {
             activeSelectedQuote = "";
             document.getElementById("activeQuoteText").textContent = "";
             document.getElementById("activeQuotePreview").classList.remove("flex");
             document.getElementById("activeQuotePreview").classList.add("hidden");
-        }
-
-        function clearAiContextSnippet() {
-            activeAiContextSnippet = "";
-            document.getElementById("aiContextText").textContent = "";
-            document.getElementById("aiContextPreview").classList.remove("flex");
-            document.getElementById("aiContextPreview").classList.add("hidden");
         }
 
         // File Management in Editor
@@ -1528,198 +1307,6 @@
                 refreshIcons();
             }
         }
-
-        // AI Copilot Chat Handling
-        function sendQuickAiPrompt(text) {
-            document.getElementById("aiInputText").value = text;
-            submitAiMessage();
-        }
-
-        async function submitAiMessage() {
-            if (isAiThinking) return;
-            const input = document.getElementById("aiInputText");
-            const message = input.value.trim();
-            if (!message) return;
-
-            input.value = "";
-            const contextSnippet = activeAiContextSnippet;
-            clearAiContextSnippet();
-
-            appendAiMessageBubble("user", message, contextSnippet);
-            
-            const loadingId = "ai-loading-" + Date.now();
-            appendAiLoadingBubble(loadingId);
-
-            isAiThinking = true;
-            const sendBtn = document.getElementById("aiSendBtn");
-            sendBtn.innerHTML = "<i data-lucide=\"loader-2\" class=\"w-3.5 h-3.5 animate-spin\"></i>";
-            refreshIcons();
-
-            const fileContent = editor ? editor.getValue() : "";
-
-            try {
-                const res = await fetch("/api/ai/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        message: message,
-                        selectedText: contextSnippet,
-                        currentFile: currentFile,
-                        fileContent: fileContent,
-                        history: aiChatHistory
-                    })
-                });
-
-                const data = await res.json();
-                removeAiElement(loadingId);
-
-                if (data.success) {
-                    appendAiMessageBubble("assistant", data.reply);
-                    aiChatHistory.push({ role: "user", content: message });
-                    aiChatHistory.push({ role: "assistant", content: data.reply });
-                    if (aiChatHistory.length > 12) {
-                        aiChatHistory = aiChatHistory.slice(-12);
-                    }
-                } else {
-                    appendAiMessageBubble("assistant", `⚠️ **Lỗi:** ${data.error || "Không thể kết nối đến AI Assistant"}`);
-                }
-            } catch (err) {
-                removeAiElement(loadingId);
-                appendAiMessageBubble("assistant", `⚠️ **Lỗi kết nối:** ${err.message}`);
-            } finally {
-                isAiThinking = false;
-                sendBtn.innerHTML = "<i data-lucide=\"send\" class=\"w-3.5 h-3.5\"></i>";
-                refreshIcons();
-            }
-        }
-
-        function appendAiMessageBubble(role, content, snippet = "") {
-            const container = document.getElementById("aiChatMessages");
-            const div = document.createElement("div");
-            div.className = "flex gap-2.5 items-start";
-
-            if (role === "user") {
-                const snippetHtml = snippet ? `
-                    <div class="mb-2 bg-indigo-950/70 border-l-2 border-indigo-400 px-2 py-1 rounded text-[11px] text-indigo-300 italic truncate">
-                        ❝ ${escapeHtml(snippet)} ❞
-                    </div>
-                ` : "";
-
-                div.innerHTML = `
-                    <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <i data-lucide="user" class="w-3.5 h-3.5 text-slate-300"></i>
-                    </div>
-                    <div class="flex-1 bg-indigo-600/20 border border-indigo-500/30 rounded-xl p-3 text-xs text-slate-200 shadow-sm">
-                        ${snippetHtml}
-                        <div class="whitespace-pre-wrap leading-relaxed">${escapeHtml(content)}</div>
-                    </div>
-                `;
-            } else {
-                const renderedHtml = marked.parse(content);
-                div.innerHTML = `
-                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
-                    </div>
-                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 shadow-sm ai-prose">
-                        ${renderedHtml}
-                    </div>
-                `;
-
-                div.querySelectorAll("pre code").forEach((codeBlock) => {
-                    const pre = codeBlock.parentElement;
-                    const rawCode = codeBlock.innerText;
-                    
-                    const btnBar = document.createElement("div");
-                    btnBar.className = "flex items-center justify-end gap-1.5 mb-1.5 pb-1 border-b border-slate-800";
-                    btnBar.innerHTML = `
-                        <button class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10.5px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 transition" title="Paste directly into LaTeX Editor">
-                            <i data-lucide="file-input" class="w-3 h-3"></i>
-                            <span>Apply to Editor</span>
-                        </button>
-                        <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] px-2 py-0.5 rounded flex items-center gap-1 border border-slate-700 transition" title="Copy code">
-                            <i data-lucide="copy" class="w-3 h-3"></i>
-                            <span>Copy</span>
-                        </button>
-                    `;
-
-                    const applyBtn = btnBar.querySelectorAll("button")[0];
-                    const copyBtn = btnBar.querySelectorAll("button")[1];
-
-                    applyBtn.onclick = () => applyCodeToEditor(rawCode);
-                    copyBtn.onclick = () => {
-                        navigator.clipboard.writeText(rawCode);
-                        copyBtn.innerHTML = "<i data-lucide=\"check\" class=\"w-3 h-3 text-emerald-400\"></i> Copied!";
-                        setTimeout(() => {
-                            copyBtn.innerHTML = "<i data-lucide=\"copy\" class=\"w-3 h-3\"></i> Copy";
-                            refreshIcons();
-                        }, 1800);
-                    };
-
-                    pre.insertBefore(btnBar, codeBlock);
-                });
-            }
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            refreshIcons();
-        }
-
-        function applyCodeToEditor(code) {
-            if (!editor) return;
-            const selectedText = editor.getSelectedText();
-            if (selectedText) {
-                editor.session.replace(editor.getSelectionRange(), code);
-            } else {
-                editor.insert(code);
-            }
-            editor.focus();
-            
-            const ind = document.getElementById("saveIndicator");
-            ind.textContent = "AI code inserted!";
-            ind.className = "text-[10px] text-sky-400 font-bold hidden lg:inline";
-        }
-
-        function appendAiLoadingBubble(id) {
-            const container = document.getElementById("aiChatMessages");
-            const div = document.createElement("div");
-            div.id = id;
-            div.className = "flex gap-2.5 items-start animate-pulse";
-            div.innerHTML = `
-                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 flex items-center gap-2">
-                    <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-sky-400"></i>
-                    <span>AI Assistant đang phân tích và soạn nội dung bài báo...</span>
-                </div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            refreshIcons();
-        }
-
-        function removeAiElement(id) {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-        }
-
-        function clearAiChat() {
-            aiChatHistory = [];
-            clearAiContextSnippet();
-            const container = document.getElementById("aiChatMessages");
-            container.innerHTML = `
-                <div class="flex gap-2.5 items-start">
-                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
-                    </div>
-                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 leading-relaxed shadow-sm">
-                        <p class="font-semibold text-sky-400 mb-1">Chat cleared. AI Assistant is ready for your paper requests!</p>
-                    </div>
-                </div>
-            `;
-            refreshIcons();
-        }
-
         // Logs Handling
         function renderLogs(rawText) {
             const logContent = document.getElementById("logContent");
@@ -1828,17 +1415,9 @@
             });
 
             if (filtered.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-10 px-4 text-slate-500 flex flex-col items-center">
-                        <i data-lucide="message-square" class="w-8 h-8 mb-2 opacity-50"></i>
-                        <div class="text-xs font-medium">No comments in this view.</div>
-                        <div class="text-[11px] mt-1 text-slate-600">Select text in PDF to add feedback.</div>
-                    </div>
-                `;
-                refreshIcons();
+                list.innerHTML = `<div class="text-slate-500 text-center py-8 text-xs">No comments found</div>`;
                 return;
             }
-
             list.innerHTML = filtered.map(c => {
                 const tag = getTagConfig(c.type);
                 const timeAgo = formatTimeAgo(c.createdAt);
@@ -1978,13 +1557,6 @@
             if ((e.ctrlKey || e.metaKey) && (e.key === "l" || e.key === "L")) {
                 e.preventDefault();
                 toggleLogs();
-            }
-        });
-
-        document.getElementById("aiInputText")?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submitAiMessage();
             }
         });
 
