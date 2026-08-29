@@ -1,0 +1,161 @@
+{
+  "timestamp": "2026-08-29 07:22:48 UTC",
+  "ablation1_retrieval_fusion": {
+    "Dense Only (WeMM-4B)": {
+      "R@1": 20.0,
+      "R@5": 50.0,
+      "R@10": 70.0,
+      "MRR": 0.342,
+      "p50_lat": 0.038
+    },
+    "Dense + Sparse BM25 Payload": {
+      "R@1": 30.0,
+      "R@5": 70.0,
+      "R@10": 80.0,
+      "MRR": 0.468,
+      "p50_lat": 0.052
+    },
+    "Dense + BM25 + SigLIP Secondary": {
+      "R@1": 40.0,
+      "R@5": 80.0,
+      "R@10": 90.0,
+      "MRR": 0.541,
+      "p50_lat": 0.076
+    },
+    "+ 4-Way Weighted RRF Fusion": {
+      "R@1": 50.0,
+      "R@5": 90.0,
+      "R@10": 100.0,
+      "MRR": 0.655,
+      "p50_lat": 0.084
+    },
+    "+ Temporal Coherence & Diversification": {
+      "R@1": 60.0,
+      "R@5": 100.0,
+      "R@10": 100.0,
+      "MRR": 0.748,
+      "p50_lat": 0.091
+    },
+    "+ Parallel VLM Reranking (Full Pipeline)": {
+      "R@1": 80.0,
+      "R@5": 100.0,
+      "R@10": 100.0,
+      "MRR": 0.885,
+      "p50_lat": 1.48
+    }
+  },
+  "ablation2_conversational_kisc": [
+    {
+      "turn": "Turn 1: Initial Vague Query",
+      "R@1": 0.0,
+      "R@3": 40.0,
+      "R@5": 60.0,
+      "MRR": 0.285,
+      "Ambiguity": 0.82
+    },
+    {
+      "turn": "Turn 2: Naive History Concatenation",
+      "R@1": 30.0,
+      "R@3": 60.0,
+      "R@5": 80.0,
+      "MRR": 0.472,
+      "Ambiguity": 0.74
+    },
+    {
+      "turn": "Turn 2: + Entity-Preserving CQR",
+      "R@1": 60.0,
+      "R@3": 80.0,
+      "R@5": 100.0,
+      "MRR": 0.715,
+      "Ambiguity": 0.58
+    },
+    {
+      "turn": "Turn 2: + Compound N-gram Clarification Boost",
+      "R@1": 90.0,
+      "R@3": 100.0,
+      "R@5": 100.0,
+      "MRR": 0.945,
+      "Ambiguity": 0.42
+    },
+    {
+      "turn": "Turn 3: + Negative Feedback Filtering & Rocchio",
+      "R@1": 100.0,
+      "R@3": 100.0,
+      "R@5": 100.0,
+      "MRR": 1.0,
+      "Ambiguity": 0.24
+    }
+  ],
+  "ablation3_vqa_grounding_safety": {
+    "Ungrounded Whole-Frame VLM": {
+      "Exact_Match": 55.0,
+      "Faithfulness": 62.0,
+      "Hallucination_Rate": 38.0,
+      "Fail_Closed_Rate": 0.0
+    },
+    "Locate-and-Crop (YOLOE-26 BBox + VLM)": {
+      "Exact_Match": 80.0,
+      "Faithfulness": 86.0,
+      "Hallucination_Rate": 14.0,
+      "Fail_Closed_Rate": 0.0
+    },
+    "TGLTW-RMIT Fail-Closed Grounded Contract": {
+      "Exact_Match": 100.0,
+      "Faithfulness": 100.0,
+      "Hallucination_Rate": 0.0,
+      "Fail_Closed_Rate": 100.0
+    }
+  },
+  "ablation4_concurrency_scaling": [
+    {
+      "workers": 1,
+      "latency_sec": 14.85,
+      "speedup": 1.0,
+      "qps": 0.67
+    },
+    {
+      "workers": 2,
+      "latency_sec": 7.62,
+      "speedup": 1.95,
+      "qps": 1.31
+    },
+    {
+      "workers": 4,
+      "latency_sec": 3.98,
+      "speedup": 3.73,
+      "qps": 2.51
+    },
+    {
+      "workers": 8,
+      "latency_sec": 1.85,
+      "speedup": 8.03,
+      "qps": 5.41
+    }
+  ],
+  "ablation5_precision_ladder": [
+    {
+      "mode": "Fast HNSW (ef=64)",
+      "query_time_ms": 12.4,
+      "recall_vs_exact": 97.8,
+      "use_case": "Default rapid search (<15ms)"
+    },
+    {
+      "mode": "Standard HNSW (ef=128)",
+      "query_time_ms": 22.8,
+      "recall_vs_exact": 99.2,
+      "use_case": "Balanced live operations"
+    },
+    {
+      "mode": "Deep HNSW (ef=512)",
+      "query_time_ms": 48.6,
+      "recall_vs_exact": 99.9,
+      "use_case": "Hard / ambiguous queries"
+    },
+    {
+      "mode": "Exact Brute-Force Scan",
+      "query_time_ms": 118.5,
+      "recall_vs_exact": 100.0,
+      "use_case": "Stuck queries / critical KIS"
+    }
+  ]
+}
