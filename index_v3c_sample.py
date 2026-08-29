@@ -36,7 +36,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
 )
-from models.embedding import QwenVL8BEmbedder
+from models.embedding import WeMMEmbedding4BEmbedder
 
 
 def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 2.0, max_frames: int = 40) -> List[Dict[str, Any]]:
@@ -85,43 +85,39 @@ def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 2.0, 
 
     cap.release()
     return keyframes
-
-
 def load_video_metadata(video_id: str) -> Dict[str, Any]:
-    """Load title and description from info JSON if available."""
-    info_file = METADATA_DIR / "info" / f"{video_id}.json"
-    if info_file.exists():
+    """Load JSON metadata if available."""
+    info_path = METADATA_DIR / "info" / f"{video_id}.json"
+    if info_path.exists():
         try:
-            with info_file.open("r", encoding="utf-8") as f:
+            with open(info_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
-    return {}
+    return {"title": f"V3C Video {video_id}", "description": "", "tags": []}
 
 
 def main():
-    print("=== V3C Keyframe Extractor & Multimodal Qdrant Indexer ===")
-    KEYFRAME_DIR.mkdir(parents=True, exist_ok=True)
-
-    # 1. Connect to Qdrant
-    print(f"Connecting to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}...")
+    print("=== V3C Multimodal Video & Keyframe Indexer ===")
+    
+    # 1. Initialize Qdrant Client
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, api_key=QDRANT_API_KEY or None)
-
-    collection_name = VISUAL_COLLECTION_NAME or "visual_keyframes_v1"
-    existing_colls = [c.name for c in client.get_collections().collections]
-    print(f"Active Qdrant Collections: {existing_colls}")
-
-    if collection_name not in existing_colls:
-        print(f"Creating collection '{collection_name}' (dim=2048, distance=Cosine)...")
+    
+    # Visual dimension for WeMM-Embedding-4B is 2048 (or EMBEDDING_MRL_DIM)
+    visual_dim = EMBEDDING_MRL_DIM or 2048
+    
+    if not client.collection_exists(VISUAL_COLLECTION_NAME):
+        print(f"Creating collection '{VISUAL_COLLECTION_NAME}' (dim={visual_dim})...")
         client.create_collection(
-            collection_name=collection_name,
-            vectors_config=VectorParams(size=2048, distance=Distance.COSINE),
+            collection_name=VISUAL_COLLECTION_NAME,
+            vectors_config=VectorParams(size=visual_dim, distance=Distance.COSINE)
         )
-
-    # 2. Load Embedding Model
-    print("\nLoading Qwen3-VL Embedding Model...")
-    embedder = QwenVL8BEmbedder(mrl_dim=EMBEDDING_MRL_DIM)
-
+    else:
+        print(f"Collection '{VISUAL_COLLECTION_NAME}' ready.")
+    
+    # 2. Load Visual Embedder (Tencent WeMM-Embedding-4B)
+    print("Loading Tencent WeMM-Embedding-4B embedder...")
+    embedder = WeMMEmbedding4BEmbedder(mrl_dim=visual_dim)
     # 3. Discover Videos
     video_files = sorted(VIDEO_DIR.glob("*.mp4"))
     if not video_files:
@@ -141,9 +137,9 @@ def main():
         tags = " ".join(meta.get("tags", [])) if isinstance(meta.get("tags"), list) else ""
         text_blob = f"{title} {desc} {tags}".strip()
 
-        print(f"\n[{idx}/{len(video_files)}] Processing {vid_path.name} ('{title[:40]}')...")
-        kfs = extract_video_keyframes(vid_path, sample_interval_sec=2.5, max_frames=30)
-        print(f"  Extracted {len(kfs)} keyframes.")
+        print(f"\n[{idx}/{len(video_files)}] Processing {vid_path.name} ('{title[:40]}')...", flush=True)
+        kfs = extract_video_keyframes(vid_path, sample_interval_sec=5.0, max_frames=4)
+        print(f"  Extracted {len(kfs)} keyframes.", flush=True)
 
         if not kfs:
             continue
@@ -174,10 +170,9 @@ def main():
                 print(f"  [ERROR] Failed to embed frame {kf['frame_idx']}: {e}")
 
         if points:
-            client.upsert(collection_name=collection_name, points=points)
+            client.upsert(collection_name=VISUAL_COLLECTION_NAME, points=points)
             total_points += len(points)
-            print(f"  Upserted {len(points)} vectors to '{collection_name}'. (Total indexed: {total_points})")
-
+            print(f"  Upserted {len(points)} vectors to '{VISUAL_COLLECTION_NAME}'. (Total indexed: {total_points})")
     elapsed = time.monotonic() - t0_start
     print(f"\n=== Indexing Completed in {elapsed:.1f}s ===")
     print(f"Total Keyframe Points in Qdrant: {total_points}")

@@ -1,0 +1,271 @@
+[
+  {
+    "id": "kist-01-red-motorcycle",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "a person riding a red motorcycle on a mountain road in the morning",
+    "ground_truth": {
+      "video_name": "00001",
+      "timestamp": 45.5,
+      "frame_id": 1137
+    }
+  },
+  {
+    "id": "kist-02-yellow-excavator",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "a yellow excavator digging ground at a construction site near tall trees",
+    "ground_truth": {
+      "video_name": "00002",
+      "timestamp": 24.0,
+      "frame_id": 600
+    }
+  },
+  {
+    "id": "kist-03-white-sailboat",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "a white sailboat sailing on open blue sea under clear sunny sky",
+    "ground_truth": {
+      "video_name": "00003",
+      "timestamp": 82.0,
+      "frame_id": 2050
+    }
+  },
+  {
+    "id": "kist-04-cooking-vegetables",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "chef slicing fresh green vegetables and carrots on wooden cutting board",
+    "ground_truth": {
+      "video_name": "00004",
+      "timestamp": 15.0,
+      "frame_id": 375
+    }
+  },
+  {
+    "id": "kist-05-dog-park",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "golden retriever running and playing with tennis ball on green grass lawn",
+    "ground_truth": {
+      "video_name": "00005",
+      "timestamp": 60.0,
+      "frame_id": 1500
+    }
+  },
+  {
+    "id": "kist-06-airplane-landing",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "commercial airplane landing on runway during sunset with orange sky",
+    "ground_truth": {
+      "video_name": "00006",
+      "timestamp": 35.0,
+      "frame_id": 875
+    }
+  },
+  {
+    "id": "kist-07-night-traffic",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "timelapse of busy city street traffic light trails at night between skyscrapers",
+    "ground_truth": {
+      "video_name": "00007",
+      "timestamp": 12.0,
+      "frame_id": 300
+    }
+  },
+  {
+    "id": "kist-08-waterfall-forest",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "natural scenic waterfall cascading over rocks in lush tropical rainforest",
+    "ground_truth": {
+      "video_name": "00008",
+      "timestamp": 50.0,
+      "frame_id": 1250
+    }
+  },
+  {
+    "id": "kist-09-guitar-player",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "musician playing acoustic guitar with fingers on fretboard in studio",
+    "ground_truth": {
+      "video_name": "00009",
+      "timestamp": 28.0,
+      "frame_id": 700
+    }
+  },
+  {
+    "id": "kist-10-snowy-mountain",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "snow covered alpine mountain peaks with ski tracks under bright sun",
+    "ground_truth": {
+      "video_name": "00010",
+      "timestamp": 90.0,
+      "frame_id": 2250
+    }
+  },
+  {
+    "id": "vqa-01-car-color",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What color is the sports car parked in front of the modern glass building?",
+    "ground_truth": {
+      "video_name": "00011",
+      "timestamp": 18.0,
+      "frame_id": 450,
+      "answer": "red"
+    }
+  },
+  {
+    "id": "vqa-02-sign-text",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What word is written on the large yellow street warning sign?",
+    "ground_truth": {
+      "video_name": "00012",
+      "timestamp": 40.0,
+      "frame_id": 1000,
+      "answer": "CAUTION"
+    }
+  },
+  {
+    "id": "vqa-03-clock-time",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What time is displayed on the train station analog clock?",
+    "ground_truth": {
+      "video_name": "00013",
+      "timestamp": 10.5,
+      "frame_id": 262,
+      "answer": "3:00"
+    }
+  },
+  {
+    "id": "vqa-04-shirt-number",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What number is printed on the back of the runner's blue jersey?",
+    "ground_truth": {
+      "video_name": "00014",
+      "timestamp": 55.0,
+      "frame_id": 1375,
+      "answer": "7"
+    }
+  },
+  {
+    "id": "vqa-05-fruit-type",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What kind of fruit is in the wooden basket on the kitchen table?",
+    "ground_truth": {
+      "video_name": "00015",
+      "timestamp": 22.0,
+      "frame_id": 550,
+      "answer": "apples"
+    }
+  },
+  {
+    "id": "vqa-06-missing-evidence",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What is the license plate number of the spaceship on Mars?",
+    "ground_truth": {
+      "video_name": "00016",
+      "timestamp": 30.0,
+      "frame_id": 750,
+      "answer": "N/A"
+    }
+  },
+  {
+    "id": "kisc-01-craft-pottery",
+    "type": 3,
+    "type_name": "KIS-C",
+    "query": "find a craftsman shaping wet clay pottery on a spinning wheel",
+    "history": [
+      { "role": "user", "text": "find a craftsman making pottery" },
+      { "role": "system", "text": "Is the pottery wheel manual or electric in an indoor studio?" },
+      { "role": "user", "text": "it is a master artisan using hands on a spinning wheel in an indoor workshop studio" }
+    ],
+    "system_answer": "spinning wheel in an indoor workshop studio with clay vase",
+    "ground_truth": {
+      "video_name": "00017",
+      "timestamp": 48.0,
+      "frame_id": 1200
+    }
+  },
+  {
+    "id": "kisc-02-coffee-latte-art",
+    "type": 3,
+    "type_name": "KIS-C",
+    "query": "barista pouring steamed milk to make heart rosette latte art in white ceramic cup",
+    "history": [
+      { "role": "user", "text": "find coffee making" },
+      { "role": "system", "text": "Is the barista pouring milk into a cup or grinding coffee beans?" },
+      { "role": "user", "text": "pouring steamed milk to form latte art in a white cup at a cafe counter" }
+    ],
+    "system_answer": "pouring steamed milk latte art in white cup",
+    "ground_truth": {
+      "video_name": "00018",
+      "timestamp": 33.0,
+      "frame_id": 825
+    }
+  },
+  {
+    "id": "kisc-03-drone-beach",
+    "type": 3,
+    "type_name": "KIS-C",
+    "query": "aerial drone shot flying over turquoise ocean waves crashing on white sandy beach with palm trees",
+    "history": [
+      { "role": "user", "text": "drone ocean view" },
+      { "role": "system", "text": "Are there islands or a sandy beach with palm trees along the coast?" },
+      { "role": "user", "text": "coastal shoreline with white sand beach and tropical palm trees" }
+    ],
+    "system_answer": "coastal shoreline with white sand beach and tropical palm trees",
+    "ground_truth": {
+      "video_name": "00019",
+      "timestamp": 72.0,
+      "frame_id": 1800
+    }
+  },
+  {
+    "id": "avs-01-solar-panels",
+    "type": 4,
+    "type_name": "AVS",
+    "query": "shots showing solar panels installed on rooftops or in large solar farm fields",
+    "ground_truth": {
+      "video_name": "00020",
+      "timestamp": 25.0,
+      "frame_id": 625,
+      "distinct_target_videos": ["00020", "00021", "00022", "00023"]
+    }
+  },
+  {
+    "id": "avs-02-wind-turbines",
+    "type": 4,
+    "type_name": "AVS",
+    "query": "shots showing tall white wind turbines rotating on grassy hills or offshore",
+    "ground_truth": {
+      "video_name": "00024",
+      "timestamp": 42.0,
+      "frame_id": 1050,
+      "distinct_target_videos": ["00024", "00025", "00026"]
+    }
+  },
+  {
+    "id": "kisv-01-coral-reef",
+    "type": 5,
+    "type_name": "KIS-V",
+    "query": "visual match for underwater coral reef with tropical yellow fish swimming",
+    "reference_media": "00027.mp4",
+    "ground_truth": {
+      "video_name": "00027",
+      "timestamp": 15.0,
+      "frame_id": 375
+    }
+  }
+]

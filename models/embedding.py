@@ -139,31 +139,45 @@ class WeMMEmbedding4BEmbedder:
         image = image.convert("RGB")
 
         if self._hf_loaded:
-            with torch.no_grad():
-                inputs = self.processor(images=image, return_tensors="pt").to(self.device)
-                outputs = self.model(**inputs, output_hidden_states=True)
-                hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
-                emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
-                norm = np.linalg.norm(emb)
-                emb = emb / norm if norm > 0 else emb
-                return _apply_mrl_truncation(emb, self.mrl_dim)
+            try:
+                messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": "a video keyframe"}]}]
+                text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+                inputs = self.processor(text=[text], images=[image], padding=True, return_tensors="pt").to(self.device)
+                with torch.no_grad():
+                    outputs = self.model(**inputs, output_hidden_states=True)
+                    hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
+                    emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                    norm = np.linalg.norm(emb)
+                    emb = emb / norm if norm > 0 else emb
+                    return _apply_mrl_truncation(emb, self.mrl_dim)
+            except Exception as e:
+                pass
 
-        embeddings = self._embedder.process([{"image": image}])
-        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
+        if hasattr(self, "_embedder"):
+            embeddings = self._embedder.process([{"image": image}])
+            return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
+        raise RuntimeError("Visual embedding model failed to process image.")
 
     def embed_text(self, text: str) -> np.ndarray:
         if self._hf_loaded:
-            with torch.no_grad():
-                inputs = self.processor(text=text, return_tensors="pt").to(self.device)
-                outputs = self.model(**inputs, output_hidden_states=True)
-                hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
-                emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
-                norm = np.linalg.norm(emb)
-                emb = emb / norm if norm > 0 else emb
-                return _apply_mrl_truncation(emb, self.mrl_dim)
+            try:
+                messages = [{"role": "user", "content": [{"type": "text", "text": text}]}]
+                formatted = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+                inputs = self.processor(text=[formatted], padding=True, return_tensors="pt").to(self.device)
+                with torch.no_grad():
+                    outputs = self.model(**inputs, output_hidden_states=True)
+                    hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
+                    emb = hidden_state.mean(dim=1).squeeze(0).float().cpu().numpy()
+                    norm = np.linalg.norm(emb)
+                    emb = emb / norm if norm > 0 else emb
+                    return _apply_mrl_truncation(emb, self.mrl_dim)
+            except Exception as e:
+                pass
 
-        embeddings = self._embedder.process([{"text": text}])
-        return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
+        if hasattr(self, "_embedder"):
+            embeddings = self._embedder.process([{"text": text}])
+            return _apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim)
+        raise RuntimeError("Visual embedding model failed to process text.")
 
 class DashScopeCloudEmbedder:
     """

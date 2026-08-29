@@ -62,10 +62,8 @@ def main():
         print("[ERROR] No info json files found. Please extract info.tar.gz first.")
         sys.exit(1)
 
-    video_ids = [f.stem for f in info_files[:500]]
-    print(f"Loaded {len(video_ids)} candidate video IDs from V3C metadata.")
-
-    # 2. Check existing storage
+    candidate_ids = [f.stem for f in info_files]
+    print(f"Loaded {len(candidate_ids)} candidate video IDs from V3C metadata.")
     current_size = sum(f.stat().st_size for f in VIDEO_DIR.glob("*.mp4"))
     print(f"Existing video storage: {current_size / (1024*1024*1024):.2f} GB")
 
@@ -80,7 +78,7 @@ def main():
 
     print("\nStarting concurrent downloads...")
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(run_curl_download, v_id): v_id for v_id in video_ids}
+        futures = {executor.submit(run_curl_download, v_id): v_id for v_id in candidate_ids}
         for future in as_completed(futures):
             v_id, ok, sz = future.result()
             if ok and sz > 0:
