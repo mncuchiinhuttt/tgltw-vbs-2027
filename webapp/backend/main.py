@@ -569,10 +569,11 @@ async def run_search(request: SearchRequest):
                     if len(summaries) >= 5:
                         break
                 clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
-                _session_state["pending_clarification"] = {
-                    "question": clarification_question,
-                    "candidate_ids": summary_ids,
-                }
+                if clarification_question:
+                    _session_state["pending_clarification"] = {
+                        "question": clarification_question,
+                        "candidate_ids": summary_ids,
+                    }
 
             rerank_k = getattr(config, "RERANK_TOP_K", 20)
             submission_k = getattr(config, "SUBMISSION_TOP_K", 100)

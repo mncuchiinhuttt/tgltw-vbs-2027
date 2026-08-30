@@ -26,7 +26,13 @@ class QueryProcessor:
             return query
 
         prompt = build_cqr_prompt(query, context_history)
-        rewritten = self.vlm.generate(None, prompt).strip()
+        try:
+            rewritten = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            # A failed rewrite must not kill the search: fall back to the
+            # raw query (loses conversational resolution, not the search).
+            print(f"[CQR] Rewrite failed, using raw query: {exc}")
+            return query
         print(f"CQR Rewrite: '{query}' -> '{rewritten}'")
         return rewritten
 
@@ -38,8 +44,13 @@ class QueryProcessor:
 You are an expert video retrieval assistant. Write a short, factual, and detailed 2-sentence description of what a video keyframe matching this search query would look like. Be concrete about typical objects, colors, actions, and settings. Vietnamese is OK.
 Query: "{query}"
 Hypothetical description:"""
-        
-        hyde_answer = self.vlm.generate(None, prompt).strip()
+
+        try:
+            hyde_answer = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            # No expansion rather than no search.
+            print(f"[HyDE] Generation failed, using raw query: {exc}")
+            return query
         print(f"HyDE description: '{hyde_answer}'")
         return hyde_answer
 
@@ -64,15 +75,22 @@ Output ONLY valid JSON matching this format:
 }}
 Query: "{query}"
 JSON:"""
-        
-        raw_output = self.vlm.generate(None, prompt).strip()
+
+        try:
+            raw_output = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            print(f"[Decompose] VLM call failed, single sub-query fallback: {exc}")
+            return {"sub_queries": [query], "constraints": []}
         if raw_output.startswith("```json"):
             raw_output = raw_output[7:]
         if raw_output.endswith("```"):
             raw_output = raw_output[:-3]
-            
+
         try:
-            return json.loads(raw_output.strip())
+            parsed = json.loads(raw_output.strip())
+            if not isinstance(parsed, dict):
+                return {"sub_queries": [query], "constraints": []}
+            return parsed
         except json.JSONDecodeError:
             # Fallback decomposition
             return {
@@ -100,7 +118,13 @@ JSON:"""
         question - still one VLM call.
         """
         prompt = build_clarification_prompt(query, candidate_summaries)
-        question = self.vlm.generate(None, prompt).strip()
+        try:
+            question = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            # None signals "no clarification this turn" - the ambiguity
+            # boost/filter machinery simply doesn't engage.
+            print(f"[Clarification] Question generation failed: {exc}")
+            return None
         print(f"Clarification question: '{question}'")
         return question
 
@@ -122,7 +146,11 @@ Output ONLY valid JSON matching this format:
 Query: "{query}"
 JSON:"""
 
-        raw_output = self.vlm.generate(None, prompt).strip()
+        try:
+            raw_output = self.vlm.generate(None, prompt).strip()
+        except Exception as exc:
+            print(f"[Temporal] Event decomposition failed, single-event fallback: {exc}")
+            return [query]
         if raw_output.startswith("```json"):
             raw_output = raw_output[7:]
         if raw_output.endswith("```"):
