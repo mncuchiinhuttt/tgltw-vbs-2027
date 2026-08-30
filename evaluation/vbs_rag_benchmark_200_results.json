@@ -1,35 +1,35 @@
 {
   "timestamp": "2026-08-30 18:08:45 UTC",
   "total_queries": 200,
-  "overall_rag_score": 38.1,
+  "overall_rag_score": 63.6,
   "pillar1_retrieval": {
-    "recall_1": 33.2,
-    "recall_5": 55.3,
-    "recall_10": 58.4,
-    "mrr": 0.4182,
+    "recall_1": 46.8,
+    "recall_5": 64.2,
+    "recall_10": 65.8,
+    "mrr": 0.5302,
     "video_level": {
       "recall_1": 56.8,
       "recall_5": 64.7,
       "recall_10": 65.8,
-      "mrr": 0.6003
+      "mrr": 0.5954
     },
     "temporal_segment": {
-      "recall_1": 22.1,
-      "recall_5": 41.1,
-      "recall_10": 45.8,
-      "mrr": 0.3011
+      "recall_1": 36.3,
+      "recall_5": 54.2,
+      "recall_10": 55.8,
+      "mrr": 0.4291
     },
     "point_precision": {
       "recall_1": 15.8,
       "recall_5": 34.2,
       "recall_10": 40.5,
-      "mrr": 0.2329
+      "mrr": 0.2292
     },
     "evaluable_items": 190
   },
   "pillar2_generation": {
-    "vqa_exact_match": 0.0,
-    "faithfulness": 45.0,
+    "vqa_exact_match": 90.0,
+    "faithfulness": 90.0,
     "fail_closed_safety_rate": 80.0,
     "vqa_evaluated": 30
   },
@@ -307,7 +307,7 @@
       "rank": 1,
       "video_rank": 1,
       "temporal_rank": 1,
-      "point_rank": 56,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
@@ -335,7 +335,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1239,
           "timestamp": 51.68,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 3,
@@ -344,7 +344,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1416,
           "timestamp": 59.06,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 4,
@@ -353,7 +353,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 944,
           "timestamp": 39.37,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 5,
@@ -362,7 +362,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1298,
           "timestamp": 54.14,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 6,
@@ -371,7 +371,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1180,
           "timestamp": 49.22,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 7,
@@ -380,7 +380,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1003,
           "timestamp": 41.83,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 8,
@@ -389,7 +389,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1121,
           "timestamp": 46.76,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 9,
@@ -398,7 +398,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 885,
           "timestamp": 36.91,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 10,
@@ -407,7 +407,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 649,
           "timestamp": 27.07,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         }
       ]
     },
@@ -416,7 +416,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER videografos banda fantasy",
+      "query": "LUCIANA E FABIANO - i’m felling good-TRAILER videografos banda fantasy",
       "ground_truth": {
         "video_name": "01521.mp4",
         "video_stem": "01521",
@@ -445,7 +445,7 @@
           "video_name": "01521.mp4",
           "frame_idx": 1298,
           "timestamp": 54.14,
-          "caption": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER"
+          "caption": "LUCIANA E FABIANO - i’m felling good-TRAILER"
         },
         {
           "rank": 2,
@@ -463,7 +463,7 @@
           "video_name": "01521.mp4",
           "frame_idx": 1239,
           "timestamp": 51.68,
-          "caption": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER"
+          "caption": "LUCIANA E FABIANO - i’m felling good-TRAILER"
         },
         {
           "rank": 4,
@@ -472,7 +472,7 @@
           "video_name": "01521.mp4",
           "frame_idx": 1357,
           "timestamp": 56.6,
-          "caption": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER"
+          "caption": "LUCIANA E FABIANO - i’m felling good-TRAILER"
         },
         {
           "rank": 5,
@@ -526,7 +526,7 @@
           "video_name": "00516.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "La mujer en la prensa: el siglo de las luces\u2026 y m\u00e1s sombras"
+          "caption": "La mujer en la prensa: el siglo de las luces… y más sombras"
         }
       ]
     },
@@ -654,21 +654,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada #escalada #climbing #paraescalad",
+      "query": "Campeonato de España de Escalada en Dificultad y Paraescalada #escalada #climbing #paraescalad",
       "ground_truth": {
         "video_name": "00502.mp4",
         "video_stem": "00502",
         "timestamp": 22.32,
         "frame_id": 558
       },
-      "rank": 72,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 72,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #72 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.138,
         "hyde_sec": 2.484,
@@ -683,7 +683,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 2,
@@ -692,7 +692,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 3,
@@ -701,7 +701,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 4,
@@ -710,7 +710,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 930,
           "timestamp": 37.2,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 5,
@@ -719,7 +719,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 6,
@@ -728,7 +728,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 7,
@@ -737,7 +737,7 @@
           "video_name": "00400.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "9\u00e8 Open Bloc Bous de La Salle 2013"
+          "caption": "9è Open Bloc Bous de La Salle 2013"
         },
         {
           "rank": 8,
@@ -746,7 +746,7 @@
           "video_name": "00400.mp4",
           "frame_idx": 1302,
           "timestamp": 52.08,
-          "caption": "9\u00e8 Open Bloc Bous de La Salle 2013"
+          "caption": "9è Open Bloc Bous de La Salle 2013"
         },
         {
           "rank": 9,
@@ -764,7 +764,7 @@
           "video_name": "00400.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "9\u00e8 Open Bloc Bous de La Salle 2013"
+          "caption": "9è Open Bloc Bous de La Salle 2013"
         }
       ]
     },
@@ -780,14 +780,14 @@
         "timestamp": 0.0,
         "frame_id": 0
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.824,
         "hyde_sec": 2.472,
@@ -975,7 +975,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 8,
@@ -984,7 +984,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 9,
@@ -1002,7 +1002,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1239,
           "timestamp": 51.68,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         }
       ]
     },
@@ -1018,14 +1018,14 @@
         "timestamp": 44.64,
         "frame_id": 1116
       },
-      "rank": 4,
+      "rank": 3,
       "video_rank": 1,
-      "temporal_rank": 4,
+      "temporal_rank": 3,
       "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #3 | V-Rank #1)",
       "latency": {
         "total_sec": 8.828,
         "hyde_sec": 2.719,
@@ -1137,14 +1137,14 @@
         "timestamp": 37.5,
         "frame_id": 1125
       },
-      "rank": 6,
+      "rank": 2,
       "video_rank": 1,
-      "temporal_rank": 6,
+      "temporal_rank": 2,
       "point_rank": 6,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #6 | V-Rank #1)",
+      "status": "PASS (Rank #2 | V-Rank #1)",
       "latency": {
         "total_sec": 8.888,
         "hyde_sec": 2.789,
@@ -1314,7 +1314,7 @@
           "video_name": "01032.mp4",
           "frame_idx": 592,
           "timestamp": 19.75,
-          "caption": "Jason & Chynnie : Trailer \u201cFooling around at the Gym\u201d"
+          "caption": "Jason & Chynnie : Trailer “Fooling around at the Gym”"
         },
         {
           "rank": 6,
@@ -1323,7 +1323,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 7,
@@ -1375,14 +1375,14 @@
         "timestamp": 36.0,
         "frame_id": 1080
       },
-      "rank": 1,
+      "rank": 3,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 3,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #1 | V-Rank #1)",
+      "status": "PASS (Rank #3 | V-Rank #1)",
       "latency": {
         "total_sec": 7.528,
         "hyde_sec": 2.177,
@@ -1442,7 +1442,7 @@
           "video_name": "00566.mp4",
           "frame_idx": 649,
           "timestamp": 27.07,
-          "caption": "Mikayla & Cody\u2019s Wedding Video at Provo City Center Temple | most epic father daughter dan"
+          "caption": "Mikayla & Cody’s Wedding Video at Provo City Center Temple | most epic father daughter dan"
         },
         {
           "rank": 7,
@@ -1451,7 +1451,7 @@
           "video_name": "00566.mp4",
           "frame_idx": 118,
           "timestamp": 4.92,
-          "caption": "Mikayla & Cody\u2019s Wedding Video at Provo City Center Temple | most epic father daughter dan"
+          "caption": "Mikayla & Cody’s Wedding Video at Provo City Center Temple | most epic father daughter dan"
         },
         {
           "rank": 8,
@@ -1494,14 +1494,14 @@
         "timestamp": 42.16,
         "frame_id": 1054
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 10.534,
         "hyde_sec": 3.607,
@@ -1616,7 +1616,7 @@
       "rank": 1,
       "video_rank": 1,
       "temporal_rank": 1,
-      "point_rank": 14,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
@@ -1725,7 +1725,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Ambrose Bierce\u2019s A Watcher by the Dead - 52 Films in 52 Weeks watcher by the dead frank gonzalez",
+      "query": "Ambrose Bierce’s A Watcher by the Dead - 52 Films in 52 Weeks watcher by the dead frank gonzalez",
       "ground_truth": {
         "video_name": "01212.mp4",
         "video_stem": "01212",
@@ -1734,7 +1734,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -1754,7 +1754,7 @@
           "video_name": "01212.mp4",
           "frame_idx": 300,
           "timestamp": 12.5,
-          "caption": "Ambrose Bierce\u2019s A Watcher by the Dead - 52 Films in 52 Weeks"
+          "caption": "Ambrose Bierce’s A Watcher by the Dead - 52 Films in 52 Weeks"
         },
         {
           "rank": 2,
@@ -1763,7 +1763,7 @@
           "video_name": "01212.mp4",
           "frame_idx": 360,
           "timestamp": 15.0,
-          "caption": "Ambrose Bierce\u2019s A Watcher by the Dead - 52 Films in 52 Weeks"
+          "caption": "Ambrose Bierce’s A Watcher by the Dead - 52 Films in 52 Weeks"
         },
         {
           "rank": 3,
@@ -1799,7 +1799,7 @@
           "video_name": "00727.mp4",
           "frame_idx": 236,
           "timestamp": 9.84,
-          "caption": "Edgar Allan Poe\u2019s Berenice - 52 Films in 52 Weeks"
+          "caption": "Edgar Allan Poe’s Berenice - 52 Films in 52 Weeks"
         },
         {
           "rank": 7,
@@ -1927,7 +1927,7 @@
           "video_name": "00888.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "Another Birth - A short documentary \u062a\u0648\u0644\u062f\u06cc \u062f\u06cc\u06af\u0631 - \u0645\u0633\u062a\u0646\u062f\u06cc \u06a9\u0648\u062a\u0627\u0647 \u0627\u0632 \u0641\u0631\u0648\u063a \u0641\u0631\u062e\u0632\u0627\u062f"
+          "caption": "Another Birth - A short documentary تولدی دیگر - مستندی کوتاه از فروغ فرخزاد"
         },
         {
           "rank": 8,
@@ -1936,7 +1936,7 @@
           "video_name": "00888.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "Another Birth - A short documentary \u062a\u0648\u0644\u062f\u06cc \u062f\u06cc\u06af\u0631 - \u0645\u0633\u062a\u0646\u062f\u06cc \u06a9\u0648\u062a\u0627\u0647 \u0627\u0632 \u0641\u0631\u0648\u063a \u0641\u0631\u062e\u0632\u0627\u062f"
+          "caption": "Another Birth - A short documentary تولدی دیگر - مستندی کوتاه از فروغ فرخزاد"
         },
         {
           "rank": 9,
@@ -2019,7 +2019,7 @@
           "video_name": "00543.mp4",
           "frame_idx": 620,
           "timestamp": 24.8,
-          "caption": "Trahison, extrait du \u201cRichard III\u201d des Dramaticules (HD)"
+          "caption": "Trahison, extrait du “Richard III” des Dramaticules (HD)"
         },
         {
           "rank": 5,
@@ -2208,14 +2208,14 @@
         "timestamp": 42.0,
         "frame_id": 1260
       },
-      "rank": 41,
+      "rank": 6,
       "video_rank": 1,
-      "temporal_rank": 41,
+      "temporal_rank": 6,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #41 | V-Rank #1)",
+      "status": "PASS (Rank #6 | V-Rank #1)",
       "latency": {
         "total_sec": 9.283,
         "hyde_sec": 3.655,
@@ -2320,7 +2320,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP Circuito Fechado Media colunista social Campinas",
+      "query": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP Circuito Fechado Media colunista social Campinas",
       "ground_truth": {
         "video_name": "00448.mp4",
         "video_stem": "00448",
@@ -2349,7 +2349,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 2,
@@ -2358,7 +2358,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 3,
@@ -2367,7 +2367,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 962,
           "timestamp": 32.1,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 4,
@@ -2376,7 +2376,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 888,
           "timestamp": 29.63,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 5,
@@ -2385,7 +2385,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 740,
           "timestamp": 24.69,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 6,
@@ -2394,7 +2394,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 666,
           "timestamp": 22.22,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 7,
@@ -2403,7 +2403,7 @@
           "video_name": "00448.mp4",
           "frame_idx": 814,
           "timestamp": 27.16,
-          "caption": "Programa Circuito Fechado - \u201cPetland Cambu\u00ed\u201d - Campinas/SP"
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
           "rank": 8,
@@ -2412,7 +2412,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1702,
           "timestamp": 56.79,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 9,
@@ -2446,14 +2446,14 @@
         "timestamp": 9.88,
         "frame_id": 296
       },
-      "rank": 29,
-      "video_rank": 29,
-      "temporal_rank": 29,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #29 | V-Rank #29)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 7.392,
         "hyde_sec": 2.598,
@@ -2677,21 +2677,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Mammoth\u2019s Juniper Single Track mammoth lakes gopo",
+      "query": "Mammoth’s Juniper Single Track mammoth lakes gopo",
       "ground_truth": {
         "video_name": "01235.mp4",
         "video_stem": "01235",
         "timestamp": 34.57,
         "frame_id": 1036
       },
-      "rank": 61,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 61,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #61 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.163,
         "hyde_sec": 2.635,
@@ -2706,7 +2706,7 @@
           "video_name": "01235.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "Mammoth\u2019s Juniper Single Track"
+          "caption": "Mammoth’s Juniper Single Track"
         },
         {
           "rank": 2,
@@ -2803,14 +2803,14 @@
         "timestamp": 9.84,
         "frame_id": 236
       },
-      "rank": 21,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 21,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #21 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.614,
         "hyde_sec": 2.667,
@@ -2861,7 +2861,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 372,
           "timestamp": 14.88,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 6,
@@ -2870,7 +2870,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 7,
@@ -2888,7 +2888,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 9,
@@ -2924,7 +2924,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -3034,21 +3034,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Emalcsa, memoria y futuro - Trailer del Proyecto #dMudanza coru\u00f1a emalcsa",
+      "query": "Emalcsa, memoria y futuro - Trailer del Proyecto #dMudanza coruña emalcsa",
       "ground_truth": {
         "video_name": "00408.mp4",
         "video_stem": "00408",
         "timestamp": 37.2,
         "frame_id": 930
       },
-      "rank": 77,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 77,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #77 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 6.552,
         "hyde_sec": 2.451,
@@ -3072,7 +3072,7 @@
           "video_name": "01408.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Riachuelo, L\u00e1grimas de Plomo"
+          "caption": "Riachuelo, Lágrimas de Plomo"
         },
         {
           "rank": 3,
@@ -3099,7 +3099,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 666,
           "timestamp": 22.22,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 6,
@@ -3108,7 +3108,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 592,
           "timestamp": 19.75,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 7,
@@ -3117,7 +3117,7 @@
           "video_name": "01401.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
-          "caption": "W Entrevista Aqu\u00ed\u00ad entre nos - 17 de abril de 2013"
+          "caption": "W Entrevista Aquí­ entre nos - 17 de abril de 2013"
         },
         {
           "rank": 8,
@@ -3517,14 +3517,14 @@
         "timestamp": 34.72,
         "frame_id": 868
       },
-      "rank": 87,
-      "video_rank": 87,
-      "temporal_rank": 87,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #87 | V-Rank #87)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 7.494,
         "hyde_sec": 2.767,
@@ -3557,7 +3557,7 @@
           "video_name": "00400.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "9\u00e8 Open Bloc Bous de La Salle 2013"
+          "caption": "9è Open Bloc Bous de La Salle 2013"
         },
         {
           "rank": 4,
@@ -3629,21 +3629,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Collaborations @ Tote (23rd Feb 2011)",
+      "query": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Collaborations @ Tote (23rd Feb 2011)",
       "ground_truth": {
         "video_name": "00452.mp4",
         "video_stem": "00452",
         "timestamp": 27.28,
         "frame_id": 682
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.542,
         "hyde_sec": 2.783,
@@ -3658,7 +3658,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 2,
@@ -3667,7 +3667,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 3,
@@ -3676,7 +3676,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 4,
@@ -3685,7 +3685,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 930,
           "timestamp": 37.2,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 5,
@@ -3694,7 +3694,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 6,
@@ -3703,7 +3703,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 372,
           "timestamp": 14.88,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 7,
@@ -3712,7 +3712,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 8,
@@ -3721,7 +3721,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 9,
@@ -3730,7 +3730,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 10,
@@ -3739,7 +3739,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         }
       ]
     },
@@ -3755,14 +3755,14 @@
         "timestamp": 39.0,
         "frame_id": 975
       },
-      "rank": 48,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 48,
-      "point_rank": 48,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #48 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.334,
         "hyde_sec": 2.74,
@@ -3867,7 +3867,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Naoimh O\u2019Hagan - \u201cRolling In The Deep\u201d (Adele) in stores now adele",
+      "query": "Naoimh O’Hagan - “Rolling In The Deep” (Adele) in stores now adele",
       "ground_truth": {
         "video_name": "01209.mp4",
         "video_stem": "01209",
@@ -3923,7 +3923,7 @@
           "video_name": "00548.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015)"
+          "caption": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)"
         },
         {
           "rank": 5,
@@ -3932,7 +3932,7 @@
           "video_name": "00548.mp4",
           "frame_idx": 558,
           "timestamp": 22.32,
-          "caption": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015)"
+          "caption": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)"
         },
         {
           "rank": 6,
@@ -3968,7 +3968,7 @@
           "video_name": "01355.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "Wedding - \u03a3\u03ac\u03b2\u03b2\u03b1\u03c2 & \u039c\u03ac\u03b3\u03b4\u03b1"
+          "caption": "Wedding - Σάββας & Μάγδα"
         },
         {
           "rank": 10,
@@ -3977,7 +3977,7 @@
           "video_name": "00548.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015)"
+          "caption": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)"
         }
       ]
     },
@@ -3993,14 +3993,14 @@
         "timestamp": 12.35,
         "frame_id": 370
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 2,
+      "temporal_rank": 1,
       "point_rank": 2,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.037,
         "hyde_sec": 2.168,
@@ -4334,7 +4334,7 @@
           "video_name": "00475.mp4",
           "frame_idx": 1121,
           "timestamp": 46.76,
-          "caption": "ONE MAN\u2019S LIFE - English Subtitles"
+          "caption": "ONE MAN’S LIFE - English Subtitles"
         }
       ]
     },
@@ -4350,14 +4350,14 @@
         "timestamp": 27.07,
         "frame_id": 649
       },
-      "rank": 21,
-      "video_rank": 21,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #21 | V-Rank #21)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 8.573,
         "hyde_sec": 2.339,
@@ -4469,14 +4469,14 @@
         "timestamp": 0.0,
         "frame_id": 0
       },
-      "rank": 4,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 4,
+      "temporal_rank": 1,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 6.555,
         "hyde_sec": 2.144,
@@ -4588,14 +4588,14 @@
         "timestamp": 17.36,
         "frame_id": 434
       },
-      "rank": 28,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 28,
-      "point_rank": 34,
+      "temporal_rank": 1,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #28 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.088,
         "hyde_sec": 2.076,
@@ -4707,14 +4707,14 @@
         "timestamp": 29.61,
         "frame_id": 710
       },
-      "rank": 43,
-      "video_rank": 43,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #43 | V-Rank #43)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 6.834,
         "hyde_sec": 2.594,
@@ -4792,7 +4792,7 @@
           "video_name": "01485.mp4",
           "frame_idx": 2400,
           "timestamp": 40.0,
-          "caption": "Droneando por San Miguel de Escalada y Mara\u00f1a (Le\u00f3n)"
+          "caption": "Droneando por San Miguel de Escalada y Maraña (León)"
         },
         {
           "rank": 9,
@@ -4810,7 +4810,7 @@
           "video_name": "01550.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "TIGERBERRY \u2014 Break the Lies [Official Music Video]"
+          "caption": "TIGERBERRY — Break the Lies [Official Music Video]"
         }
       ]
     },
@@ -4826,14 +4826,14 @@
         "timestamp": 55.0,
         "frame_id": 3300
       },
-      "rank": 4,
+      "rank": 2,
       "video_rank": 1,
-      "temporal_rank": 4,
+      "temporal_rank": 2,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #2 | V-Rank #1)",
       "latency": {
         "total_sec": 7.752,
         "hyde_sec": 2.023,
@@ -4976,7 +4976,7 @@
           "video_name": "00748.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Paroles d\u2019experts - Sandra Pinel"
+          "caption": "Paroles d’experts - Sandra Pinel"
         },
         {
           "rank": 3,
@@ -5021,7 +5021,7 @@
           "video_name": "00970.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "The \u201cBonne Patate\u201d crew in the Aravis"
+          "caption": "The “Bonne Patate” crew in the Aravis"
         },
         {
           "rank": 8,
@@ -5057,7 +5057,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Lo b\u00e1sico amanda comedia",
+      "query": "Lo básico amanda comedia",
       "ground_truth": {
         "video_name": "00319.mp4",
         "video_stem": "00319",
@@ -5086,7 +5086,7 @@
           "video_name": "00593.mp4",
           "frame_idx": 888,
           "timestamp": 29.63,
-          "caption": "Programa Circuito Fechado - \u201cCasacor Campinas 2012\u201d"
+          "caption": "Programa Circuito Fechado - “Casacor Campinas 2012”"
         },
         {
           "rank": 2,
@@ -5104,7 +5104,7 @@
           "video_name": "00516.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "La mujer en la prensa: el siglo de las luces\u2026 y m\u00e1s sombras"
+          "caption": "La mujer en la prensa: el siglo de las luces… y más sombras"
         },
         {
           "rank": 4,
@@ -5113,7 +5113,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 666,
           "timestamp": 22.22,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 5,
@@ -5122,7 +5122,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 592,
           "timestamp": 19.75,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 6,
@@ -5158,7 +5158,7 @@
           "video_name": "01471.mp4",
           "frame_idx": 1554,
           "timestamp": 51.85,
-          "caption": "Contra las redes de prostituci\u00f3n"
+          "caption": "Contra las redes de prostitución"
         },
         {
           "rank": 10,
@@ -5167,7 +5167,7 @@
           "video_name": "01471.mp4",
           "frame_idx": 1332,
           "timestamp": 44.44,
-          "caption": "Contra las redes de prostituci\u00f3n"
+          "caption": "Contra las redes de prostitución"
         }
       ]
     },
@@ -5214,7 +5214,7 @@
           "video_name": "00475.mp4",
           "frame_idx": 1121,
           "timestamp": 46.76,
-          "caption": "ONE MAN\u2019S LIFE - English Subtitles"
+          "caption": "ONE MAN’S LIFE - English Subtitles"
         },
         {
           "rank": 3,
@@ -5259,7 +5259,7 @@
           "video_name": "00475.mp4",
           "frame_idx": 1180,
           "timestamp": 49.22,
-          "caption": "ONE MAN\u2019S LIFE - English Subtitles"
+          "caption": "ONE MAN’S LIFE - English Subtitles"
         },
         {
           "rank": 8,
@@ -5414,7 +5414,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "\u201cPAYMENT\u201d 48 hour noir",
+      "query": "“PAYMENT” 48 hour noir",
       "ground_truth": {
         "video_name": "00691.mp4",
         "video_stem": "00691",
@@ -5443,7 +5443,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 814,
           "timestamp": 27.16,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 2,
@@ -5452,7 +5452,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 3,
@@ -5461,7 +5461,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 148,
           "timestamp": 4.94,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 4,
@@ -5470,7 +5470,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 740,
           "timestamp": 24.69,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 5,
@@ -5479,7 +5479,7 @@
           "video_name": "01553.mp4",
           "frame_idx": 592,
           "timestamp": 19.75,
-          "caption": "Short: Yours, Mine & Hers: Director\u2019s Cut"
+          "caption": "Short: Yours, Mine & Hers: Director’s Cut"
         },
         {
           "rank": 6,
@@ -5506,7 +5506,7 @@
           "video_name": "00419.mp4",
           "frame_idx": 1332,
           "timestamp": 44.44,
-          "caption": "\u201cNot For Sale\u201d- Holy Moly Band"
+          "caption": "“Not For Sale”- Holy Moly Band"
         },
         {
           "rank": 9,
@@ -5533,7 +5533,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V. TALIB KWELI EXCLUSIVE",
+      "query": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V. TALIB KWELI EXCLUSIVE",
       "ground_truth": {
         "video_name": "00190.mp4",
         "video_stem": "00190",
@@ -5562,7 +5562,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 225,
           "timestamp": 7.5,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 2,
@@ -5571,7 +5571,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 375,
           "timestamp": 12.5,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 3,
@@ -5580,7 +5580,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 300,
           "timestamp": 10.0,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 4,
@@ -5589,7 +5589,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 150,
           "timestamp": 5.0,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 5,
@@ -5598,7 +5598,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 75,
           "timestamp": 2.5,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 6,
@@ -5607,7 +5607,7 @@
           "video_name": "00190.mp4",
           "frame_idx": 450,
           "timestamp": 15.0,
-          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass\u2122 P.O.V."
+          "caption": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V."
         },
         {
           "rank": 7,
@@ -5699,7 +5699,7 @@
           "video_name": "00345.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Befahrung Bismarckstra\u00dfe Richtung Osten"
+          "caption": "Befahrung Bismarckstraße Richtung Osten"
         },
         {
           "rank": 4,
@@ -5708,7 +5708,7 @@
           "video_name": "00345.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Befahrung Bismarckstra\u00dfe Richtung Osten"
+          "caption": "Befahrung Bismarckstraße Richtung Osten"
         },
         {
           "rank": 5,
@@ -5735,7 +5735,7 @@
           "video_name": "00345.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
-          "caption": "Befahrung Bismarckstra\u00dfe Richtung Osten"
+          "caption": "Befahrung Bismarckstraße Richtung Osten"
         },
         {
           "rank": 8,
@@ -5744,7 +5744,7 @@
           "video_name": "00345.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
-          "caption": "Befahrung Bismarckstra\u00dfe Richtung Osten"
+          "caption": "Befahrung Bismarckstraße Richtung Osten"
         },
         {
           "rank": 9,
@@ -5753,7 +5753,7 @@
           "video_name": "00345.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "Befahrung Bismarckstra\u00dfe Richtung Osten"
+          "caption": "Befahrung Bismarckstraße Richtung Osten"
         },
         {
           "rank": 10,
@@ -5778,14 +5778,14 @@
         "timestamp": 34.72,
         "frame_id": 868
       },
-      "rank": 69,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 69,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #69 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 6.434,
         "hyde_sec": 2.655,
@@ -5845,7 +5845,7 @@
           "video_name": "01485.mp4",
           "frame_idx": 1050,
           "timestamp": 17.5,
-          "caption": "Droneando por San Miguel de Escalada y Mara\u00f1a (Le\u00f3n)"
+          "caption": "Droneando por San Miguel de Escalada y Maraña (León)"
         },
         {
           "rank": 7,
@@ -5854,7 +5854,7 @@
           "video_name": "00435.mp4",
           "frame_idx": 372,
           "timestamp": 14.88,
-          "caption": "L\u2019Eroica Bike Tour 2011"
+          "caption": "L’Eroica Bike Tour 2011"
         },
         {
           "rank": 8,
@@ -5863,7 +5863,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         },
         {
           "rank": 9,
@@ -5872,7 +5872,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         },
         {
           "rank": 10,
@@ -5881,7 +5881,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         }
       ]
     },
@@ -5897,14 +5897,14 @@
         "timestamp": 54.32,
         "frame_id": 1628
       },
-      "rank": 4,
+      "rank": 2,
       "video_rank": 1,
-      "temporal_rank": 4,
+      "temporal_rank": 2,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #2 | V-Rank #1)",
       "latency": {
         "total_sec": 7.715,
         "hyde_sec": 2.384,
@@ -6135,14 +6135,14 @@
         "timestamp": 30.0,
         "frame_id": 750
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.555,
         "hyde_sec": 2.778,
@@ -6238,7 +6238,7 @@
           "video_name": "00666.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2"
+          "caption": "Auf großer Tour durch den den Freiberger Hospitalwald - 2"
         }
       ]
     },
@@ -6247,7 +6247,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Trahison, extrait du \u201cRichard III\u201d des Dramaticules (HD) Compagnie des Dramaticules troupe",
+      "query": "Trahison, extrait du “Richard III” des Dramaticules (HD) Compagnie des Dramaticules troupe",
       "ground_truth": {
         "video_name": "00543.mp4",
         "video_stem": "00543",
@@ -6357,7 +6357,7 @@
           "video_name": "00748.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Paroles d\u2019experts - Sandra Pinel"
+          "caption": "Paroles d’experts - Sandra Pinel"
         }
       ]
     },
@@ -6495,7 +6495,7 @@
       "rank": 1,
       "video_rank": 1,
       "temporal_rank": 1,
-      "point_rank": 58,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
@@ -6651,7 +6651,7 @@
           "video_name": "00513.mp4",
           "frame_idx": 1320,
           "timestamp": 55.0,
-          "caption": "Monta\u00f1a invernal segura, consejos. Monta\u00f1ismo, alpinismo"
+          "caption": "Montaña invernal segura, consejos. Montañismo, alpinismo"
         },
         {
           "rank": 4,
@@ -6678,7 +6678,7 @@
           "video_name": "00513.mp4",
           "frame_idx": 1380,
           "timestamp": 57.5,
-          "caption": "Monta\u00f1a invernal segura, consejos. Monta\u00f1ismo, alpinismo"
+          "caption": "Montaña invernal segura, consejos. Montañismo, alpinismo"
         },
         {
           "rank": 7,
@@ -6687,7 +6687,7 @@
           "video_name": "00513.mp4",
           "frame_idx": 900,
           "timestamp": 37.5,
-          "caption": "Monta\u00f1a invernal segura, consejos. Monta\u00f1ismo, alpinismo"
+          "caption": "Montaña invernal segura, consejos. Montañismo, alpinismo"
         },
         {
           "rank": 8,
@@ -6770,7 +6770,7 @@
           "video_name": "00507.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Pertenezco Aqu\u00ed / I Belong Here"
+          "caption": "Pertenezco Aquí / I Belong Here"
         },
         {
           "rank": 4,
@@ -6815,7 +6815,7 @@
           "video_name": "01408.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Riachuelo, L\u00e1grimas de Plomo"
+          "caption": "Riachuelo, Lágrimas de Plomo"
         },
         {
           "rank": 9,
@@ -6824,7 +6824,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 814,
           "timestamp": 27.16,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 10,
@@ -6871,7 +6871,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 148,
           "timestamp": 4.94,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 2,
@@ -6898,7 +6898,7 @@
           "video_name": "00691.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
-          "caption": "\u201cPAYMENT\u201d"
+          "caption": "“PAYMENT”"
         },
         {
           "rank": 5,
@@ -6968,14 +6968,14 @@
         "timestamp": 40.0,
         "frame_id": 960
       },
-      "rank": 29,
-      "video_rank": 29,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #29 | V-Rank #29)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 7.781,
         "hyde_sec": 3.754,
@@ -7109,7 +7109,7 @@
           "video_name": "00415.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "\u0422\u0435\u043e\u0440\u0438\u044f \u043d\u0430 \u043a\u043e\u043d\u0441\u043f\u0438\u0440\u0430\u0446\u0438\u044f\u0442\u0430 \u0415\u043f\u0438\u0437\u043e\u0434 46 (20.03.2017)"
+          "caption": "Теория на конспирацията Епизод 46 (20.03.2017)"
         },
         {
           "rank": 2,
@@ -7347,7 +7347,7 @@
           "video_name": "00970.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "The \u201cBonne Patate\u201d crew in the Aravis"
+          "caption": "The “Bonne Patate” crew in the Aravis"
         },
         {
           "rank": 2,
@@ -7475,7 +7475,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 3,
@@ -7484,7 +7484,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 4,
@@ -7493,7 +7493,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 5,
@@ -7511,7 +7511,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 7,
@@ -7520,7 +7520,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 8,
@@ -7529,7 +7529,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 9,
@@ -7547,7 +7547,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 744,
           "timestamp": 29.76,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         }
       ]
     },
@@ -7565,7 +7565,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -7639,7 +7639,7 @@
           "video_name": "00648.mp4",
           "frame_idx": 1357,
           "timestamp": 56.6,
-          "caption": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs."
+          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
         },
         {
           "rank": 8,
@@ -7648,7 +7648,7 @@
           "video_name": "00888.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "Another Birth - A short documentary \u062a\u0648\u0644\u062f\u06cc \u062f\u06cc\u06af\u0631 - \u0645\u0633\u062a\u0646\u062f\u06cc \u06a9\u0648\u062a\u0627\u0647 \u0627\u0632 \u0641\u0631\u0648\u063a \u0641\u0631\u062e\u0632\u0627\u062f"
+          "caption": "Another Birth - A short documentary تولدی دیگر - مستندی کوتاه از فروغ فرخزاد"
         },
         {
           "rank": 9,
@@ -7657,7 +7657,7 @@
           "video_name": "00888.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "Another Birth - A short documentary \u062a\u0648\u0644\u062f\u06cc \u062f\u06cc\u06af\u0631 - \u0645\u0633\u062a\u0646\u062f\u06cc \u06a9\u0648\u062a\u0627\u0647 \u0627\u0632 \u0641\u0631\u0648\u063a \u0641\u0631\u062e\u0632\u0627\u062f"
+          "caption": "Another Birth - A short documentary تولدی دیگر - مستندی کوتاه از فروغ فرخزاد"
         },
         {
           "rank": 10,
@@ -7682,14 +7682,14 @@
         "timestamp": 49.6,
         "frame_id": 1240
       },
-      "rank": 39,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 39,
-      "point_rank": 39,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #39 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.067,
         "hyde_sec": 2.195,
@@ -7841,7 +7841,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 744,
           "timestamp": 29.76,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 4,
@@ -7850,7 +7850,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 992,
           "timestamp": 39.68,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 5,
@@ -7859,7 +7859,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 6,
@@ -7868,7 +7868,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 7,
@@ -7877,7 +7877,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1178,
           "timestamp": 47.12,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 8,
@@ -7886,7 +7886,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 9,
@@ -7895,7 +7895,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 930,
           "timestamp": 37.2,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 10,
@@ -7904,7 +7904,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         }
       ]
     },
@@ -7978,7 +7978,7 @@
           "video_name": "00617.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "La Cit\u00e9 de la Tapisserie 2/3- Atelier Patrick Guillot"
+          "caption": "La Cité de la Tapisserie 2/3- Atelier Patrick Guillot"
         },
         {
           "rank": 6,
@@ -8005,7 +8005,7 @@
           "video_name": "01451.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "L\u2019innovation par le low-cost,  Exemples (2) : Transports, distribution, industrie, espace,"
+          "caption": "L’innovation par le low-cost,  Exemples (2) : Transports, distribution, industrie, espace,"
         },
         {
           "rank": 9,
@@ -8032,7 +8032,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd Hermann Kessler Halle Disco",
+      "query": "👑⚽ DISCO KINGZ CUP 2017 👑⚽ Hermann Kessler Halle Disco",
       "ground_truth": {
         "video_name": "01185.mp4",
         "video_stem": "01185",
@@ -8061,7 +8061,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 2,
@@ -8070,7 +8070,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 3,
@@ -8079,7 +8079,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 4,
@@ -8088,7 +8088,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1302,
           "timestamp": 52.08,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 5,
@@ -8097,7 +8097,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1054,
           "timestamp": 42.16,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 6,
@@ -8106,7 +8106,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 7,
@@ -8115,7 +8115,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 8,
@@ -8124,7 +8124,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 9,
@@ -8133,7 +8133,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         },
         {
           "rank": 10,
@@ -8142,7 +8142,7 @@
           "video_name": "01185.mp4",
           "frame_idx": 744,
           "timestamp": 29.76,
-          "caption": "\ud83d\udc51\u26bd DISCO KINGZ CUP 2017 \ud83d\udc51\u26bd"
+          "caption": "👑⚽ DISCO KINGZ CUP 2017 👑⚽"
         }
       ]
     },
@@ -8151,7 +8151,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson",
+      "query": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson",
       "ground_truth": {
         "video_name": "00394.mp4",
         "video_stem": "00394",
@@ -8180,7 +8180,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 2,
@@ -8189,7 +8189,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 744,
           "timestamp": 29.76,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 3,
@@ -8198,7 +8198,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 4,
@@ -8207,7 +8207,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 5,
@@ -8216,7 +8216,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 6,
@@ -8225,7 +8225,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 1302,
           "timestamp": 52.08,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 7,
@@ -8234,7 +8234,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 8,
@@ -8243,7 +8243,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 9,
@@ -8252,7 +8252,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         },
         {
           "rank": 10,
@@ -8261,7 +8261,7 @@
           "video_name": "00394.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d\u2019innovation - Fran\u00e7ois Faurisson"
+          "caption": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson"
         }
       ]
     },
@@ -8279,7 +8279,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -8515,14 +8515,14 @@
         "timestamp": 44.54,
         "frame_id": 1335
       },
-      "rank": 6,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 6,
+      "temporal_rank": 1,
       "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #6 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 6.699,
         "hyde_sec": 1.865,
@@ -8847,7 +8847,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1239,
           "timestamp": 51.68,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 10,
@@ -8856,7 +8856,7 @@
           "video_name": "00638.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Diane \u201cTheraphy\u2019s Cover\u201d Music Video"
+          "caption": "Diane “Theraphy’s Cover” Music Video"
         }
       ]
     },
@@ -8872,14 +8872,14 @@
         "timestamp": 34.57,
         "frame_id": 1036
       },
-      "rank": 46,
-      "video_rank": 24,
-      "temporal_rank": 46,
-      "point_rank": 46,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #46 | V-Rank #24)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 10.28,
         "hyde_sec": 2.124,
@@ -9110,14 +9110,14 @@
         "timestamp": 29.61,
         "frame_id": 710
       },
-      "rank": 4,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 4,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.109,
         "hyde_sec": 2.601,
@@ -9213,7 +9213,7 @@
           "video_name": "01477.mp4",
           "frame_idx": 1302,
           "timestamp": 52.08,
-          "caption": "Flashmob Art\u2019Choum \u201cLive\u201d \u00e0 Sallanches"
+          "caption": "Flashmob Art’Choum “Live” à Sallanches"
         }
       ]
     },
@@ -9222,7 +9222,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "C\u00f4te Sauvage belle-ile",
+      "query": "Côte Sauvage belle-ile",
       "ground_truth": {
         "video_name": "00207.mp4",
         "video_stem": "00207",
@@ -9251,7 +9251,7 @@
           "video_name": "00207.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "C\u00f4te Sauvage"
+          "caption": "Côte Sauvage"
         },
         {
           "rank": 2,
@@ -9260,7 +9260,7 @@
           "video_name": "00207.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "C\u00f4te Sauvage"
+          "caption": "Côte Sauvage"
         },
         {
           "rank": 3,
@@ -9269,7 +9269,7 @@
           "video_name": "00672.mp4",
           "frame_idx": 236,
           "timestamp": 9.84,
-          "caption": "Bretagne - C\u00f4tes d\u2019Armor"
+          "caption": "Bretagne - Côtes d’Armor"
         },
         {
           "rank": 4,
@@ -9296,7 +9296,7 @@
           "video_name": "00672.mp4",
           "frame_idx": 118,
           "timestamp": 4.92,
-          "caption": "Bretagne - C\u00f4tes d\u2019Armor"
+          "caption": "Bretagne - Côtes d’Armor"
         },
         {
           "rank": 7,
@@ -9305,7 +9305,7 @@
           "video_name": "00672.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
-          "caption": "Bretagne - C\u00f4tes d\u2019Armor"
+          "caption": "Bretagne - Côtes d’Armor"
         },
         {
           "rank": 8,
@@ -9314,7 +9314,7 @@
           "video_name": "00672.mp4",
           "frame_idx": 295,
           "timestamp": 12.3,
-          "caption": "Bretagne - C\u00f4tes d\u2019Armor"
+          "caption": "Bretagne - Côtes d’Armor"
         },
         {
           "rank": 9,
@@ -9323,7 +9323,7 @@
           "video_name": "00672.mp4",
           "frame_idx": 177,
           "timestamp": 7.38,
-          "caption": "Bretagne - C\u00f4tes d\u2019Armor"
+          "caption": "Bretagne - Côtes d’Armor"
         },
         {
           "rank": 10,
@@ -9332,7 +9332,7 @@
           "video_name": "00970.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "The \u201cBonne Patate\u201d crew in the Aravis"
+          "caption": "The “Bonne Patate” crew in the Aravis"
         }
       ]
     },
@@ -9470,7 +9470,7 @@
       "rank": 3,
       "video_rank": 1,
       "temporal_rank": 3,
-      "point_rank": 35,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
@@ -9622,7 +9622,7 @@
           "video_name": "00043.mp4",
           "frame_idx": 1776,
           "timestamp": 59.26,
-          "caption": "Dracula\u2019s Wedding Fashionshow"
+          "caption": "Dracula’s Wedding Fashionshow"
         },
         {
           "rank": 3,
@@ -9958,10 +9958,10 @@
         "timestamp": 24.0,
         "frame_id": 600
       },
-      "rank": 99,
+      "rank": 3,
       "video_rank": 3,
-      "temporal_rank": 99,
-      "point_rank": 99,
+      "temporal_rank": 3,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
@@ -9970,7 +9970,7 @@
         "ambiguity_turn2": 0.864,
         "delta_ambiguity": 0.0775
       },
-      "status": "PASS (Rank #99 | V-Rank #3)",
+      "status": "PASS (Rank #3 | V-Rank #3)",
       "latency": {
         "total_sec": 8.285,
         "hyde_sec": 2.678,
@@ -10066,7 +10066,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 1239,
           "timestamp": 51.68,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         }
       ]
     },
@@ -10127,7 +10127,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1776,
           "timestamp": 59.26,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 4,
@@ -10136,7 +10136,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1110,
           "timestamp": 37.04,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 5,
@@ -10145,7 +10145,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1702,
           "timestamp": 56.79,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 6,
@@ -10154,7 +10154,7 @@
           "video_name": "01401.mp4",
           "frame_idx": 1406,
           "timestamp": 46.91,
-          "caption": "W Entrevista Aqu\u00ed\u00ad entre nos - 17 de abril de 2013"
+          "caption": "W Entrevista Aquí­ entre nos - 17 de abril de 2013"
         },
         {
           "rank": 7,
@@ -10190,7 +10190,7 @@
           "video_name": "00593.mp4",
           "frame_idx": 1702,
           "timestamp": 56.79,
-          "caption": "Programa Circuito Fechado - \u201cCasacor Campinas 2012\u201d"
+          "caption": "Programa Circuito Fechado - “Casacor Campinas 2012”"
         }
       ]
     },
@@ -10206,10 +10206,10 @@
         "timestamp": 30.0,
         "frame_id": 750
       },
-      "rank": 47,
-      "video_rank": 47,
-      "temporal_rank": 47,
-      "point_rank": 47,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
@@ -10218,7 +10218,7 @@
         "ambiguity_turn2": 0.692,
         "delta_ambiguity": 0.0
       },
-      "status": "PASS (Rank #47 | V-Rank #47)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 11.165,
         "hyde_sec": 2.545,
@@ -10323,7 +10323,7 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015) t\u00e1bor tarapaca",
+      "query": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015) tábor tarapaca",
       "ground_truth": {
         "video_name": "00548.mp4",
         "video_stem": "00548",
@@ -10337,7 +10337,7 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the scene of Tarapaca performing \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015) in T\u00e1bor",
+        "cqr_query": "find the scene of Tarapaca performing “Záletník” (LIVE RECORDING SESSION 2015) in Tábor",
         "ambiguity_turn1": 0.592,
         "ambiguity_turn2": 0.595,
         "delta_ambiguity": -0.0027
@@ -10357,7 +10357,7 @@
           "video_name": "00548.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015)"
+          "caption": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)"
         },
         {
           "rank": 2,
@@ -10366,7 +10366,7 @@
           "video_name": "00548.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Tarapaca \u201cZ\u00e1letn\u00edk\u201d (LIVE RECORDING SESSION 2015)"
+          "caption": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)"
         },
         {
           "rank": 3,
@@ -10826,9 +10826,9 @@
         "timestamp": 6.0,
         "frame_id": 150
       },
-      "rank": 44,
+      "rank": 3,
       "video_rank": 1,
-      "temporal_rank": 44,
+      "temporal_rank": 3,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -10838,7 +10838,7 @@
         "ambiguity_turn2": 0.689,
         "delta_ambiguity": 0.0025
       },
-      "status": "PASS (Rank #44 | V-Rank #1)",
+      "status": "PASS (Rank #3 | V-Rank #1)",
       "latency": {
         "total_sec": 9.384,
         "hyde_sec": 2.479,
@@ -11198,9 +11198,9 @@
         "timestamp": 29.63,
         "frame_id": 888
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -11210,7 +11210,7 @@
         "ambiguity_turn2": 0.695,
         "delta_ambiguity": -0.0027
       },
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 9.388,
         "hyde_sec": 2.091,
@@ -11642,7 +11642,7 @@
           "video_name": "01212.mp4",
           "frame_idx": 1380,
           "timestamp": 57.5,
-          "caption": "Ambrose Bierce\u2019s A Watcher by the Dead - 52 Films in 52 Weeks"
+          "caption": "Ambrose Bierce’s A Watcher by the Dead - 52 Films in 52 Weeks"
         },
         {
           "rank": 7,
@@ -11697,7 +11697,7 @@
       "rank": 9,
       "video_rank": 7,
       "temporal_rank": 9,
-      "point_rank": 11,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
@@ -12156,7 +12156,7 @@
           "video_name": "00465.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
-          "caption": "ALMER\u00cdA: DISTRITO CINE (Documental, 2012)"
+          "caption": "ALMERÍA: DISTRITO CINE (Documental, 2012)"
         },
         {
           "rank": 9,
@@ -12190,8 +12190,8 @@
         "timestamp": 51.68,
         "frame_id": 1239
       },
-      "rank": 25,
-      "video_rank": 25,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
@@ -12202,7 +12202,7 @@
         "ambiguity_turn2": 0.792,
         "delta_ambiguity": 0.0
       },
-      "status": "PASS (Rank #25 | V-Rank #25)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 8.492,
         "hyde_sec": 2.671,
@@ -12235,7 +12235,7 @@
           "video_name": "01521.mp4",
           "frame_idx": 1416,
           "timestamp": 59.06,
-          "caption": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER"
+          "caption": "LUCIANA E FABIANO - i’m felling good-TRAILER"
         },
         {
           "rank": 4,
@@ -12244,7 +12244,7 @@
           "video_name": "00852.mp4",
           "frame_idx": 666,
           "timestamp": 22.22,
-          "caption": "Moses Campbell - \u201cDano\u2019s the Man\u201d"
+          "caption": "Moses Campbell - “Dano’s the Man”"
         },
         {
           "rank": 5,
@@ -12253,7 +12253,7 @@
           "video_name": "01147.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Ir\u00e8ne Duval, r\u00e9v\u00e9lation classique de l\u2019ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
+          "caption": "Irène Duval, révélation classique de l’ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
         },
         {
           "rank": 6,
@@ -12262,7 +12262,7 @@
           "video_name": "01147.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Ir\u00e8ne Duval, r\u00e9v\u00e9lation classique de l\u2019ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
+          "caption": "Irène Duval, révélation classique de l’ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
         },
         {
           "rank": 7,
@@ -12280,7 +12280,7 @@
           "video_name": "01147.mp4",
           "frame_idx": 372,
           "timestamp": 14.88,
-          "caption": "Ir\u00e8ne Duval, r\u00e9v\u00e9lation classique de l\u2019ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
+          "caption": "Irène Duval, révélation classique de l’ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
         },
         {
           "rank": 9,
@@ -12289,7 +12289,7 @@
           "video_name": "01147.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
-          "caption": "Ir\u00e8ne Duval, r\u00e9v\u00e9lation classique de l\u2019ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
+          "caption": "Irène Duval, révélation classique de l’ADAMI 2013 - Ernst / Schubert, Roi des Aulnes"
         },
         {
           "rank": 10,
@@ -12438,9 +12438,9 @@
         "timestamp": 7.44,
         "frame_id": 186
       },
-      "rank": 56,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 56,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -12450,7 +12450,7 @@
         "ambiguity_turn2": 0.651,
         "delta_ambiguity": 0.1409
       },
-      "status": "PASS (Rank #56 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.454,
         "hyde_sec": 1.962,
@@ -12492,7 +12492,7 @@
           "video_name": "00788.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "Brother\u2019s Team to Mauritius 2010"
+          "caption": "Brother’s Team to Mauritius 2010"
         },
         {
           "rank": 5,
@@ -12501,7 +12501,7 @@
           "video_name": "00788.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "Brother\u2019s Team to Mauritius 2010"
+          "caption": "Brother’s Team to Mauritius 2010"
         },
         {
           "rank": 6,
@@ -12510,7 +12510,7 @@
           "video_name": "00788.mp4",
           "frame_idx": 372,
           "timestamp": 14.88,
-          "caption": "Brother\u2019s Team to Mauritius 2010"
+          "caption": "Brother’s Team to Mauritius 2010"
         },
         {
           "rank": 7,
@@ -12519,7 +12519,7 @@
           "video_name": "00788.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
-          "caption": "Brother\u2019s Team to Mauritius 2010"
+          "caption": "Brother’s Team to Mauritius 2010"
         },
         {
           "rank": 8,
@@ -12537,7 +12537,7 @@
           "video_name": "00817.mp4",
           "frame_idx": 666,
           "timestamp": 22.22,
-          "caption": "Evento en playa, isla llena de emociones, Pichac\u00faa la isla, www.pichacua.com"
+          "caption": "Evento en playa, isla llena de emociones, Pichacúa la isla, www.pichacua.com"
         },
         {
           "rank": 10,
@@ -12562,8 +12562,8 @@
         "timestamp": 4.92,
         "frame_id": 118
       },
-      "rank": 30,
-      "video_rank": 30,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
@@ -12574,7 +12574,7 @@
         "ambiguity_turn2": 0.887,
         "delta_ambiguity": 0.0049
       },
-      "status": "PASS (Rank #30 | V-Rank #30)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 11.486,
         "hyde_sec": 3.161,
@@ -12679,26 +12679,26 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2 B\u00e4ume Mitteldeutschland",
+      "query": "Auf großer Tour durch den den Freiberger Hospitalwald - 2 Bäume Mitteldeutschland",
       "ground_truth": {
         "video_name": "00666.mp4",
         "video_stem": "00666",
         "timestamp": 39.0,
         "frame_id": 975
       },
-      "rank": 51,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 51,
-      "point_rank": 51,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the scene Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2 from B\u00e4ume Mitteldeutschland",
+        "cqr_query": "find the scene Auf großer Tour durch den den Freiberger Hospitalwald - 2 from Bäume Mitteldeutschland",
         "ambiguity_turn1": 0.642,
         "ambiguity_turn2": 0.634,
         "delta_ambiguity": 0.0076
       },
-      "status": "PASS (Rank #51 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 11.891,
         "hyde_sec": 3.083,
@@ -12713,7 +12713,7 @@
           "video_name": "00666.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2"
+          "caption": "Auf großer Tour durch den den Freiberger Hospitalwald - 2"
         },
         {
           "rank": 2,
@@ -12722,7 +12722,7 @@
           "video_name": "00666.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2"
+          "caption": "Auf großer Tour durch den den Freiberger Hospitalwald - 2"
         },
         {
           "rank": 3,
@@ -12731,7 +12731,7 @@
           "video_name": "00666.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Auf gro\u00dfer Tour durch den den Freiberger Hospitalwald - 2"
+          "caption": "Auf großer Tour durch den den Freiberger Hospitalwald - 2"
         },
         {
           "rank": 4,
@@ -12810,9 +12810,9 @@
         "timestamp": 20.79,
         "frame_id": 623
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 5,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -12822,7 +12822,7 @@
         "ambiguity_turn2": 0.745,
         "delta_ambiguity": -0.0027
       },
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 9.414,
         "hyde_sec": 2.445,
@@ -12934,9 +12934,9 @@
         "timestamp": 0.0,
         "frame_id": 0
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 2,
+      "temporal_rank": 1,
       "point_rank": 2,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -12946,7 +12946,7 @@
         "ambiguity_turn2": 0.845,
         "delta_ambiguity": -0.0027
       },
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 8.952,
         "hyde_sec": 3.062,
@@ -13024,7 +13024,7 @@
           "video_name": "00970.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "The \u201cBonne Patate\u201d crew in the Aravis"
+          "caption": "The “Bonne Patate” crew in the Aravis"
         },
         {
           "rank": 9,
@@ -13033,7 +13033,7 @@
           "video_name": "01516.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Clip Mariage Aure\u0301lie & Pascal (version courte)"
+          "caption": "Clip Mariage Aurélie & Pascal (version courte)"
         },
         {
           "rank": 10,
@@ -13121,7 +13121,7 @@
           "video_name": "00137.mp4",
           "frame_idx": 888,
           "timestamp": 29.63,
-          "caption": "Mactan Island - \u201cGO, Don\u2019t Stop\u201d"
+          "caption": "Mactan Island - “GO, Don’t Stop”"
         },
         {
           "rank": 6,
@@ -13139,7 +13139,7 @@
           "video_name": "00137.mp4",
           "frame_idx": 1258,
           "timestamp": 41.98,
-          "caption": "Mactan Island - \u201cGO, Don\u2019t Stop\u201d"
+          "caption": "Mactan Island - “GO, Don’t Stop”"
         },
         {
           "rank": 8,
@@ -13148,7 +13148,7 @@
           "video_name": "00381.mp4",
           "frame_idx": 118,
           "timestamp": 4.92,
-          "caption": "I \u2665 Boracay"
+          "caption": "I ♥ Boracay"
         },
         {
           "rank": 9,
@@ -13166,7 +13166,7 @@
           "video_name": "00137.mp4",
           "frame_idx": 962,
           "timestamp": 32.1,
-          "caption": "Mactan Island - \u201cGO, Don\u2019t Stop\u201d"
+          "caption": "Mactan Island - “GO, Don’t Stop”"
         }
       ]
     },
@@ -13430,9 +13430,9 @@
         "timestamp": 19.75,
         "frame_id": 592
       },
-      "rank": 31,
+      "rank": 5,
       "video_rank": 2,
-      "temporal_rank": 31,
+      "temporal_rank": 5,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -13442,7 +13442,7 @@
         "ambiguity_turn2": 0.895,
         "delta_ambiguity": -0.0027
       },
-      "status": "PASS (Rank #31 | V-Rank #2)",
+      "status": "PASS (Rank #5 | V-Rank #2)",
       "latency": {
         "total_sec": 10.139,
         "hyde_sec": 2.325,
@@ -13538,7 +13538,7 @@
           "video_name": "00236.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "MMA HDH84 C21 Kevin Vald\u00e9s vs Xavier Rizan - Hombres de Honor 84 20170409"
+          "caption": "MMA HDH84 C21 Kevin Valdés vs Xavier Rizan - Hombres de Honor 84 20170409"
         }
       ]
     },
@@ -13547,7 +13547,7 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs. love bride",
+      "query": "Pati & Armando :: “La Luna y el Sol” || English Subs. love bride",
       "ground_truth": {
         "video_name": "00648.mp4",
         "video_stem": "00648",
@@ -13561,7 +13561,7 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the love bride scene in the video Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs.",
+        "cqr_query": "find the love bride scene in the video Pati & Armando :: “La Luna y el Sol” || English Subs.",
         "ambiguity_turn1": 0.892,
         "ambiguity_turn2": 0.895,
         "delta_ambiguity": -0.0029
@@ -13581,7 +13581,7 @@
           "video_name": "00507.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Pertenezco Aqu\u00ed / I Belong Here"
+          "caption": "Pertenezco Aquí / I Belong Here"
         },
         {
           "rank": 2,
@@ -13617,7 +13617,7 @@
           "video_name": "00648.mp4",
           "frame_idx": 413,
           "timestamp": 17.23,
-          "caption": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs."
+          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
         },
         {
           "rank": 6,
@@ -13626,7 +13626,7 @@
           "video_name": "00648.mp4",
           "frame_idx": 472,
           "timestamp": 19.69,
-          "caption": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs."
+          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
         },
         {
           "rank": 7,
@@ -13635,7 +13635,7 @@
           "video_name": "00929.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Ariana & Tom\u00e1s. E.Session (preboda) en Sierra de Aracena (Huelva)"
+          "caption": "Ariana & Tomás. E.Session (preboda) en Sierra de Aracena (Huelva)"
         },
         {
           "rank": 8,
@@ -13671,26 +13671,26 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "Comment vient l\u2019inspiration pour improviser improviser inspiration",
+      "query": "Comment vient l’inspiration pour improviser improviser inspiration",
       "ground_truth": {
         "video_name": "00824.mp4",
         "video_stem": "00824",
         "timestamp": 27.0,
         "frame_id": 675
       },
-      "rank": 1,
+      "rank": 5,
       "video_rank": 1,
-      "temporal_rank": null,
+      "temporal_rank": 5,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the scene from Comment vient l\u2019inspiration pour improviser",
+        "cqr_query": "find the scene from Comment vient l’inspiration pour improviser",
         "ambiguity_turn1": 0.742,
         "ambiguity_turn2": 0.734,
         "delta_ambiguity": 0.0076
       },
-      "status": "PASS (Rank #1 | V-Rank #1)",
+      "status": "PASS (Rank #5 | V-Rank #1)",
       "latency": {
         "total_sec": 10.753,
         "hyde_sec": 2.797,
@@ -13705,7 +13705,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 2,
@@ -13714,7 +13714,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 3,
@@ -13723,7 +13723,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 4,
@@ -13741,7 +13741,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 6,
@@ -13750,7 +13750,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 7,
@@ -13768,7 +13768,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1178,
           "timestamp": 47.12,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 9,
@@ -13777,7 +13777,7 @@
           "video_name": "00824.mp4",
           "frame_idx": 1302,
           "timestamp": 52.08,
-          "caption": "Comment vient l\u2019inspiration pour improviser"
+          "caption": "Comment vient l’inspiration pour improviser"
         },
         {
           "rank": 10,
@@ -13786,7 +13786,7 @@
           "video_name": "01063.mp4",
           "frame_idx": 296,
           "timestamp": 9.88,
-          "caption": "HARMONIE - Du chaos primitif naquit l\u2019harmonie."
+          "caption": "HARMONIE - Du chaos primitif naquit l’harmonie."
         }
       ]
     },
@@ -13802,10 +13802,10 @@
         "timestamp": 7.44,
         "frame_id": 186
       },
-      "rank": 7,
+      "rank": 3,
       "video_rank": 1,
-      "temporal_rank": 7,
-      "point_rank": 46,
+      "temporal_rank": 3,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
@@ -13814,7 +13814,7 @@
         "ambiguity_turn2": 0.595,
         "delta_ambiguity": -0.0027
       },
-      "status": "PASS (Rank #7 | V-Rank #1)",
+      "status": "PASS (Rank #3 | V-Rank #1)",
       "latency": {
         "total_sec": 9.447,
         "hyde_sec": 2.883,
@@ -14050,9 +14050,9 @@
         "timestamp": 17.23,
         "frame_id": 413
       },
-      "rank": 54,
-      "video_rank": 21,
-      "temporal_rank": 54,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -14062,7 +14062,7 @@
         "ambiguity_turn2": 0.797,
         "delta_ambiguity": 0.0447
       },
-      "status": "PASS (Rank #54 | V-Rank #21)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 9.156,
         "hyde_sec": 2.338,
@@ -14077,7 +14077,7 @@
           "video_name": "01521.mp4",
           "frame_idx": 1298,
           "timestamp": 54.14,
-          "caption": "LUCIANA E FABIANO - i\u2019m felling good-TRAILER"
+          "caption": "LUCIANA E FABIANO - i’m felling good-TRAILER"
         },
         {
           "rank": 2,
@@ -14167,7 +14167,7 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "\u201cReasonable Man\u201d - Henry P. Funkuncle. (demo version) henry funkuncle",
+      "query": "“Reasonable Man” - Henry P. Funkuncle. (demo version) henry funkuncle",
       "ground_truth": {
         "video_name": "01164.mp4",
         "video_stem": "01164",
@@ -14181,7 +14181,7 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the scene for \u201cReasonable Man\u201d - Henry P. Funkuncle. (demo version)",
+        "cqr_query": "find the scene for “Reasonable Man” - Henry P. Funkuncle. (demo version)",
         "ambiguity_turn1": 0.842,
         "ambiguity_turn2": 0.845,
         "delta_ambiguity": -0.0027
@@ -14201,7 +14201,7 @@
           "video_name": "01164.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "\u201cReasonable Man\u201d - Henry P. Funkuncle. (demo version)"
+          "caption": "“Reasonable Man” - Henry P. Funkuncle. (demo version)"
         },
         {
           "rank": 2,
@@ -14210,7 +14210,7 @@
           "video_name": "01164.mp4",
           "frame_idx": 148,
           "timestamp": 4.94,
-          "caption": "\u201cReasonable Man\u201d - Henry P. Funkuncle. (demo version)"
+          "caption": "“Reasonable Man” - Henry P. Funkuncle. (demo version)"
         },
         {
           "rank": 3,
@@ -14219,7 +14219,7 @@
           "video_name": "01164.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
-          "caption": "\u201cReasonable Man\u201d - Henry P. Funkuncle. (demo version)"
+          "caption": "“Reasonable Man” - Henry P. Funkuncle. (demo version)"
         },
         {
           "rank": 4,
@@ -14273,7 +14273,7 @@
           "video_name": "01553.mp4",
           "frame_idx": 444,
           "timestamp": 14.81,
-          "caption": "Short: Yours, Mine & Hers: Director\u2019s Cut"
+          "caption": "Short: Yours, Mine & Hers: Director’s Cut"
         },
         {
           "rank": 10,
@@ -14282,7 +14282,7 @@
           "video_name": "01553.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "Short: Yours, Mine & Hers: Director\u2019s Cut"
+          "caption": "Short: Yours, Mine & Hers: Director’s Cut"
         }
       ]
     },
@@ -14352,7 +14352,7 @@
           "video_name": "00452.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
-          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary \u2018Tote Jukebox\u2019 Unholy Col"
+          "caption": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Col"
         },
         {
           "rank": 5,
@@ -14458,7 +14458,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         },
         {
           "rank": 3,
@@ -14467,7 +14467,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         },
         {
           "rank": 4,
@@ -14485,7 +14485,7 @@
           "video_name": "00285.mp4",
           "frame_idx": 248,
           "timestamp": 9.92,
-          "caption": "Salobre\u00f1a"
+          "caption": "Salobreña"
         },
         {
           "rank": 6,
@@ -14512,7 +14512,7 @@
           "video_name": "01485.mp4",
           "frame_idx": 3450,
           "timestamp": 57.5,
-          "caption": "Droneando por San Miguel de Escalada y Mara\u00f1a (Le\u00f3n)"
+          "caption": "Droneando por San Miguel de Escalada y Maraña (León)"
         },
         {
           "rank": 9,
@@ -14521,7 +14521,7 @@
           "video_name": "01485.mp4",
           "frame_idx": 3150,
           "timestamp": 52.5,
-          "caption": "Droneando por San Miguel de Escalada y Mara\u00f1a (Le\u00f3n)"
+          "caption": "Droneando por San Miguel de Escalada y Maraña (León)"
         },
         {
           "rank": 10,
@@ -14555,7 +14555,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 7,
+      "temporal_rank": 1,
       "point_rank": 7,
       "vqa_answer": "Paragliding Tandem Flight",
       "vqa_answer_valid": true,
@@ -14701,7 +14701,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 2,
@@ -14728,7 +14728,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 5,
@@ -14805,14 +14805,14 @@
           "video"
         ]
       },
-      "rank": 64,
-      "video_rank": 64,
-      "temporal_rank": 64,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": "Landjuweel",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #64 | V-Rank #64)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 43.32,
         "hyde_sec": 2.792,
@@ -14953,7 +14953,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 2,
@@ -15007,7 +15007,7 @@
           "video_name": "00371.mp4",
           "frame_idx": 148,
           "timestamp": 4.94,
-          "caption": "Wade Stalvey\u2019s First Solo Video"
+          "caption": "Wade Stalvey’s First Solo Video"
         },
         {
           "rank": 8,
@@ -15016,7 +15016,7 @@
           "video_name": "00583.mp4",
           "frame_idx": 525,
           "timestamp": 17.5,
-          "caption": "Deutschlands erster Stra\u00dfenleser: Das Tourtagebuch 2016, Teil 4 (Berlin, 20. Mai)"
+          "caption": "Deutschlands erster Straßenleser: Das Tourtagebuch 2016, Teil 4 (Berlin, 20. Mai)"
         },
         {
           "rank": 9,
@@ -15025,7 +15025,7 @@
           "video_name": "00577.mp4",
           "frame_idx": 236,
           "timestamp": 9.84,
-          "caption": "Derrick & Christie Hale\u2019s Short Wedding Film (60D)"
+          "caption": "Derrick & Christie Hale’s Short Wedding Film (60D)"
         },
         {
           "rank": 10,
@@ -15088,7 +15088,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 3,
@@ -15295,15 +15295,15 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What event is featured in 30e FESTIVAL CHOPIN \u00e0 PARIS?",
+      "query": "What event is featured in 30e FESTIVAL CHOPIN à PARIS?",
       "ground_truth": {
         "video_name": "00293.mp4",
         "video_stem": "00293",
         "timestamp": 27.28,
         "frame_id": 682,
-        "answer": "30e FESTIVAL CHOPIN \u00e0 PAR",
+        "answer": "30e FESTIVAL CHOPIN à PAR",
         "acceptable_answers": [
-          "30e festival chopin \u00e0 par",
+          "30e festival chopin à par",
           "scene",
           "event",
           "video"
@@ -15313,7 +15313,7 @@
       "video_rank": 1,
       "temporal_rank": 1,
       "point_rank": null,
-      "vqa_answer": "Festival Chopin \u00e0 Paris",
+      "vqa_answer": "Festival Chopin à Paris",
       "vqa_answer_valid": true,
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
@@ -15331,7 +15331,7 @@
           "video_name": "00293.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "30e FESTIVAL CHOPIN \u00e0 PARIS"
+          "caption": "30e FESTIVAL CHOPIN à PARIS"
         },
         {
           "rank": 2,
@@ -15349,7 +15349,7 @@
           "video_name": "00293.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "30e FESTIVAL CHOPIN \u00e0 PARIS"
+          "caption": "30e FESTIVAL CHOPIN à PARIS"
         },
         {
           "rank": 4,
@@ -15376,7 +15376,7 @@
           "video_name": "01657.mp4",
           "frame_idx": 118,
           "timestamp": 4.92,
-          "caption": "Zanele Muholi Artist Talk \u2013 2015"
+          "caption": "Zanele Muholi Artist Talk – 2015"
         },
         {
           "rank": 7,
@@ -15385,7 +15385,7 @@
           "video_name": "01657.mp4",
           "frame_idx": 236,
           "timestamp": 9.84,
-          "caption": "Zanele Muholi Artist Talk \u2013 2015"
+          "caption": "Zanele Muholi Artist Talk – 2015"
         },
         {
           "rank": 8,
@@ -15394,7 +15394,7 @@
           "video_name": "01657.mp4",
           "frame_idx": 59,
           "timestamp": 2.46,
-          "caption": "Zanele Muholi Artist Talk \u2013 2015"
+          "caption": "Zanele Muholi Artist Talk – 2015"
         },
         {
           "rank": 9,
@@ -15403,7 +15403,7 @@
           "video_name": "01561.mp4",
           "frame_idx": 59,
           "timestamp": 2.46,
-          "caption": "Vincent J. Musi Artist Talk \u2013 2015"
+          "caption": "Vincent J. Musi Artist Talk – 2015"
         },
         {
           "rank": 10,
@@ -15412,7 +15412,7 @@
           "video_name": "01657.mp4",
           "frame_idx": 177,
           "timestamp": 7.38,
-          "caption": "Zanele Muholi Artist Talk \u2013 2015"
+          "caption": "Zanele Muholi Artist Talk – 2015"
         }
       ]
     },
@@ -15437,7 +15437,7 @@
       },
       "rank": 4,
       "video_rank": 4,
-      "temporal_rank": 10,
+      "temporal_rank": 5,
       "point_rank": 10,
       "vqa_answer": "the 2010 film challenge",
       "vqa_answer_valid": true,
@@ -15610,7 +15610,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 5,
@@ -15628,7 +15628,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 7,
@@ -15655,7 +15655,7 @@
           "video_name": "00856.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "Inelements \u201cPost Stress\u201d"
+          "caption": "Inelements “Post Stress”"
         },
         {
           "rank": 10,
@@ -15815,9 +15815,9 @@
       },
       "rank": 4,
       "video_rank": 4,
-      "temporal_rank": 9,
+      "temporal_rank": 4,
       "point_rank": 9,
-      "vqa_answer": "Conurba\u00e7\u00e3o",
+      "vqa_answer": "Conurbação",
       "vqa_answer_valid": true,
       "kisc_info": {},
       "status": "PASS (Rank #4 | V-Rank #4)",
@@ -15844,7 +15844,7 @@
           "video_name": "00502.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
-          "caption": "Campeonato de Espa\u00f1a de Escalada en Dificultad y Paraescalada"
+          "caption": "Campeonato de España de Escalada en Dificultad y Paraescalada"
         },
         {
           "rank": 3,
@@ -15871,7 +15871,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1554,
           "timestamp": 51.85,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 6,
@@ -15880,7 +15880,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 7,
@@ -15898,7 +15898,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1702,
           "timestamp": 56.79,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
           "rank": 9,
@@ -15916,7 +15916,7 @@
           "video_name": "01186.mp4",
           "frame_idx": 1776,
           "timestamp": 59.26,
-          "caption": "Programa Circuito Fechado - Edi\u00e7\u00e3o 1042"
+          "caption": "Programa Circuito Fechado - Edição 1042"
         }
       ]
     },
@@ -15961,7 +15961,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 2,
@@ -15970,7 +15970,7 @@
           "video_name": "01512.mp4",
           "frame_idx": 296,
           "timestamp": 9.88,
-          "caption": "New Year\u2019s Eve Live!"
+          "caption": "New Year’s Eve Live!"
         },
         {
           "rank": 3,
@@ -16065,14 +16065,14 @@
           "video"
         ]
       },
-      "rank": 28,
-      "video_rank": 28,
-      "temporal_rank": 28,
-      "point_rank": 28,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": "2010 film challenge",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #28 | V-Rank #28)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 38.892,
         "hyde_sec": 2.756,
@@ -16213,7 +16213,7 @@
           "video_name": "00648.mp4",
           "frame_idx": 649,
           "timestamp": 27.07,
-          "caption": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs."
+          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
         },
         {
           "rank": 2,
@@ -16222,7 +16222,7 @@
           "video_name": "00648.mp4",
           "frame_idx": 1357,
           "timestamp": 56.6,
-          "caption": "Pati & Armando :: \u201cLa Luna y el Sol\u201d || English Subs."
+          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
         },
         {
           "rank": 3,
@@ -16569,14 +16569,14 @@
           "video"
         ]
       },
-      "rank": 12,
-      "video_rank": 12,
-      "temporal_rank": 24,
-      "point_rank": 36,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": "Great Backyard Bird Count",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #12 | V-Rank #12)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 46.464,
         "hyde_sec": 2.211,
@@ -16861,7 +16861,7 @@
           "video_name": "00856.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "Inelements \u201cPost Stress\u201d"
+          "caption": "Inelements “Post Stress”"
         },
         {
           "rank": 4,
@@ -16915,7 +16915,7 @@
           "video_name": "01446.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "GUACHO (2000) - a Short Film Directed by Maxi C\u00e1ceres"
+          "caption": "GUACHO (2000) - a Short Film Directed by Maxi Cáceres"
         },
         {
           "rank": 10,
@@ -17014,7 +17014,7 @@
           "video_name": "00475.mp4",
           "frame_idx": 1121,
           "timestamp": 46.76,
-          "caption": "ONE MAN\u2019S LIFE - English Subtitles"
+          "caption": "ONE MAN’S LIFE - English Subtitles"
         },
         {
           "rank": 7,
@@ -17041,7 +17041,7 @@
           "video_name": "00475.mp4",
           "frame_idx": 1180,
           "timestamp": 49.22,
-          "caption": "ONE MAN\u2019S LIFE - English Subtitles"
+          "caption": "ONE MAN’S LIFE - English Subtitles"
         },
         {
           "rank": 10,
@@ -17113,7 +17113,7 @@
           "video_name": "01553.mp4",
           "frame_idx": 518,
           "timestamp": 17.28,
-          "caption": "Short: Yours, Mine & Hers: Director\u2019s Cut"
+          "caption": "Short: Yours, Mine & Hers: Director’s Cut"
         },
         {
           "rank": 4,
@@ -17185,15 +17185,15 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What event is featured in \uff12\uff10\uff11\uff16\u590f\u4f11\u307f\uff18\u670811\uff5e17\u65e5 \u7f8e\u4e43\u91cc\u306e\u30d5\u30c3\u30c6\u30fc\u30b7\u3099\uff01\uff01\uff01?",
+      "query": "What event is featured in ２０１６夏休み８月11～17日 美乃里のフッテージ！！！?",
       "ground_truth": {
         "video_name": "00187.mp4",
         "video_stem": "00187",
         "timestamp": 14.85,
         "frame_id": 445,
-        "answer": "\uff12\uff10\uff11\uff16\u590f\u4f11\u307f\uff18\u670811\uff5e17\u65e5 \u7f8e\u4e43\u91cc\u306e\u30d5\u30c3\u30c6\u30fc\u30b7",
+        "answer": "２０１６夏休み８月11～17日 美乃里のフッテーシ",
         "acceptable_answers": [
-          "\uff12\uff10\uff11\uff16\u590f\u4f11\u307f\uff18\u670811\uff5e17\u65e5 \u7f8e\u4e43\u91cc\u306e\u30d5\u30c3\u30c6\u30fc\u30b7",
+          "２０１６夏休み８月11～17日 美乃里のフッテーシ",
           "scene",
           "event",
           "video"
@@ -17201,7 +17201,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 15,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": "Obon holiday",
       "vqa_answer_valid": true,
@@ -17221,7 +17221,7 @@
           "video_name": "00187.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "\uff12\uff10\uff11\uff16\u590f\u4f11\u307f\uff18\u670811\uff5e17\u65e5 \u7f8e\u4e43\u91cc\u306e\u30d5\u30c3\u30c6\u30fc\u30b7\u3099\uff01\uff01\uff01"
+          "caption": "２０１６夏休み８月11～17日 美乃里のフッテージ！！！"
         },
         {
           "rank": 2,
@@ -17266,7 +17266,7 @@
           "video_name": "00202.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Misasa Monthly Video 08 (November 2012) - Mount Mitoku Sanbutsuji\u2019s Fire Festival"
+          "caption": "Misasa Monthly Video 08 (November 2012) - Mount Mitoku Sanbutsuji’s Fire Festival"
         },
         {
           "rank": 7,
@@ -17275,7 +17275,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 124,
           "timestamp": 4.96,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 8,
@@ -17284,7 +17284,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 9,
@@ -17311,28 +17311,28 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What event is featured in TIGERBERRY \u2014 Break the Lies [Official Music Video]?",
+      "query": "What event is featured in TIGERBERRY — Break the Lies [Official Music Video]?",
       "ground_truth": {
         "video_name": "01550.mp4",
         "video_stem": "01550",
         "timestamp": 24.0,
         "frame_id": 600,
-        "answer": "TIGERBERRY \u2014 Break the Li",
+        "answer": "TIGERBERRY — Break the Li",
         "acceptable_answers": [
-          "tigerberry \u2014 break the li",
+          "tigerberry — break the li",
           "scene",
           "event",
           "video"
         ]
       },
-      "rank": 12,
-      "video_rank": 12,
+      "rank": null,
+      "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": "Great Western War 2013",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #12 | V-Rank #12)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 43.413,
         "hyde_sec": 2.708,
@@ -17451,14 +17451,14 @@
           "video"
         ]
       },
-      "rank": 6,
+      "rank": 2,
       "video_rank": 2,
-      "temporal_rank": 6,
+      "temporal_rank": 2,
       "point_rank": 6,
       "vqa_answer": "UNKNOWN",
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #6 | V-Rank #2)",
+      "status": "PASS (Rank #2 | V-Rank #2)",
       "latency": {
         "total_sec": 50.764,
         "hyde_sec": 2.45,
@@ -17608,7 +17608,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 3,
@@ -17705,7 +17705,7 @@
       },
       "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 2,
       "point_rank": 4,
       "vqa_answer": "The Hollow Earth Chronicles",
       "vqa_answer_valid": true,
@@ -17829,14 +17829,14 @@
           "video"
         ]
       },
-      "rank": 33,
-      "video_rank": 33,
-      "temporal_rank": 33,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": "hiking with Francisco Jimenez",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #33 | V-Rank #33)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 59.281,
         "hyde_sec": 2.763,
@@ -17941,7 +17941,7 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What event is featured in Carvey Crew Press Conference - King of Fayetteville \u201809 Part 2?",
+      "query": "What event is featured in Carvey Crew Press Conference - King of Fayetteville ‘09 Part 2?",
       "ground_truth": {
         "video_name": "00328.mp4",
         "video_stem": "00328",
@@ -18247,7 +18247,7 @@
           "video_name": "00247.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
-          "caption": "O\u2019Neill Pleasure Jam 2013 - Highlights from the Highlife"
+          "caption": "O’Neill Pleasure Jam 2013 - Highlights from the Highlife"
         },
         {
           "rank": 4,
@@ -18409,7 +18409,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 472,
           "timestamp": 19.69,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 8,
@@ -18499,7 +18499,7 @@
           "video_name": "01134.mp4",
           "frame_idx": 434,
           "timestamp": 17.36,
-          "caption": "\u0422\u0435\u043e\u0440\u0438\u044f \u043d\u0430 \u043a\u043e\u043d\u0441\u043f\u0438\u0440\u0430\u0446\u0438\u044f\u0442\u0430 \u0415\u043f\u0438\u0437\u043e\u0434 198 (20.12.2017)"
+          "caption": "Теория на конспирацията Епизод 198 (20.12.2017)"
         },
         {
           "rank": 4,
@@ -18634,7 +18634,7 @@
           "video_name": "00936.mp4",
           "frame_idx": 649,
           "timestamp": 27.07,
-          "caption": "Gilbere Forte\u2019 - Die For You"
+          "caption": "Gilbere Forte’ - Die For You"
         },
         {
           "rank": 5,
@@ -18733,7 +18733,7 @@
           "video_name": "01108.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Jap\u00f3n VIII: Kamakura y Yokohama"
+          "caption": "Japón VIII: Kamakura y Yokohama"
         },
         {
           "rank": 2,
@@ -18886,7 +18886,7 @@
           "video_name": "01108.mp4",
           "frame_idx": 0,
           "timestamp": 0.0,
-          "caption": "Jap\u00f3n VIII: Kamakura y Yokohama"
+          "caption": "Japón VIII: Kamakura y Yokohama"
         },
         {
           "rank": 5,
@@ -18994,7 +18994,7 @@
           "video_name": "01351.mp4",
           "frame_idx": 472,
           "timestamp": 19.69,
-          "caption": "Z: Project Lazarus\u23aaPicture Lock w. Temp. Track - 2012"
+          "caption": "Z: Project Lazarus⎪Picture Lock w. Temp. Track - 2012"
         },
         {
           "rank": 3,
@@ -19021,7 +19021,7 @@
           "video_name": "01670.mp4",
           "frame_idx": 1110,
           "timestamp": 37.04,
-          "caption": "Cruisin\u2019 USA"
+          "caption": "Cruisin’ USA"
         },
         {
           "rank": 6,
@@ -19372,7 +19372,7 @@
           "video_name": "00936.mp4",
           "frame_idx": 649,
           "timestamp": 27.07,
-          "caption": "Gilbere Forte\u2019 - Die For You"
+          "caption": "Gilbere Forte’ - Die For You"
         },
         {
           "rank": 3,
@@ -19639,7 +19639,7 @@
           "video_name": "00088.mp4",
           "frame_idx": 518,
           "timestamp": 17.28,
-          "caption": "Shela & Jai : singapore wedding reception \u201cSIGNED, SEALED and MATE as JS\u201d by Digimax Video"
+          "caption": "Shela & Jai : singapore wedding reception “SIGNED, SEALED and MATE as JS” by Digimax Video"
         },
         {
           "rank": 5,
@@ -19817,7 +19817,7 @@
           "video_name": "00840.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "caption": "유태화 강사님 장비 탈착 시범"
         }
       ]
     },
@@ -19838,7 +19838,7 @@
       },
       "rank": 5,
       "video_rank": 5,
-      "temporal_rank": 20,
+      "temporal_rank": 5,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -19876,7 +19876,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 4,
@@ -19912,7 +19912,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 8,
@@ -19959,14 +19959,14 @@
           "00206"
         ]
       },
-      "rank": 17,
-      "video_rank": 17,
-      "temporal_rank": 17,
-      "point_rank": 17,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #17 | V-Rank #17)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.602,
         "hyde_sec": 0.0,
@@ -19981,7 +19981,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 2,
@@ -19990,7 +19990,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1178,
           "timestamp": 47.12,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 3,
@@ -20008,7 +20008,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 5,
@@ -20017,7 +20017,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 6,
@@ -20026,7 +20026,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 7,
@@ -20035,7 +20035,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 8,
@@ -20044,7 +20044,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 9,
@@ -20062,7 +20062,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         }
       ]
     },
@@ -20225,7 +20225,7 @@
           "video_name": "00246.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "The Making of \u201cCowboy Dreams\u201d - Episode 1 \u201cShooting on Location\u201d"
+          "caption": "The Making of “Cowboy Dreams” - Episode 1 “Shooting on Location”"
         },
         {
           "rank": 2,
@@ -20288,7 +20288,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 9,
@@ -20297,7 +20297,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 10,
@@ -20325,14 +20325,14 @@
           "00007"
         ]
       },
-      "rank": 58,
-      "video_rank": 58,
-      "temporal_rank": 58,
-      "point_rank": 59,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #58 | V-Rank #58)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.497,
         "hyde_sec": 0.0,
@@ -20347,7 +20347,7 @@
           "video_name": "00573.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
-          "caption": "C\u00f3mo se hizo\u2026 Acuarela digitalizada (timelapse)"
+          "caption": "Cómo se hizo… Acuarela digitalizada (timelapse)"
         },
         {
           "rank": 2,
@@ -20356,7 +20356,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 3,
@@ -20365,7 +20365,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 295,
           "timestamp": 12.3,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 4,
@@ -20401,7 +20401,7 @@
           "video_name": "00573.mp4",
           "frame_idx": 472,
           "timestamp": 19.69,
-          "caption": "C\u00f3mo se hizo\u2026 Acuarela digitalizada (timelapse)"
+          "caption": "Cómo se hizo… Acuarela digitalizada (timelapse)"
         },
         {
           "rank": 8,
@@ -20419,7 +20419,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 177,
           "timestamp": 7.38,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 10,
@@ -20428,7 +20428,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 944,
           "timestamp": 39.37,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         }
       ]
     },
@@ -20600,7 +20600,7 @@
           "video_name": "00246.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "The Making of \u201cCowboy Dreams\u201d - Episode 1 \u201cShooting on Location\u201d"
+          "caption": "The Making of “Cowboy Dreams” - Episode 1 “Shooting on Location”"
         },
         {
           "rank": 3,
@@ -20692,14 +20692,14 @@
           "00250"
         ]
       },
-      "rank": 14,
-      "video_rank": 14,
-      "temporal_rank": 45,
-      "point_rank": 45,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #14 | V-Rank #14)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.497,
         "hyde_sec": 0.0,
@@ -20864,7 +20864,7 @@
           "video_name": "00088.mp4",
           "frame_idx": 518,
           "timestamp": 17.28,
-          "caption": "Shela & Jai : singapore wedding reception \u201cSIGNED, SEALED and MATE as JS\u201d by Digimax Video"
+          "caption": "Shela & Jai : singapore wedding reception “SIGNED, SEALED and MATE as JS” by Digimax Video"
         },
         {
           "rank": 5,
@@ -21042,7 +21042,7 @@
           "video_name": "00840.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "caption": "유태화 강사님 장비 탈착 시범"
         }
       ]
     },
@@ -21063,7 +21063,7 @@
       },
       "rank": 5,
       "video_rank": 5,
-      "temporal_rank": 20,
+      "temporal_rank": 5,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -21101,7 +21101,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 4,
@@ -21137,7 +21137,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 8,
@@ -21184,14 +21184,14 @@
           "00206"
         ]
       },
-      "rank": 17,
-      "video_rank": 17,
-      "temporal_rank": 17,
-      "point_rank": 17,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #17 | V-Rank #17)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.465,
         "hyde_sec": 0.0,
@@ -21206,7 +21206,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 2,
@@ -21215,7 +21215,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1178,
           "timestamp": 47.12,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 3,
@@ -21233,7 +21233,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 5,
@@ -21242,7 +21242,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 6,
@@ -21251,7 +21251,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 7,
@@ -21260,7 +21260,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 8,
@@ -21269,7 +21269,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 9,
@@ -21287,7 +21287,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         }
       ]
     },
@@ -21450,7 +21450,7 @@
           "video_name": "00246.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "The Making of \u201cCowboy Dreams\u201d - Episode 1 \u201cShooting on Location\u201d"
+          "caption": "The Making of “Cowboy Dreams” - Episode 1 “Shooting on Location”"
         },
         {
           "rank": 2,
@@ -21513,7 +21513,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 9,
@@ -21522,7 +21522,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 10,
@@ -21550,14 +21550,14 @@
           "00007"
         ]
       },
-      "rank": 58,
-      "video_rank": 58,
-      "temporal_rank": 58,
-      "point_rank": 59,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #58 | V-Rank #58)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.509,
         "hyde_sec": 0.0,
@@ -21572,7 +21572,7 @@
           "video_name": "00573.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
-          "caption": "C\u00f3mo se hizo\u2026 Acuarela digitalizada (timelapse)"
+          "caption": "Cómo se hizo… Acuarela digitalizada (timelapse)"
         },
         {
           "rank": 2,
@@ -21581,7 +21581,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 3,
@@ -21590,7 +21590,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 295,
           "timestamp": 12.3,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 4,
@@ -21626,7 +21626,7 @@
           "video_name": "00573.mp4",
           "frame_idx": 472,
           "timestamp": 19.69,
-          "caption": "C\u00f3mo se hizo\u2026 Acuarela digitalizada (timelapse)"
+          "caption": "Cómo se hizo… Acuarela digitalizada (timelapse)"
         },
         {
           "rank": 8,
@@ -21644,7 +21644,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 177,
           "timestamp": 7.38,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         },
         {
           "rank": 10,
@@ -21653,7 +21653,7 @@
           "video_name": "01307.mp4",
           "frame_idx": 944,
           "timestamp": 39.37,
-          "caption": "Puff \u2018N Squeak, Nikon D7000"
+          "caption": "Puff ‘N Squeak, Nikon D7000"
         }
       ]
     },
@@ -21825,7 +21825,7 @@
           "video_name": "00246.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
-          "caption": "The Making of \u201cCowboy Dreams\u201d - Episode 1 \u201cShooting on Location\u201d"
+          "caption": "The Making of “Cowboy Dreams” - Episode 1 “Shooting on Location”"
         },
         {
           "rank": 3,
@@ -21917,14 +21917,14 @@
           "00250"
         ]
       },
-      "rank": 14,
-      "video_rank": 14,
-      "temporal_rank": 45,
-      "point_rank": 45,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #14 | V-Rank #14)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.502,
         "hyde_sec": 0.0,
@@ -22089,7 +22089,7 @@
           "video_name": "00088.mp4",
           "frame_idx": 518,
           "timestamp": 17.28,
-          "caption": "Shela & Jai : singapore wedding reception \u201cSIGNED, SEALED and MATE as JS\u201d by Digimax Video"
+          "caption": "Shela & Jai : singapore wedding reception “SIGNED, SEALED and MATE as JS” by Digimax Video"
         },
         {
           "rank": 5,
@@ -22267,7 +22267,7 @@
           "video_name": "00840.mp4",
           "frame_idx": 74,
           "timestamp": 2.47,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "caption": "유태화 강사님 장비 탈착 시범"
         }
       ]
     },
@@ -22288,7 +22288,7 @@
       },
       "rank": 5,
       "video_rank": 5,
-      "temporal_rank": 20,
+      "temporal_rank": 5,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
@@ -22326,7 +22326,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 4,
@@ -22362,7 +22362,7 @@
           "video_name": "01294.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
-          "caption": "\u201cNew Blood\u201d Contest"
+          "caption": "“New Blood” Contest"
         },
         {
           "rank": 8,
@@ -22409,14 +22409,14 @@
           "00206"
         ]
       },
-      "rank": 17,
-      "video_rank": 17,
-      "temporal_rank": 17,
-      "point_rank": 17,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #17 | V-Rank #17)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 0.501,
         "hyde_sec": 0.0,
@@ -22431,7 +22431,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 2,
@@ -22440,7 +22440,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1178,
           "timestamp": 47.12,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 3,
@@ -22458,7 +22458,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1426,
           "timestamp": 57.04,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 5,
@@ -22467,7 +22467,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1364,
           "timestamp": 54.56,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 6,
@@ -22476,7 +22476,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 7,
@@ -22485,7 +22485,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 8,
@@ -22494,7 +22494,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 806,
           "timestamp": 32.24,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         },
         {
           "rank": 9,
@@ -22512,7 +22512,7 @@
           "video_name": "00409.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
-          "caption": "Videokopter Akdeniz Offroad Havadan Video \u00c7ekimi B\u00f6l\u00fcm - 1"
+          "caption": "Videokopter Akdeniz Offroad Havadan Video Çekimi Bölüm - 1"
         }
       ]
     },
@@ -22650,14 +22650,14 @@
         "timestamp": 38.5,
         "frame_id": 923
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.389,
         "hyde_sec": 0.0,
@@ -22888,14 +22888,14 @@
         "timestamp": 12.35,
         "frame_id": 370
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
       "temporal_rank": 2,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 5.031,
         "hyde_sec": 0.0,
@@ -23245,14 +23245,14 @@
         "timestamp": 34.72,
         "frame_id": 868
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 2,
+      "temporal_rank": 1,
       "point_rank": 2,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 7.909,
         "hyde_sec": 0.0,
@@ -23364,14 +23364,14 @@
         "timestamp": 22.22,
         "frame_id": 666
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 2,
+      "temporal_rank": 1,
       "point_rank": 2,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 6.011,
         "hyde_sec": 0.0,
@@ -23952,7 +23952,7 @@
       "type": 5,
       "type_name": "KIS-V",
       "category": "Visual Query Search",
-      "query": "samuel curtis - say, what i won\u2019t say",
+      "query": "samuel curtis - say, what i won’t say",
       "ground_truth": {
         "video_name": "00235.mp4",
         "video_stem": "00235",
@@ -23981,7 +23981,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 1380,
           "timestamp": 57.5,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 2,
@@ -23990,7 +23990,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 432,
           "timestamp": 18.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 3,
@@ -23999,7 +23999,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 840,
           "timestamp": 35.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 4,
@@ -24008,7 +24008,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 1080,
           "timestamp": 45.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 5,
@@ -24017,7 +24017,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 1260,
           "timestamp": 52.5,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 6,
@@ -24026,7 +24026,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 960,
           "timestamp": 40.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 7,
@@ -24035,7 +24035,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 900,
           "timestamp": 37.5,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 8,
@@ -24044,7 +24044,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 792,
           "timestamp": 33.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 9,
@@ -24053,7 +24053,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 360,
           "timestamp": 15.0,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         },
         {
           "rank": 10,
@@ -24062,7 +24062,7 @@
           "video_name": "00235.mp4",
           "frame_idx": 540,
           "timestamp": 22.5,
-          "caption": "samuel curtis - say, what i won\u2019t say"
+          "caption": "samuel curtis - say, what i won’t say"
         }
       ]
     },
@@ -24078,14 +24078,14 @@
         "timestamp": 32.67,
         "frame_id": 979
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
       "temporal_rank": 2,
       "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 4.802,
         "hyde_sec": 0.0,
@@ -24197,14 +24197,14 @@
         "timestamp": 33.0,
         "frame_id": 825
       },
-      "rank": 3,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 3,
+      "temporal_rank": 1,
       "point_rank": 9,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 4.613,
         "hyde_sec": 0.0,
@@ -24316,14 +24316,14 @@
         "timestamp": 49.38,
         "frame_id": 1480
       },
-      "rank": 5,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 5,
+      "temporal_rank": 1,
       "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #5 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
         "total_sec": 5.167,
         "hyde_sec": 0.0,

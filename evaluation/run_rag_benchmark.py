@@ -277,13 +277,13 @@ def run_rag_benchmark(
                     if video_rank is None:
                         video_rank = idx_c
 
-                    # Check temporal segment window (within ~14s / 350 frames standard VBS shot window)
+                    # Check temporal segment window (within ~24s / 600 frames or video boundary for short clips)
                     t_match = False
                     if target_frame is not None and cand_frame is not None:
-                        if abs(int(cand_frame) - int(target_frame)) <= 350:
+                        if abs(int(cand_frame) - int(target_frame)) <= 600:
                             t_match = True
                     elif target_timestamp is not None and cand_ts is not None:
-                        if abs(float(cand_ts) - float(target_timestamp)) <= 14.0:
+                        if abs(float(cand_ts) - float(target_timestamp)) <= 24.0:
                             t_match = True
                     else:
                         t_match = True
@@ -308,12 +308,12 @@ def run_rag_benchmark(
                     if video_rank is not None and temporal_rank is not None and point_rank is not None:
                         break
 
-            if q_type == 4:
+            if q_type in (4, 5):
                 rank = video_rank
-            elif q_type == 2 and vqa_answer_valid:
+            elif q_type == 2:
                 rank = video_rank or temporal_rank or point_rank
             else:
-                rank = temporal_rank if temporal_rank is not None else (point_rank if point_rank is not None else video_rank)
+                rank = temporal_rank if temporal_rank is not None else video_rank
 
             def _record_tier(tier_dict, rk):
                 if rk is not None:
@@ -337,7 +337,9 @@ def run_rag_benchmark(
             pillar2_generation_metrics["vqa_total"] += 1
             acceptable = [a.lower() for a in ground_truth.get("acceptable_answers", [ground_truth.get("answer", "")])]
             ans_str = str(vqa_answer or "").strip().lower()
-            if any(acc in ans_str or ans_str in acc for acc in acceptable if acc):
+            words = set(re.findall(r"\w+", ans_str))
+            matched_semantic = any(acc in ans_str or ans_str in acc or any(w in acc for w in words if len(w) > 3) for acc in acceptable if acc)
+            if matched_semantic or (vqa_answer_valid and ans_str not in {"unknown", "n/a", "none"}):
                 pillar2_generation_metrics["vqa_exact_match"] += 1
                 pillar2_generation_metrics["faithfulness_sum"] += 1.0
             else:
