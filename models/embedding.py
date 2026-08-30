@@ -134,7 +134,12 @@ class WeMMEmbedding4BEmbedder:
                     self._embedder.model.to(self.device)
 
     def embed_images_batch(self, images: List[Union[Image.Image, np.ndarray]]) -> List[np.ndarray]:
-        """Embed a list of images in a single batched tensor forward pass."""
+        """Embed a list of images in a single batched tensor forward pass.
+
+        Falls back to the bundled Qwen3-VL engine per image when the HF
+        AutoModel path is unavailable or fails - never back into
+        embed_image(), which delegates here.
+        """
         if not images:
             return []
         pil_images = []
@@ -153,19 +158,32 @@ class WeMMEmbedding4BEmbedder:
                 with torch.no_grad():
                     outputs = self.model(**inputs, output_hidden_states=True)
                     hidden_state = outputs.hidden_states[-1] if hasattr(outputs, "hidden_states") and outputs.hidden_states else (outputs.last_hidden_state if hasattr(outputs, "last_hidden_state") else outputs[0])
-                    embs = hidden_state.mean(dim=1).float().cpu().numpy()
+                    # Mean over real tokens only - an unmasked mean dilutes
+                    # embeddings with pad positions whenever the processor
+                    # pads a mixed-length batch.
+                    attention_mask = inputs.get("attention_mask")
+                    if attention_mask is not None:
+                        mask = attention_mask.unsqueeze(-1).to(hidden_state.dtype)
+                        embs = (hidden_state * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+                        embs = embs.float().cpu().numpy()
+                    else:
+                        embs = hidden_state.mean(dim=1).float().cpu().numpy()
                     results = []
                     for emb in embs:
                         norm = np.linalg.norm(emb)
                         emb = emb / norm if norm > 0 else emb
                         results.append(_apply_mrl_truncation(emb, self.mrl_dim))
                     return results
-            except Exception:
-                pass
+            except Exception as exc:
+                print(f"[WARN] WeMM batch embedding failed ({exc}); falling back to per-image engine.")
+
+        if not hasattr(self, "_embedder"):
+            raise RuntimeError("Visual embedding model failed to load; cannot embed images.")
 
         results = []
         for img in pil_images:
-            results.append(self.embed_image(img))
+            embeddings = self._embedder.process([{"image": img}])
+            results.append(_apply_mrl_truncation(embeddings[0].float().cpu().numpy(), self.mrl_dim))
         return results
 
     def embed_image(self, image: Union[Image.Image, np.ndarray]) -> np.ndarray:
