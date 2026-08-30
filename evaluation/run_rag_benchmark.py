@@ -308,7 +308,12 @@ def run_rag_benchmark(
                     if video_rank is not None and temporal_rank is not None and point_rank is not None:
                         break
 
-            rank = temporal_rank if temporal_rank is not None else (point_rank if point_rank is not None else video_rank)
+            if q_type == 4:
+                rank = video_rank
+            elif q_type == 2 and vqa_answer_valid:
+                rank = temporal_rank or video_rank or point_rank
+            else:
+                rank = temporal_rank if temporal_rank is not None else (point_rank if point_rank is not None else video_rank)
 
             def _record_tier(tier_dict, rk):
                 if rk is not None:

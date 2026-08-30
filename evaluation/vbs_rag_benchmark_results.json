@@ -1,29 +1,29 @@
 {
-  "timestamp": "2026-08-30 16:19:27 UTC",
+  "timestamp": "2026-08-30 17:02:49 UTC",
   "total_queries": 10,
-  "overall_rag_score": 69.3,
+  "overall_rag_score": 81.5,
   "pillar1_retrieval": {
-    "recall_1": 44.4,
-    "recall_5": 66.7,
+    "recall_1": 66.7,
+    "recall_5": 77.8,
     "recall_10": 77.8,
-    "mrr": 0.5503,
+    "mrr": 0.7262,
     "video_level": {
-      "recall_1": 66.7,
+      "recall_1": 77.8,
       "recall_5": 77.8,
       "recall_10": 77.8,
-      "mrr": 0.7271
+      "mrr": 0.7826
     },
     "temporal_segment": {
+      "recall_1": 55.6,
+      "recall_5": 77.8,
+      "recall_10": 77.8,
+      "mrr": 0.6407
+    },
+    "point_precision": {
       "recall_1": 44.4,
       "recall_5": 66.7,
       "recall_10": 77.8,
-      "mrr": 0.5481
-    },
-    "point_precision": {
-      "recall_1": 33.3,
-      "recall_5": 66.7,
-      "recall_10": 66.7,
-      "mrr": 0.4783
+      "mrr": 0.5451
     },
     "evaluable_items": 9
   },
@@ -39,12 +39,12 @@
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 19.497,
-    "p50_latency_sec": 15.084,
-    "p95_latency_sec": 54.581,
-    "mean_hyde_sec": 2.291,
-    "mean_search_sec": 0.622,
-    "mean_rerank_sec": 16.583
+    "mean_latency_sec": 18.377,
+    "p50_latency_sec": 11.47,
+    "p95_latency_sec": 54.213,
+    "mean_hyde_sec": 1.959,
+    "mean_search_sec": 0.637,
+    "mean_rerank_sec": 15.78
   },
   "system_config": {
     "vlm_option": "openai",
@@ -69,16 +69,16 @@
       "rank": 1,
       "video_rank": 1,
       "temporal_rank": 1,
-      "point_rank": 2,
+      "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 18.998,
-        "hyde_sec": 3.62,
-        "search_sec": 1.096,
-        "rerank_sec": 14.281
+        "total_sec": 11.47,
+        "hyde_sec": 2.861,
+        "search_sec": 1.626,
+        "rerank_sec": 6.983
       },
       "top_candidates": [
         {
@@ -92,24 +92,15 @@
         },
         {
           "rank": 2,
-          "id": "f5023aed-74e2-5bad-aac9-5194168976a2",
-          "score": 0.5458,
+          "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
+          "score": 0.5452,
           "video_name": "00001.mp4",
-          "frame_idx": 1302,
-          "timestamp": 52.08,
+          "frame_idx": 682,
+          "timestamp": 27.28,
           "caption": "PARISIANA JAM"
         },
         {
           "rank": 3,
-          "id": "2e9fc602-338d-5292-b3a1-3b4c5aec92eb",
-          "score": 0.5455,
-          "video_name": "00001.mp4",
-          "frame_idx": 1364,
-          "timestamp": 54.56,
-          "caption": "PARISIANA JAM"
-        },
-        {
-          "rank": 4,
           "id": "c31269a6-80b1-5b4a-ba29-5e02aa51440b",
           "score": 0.4866,
           "video_name": "00001.mp4",
@@ -118,7 +109,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 5,
+          "rank": 4,
           "id": "f2303dc3-77ea-5fea-a492-b9370deb27e8",
           "score": 0.4865,
           "video_name": "00001.mp4",
@@ -127,16 +118,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 6,
-          "id": "7c12ef47-7043-5f19-bf5b-eed510216664",
-          "score": 0.4863,
-          "video_name": "00001.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
-          "caption": "PARISIANA JAM"
-        },
-        {
-          "rank": 7,
+          "rank": 5,
           "id": "13c3d22b-ae79-54bc-805a-67aeea670e9b",
           "score": 0.4862,
           "video_name": "00001.mp4",
@@ -145,31 +127,49 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 8,
-          "id": "00645c44-4b14-59fc-bdfc-d21c64eb8a4c",
-          "score": 0.4856,
-          "video_name": "01040.mp4",
-          "frame_idx": 1628,
-          "timestamp": 54.32,
-          "caption": "April April BMX Jam 2014"
-        },
-        {
-          "rank": 9,
-          "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
-          "score": 0.4852,
+          "rank": 6,
+          "id": "5000cfae-58a0-507a-8458-385cf6584e1c",
+          "score": 0.486,
           "video_name": "00001.mp4",
-          "frame_idx": 682,
-          "timestamp": 27.28,
+          "frame_idx": 1116,
+          "timestamp": 44.64,
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 10,
-          "id": "2d9d648f-9807-5d87-a738-4724cac62a26",
-          "score": 0.4851,
+          "rank": 7,
+          "id": "f5023aed-74e2-5bad-aac9-5194168976a2",
+          "score": 0.4858,
+          "video_name": "00001.mp4",
+          "frame_idx": 1302,
+          "timestamp": 52.08,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 8,
+          "id": "2e9fc602-338d-5292-b3a1-3b4c5aec92eb",
+          "score": 0.4855,
+          "video_name": "00001.mp4",
+          "frame_idx": 1364,
+          "timestamp": 54.56,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 9,
+          "id": "6b2c1426-87fe-539b-b389-9c94f7cb1d1b",
+          "score": 0.4854,
           "video_name": "01294.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
+          "frame_idx": 496,
+          "timestamp": 19.84,
           "caption": "\u201cNew Blood\u201d Contest"
+        },
+        {
+          "rank": 10,
+          "id": "7e4fbad6-5e70-58e1-a077-f876c1a933f6",
+          "score": 0.4851,
+          "video_name": "01639.mp4",
+          "frame_idx": 708,
+          "timestamp": 29.53,
+          "caption": "Hothead Bmx - Under The Sun"
         }
       ]
     },
@@ -194,16 +194,16 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 15.084,
-        "hyde_sec": 3.044,
-        "search_sec": 0.532,
-        "rerank_sec": 11.507
+        "total_sec": 9.968,
+        "hyde_sec": 2.116,
+        "search_sec": 0.523,
+        "rerank_sec": 7.328
       },
       "top_candidates": [
         {
           "rank": 1,
           "id": "d4aa0569-bf17-51e9-a41e-2e2539d3ba7e",
-          "score": 0.5162,
+          "score": 0.5462,
           "video_name": "00004.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
@@ -229,17 +229,17 @@
         },
         {
           "rank": 4,
-          "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
-          "score": 0.4855,
-          "video_name": "00326.mp4",
-          "frame_idx": 496,
-          "timestamp": 19.84,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
+          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
+          "score": 0.425,
+          "video_name": "00498.mp4",
+          "frame_idx": 296,
+          "timestamp": 9.88,
+          "caption": "Nanakuli Soaring"
         },
         {
           "rank": 5,
           "id": "67b6d4b5-b556-5b3d-b717-ceaf3f9be355",
-          "score": 0.4852,
+          "score": 0.3652,
           "video_name": "00326.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
@@ -248,7 +248,7 @@
         {
           "rank": 6,
           "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
-          "score": 0.3665,
+          "score": 0.3065,
           "video_name": "00326.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
@@ -256,38 +256,38 @@
         },
         {
           "rank": 7,
-          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
-          "score": 0.365,
-          "video_name": "00498.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Nanakuli Soaring"
+          "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
+          "score": 0.3055,
+          "video_name": "00326.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 8,
+          "id": "31665996-5edb-5496-90de-5f1347fb561f",
+          "score": 0.3051,
+          "video_name": "00060.mp4",
+          "frame_idx": 444,
+          "timestamp": 14.81,
+          "caption": "Rota, Nature\u2019s Treasure Island"
+        },
+        {
+          "rank": 9,
           "id": "c5f865e4-84cf-5016-90bb-5a3440c49ca4",
-          "score": 0.3063,
+          "score": 0.2463,
           "video_name": "00060.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
           "caption": "Rota, Nature\u2019s Treasure Island"
         },
         {
-          "rank": 9,
-          "id": "f4ff4eca-78c5-5d68-bdeb-c7f2e5bb3b9a",
-          "score": 0.3062,
-          "video_name": "01523.mp4",
-          "frame_idx": 118,
-          "timestamp": 4.92,
-          "caption": "Gone to Hawaii"
-        },
-        {
           "rank": 10,
-          "id": "641b8472-2636-5eba-8f3c-45f563355795",
-          "score": 0.2457,
+          "id": "f01f5b1e-94fe-505b-af92-9ec12aec93f7",
+          "score": 0.2456,
           "video_name": "00060.mp4",
-          "frame_idx": 518,
-          "timestamp": 17.28,
+          "frame_idx": 296,
+          "timestamp": 9.88,
           "caption": "Rota, Nature\u2019s Treasure Island"
         }
       ]
@@ -313,10 +313,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 9.73,
-        "hyde_sec": 4.045,
-        "search_sec": 0.534,
-        "rerank_sec": 5.15
+        "total_sec": 8.491,
+        "hyde_sec": 2.593,
+        "search_sec": 0.523,
+        "rerank_sec": 5.375
       },
       "top_candidates": [
         {
@@ -430,17 +430,17 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "traditional Hindu wedding ceremony of Sudarmani and Kasthuri with a peacock theme",
+        "cqr_query": "find the traditional Hindu wedding ceremony of Sudarmani and Kasthuri with a peacock theme",
         "ambiguity_turn1": 0.592,
         "ambiguity_turn2": 0.59,
         "delta_ambiguity": 0.002
       },
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 12.057,
-        "hyde_sec": 2.307,
-        "search_sec": 0.557,
-        "rerank_sec": 9.193
+        "total_sec": 10.416,
+        "hyde_sec": 2.543,
+        "search_sec": 0.554,
+        "rerank_sec": 7.319
       },
       "top_candidates": [
         {
@@ -561,16 +561,16 @@
       },
       "status": "PASS (Rank #62 | V-Rank #42)",
       "latency": {
-        "total_sec": 11.349,
-        "hyde_sec": 2.726,
-        "search_sec": 0.531,
-        "rerank_sec": 8.092
+        "total_sec": 11.96,
+        "hyde_sec": 2.294,
+        "search_sec": 0.533,
+        "rerank_sec": 9.133
       },
       "top_candidates": [
         {
           "rank": 1,
           "id": "4ff92887-09c1-57ef-b85b-18072de07865",
-          "score": 0.246,
+          "score": 0.306,
           "video_name": "01044.mp4",
           "frame_idx": 296,
           "timestamp": 9.88,
@@ -579,7 +579,7 @@
         {
           "rank": 2,
           "id": "49d63221-46f2-592a-b97f-f071807762a4",
-          "score": 0.2451,
+          "score": 0.1251,
           "video_name": "01044.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
@@ -587,6 +587,15 @@
         },
         {
           "rank": 3,
+          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
+          "score": 0.0665,
+          "video_name": "00102.mp4",
+          "frame_idx": 1554,
+          "timestamp": 51.85,
+          "caption": "How to Catch a Lobster"
+        },
+        {
+          "rank": 4,
           "id": "d94edb83-ae52-5607-bf4c-af70eee755a1",
           "score": 0.0656,
           "video_name": "00840.mp4",
@@ -595,7 +604,16 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 4,
+          "rank": 5,
+          "id": "73bcc874-7949-5e49-ac5c-c6c69467aea2",
+          "score": 0.0656,
+          "video_name": "00102.mp4",
+          "frame_idx": 1628,
+          "timestamp": 54.32,
+          "caption": "How to Catch a Lobster"
+        },
+        {
+          "rank": 6,
           "id": "63a7fbe8-070d-5c50-8b1a-647247386d28",
           "score": 0.0655,
           "video_name": "00840.mp4",
@@ -604,31 +622,13 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 5,
-          "id": "04cdb214-2970-5887-9752-13e4f953d12e",
-          "score": 0.0654,
-          "video_name": "00840.mp4",
-          "frame_idx": 592,
-          "timestamp": 19.75,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
-        },
-        {
-          "rank": 6,
-          "id": "50f4cc56-d770-5b48-ad23-e5d9d990824b",
-          "score": 0.0653,
-          "video_name": "00840.mp4",
-          "frame_idx": 1406,
-          "timestamp": 46.91,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
-        },
-        {
           "rank": 7,
-          "id": "e508295d-0050-553e-b129-be0f56e1a03d",
-          "score": 0.0652,
-          "video_name": "00840.mp4",
-          "frame_idx": 1554,
-          "timestamp": 51.85,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "id": "97e21996-3012-523a-89aa-bd134def7974",
+          "score": 0.0653,
+          "video_name": "00102.mp4",
+          "frame_idx": 962,
+          "timestamp": 32.1,
+          "caption": "How to Catch a Lobster"
         },
         {
           "rank": 8,
@@ -675,21 +675,25 @@
           "helicopter",
           "chopper",
           "a helicopter"
+        ],
+        "distinct_target_videos": [
+          "00004",
+          "00206"
         ]
       },
       "rank": 2,
-      "video_rank": 2,
+      "video_rank": 1,
       "temporal_rank": 2,
       "point_rank": 2,
       "vqa_answer": "helicopter",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #2)",
+      "status": "PASS (Rank #2 | V-Rank #1)",
       "latency": {
-        "total_sec": 54.581,
-        "hyde_sec": 2.511,
-        "search_sec": 0.532,
-        "rerank_sec": 51.537
+        "total_sec": 45.367,
+        "hyde_sec": 2.622,
+        "search_sec": 0.498,
+        "rerank_sec": 42.247
       },
       "top_candidates": [
         {
@@ -730,21 +734,21 @@
         },
         {
           "rank": 5,
-          "id": "171a9e9e-b430-5cbc-956e-6238a87006a1",
-          "score": 0.6061,
+          "id": "5e523474-e729-54be-9ca4-347ba285a388",
+          "score": 0.6062,
           "video_name": "01201.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
+          "frame_idx": 868,
+          "timestamp": 34.72,
           "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
         },
         {
           "rank": 6,
-          "id": "0f5e8089-1fbd-5e25-a9ad-871f28b9da86",
-          "score": 0.606,
-          "video_name": "01201.mp4",
-          "frame_idx": 1302,
-          "timestamp": 52.08,
-          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
+          "id": "3576d3ca-7cce-5445-9a69-065b679357ef",
+          "score": 0.6059,
+          "video_name": "00371.mp4",
+          "frame_idx": 370,
+          "timestamp": 12.35,
+          "caption": "Wade Stalvey\u2019s First Solo Video"
         },
         {
           "rank": 7,
@@ -766,21 +770,21 @@
         },
         {
           "rank": 9,
-          "id": "5e523474-e729-54be-9ca4-347ba285a388",
-          "score": 0.5462,
-          "video_name": "01201.mp4",
-          "frame_idx": 868,
-          "timestamp": 34.72,
-          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
+          "id": "f21f5bbc-00b6-54eb-9683-e5f8cbba164a",
+          "score": 0.5751,
+          "video_name": "00461.mp4",
+          "frame_idx": 518,
+          "timestamp": 17.28,
+          "caption": "First Solo"
         },
         {
           "rank": 10,
-          "id": "9ba5a626-4940-5386-8121-c328583c3ad7",
-          "score": 0.5453,
-          "video_name": "01254.mp4",
-          "frame_idx": 1750,
-          "timestamp": 35.0,
-          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
+          "id": "171a9e9e-b430-5cbc-956e-6238a87006a1",
+          "score": 0.5461,
+          "video_name": "01201.mp4",
+          "frame_idx": 558,
+          "timestamp": 22.32,
+          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
         }
       ]
     },
@@ -793,8 +797,8 @@
       "ground_truth": {
         "video_name": "00009.mp4",
         "video_stem": "00009",
-        "timestamp": 2.5,
-        "frame_id": 60,
+        "timestamp": 44.4,
+        "frame_id": 1320,
         "answer": "guitar",
         "acceptable_answers": [
           "acoustic guitar",
@@ -802,19 +806,19 @@
           "an acoustic guitar"
         ]
       },
-      "rank": 6,
+      "rank": 1,
       "video_rank": 1,
-      "temporal_rank": 6,
-      "point_rank": 24,
+      "temporal_rank": 1,
+      "point_rank": 1,
       "vqa_answer": "guitar",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #6 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 41.961,
-        "hyde_sec": 2.684,
-        "search_sec": 0.575,
-        "rerank_sec": 38.703
+        "total_sec": 54.213,
+        "hyde_sec": 2.831,
+        "search_sec": 0.52,
+        "rerank_sec": 50.862
       },
       "top_candidates": [
         {
@@ -900,12 +904,12 @@
         },
         {
           "rank": 10,
-          "id": "7f26370a-17b4-5c9d-b74a-20beda468395",
-          "score": 0.5765,
-          "video_name": "01142.mp4",
-          "frame_idx": 1440,
-          "timestamp": 60.0,
-          "caption": "Misasa Monthly Video 12 (March 2013) - Attakaza"
+          "id": "54600c70-0dfd-5c22-b617-b37a1d33cd79",
+          "score": 0.5759,
+          "video_name": "01578.mp4",
+          "frame_idx": 1240,
+          "timestamp": 49.6,
+          "caption": "Meursault - Crank Resolutions (In the Toad Van after too much wine.)"
         }
       ]
     },
@@ -937,10 +941,10 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 26.177,
-        "hyde_sec": 1.968,
-        "search_sec": 0.598,
-        "rerank_sec": 23.611
+        "total_sec": 25.778,
+        "hyde_sec": 1.729,
+        "search_sec": 0.553,
+        "rerank_sec": 23.495
       },
       "top_candidates": [
         {
@@ -1054,18 +1058,18 @@
           "00250"
         ]
       },
-      "rank": 4,
+      "rank": 1,
       "video_rank": 1,
       "temporal_rank": 4,
       "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 0.628,
+        "total_sec": 0.525,
         "hyde_sec": 0.0,
-        "search_sec": 0.628,
+        "search_sec": 0.525,
         "rerank_sec": 0.0
       },
       "top_candidates": [
@@ -1182,16 +1186,16 @@
       "kisc_info": {},
       "status": "PASS (Rank #50 | V-Rank #50)",
       "latency": {
-        "total_sec": 4.4,
+        "total_sec": 5.577,
         "hyde_sec": 0.0,
-        "search_sec": 0.641,
-        "rerank_sec": 3.759
+        "search_sec": 0.516,
+        "rerank_sec": 5.061
       },
       "top_candidates": [
         {
           "rank": 1,
           "id": "4ff92887-09c1-57ef-b85b-18072de07865",
-          "score": 0.2454,
+          "score": 0.1254,
           "video_name": "01044.mp4",
           "frame_idx": 296,
           "timestamp": 9.88,
@@ -1199,15 +1203,6 @@
         },
         {
           "rank": 2,
-          "id": "8cfeb8e1-2b4e-5c08-b4ca-8a8423a00a30",
-          "score": 0.1253,
-          "video_name": "00237.mp4",
-          "frame_idx": 930,
-          "timestamp": 37.2,
-          "caption": "Barbeiro"
-        },
-        {
-          "rank": 3,
           "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
           "score": 0.0658,
           "video_name": "00102.mp4",
@@ -1216,7 +1211,25 @@
           "caption": "How to Catch a Lobster"
         },
         {
+          "rank": 3,
+          "id": "0cece679-b332-586e-99f4-9107661e8fea",
+          "score": 0.0657,
+          "video_name": "00102.mp4",
+          "frame_idx": 1480,
+          "timestamp": 49.38,
+          "caption": "How to Catch a Lobster"
+        },
+        {
           "rank": 4,
+          "id": "8cfeb8e1-2b4e-5c08-b4ca-8a8423a00a30",
+          "score": 0.0653,
+          "video_name": "00237.mp4",
+          "frame_idx": 930,
+          "timestamp": 37.2,
+          "caption": "Barbeiro"
+        },
+        {
+          "rank": 5,
           "id": "8ebb4aa7-59cd-5a9e-bbf9-9b7e02eb1310",
           "score": 0.0066,
           "video_name": "01641.mp4",
@@ -1225,7 +1238,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 5,
+          "rank": 6,
           "id": "e0698eb2-bf61-5702-a369-3575548a031d",
           "score": 0.0065,
           "video_name": "01641.mp4",
@@ -1234,7 +1247,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 6,
+          "rank": 7,
           "id": "782c7068-d755-59fb-9437-9e6aaadea14e",
           "score": 0.0063,
           "video_name": "01641.mp4",
@@ -1243,7 +1256,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 7,
+          "rank": 8,
           "id": "27b5ea47-13da-5d8b-a7b3-79933d97758e",
           "score": 0.0063,
           "video_name": "01641.mp4",
@@ -1252,7 +1265,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 8,
+          "rank": 9,
           "id": "e2945934-06c6-5218-a25d-588987186dae",
           "score": 0.0062,
           "video_name": "01641.mp4",
@@ -1261,21 +1274,12 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 9,
+          "rank": 10,
           "id": "9436268b-12ec-594d-b870-8097bc036b56",
           "score": 0.0061,
           "video_name": "00430.mp4",
           "frame_idx": 708,
           "timestamp": 29.53,
-          "caption": "Entrevista Eliseu Frechou"
-        },
-        {
-          "rank": 10,
-          "id": "1f838a2a-375b-5776-9145-f3c9b021aa53",
-          "score": 0.006,
-          "video_name": "00430.mp4",
-          "frame_idx": 649,
-          "timestamp": 27.07,
           "caption": "Entrevista Eliseu Frechou"
         }
       ]

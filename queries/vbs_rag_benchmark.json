@@ -90,7 +90,8 @@
       "timestamp": 59.26,
       "frame_id": 1776,
       "answer": "Helicopter",
-      "acceptable_answers": ["helicopter", "chopper", "a helicopter"]
+      "acceptable_answers": ["helicopter", "chopper", "a helicopter"],
+      "distinct_target_videos": ["00004", "00206"]
     }
   },
   {
@@ -102,8 +103,8 @@
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 2.5,
-      "frame_id": 60,
+      "timestamp": 44.4,
+      "frame_id": 1320,
       "answer": "guitar",
       "acceptable_answers": ["acoustic guitar", "guitar", "an acoustic guitar"]
     }
