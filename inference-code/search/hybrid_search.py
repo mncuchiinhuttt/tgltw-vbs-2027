@@ -440,11 +440,14 @@ class HybridSearcher:
         dense branch only - sparse_search is a payload text filter, not a
         vector search, so it has no exact/HNSW setting to override.
         """
-        dense_hits = self.dense_search(query, top_k, exact=exact, hnsw_ef=hnsw_ef)
+        # Default to HNSW ef=256 for enhanced retrieval recall across 66k+ vectors
+        effective_ef = hnsw_ef if hnsw_ef is not None else 256
+        dense_hits = self.dense_search(query, top_k, exact=exact, hnsw_ef=effective_ef)
         if len(query.split()) <= 20:
             sparse_hits = self.sparse_search(query, top_k)
-            return self.merge_rrf(dense_hits, sparse_hits)
-        return dense_hits
+            fused = self.merge_rrf(dense_hits, sparse_hits)
+            return self.temporal_coherence_boost(fused, window=15, boost_weight=0.4)
+        return self.temporal_coherence_boost(dense_hits, window=15, boost_weight=0.4)
     def get_all_points_for_video(self, video_name: str, limit: int = 10000) -> list:
         """
         Fetches every indexed visual point for a single video, not just
