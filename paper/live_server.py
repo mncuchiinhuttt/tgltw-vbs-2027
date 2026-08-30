@@ -496,11 +496,20 @@ class LatexLiveHandler(SimpleHTTPRequestHandler):
         self.send_error(404, "Endpoint not found")
 
     def do_PATCH(self):
+        self.handle_comment_update()
+
+    def do_PUT(self):
+        self.handle_comment_update()
+
+    def handle_comment_update(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/comments":
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
-            data = json.loads(body)
+            try:
+                data = json.loads(body)
+            except Exception:
+                data = {}
             cid = data.get("id")
             resolved = data.get("resolved")
 
@@ -520,7 +529,6 @@ class LatexLiveHandler(SimpleHTTPRequestHandler):
             return
 
         self.send_error(404, "Endpoint not found")
-
     def do_DELETE(self):
         parsed = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(parsed.query)

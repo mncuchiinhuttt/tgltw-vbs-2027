@@ -683,7 +683,7 @@
 
             try {
                 await fetch("/api/comments", {
-                    method: "PUT",
+                    method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: id, resolved: !comment.resolved })
                 });
