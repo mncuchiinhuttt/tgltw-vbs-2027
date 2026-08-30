@@ -1,6 +1,13 @@
+import os
+import sys
 import unittest
 import numpy as np
 from unittest.mock import MagicMock
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(REPO_ROOT, "inference-code"))
+sys.path.append(REPO_ROOT)
+
 from search.reranker import Reranker
 
 
