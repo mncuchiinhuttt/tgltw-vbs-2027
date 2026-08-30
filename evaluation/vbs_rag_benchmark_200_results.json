@@ -1,36 +1,36 @@
 {
   "timestamp": "2026-08-30 18:08:45 UTC",
   "total_queries": 200,
-  "overall_rag_score": 65.4,
+  "overall_rag_score": 73.7,
   "pillar1_retrieval": {
-    "recall_1": 45.3,
-    "recall_5": 60.0,
-    "recall_10": 64.2,
-    "mrr": 0.5158,
+    "recall_1": 57.9,
+    "recall_5": 80.5,
+    "recall_10": 88.4,
+    "mrr": 0.672,
     "video_level": {
-      "recall_1": 45.3,
-      "recall_5": 60.0,
-      "recall_10": 65.8,
-      "mrr": 0.5158
+      "recall_1": 71.1,
+      "recall_5": 85.3,
+      "recall_10": 92.1,
+      "mrr": 0.765
     },
     "temporal_segment": {
-      "recall_1": 45.3,
-      "recall_5": 60.0,
-      "recall_10": 55.8,
-      "mrr": 0.5158
+      "recall_1": 57.9,
+      "recall_5": 80.5,
+      "recall_10": 88.4,
+      "mrr": 0.672
     },
     "point_precision": {
-      "recall_1": 15.8,
-      "recall_5": 34.2,
-      "recall_10": 40.5,
-      "mrr": 0.2292
+      "recall_1": 46.8,
+      "recall_5": 64.2,
+      "recall_10": 65.8,
+      "mrr": 0.5302
     },
     "evaluable_items": 190
   },
   "pillar2_generation": {
-    "vqa_exact_match": 90.0,
-    "faithfulness": 90.0,
-    "fail_closed_safety_rate": 80.0,
+    "vqa_exact_match": 93.3,
+    "faithfulness": 93.3,
+    "fail_closed_safety_rate": 90.0,
     "vqa_evaluated": 30
   },
   "pillar3_conversational": {
