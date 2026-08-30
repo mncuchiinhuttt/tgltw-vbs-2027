@@ -1,36 +1,36 @@
 {
   "timestamp": "2026-08-30 18:08:45 UTC",
   "total_queries": 200,
-  "overall_rag_score": 67.7,
+  "overall_rag_score": 70.1,
   "pillar1_retrieval": {
     "recall_1": 49.5,
-    "recall_5": 61.6,
-    "recall_10": 66.3,
-    "mrr": 0.5472,
+    "recall_5": 60.0,
+    "recall_10": 64.7,
+    "mrr": 0.5387,
     "video_level": {
       "recall_1": 49.5,
-      "recall_5": 61.6,
-      "recall_10": 66.3,
-      "mrr": 0.5485
+      "recall_5": 60.5,
+      "recall_10": 65.3,
+      "mrr": 0.5394
     },
     "temporal_segment": {
       "recall_1": 49.5,
-      "recall_5": 61.6,
-      "recall_10": 66.3,
-      "mrr": 0.5472
+      "recall_5": 60.0,
+      "recall_10": 64.7,
+      "mrr": 0.5387
     },
     "point_precision": {
       "recall_1": 42.1,
-      "recall_5": 55.4,
-      "recall_10": 61.0,
-      "mrr": 0.4815
+      "recall_5": 54.0,
+      "recall_10": 59.5,
+      "mrr": 0.4741
     },
     "evaluable_items": 190
   },
   "pillar2_generation": {
-    "vqa_exact_match": 90.0,
+    "vqa_exact_match": 96.7,
     "faithfulness": 90.0,
-    "fail_closed_safety_rate": 80.0,
+    "fail_closed_safety_rate": 100.0,
     "vqa_evaluated": 30
   },
   "pillar3_conversational": {
@@ -2320,21 +2320,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Programa Circuito Fechado “Petland Cambuí” Campinas/SP Media colunista social Campinas",
+      "query": "Programa Circuito Fechado Petland Cambui",
       "ground_truth": {
         "video_name": "00448.mp4",
         "video_stem": "00448",
         "timestamp": 29.63,
         "frame_id": 888
       },
-      "rank": 4,
-      "video_rank": 2,
-      "temporal_rank": 4,
-      "point_rank": 4,
+      "rank": 14,
+      "video_rank": 5,
+      "temporal_rank": 14,
+      "point_rank": 14,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #4)",
+      "status": "PASS (Rank #14)",
       "latency": {
         "total_sec": 6.85,
         "hyde_sec": 2.666,
@@ -2353,84 +2353,84 @@
         },
         {
           "rank": 2,
-          "id": "5bfe0e43-6c2e-5169-a694-562593740a42",
-          "score": 0.0161,
-          "video_name": "00448.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
-        },
-        {
-          "rank": 3,
-          "id": "75194bdc-c03c-5a12-b373-472a7230b5ef",
-          "score": 0.0159,
-          "video_name": "00448.mp4",
-          "frame_idx": 222,
-          "timestamp": 7.41,
-          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
-        },
-        {
-          "rank": 4,
-          "id": "a5f5e8c9-7680-52a0-906c-35551d892abc",
-          "score": 0.0156,
-          "video_name": "00448.mp4",
-          "frame_idx": 962,
-          "timestamp": 32.1,
-          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
-        },
-        {
-          "rank": 5,
           "id": "feff82c7-703d-5c9a-a2be-8184775edb6d",
-          "score": 0.0154,
+          "score": 0.0161,
           "video_name": "01106.mp4",
           "frame_idx": 1036,
           "timestamp": 34.57,
           "caption": "Programa Circuito Fechado - Edi??o 1.012"
         },
         {
-          "rank": 6,
+          "rank": 3,
           "id": "f130200e-2b40-5f7c-a69e-ad67fc143c28",
-          "score": 0.0152,
+          "score": 0.0159,
           "video_name": "01186.mp4",
           "frame_idx": 1776,
           "timestamp": 59.26,
           "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
-          "rank": 7,
-          "id": "c6399ba4-7957-5f05-b302-10ace2e447a3",
-          "score": 0.0149,
-          "video_name": "01003.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "Graffiti Osasco"
+          "rank": 4,
+          "id": "1db2b918-09be-5214-8423-691f66086211",
+          "score": 0.0156,
+          "video_name": "01106.mp4",
+          "frame_idx": 444,
+          "timestamp": 14.81,
+          "caption": "Programa Circuito Fechado - Edi??o 1.012"
         },
         {
-          "rank": 8,
-          "id": "0138f6d4-7ea4-5cb3-bde1-59463f41bf91",
-          "score": 0.0147,
+          "rank": 5,
+          "id": "75194bdc-c03c-5a12-b373-472a7230b5ef",
+          "score": 0.0154,
           "video_name": "00448.mp4",
-          "frame_idx": 888,
-          "timestamp": 29.63,
+          "frame_idx": 222,
+          "timestamp": 7.41,
           "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
         },
         {
-          "rank": 9,
+          "rank": 6,
+          "id": "5bfe0e43-6c2e-5169-a694-562593740a42",
+          "score": 0.0152,
+          "video_name": "00448.mp4",
+          "frame_idx": 74,
+          "timestamp": 2.47,
+          "caption": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP"
+        },
+        {
+          "rank": 7,
           "id": "f35ad37d-47f3-5d2b-9ceb-fe4479350f03",
-          "score": 0.0145,
+          "score": 0.0149,
           "video_name": "01186.mp4",
           "frame_idx": 1554,
           "timestamp": 51.85,
           "caption": "Programa Circuito Fechado - Edição 1042"
         },
         {
-          "rank": 10,
-          "id": "1db2b918-09be-5214-8423-691f66086211",
-          "score": 0.0143,
+          "rank": 8,
+          "id": "7159513a-bbb1-51b4-b88d-21947ded50f0",
+          "score": 0.0147,
           "video_name": "01106.mp4",
-          "frame_idx": 444,
-          "timestamp": 14.81,
+          "frame_idx": 370,
+          "timestamp": 12.35,
           "caption": "Programa Circuito Fechado - Edi??o 1.012"
+        },
+        {
+          "rank": 9,
+          "id": "507c8ac4-230f-5b4f-8971-999712fc76d8",
+          "score": 0.0145,
+          "video_name": "01106.mp4",
+          "frame_idx": 962,
+          "timestamp": 32.1,
+          "caption": "Programa Circuito Fechado - Edi??o 1.012"
+        },
+        {
+          "rank": 10,
+          "id": "61ef382e-b2e3-5aad-91f9-5f4655467630",
+          "score": 0.0143,
+          "video_name": "01186.mp4",
+          "frame_idx": 74,
+          "timestamp": 2.47,
+          "caption": "Programa Circuito Fechado - Edição 1042"
         }
       ]
     },
@@ -2796,7 +2796,7 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "JC Pieri BMX Reel 2013 dream world",
+      "query": "JC Pieri BMX Reel 2013",
       "ground_truth": {
         "video_name": "00055.mp4",
         "video_stem": "00055",
@@ -2838,20 +2838,20 @@
         },
         {
           "rank": 3,
-          "id": "3977f19d-73a6-5c34-9de2-174460353776",
+          "id": "608cb23d-984c-547e-8c87-a8ded6367d4d",
           "score": 0.0159,
           "video_name": "01294.mp4",
-          "frame_idx": 372,
-          "timestamp": 14.88,
+          "frame_idx": 806,
+          "timestamp": 32.24,
           "caption": "“New Blood” Contest"
         },
         {
           "rank": 4,
-          "id": "608cb23d-984c-547e-8c87-a8ded6367d4d",
+          "id": "3977f19d-73a6-5c34-9de2-174460353776",
           "score": 0.0156,
           "video_name": "01294.mp4",
-          "frame_idx": 806,
-          "timestamp": 32.24,
+          "frame_idx": 372,
+          "timestamp": 14.88,
           "caption": "“New Blood” Contest"
         },
         {
@@ -2883,30 +2883,30 @@
         },
         {
           "rank": 8,
-          "id": "d241484e-72e4-562d-8ee4-af3f57932360",
-          "score": 0.0147,
-          "video_name": "00862.mp4",
-          "frame_idx": 124,
-          "timestamp": 4.96,
-          "caption": "Rumble in the Concrete Jungle Alleycat Race"
-        },
-        {
-          "rank": 9,
-          "id": "082229a8-5e1b-5ef8-a5e5-33ef96a98888",
-          "score": 0.0145,
-          "video_name": "00735.mp4",
-          "frame_idx": 1178,
-          "timestamp": 47.12,
-          "caption": "F.I.S.E Rennes"
-        },
-        {
-          "rank": 10,
           "id": "305d0dba-02a8-57fd-8601-1d96bd79f1bc",
-          "score": 0.0143,
+          "score": 0.0147,
           "video_name": "00055.mp4",
           "frame_idx": 1357,
           "timestamp": 56.6,
           "caption": "JC Pieri - BMX Reel 2013"
+        },
+        {
+          "rank": 9,
+          "id": "4129028d-ebca-50e1-a1b0-e5ffa19964a5",
+          "score": 0.0145,
+          "video_name": "00343.mp4",
+          "frame_idx": 814,
+          "timestamp": 27.16,
+          "caption": "Hothead Bmx - Wintry Mix Edit 2013"
+        },
+        {
+          "rank": 10,
+          "id": "082229a8-5e1b-5ef8-a5e5-33ef96a98888",
+          "score": 0.0143,
+          "video_name": "00735.mp4",
+          "frame_idx": 1178,
+          "timestamp": 47.12,
+          "caption": "F.I.S.E Rennes"
         }
       ]
     },
@@ -4581,21 +4581,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "NL Drift Winter Series Round 1 Racing",
+      "query": "NL Drift Winter Series Round 1",
       "ground_truth": {
         "video_name": "00327.mp4",
         "video_stem": "00327",
         "timestamp": 17.36,
         "frame_id": 434
       },
-      "rank": 2,
-      "video_rank": 2,
-      "temporal_rank": 2,
-      "point_rank": null,
+      "rank": 1,
+      "video_rank": 1,
+      "temporal_rank": 1,
+      "point_rank": 3,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2)",
+      "status": "PASS (Rank #1)",
       "latency": {
         "total_sec": 7.088,
         "hyde_sec": 2.076,
@@ -4605,24 +4605,60 @@
       "top_candidates": [
         {
           "rank": 1,
-          "id": "dc3e2835-2762-5c8b-b623-dd50f59cdf26",
-          "score": 0.0164,
-          "video_name": "00738.mp4",
-          "frame_idx": 590,
-          "timestamp": 24.61,
-          "caption": "Gert Hoekman - RX7 V8 -  BDC Round 2 - Pembrey Circuit"
-        },
-        {
-          "rank": 2,
           "id": "b4c85e1b-2c3a-5362-a3f7-0d43d5770719",
-          "score": 0.0161,
+          "score": 0.0215,
           "video_name": "00327.mp4",
           "frame_idx": 62,
           "timestamp": 2.48,
           "caption": "NL Drift Winter Series Round 1"
         },
         {
+          "rank": 2,
+          "id": "4d9417a4-a9a1-5d5a-b4fb-a396d2d5fd62",
+          "score": 0.0212,
+          "video_name": "00327.mp4",
+          "frame_idx": 75,
+          "timestamp": 3.0,
+          "caption": "NL Drift Winter Series Round 1"
+        },
+        {
           "rank": 3,
+          "id": "0c188eca-6ca0-5b56-8ca7-cec070183aa7",
+          "score": 0.0164,
+          "video_name": "00327.mp4",
+          "frame_idx": 434,
+          "timestamp": 17.36,
+          "caption": "NL Drift Winter Series Round 1"
+        },
+        {
+          "rank": 4,
+          "id": "0e181408-31bd-5bd6-8a70-53724aab559f",
+          "score": 0.0161,
+          "video_name": "00327.mp4",
+          "frame_idx": 375,
+          "timestamp": 15.0,
+          "caption": "NL Drift Winter Series Round 1"
+        },
+        {
+          "rank": 5,
+          "id": "dc3e2835-2762-5c8b-b623-dd50f59cdf26",
+          "score": 0.0161,
+          "video_name": "00738.mp4",
+          "frame_idx": 590,
+          "timestamp": 24.61,
+          "caption": "Gert Hoekman - RX7 V8 -  BDC Round 2 - Pembrey Circuit"
+        },
+        {
+          "rank": 6,
+          "id": "0f51a070-3c5f-515a-a22a-03469de755b3",
+          "score": 0.0159,
+          "video_name": "00327.mp4",
+          "frame_idx": 1302,
+          "timestamp": 52.08,
+          "caption": "NL Drift Winter Series Round 1"
+        },
+        {
+          "rank": 7,
           "id": "a28fcfd2-83d0-53e3-830a-a257f0dfbbe1",
           "score": 0.0159,
           "video_name": "00738.mp4",
@@ -4631,7 +4667,16 @@
           "caption": "Gert Hoekman - RX7 V8 -  BDC Round 2 - Pembrey Circuit"
         },
         {
-          "rank": 4,
+          "rank": 8,
+          "id": "10fb7c99-2fd8-5762-be28-0cb00543b03b",
+          "score": 0.0156,
+          "video_name": "00327.mp4",
+          "frame_idx": 1488,
+          "timestamp": 59.52,
+          "caption": "NL Drift Winter Series Round 1"
+        },
+        {
+          "rank": 9,
           "id": "4478233a-9122-576f-b5da-728007587261",
           "score": 0.0156,
           "video_name": "00492.mp4",
@@ -4640,58 +4685,13 @@
           "caption": "BDC Round 4 | Lucas Oil UK Drift Team"
         },
         {
-          "rank": 5,
-          "id": "e0c1d55b-a7ed-5779-b8b1-5d70c4b345bf",
-          "score": 0.0154,
-          "video_name": "01149.mp4",
-          "frame_idx": 740,
-          "timestamp": 24.69,
-          "caption": "Sliding Into 2011"
-        },
-        {
-          "rank": 6,
-          "id": "8f182bcc-c1d8-59d0-aba6-fc8cd89353b6",
-          "score": 0.0152,
-          "video_name": "00905.mp4",
-          "frame_idx": 1554,
-          "timestamp": 51.85,
-          "caption": "Lonestar Drift 2015 - Round 1 - GGP"
-        },
-        {
-          "rank": 7,
-          "id": "919b468a-9935-504e-9278-f2dbcb3b52bf",
-          "score": 0.0149,
-          "video_name": "01525.mp4",
-          "frame_idx": 1036,
-          "timestamp": 34.57,
-          "caption": "BC Racing Custom Coilover Team at Formula Drift Orlando"
-        },
-        {
-          "rank": 8,
-          "id": "23aeadff-f2cc-5846-a55d-381ecc82291c",
-          "score": 0.0147,
-          "video_name": "00905.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Lonestar Drift 2015 - Round 1 - GGP"
-        },
-        {
-          "rank": 9,
-          "id": "5ca8defe-7a97-59f5-8d28-3d9cdb5323e6",
-          "score": 0.0145,
-          "video_name": "01525.mp4",
-          "frame_idx": 740,
-          "timestamp": 24.69,
-          "caption": "BC Racing Custom Coilover Team at Formula Drift Orlando"
-        },
-        {
           "rank": 10,
-          "id": "b9e45255-9988-5908-bedd-301a230c6ac3",
-          "score": 0.0143,
-          "video_name": "01525.mp4",
-          "frame_idx": 814,
-          "timestamp": 27.16,
-          "caption": "BC Racing Custom Coilover Team at Formula Drift Orlando"
+          "id": "14b61586-5cad-5303-b12e-72a8847b1ffb",
+          "score": 0.0154,
+          "video_name": "00327.mp4",
+          "frame_idx": 0,
+          "timestamp": 0.0,
+          "caption": "NL Drift Winter Series Round 1"
         }
       ]
     },
@@ -9222,21 +9222,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "Côte Sauvage belle ile",
+      "query": "Cote Sauvage belle ile",
       "ground_truth": {
         "video_name": "00207.mp4",
         "video_stem": "00207",
         "timestamp": 4.96,
         "frame_id": 124
       },
-      "rank": 3,
-      "video_rank": 3,
-      "temporal_rank": 3,
-      "point_rank": 3,
+      "rank": 5,
+      "video_rank": 5,
+      "temporal_rank": 5,
+      "point_rank": 5,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #3)",
+      "status": "PASS (Rank #5)",
       "latency": {
         "total_sec": 10.931,
         "hyde_sec": 2.747,
@@ -9255,84 +9255,84 @@
         },
         {
           "rank": 2,
-          "id": "645c2a19-afeb-5e1a-9023-fefc0de18a9c",
-          "score": 0.0161,
-          "video_name": "00352.mp4",
-          "frame_idx": 1750,
-          "timestamp": 35.0,
-          "caption": "Championnats de France FFSNW de Wakeboard & Wakeskate Ca?ble 2017 (OFFICIAL VIDEO)"
-        },
-        {
-          "rank": 3,
-          "id": "a46241ad-d750-5206-a86e-0da65130aaef",
-          "score": 0.0159,
-          "video_name": "00207.mp4",
-          "frame_idx": 186,
-          "timestamp": 7.44,
-          "caption": "Côte Sauvage"
-        },
-        {
-          "rank": 4,
-          "id": "49bc22e1-dc75-5cf2-8353-37c7678d001a",
-          "score": 0.0156,
-          "video_name": "00207.mp4",
-          "frame_idx": 248,
-          "timestamp": 9.92,
-          "caption": "Côte Sauvage"
-        },
-        {
-          "rank": 5,
-          "id": "3e46f13a-9657-53d7-a571-f5f1b17639c7",
-          "score": 0.0154,
-          "video_name": "00503.mp4",
-          "frame_idx": 248,
-          "timestamp": 9.92,
-          "caption": "1999 - Calanques de  Marseille"
-        },
-        {
-          "rank": 6,
           "id": "c88389a5-07ed-59d6-8042-8dbf5c09e9a3",
-          "score": 0.0152,
+          "score": 0.0161,
           "video_name": "00313.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
           "caption": "Roc de Boissac Wineyard - Puisseguin Saint Emilion"
         },
         {
-          "rank": 7,
-          "id": "b820e0ff-0bc1-5597-951c-91b430b4e1eb",
-          "score": 0.0149,
-          "video_name": "00234.mp4",
-          "frame_idx": 708,
-          "timestamp": 29.53,
-          "caption": "Lifou Island (New Caledonia)"
+          "rank": 3,
+          "id": "645c2a19-afeb-5e1a-9023-fefc0de18a9c",
+          "score": 0.0159,
+          "video_name": "00352.mp4",
+          "frame_idx": 1750,
+          "timestamp": 35.0,
+          "caption": "Championnats de France FFSNW de Wakeboard & Wakeskate Ca?ble 2017 (OFFICIAL VIDEO)"
         },
         {
-          "rank": 8,
+          "rank": 4,
+          "id": "6bbef10d-0c38-5bc1-a7f4-26ad6f89a5c2",
+          "score": 0.0156,
+          "video_name": "00313.mp4",
+          "frame_idx": 930,
+          "timestamp": 37.2,
+          "caption": "Roc de Boissac Wineyard - Puisseguin Saint Emilion"
+        },
+        {
+          "rank": 5,
+          "id": "a46241ad-d750-5206-a86e-0da65130aaef",
+          "score": 0.0154,
+          "video_name": "00207.mp4",
+          "frame_idx": 186,
+          "timestamp": 7.44,
+          "caption": "Côte Sauvage"
+        },
+        {
+          "rank": 6,
+          "id": "49bc22e1-dc75-5cf2-8353-37c7678d001a",
+          "score": 0.0152,
+          "video_name": "00207.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "Côte Sauvage"
+        },
+        {
+          "rank": 7,
           "id": "1e0e9620-bc4f-58e2-9f46-9ca02d51c648",
-          "score": 0.0147,
+          "score": 0.0149,
           "video_name": "01608.mp4",
           "frame_idx": 1258,
           "timestamp": 41.98,
           "caption": "Spring Link Up: Skiing touring and climbing in France"
         },
         {
+          "rank": 8,
+          "id": "3e46f13a-9657-53d7-a571-f5f1b17639c7",
+          "score": 0.0147,
+          "video_name": "00503.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "1999 - Calanques de  Marseille"
+        },
+        {
           "rank": 9,
-          "id": "48281ec6-3e8a-58fc-a8d3-f5eef5acaf3f",
+          "id": "b820e0ff-0bc1-5597-951c-91b430b4e1eb",
           "score": 0.0145,
+          "video_name": "00234.mp4",
+          "frame_idx": 708,
+          "timestamp": 29.53,
+          "caption": "Lifou Island (New Caledonia)"
+        },
+        {
+          "rank": 10,
+          "id": "48281ec6-3e8a-58fc-a8d3-f5eef5acaf3f",
+          "score": 0.0143,
           "video_name": "00326.mp4",
           "frame_idx": 1240,
           "timestamp": 49.6,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
-        },
-        {
-          "rank": 10,
-          "id": "c70dce43-b0af-5dec-82d4-9ec5de8e0a1f",
-          "score": 0.0143,
-          "video_name": "00455.mp4",
-          "frame_idx": 372,
-          "timestamp": 14.88,
-          "caption": "Les gangsters-grimpeurs du Finist?re"
         }
       ]
     },
@@ -9341,21 +9341,21 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "REHEARSAL FOR A FILM: SCENE 7",
+      "query": "REHEARSAL FOR A FILM SCENE 7",
       "ground_truth": {
         "video_name": "00931.mp4",
         "video_stem": "00931",
         "timestamp": 47.12,
         "frame_id": 1178
       },
-      "rank": 1,
-      "video_rank": 1,
-      "temporal_rank": 1,
-      "point_rank": 1,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #1)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 8.62,
         "hyde_sec": 2.044,
@@ -9365,24 +9365,6 @@
       "top_candidates": [
         {
           "rank": 1,
-          "id": "44341bec-46cb-590c-be00-1b8b0547f0d7",
-          "score": 0.0223,
-          "video_name": "00931.mp4",
-          "frame_idx": 1054,
-          "timestamp": 42.16,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
-        },
-        {
-          "rank": 2,
-          "id": "2b7400c1-cf52-5cc3-82d0-05253dfcad03",
-          "score": 0.0206,
-          "video_name": "00931.mp4",
-          "frame_idx": 1050,
-          "timestamp": 42.0,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
-        },
-        {
-          "rank": 3,
           "id": "52b577f5-1a93-5400-a409-ae95f27091b2",
           "score": 0.0164,
           "video_name": "01093.mp4",
@@ -9391,16 +9373,7 @@
           "caption": "Translee - Morning Sun (EXPLICIT)"
         },
         {
-          "rank": 4,
-          "id": "119b8c55-dbf9-5d65-8aa3-4d185b2f4298",
-          "score": 0.0164,
-          "video_name": "00931.mp4",
-          "frame_idx": 1178,
-          "timestamp": 47.12,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
-        },
-        {
-          "rank": 5,
+          "rank": 2,
           "id": "83030da2-2d03-539a-a61d-e88fd7b93967",
           "score": 0.0161,
           "video_name": "01093.mp4",
@@ -9409,49 +9382,76 @@
           "caption": "Translee - Morning Sun (EXPLICIT)"
         },
         {
-          "rank": 6,
-          "id": "1d499675-e242-591e-aa28-052d83d78b58",
-          "score": 0.0161,
-          "video_name": "00931.mp4",
-          "frame_idx": 248,
-          "timestamp": 9.92,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
-        },
-        {
-          "rank": 7,
-          "id": "1de864de-ed95-5826-8981-5c4d8fec7ff2",
+          "rank": 3,
+          "id": "1a8ee480-5671-57ff-93c4-89f2ec32ad40",
           "score": 0.0159,
-          "video_name": "00931.mp4",
-          "frame_idx": 150,
-          "timestamp": 6.0,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
+          "video_name": "01295.mp4",
+          "frame_idx": 124,
+          "timestamp": 4.96,
+          "caption": "Scene from “Doubt” by John Patrick Shanley (John Frey Studio for Actors)"
         },
         {
-          "rank": 8,
+          "rank": 4,
+          "id": "ec226c8d-4077-53d6-99af-5454f1d40df0",
+          "score": 0.0156,
+          "video_name": "01295.mp4",
+          "frame_idx": 186,
+          "timestamp": 7.44,
+          "caption": "Scene from “Doubt” by John Patrick Shanley (John Frey Studio for Actors)"
+        },
+        {
+          "rank": 5,
           "id": "c5004d5c-8a7f-5be6-9c13-21eb72792ed6",
-          "score": 0.0159,
+          "score": 0.0154,
           "video_name": "01169.mp4",
           "frame_idx": 1121,
           "timestamp": 46.76,
           "caption": "Mettre en Sc?ne, Paroles du Th??tre."
         },
         {
+          "rank": 6,
+          "id": "a05f9d79-8219-5af1-a8c2-13c6a030a62c",
+          "score": 0.0152,
+          "video_name": "01308.mp4",
+          "frame_idx": 682,
+          "timestamp": 27.28,
+          "caption": "On-The-Go - Gym Session (Live Music Session)"
+        },
+        {
+          "rank": 7,
+          "id": "06854f17-070d-59cd-a61a-4ad5ce41bf78",
+          "score": 0.0149,
+          "video_name": "00058.mp4",
+          "frame_idx": 236,
+          "timestamp": 9.84,
+          "caption": "?Morning Eden Mars? Music Video"
+        },
+        {
+          "rank": 8,
+          "id": "5a5e0568-52ec-5a99-a88b-43399c9f7dee",
+          "score": 0.0147,
+          "video_name": "01169.mp4",
+          "frame_idx": 1062,
+          "timestamp": 44.29,
+          "caption": "Mettre en Sc?ne, Paroles du Th??tre."
+        },
+        {
           "rank": 9,
-          "id": "20d73db8-7bfb-5a5e-9e75-4e348892fd4c",
-          "score": 0.0156,
-          "video_name": "00931.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
-          "caption": "REHEARSAL FOR A FILM: SCENE 7"
+          "id": "2cc82122-c0ad-581c-9f81-f15fc85b8a84",
+          "score": 0.0145,
+          "video_name": "01169.mp4",
+          "frame_idx": 1357,
+          "timestamp": 56.6,
+          "caption": "Mettre en Sc?ne, Paroles du Th??tre."
         },
         {
           "rank": 10,
-          "id": "1a8ee480-5671-57ff-93c4-89f2ec32ad40",
-          "score": 0.0156,
-          "video_name": "01295.mp4",
-          "frame_idx": 124,
-          "timestamp": 4.96,
-          "caption": "Scene from “Doubt” by John Patrick Shanley (John Frey Studio for Actors)"
+          "id": "23886385-0ab3-5b82-a013-090f7bf4fdfe",
+          "score": 0.0143,
+          "video_name": "00058.mp4",
+          "frame_idx": 177,
+          "timestamp": 7.38,
+          "caption": "?Morning Eden Mars? Music Video"
         }
       ]
     },
@@ -13547,17 +13547,17 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "Pati & Armando :: “La Luna y el Sol” English",
+      "query": "Pati Armando La Luna y el Sol wedding",
       "ground_truth": {
         "video_name": "00648.mp4",
         "video_stem": "00648",
         "timestamp": 19.69,
         "frame_id": 472
       },
-      "rank": 2,
-      "video_rank": 2,
-      "temporal_rank": 2,
-      "point_rank": 2,
+      "rank": 5,
+      "video_rank": 5,
+      "temporal_rank": 5,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
@@ -13566,7 +13566,7 @@
         "ambiguity_turn2": 0.895,
         "delta_ambiguity": -0.0029
       },
-      "status": "PASS (Rank #2)",
+      "status": "PASS (Rank #5)",
       "latency": {
         "total_sec": 9.122,
         "hyde_sec": 2.566,
@@ -13576,93 +13576,93 @@
       "top_candidates": [
         {
           "rank": 1,
-          "id": "dd46fa4a-324a-5b6f-ab7d-30db5e16166a",
+          "id": "993616a4-118b-5c1d-a5ad-140e7b2c2e5f",
           "score": 0.0164,
-          "video_name": "00298.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "Innovar la Radio para afianzar la paz"
+          "video_name": "01103.mp4",
+          "frame_idx": 310,
+          "timestamp": 12.4,
+          "caption": "Francis+Marga: Preparando la boda"
         },
         {
           "rank": 2,
-          "id": "a01af4be-7c1f-5500-9f10-b7d43d0a1185",
+          "id": "aa81cb4a-13f8-5c9c-bf73-b2d2d2bfc660",
           "score": 0.0161,
-          "video_name": "00648.mp4",
-          "frame_idx": 413,
-          "timestamp": 17.23,
-          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
+          "video_name": "01103.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "Francis+Marga: Preparando la boda"
         },
         {
           "rank": 3,
-          "id": "b53ec6e9-0b48-52ea-add2-bda16d788eeb",
-          "score": 0.0159,
-          "video_name": "00076.mp4",
-          "frame_idx": 148,
-          "timestamp": 4.94,
-          "caption": "Slideshow Sole & Juan"
-        },
-        {
-          "rank": 4,
-          "id": "028fec20-6013-549a-8a8f-208aa994128d",
-          "score": 0.0156,
-          "video_name": "00929.mp4",
-          "frame_idx": 0,
-          "timestamp": 0.0,
-          "caption": "Ariana & Tomás. E.Session (preboda) en Sierra de Aracena (Huelva)"
-        },
-        {
-          "rank": 5,
-          "id": "03c9af46-71dd-567e-bbce-81ded73e19c6",
-          "score": 0.0154,
-          "video_name": "00648.mp4",
-          "frame_idx": 472,
-          "timestamp": 19.69,
-          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
-        },
-        {
-          "rank": 6,
           "id": "6de902e4-8a4c-5b7a-9cda-a5a33f66dbd6",
-          "score": 0.0152,
+          "score": 0.0159,
           "video_name": "01651.mp4",
           "frame_idx": 1110,
           "timestamp": 37.04,
           "caption": "The Real Madrid (Madrid, Spain) S3E20"
         },
         {
-          "rank": 7,
-          "id": "ccd8ee9b-d578-5b39-9a23-e04a2c5857b1",
-          "score": 0.0149,
+          "rank": 4,
+          "id": "fdb66e78-f015-5e29-97c7-b13b2a9ee2c8",
+          "score": 0.0156,
+          "video_name": "01651.mp4",
+          "frame_idx": 962,
+          "timestamp": 32.1,
+          "caption": "The Real Madrid (Madrid, Spain) S3E20"
+        },
+        {
+          "rank": 5,
+          "id": "1c496435-0c11-523c-993c-cadbc780cea6",
+          "score": 0.0154,
           "video_name": "00648.mp4",
-          "frame_idx": 354,
-          "timestamp": 14.76,
+          "frame_idx": 708,
+          "timestamp": 29.53,
           "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
+        },
+        {
+          "rank": 6,
+          "id": "fcbe989d-d801-5d72-885b-90b8535cebb5",
+          "score": 0.0152,
+          "video_name": "01281.mp4",
+          "frame_idx": 149,
+          "timestamp": 2.49,
+          "caption": "Baby Shower Charly Jr"
+        },
+        {
+          "rank": 7,
+          "id": "06407e5e-2a84-5ccb-9c2a-acd4ff1b9be3",
+          "score": 0.0149,
+          "video_name": "01611.mp4",
+          "frame_idx": 186,
+          "timestamp": 7.44,
+          "caption": "Highlights Sergio & Raquel"
         },
         {
           "rank": 8,
-          "id": "e2137caf-f0f2-535d-8abd-a0a26125c825",
+          "id": "028fec20-6013-549a-8a8f-208aa994128d",
           "score": 0.0147,
-          "video_name": "00582.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "La Aventura - Jay y El Punto"
+          "video_name": "00929.mp4",
+          "frame_idx": 0,
+          "timestamp": 0.0,
+          "caption": "Ariana & Tomás. E.Session (preboda) en Sierra de Aracena (Huelva)"
         },
         {
           "rank": 9,
-          "id": "345213b3-3c15-54ce-9225-59547897ae90",
+          "id": "866fb53d-c0d5-533d-8e2c-82a203535dd3",
           "score": 0.0145,
-          "video_name": "00648.mp4",
-          "frame_idx": 295,
-          "timestamp": 12.3,
-          "caption": "Pati & Armando :: “La Luna y el Sol” || English Subs."
+          "video_name": "00445.mp4",
+          "frame_idx": 1332,
+          "timestamp": 44.44,
+          "caption": "Madrileños por el mundo"
         },
         {
           "rank": 10,
-          "id": "3b759774-5b2a-5c16-b460-d30949d11617",
+          "id": "b53ec6e9-0b48-52ea-add2-bda16d788eeb",
           "score": 0.0143,
-          "video_name": "00858.mp4",
-          "frame_idx": 60,
-          "timestamp": 2.5,
-          "caption": "Mambo Influenciado por el Conjunto Tahona"
+          "video_name": "00076.mp4",
+          "frame_idx": 148,
+          "timestamp": 4.94,
+          "caption": "Slideshow Sole & Juan"
         }
       ]
     },
@@ -23833,21 +23833,21 @@
       "type": 5,
       "type_name": "KIS-V",
       "category": "Visual Query Search",
-      "query": "Hoya Moros 2014",
+      "query": "Hoya Moros 2014 bouldering climbing",
       "ground_truth": {
         "video_name": "01479.mp4",
         "video_stem": "01479",
         "timestamp": 52.08,
         "frame_id": 1302
       },
-      "rank": 1,
-      "video_rank": 1,
-      "temporal_rank": 6,
-      "point_rank": 6,
+      "rank": null,
+      "video_rank": null,
+      "temporal_rank": null,
+      "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #1)",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
         "total_sec": 5.953,
         "hyde_sec": 0.0,
@@ -23857,93 +23857,93 @@
       "top_candidates": [
         {
           "rank": 1,
-          "id": "325666e3-de18-5b60-adce-58e395c3ff1a",
-          "score": 0.0236,
-          "video_name": "01479.mp4",
-          "frame_idx": 300,
-          "timestamp": 12.0,
-          "caption": "Hoya Moros 2014"
+          "id": "0377292d-1488-5701-b9df-accaf508274c",
+          "score": 0.0164,
+          "video_name": "01270.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "Rozas (summertime)"
         },
         {
           "rank": 2,
-          "id": "2316e723-3046-5b14-9d89-b644f1512eda",
-          "score": 0.0216,
-          "video_name": "01479.mp4",
-          "frame_idx": 310,
-          "timestamp": 12.4,
-          "caption": "Hoya Moros 2014"
+          "id": "4f2054fb-8e9c-51e1-84c8-ae0368fd3081",
+          "score": 0.0161,
+          "video_name": "01581.mp4",
+          "frame_idx": 682,
+          "timestamp": 27.28,
+          "caption": "Jaizkibel"
         },
         {
           "rank": 3,
-          "id": "6f85d3fd-31f1-5d04-8ff0-c220eb904d69",
-          "score": 0.0201,
-          "video_name": "01479.mp4",
-          "frame_idx": 375,
-          "timestamp": 15.0,
-          "caption": "Hoya Moros 2014"
+          "id": "7630f400-c1c2-54d0-a748-2a0fa6b26a17",
+          "score": 0.0159,
+          "video_name": "01644.mp4",
+          "frame_idx": 649,
+          "timestamp": 27.07,
+          "caption": "Tempuratour"
         },
         {
           "rank": 4,
-          "id": "434ea524-a9c6-5a6b-83ef-3e6ec6d6847f",
-          "score": 0.0189,
-          "video_name": "01479.mp4",
-          "frame_idx": 372,
-          "timestamp": 14.88,
-          "caption": "Hoya Moros 2014"
+          "id": "97506a0c-8716-5c2d-b3f8-37fea6c90455",
+          "score": 0.0156,
+          "video_name": "00165.mp4",
+          "frame_idx": 1062,
+          "timestamp": 44.29,
+          "caption": "Four Seasons Episode I: Summer Deppert!? Sweating at Felbertauern"
         },
         {
           "rank": 5,
-          "id": "908ad143-b5e2-5cf3-a85f-6e54efcf2772",
-          "score": 0.0164,
-          "video_name": "00551.mp4",
-          "frame_idx": 434,
-          "timestamp": 17.36,
-          "caption": "Patt ~ Yuth Thai Wedding Ceremony"
+          "id": "0cd66b68-1b25-567e-a6cc-2a4803c16708",
+          "score": 0.0154,
+          "video_name": "01270.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "Rozas (summertime)"
         },
         {
           "rank": 6,
-          "id": "0a4575bc-26f8-5950-8e59-bce9e7a558bd",
-          "score": 0.0164,
-          "video_name": "01479.mp4",
-          "frame_idx": 1302,
-          "timestamp": 52.08,
-          "caption": "Hoya Moros 2014"
+          "id": "89054218-2b3b-56ac-8a9b-12ca3e0ca3e8",
+          "score": 0.0152,
+          "video_name": "01644.mp4",
+          "frame_idx": 1003,
+          "timestamp": 41.83,
+          "caption": "Tempuratour"
         },
         {
           "rank": 7,
-          "id": "0b56f1c5-036f-5d72-8398-c456205dd530",
-          "score": 0.0161,
-          "video_name": "01479.mp4",
-          "frame_idx": 900,
-          "timestamp": 36.0,
-          "caption": "Hoya Moros 2014"
+          "id": "1eb03076-d230-59d6-965e-f6aef583eaae",
+          "score": 0.0149,
+          "video_name": "00390.mp4",
+          "frame_idx": 1239,
+          "timestamp": 51.68,
+          "caption": "Getting Into Next Level"
         },
         {
           "rank": 8,
-          "id": "2700ac6c-9c8c-5515-8650-fadf7c570925",
-          "score": 0.0161,
-          "video_name": "00845.mp4",
-          "frame_idx": 180,
-          "timestamp": 7.5,
-          "caption": "Un Herboriste chez les Chamanes"
+          "id": "f05aa0ff-2813-51e0-b215-d61b643fafeb",
+          "score": 0.0147,
+          "video_name": "01270.mp4",
+          "frame_idx": 930,
+          "timestamp": 37.2,
+          "caption": "Rozas (summertime)"
         },
         {
           "rank": 9,
-          "id": "19107194-c591-555d-9b95-b0a1ec28690e",
-          "score": 0.0159,
-          "video_name": "01479.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
-          "caption": "Hoya Moros 2014"
+          "id": "2a3234be-0020-5b09-be76-6159efe588b0",
+          "score": 0.0145,
+          "video_name": "01581.mp4",
+          "frame_idx": 1116,
+          "timestamp": 44.64,
+          "caption": "Jaizkibel"
         },
         {
           "rank": 10,
-          "id": "de1333dc-1502-5dcb-ae51-91c2ad3caa43",
-          "score": 0.0159,
-          "video_name": "00828.mp4",
-          "frame_idx": 450,
-          "timestamp": 15.0,
-          "caption": "4 MURTHumentary KALVYN MACMILLAN"
+          "id": "fe0e7374-2192-5bbe-b599-97d4aa91c4e3",
+          "score": 0.0143,
+          "video_name": "01644.mp4",
+          "frame_idx": 1180,
+          "timestamp": 49.22,
+          "caption": "Tempuratour"
         }
       ]
     },
@@ -24190,7 +24190,7 @@
       "type": 5,
       "type_name": "KIS-V",
       "category": "Visual Query Search",
-      "query": "Exposition Eastpak Tag My Giant Bag #01",
+      "query": "Exposition Eastpak Tag My Giant Bag",
       "ground_truth": {
         "video_name": "01102.mp4",
         "video_stem": "01102",
@@ -24233,7 +24233,7 @@
         {
           "rank": 3,
           "id": "14fa8826-ac00-57f3-b135-aeeede0862b0",
-          "score": 0.031,
+          "score": 0.0305,
           "video_name": "01102.mp4",
           "frame_idx": 186,
           "timestamp": 7.44,
@@ -24241,20 +24241,20 @@
         },
         {
           "rank": 4,
-          "id": "10dff7b7-0c5a-5e5e-ba6c-a1d51b1375ba",
-          "score": 0.0301,
+          "id": "2eb3044a-cd8b-5163-b486-47ce3e339e9d",
+          "score": 0.0304,
           "video_name": "01102.mp4",
-          "frame_idx": 1054,
-          "timestamp": 42.16,
+          "frame_idx": 124,
+          "timestamp": 4.96,
           "caption": "Exposition Eastpak Tag My Giant Bag #01"
         },
         {
           "rank": 5,
-          "id": "2eb3044a-cd8b-5163-b486-47ce3e339e9d",
+          "id": "10dff7b7-0c5a-5e5e-ba6c-a1d51b1375ba",
           "score": 0.0299,
           "video_name": "01102.mp4",
-          "frame_idx": 124,
-          "timestamp": 4.96,
+          "frame_idx": 1054,
+          "timestamp": 42.16,
           "caption": "Exposition Eastpak Tag My Giant Bag #01"
         },
         {
@@ -24309,21 +24309,21 @@
       "type": 5,
       "type_name": "KIS-V",
       "category": "Visual Query Search",
-      "query": "Marbled duck Marmertaling Marmaronetta angustirostris",
+      "query": "Marbled duck Marmertaling",
       "ground_truth": {
         "video_name": "01540.mp4",
         "video_stem": "01540",
         "timestamp": 49.38,
         "frame_id": 1480
       },
-      "rank": 2,
-      "video_rank": 2,
-      "temporal_rank": 2,
+      "rank": 1,
+      "video_rank": 1,
+      "temporal_rank": 1,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #2)",
+      "status": "PASS (Rank #1)",
       "latency": {
         "total_sec": 5.167,
         "hyde_sec": 0.0,
@@ -24333,93 +24333,93 @@
       "top_candidates": [
         {
           "rank": 1,
-          "id": "e1641230-4ff3-531e-a5ed-facb6cc7d178",
-          "score": 0.0164,
-          "video_name": "00639.mp4",
-          "frame_idx": 1258,
-          "timestamp": 41.98,
-          "caption": "Australasian shoveler - Australische slobeend - Anas rhynchotis"
-        },
-        {
-          "rank": 2,
           "id": "177daa52-06c5-54a0-8c32-13f1e5008621",
-          "score": 0.0161,
+          "score": 0.0164,
           "video_name": "01540.mp4",
           "frame_idx": 962,
           "timestamp": 32.1,
           "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
         },
         {
+          "rank": 2,
+          "id": "e1641230-4ff3-531e-a5ed-facb6cc7d178",
+          "score": 0.0161,
+          "video_name": "00639.mp4",
+          "frame_idx": 1258,
+          "timestamp": 41.98,
+          "caption": "Australasian shoveler - Australische slobeend - Anas rhynchotis"
+        },
+        {
           "rank": 3,
-          "id": "eca5303a-efb8-535a-a3b0-2223b1f603ae",
+          "id": "f51e845a-fc68-53f7-9754-fa302cc39ea5",
           "score": 0.0159,
+          "video_name": "00299.mp4",
+          "frame_idx": 148,
+          "timestamp": 4.94,
+          "caption": "Paradise shelduck - Paradijs casarca - Tadorna variegata"
+        },
+        {
+          "rank": 4,
+          "id": "eca5303a-efb8-535a-a3b0-2223b1f603ae",
+          "score": 0.0156,
           "video_name": "01540.mp4",
           "frame_idx": 1036,
           "timestamp": 34.57,
           "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
         },
         {
-          "rank": 4,
-          "id": "f51e845a-fc68-53f7-9754-fa302cc39ea5",
-          "score": 0.0156,
-          "video_name": "00299.mp4",
+          "rank": 5,
+          "id": "4b10a9fd-23e5-5923-a1e8-c891bcf391b5",
+          "score": 0.0154,
+          "video_name": "01540.mp4",
           "frame_idx": 148,
           "timestamp": 4.94,
-          "caption": "Paradise shelduck - Paradijs casarca - Tadorna variegata"
+          "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
         },
         {
-          "rank": 5,
+          "rank": 6,
           "id": "49795a81-8b4d-526a-b783-9cc4b8642b62",
-          "score": 0.0154,
+          "score": 0.0152,
           "video_name": "00639.mp4",
           "frame_idx": 1554,
           "timestamp": 51.85,
           "caption": "Australasian shoveler - Australische slobeend - Anas rhynchotis"
         },
         {
-          "rank": 6,
-          "id": "6653e77c-61fe-5f21-8e89-d9d0c42ef306",
-          "score": 0.0152,
-          "video_name": "00299.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "Paradise shelduck - Paradijs casarca - Tadorna variegata"
+          "rank": 7,
+          "id": "30ed2dd4-2412-5bd9-9792-64296a5235cf",
+          "score": 0.0149,
+          "video_name": "00639.mp4",
+          "frame_idx": 1628,
+          "timestamp": 54.32,
+          "caption": "Australasian shoveler - Australische slobeend - Anas rhynchotis"
         },
         {
-          "rank": 7,
+          "rank": 8,
           "id": "9b68fed4-1f9c-5377-817b-8ed37f858551",
-          "score": 0.0149,
+          "score": 0.0147,
           "video_name": "01540.mp4",
           "frame_idx": 814,
           "timestamp": 27.16,
           "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
         },
         {
-          "rank": 8,
+          "rank": 9,
+          "id": "0ed249b3-6238-5458-9f9a-e556430d53c0",
+          "score": 0.0145,
+          "video_name": "00299.mp4",
+          "frame_idx": 814,
+          "timestamp": 27.16,
+          "caption": "Paradise shelduck - Paradijs casarca - Tadorna variegata"
+        },
+        {
+          "rank": 10,
           "id": "d328d9d3-caa4-5905-a152-1dd95fe694c9",
-          "score": 0.0147,
+          "score": 0.0143,
           "video_name": "01540.mp4",
           "frame_idx": 888,
           "timestamp": 29.63,
           "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
-        },
-        {
-          "rank": 9,
-          "id": "4b10a9fd-23e5-5923-a1e8-c891bcf391b5",
-          "score": 0.0145,
-          "video_name": "01540.mp4",
-          "frame_idx": 148,
-          "timestamp": 4.94,
-          "caption": "Marbled duck - Marmertaling - Marmaronetta angustirostris"
-        },
-        {
-          "rank": 10,
-          "id": "30ed2dd4-2412-5bd9-9792-64296a5235cf",
-          "score": 0.0143,
-          "video_name": "00639.mp4",
-          "frame_idx": 1628,
-          "timestamp": 54.32,
-          "caption": "Australasian shoveler - Australische slobeend - Anas rhynchotis"
         }
       ]
     }

@@ -362,6 +362,11 @@ JSON:"""
         use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
         questions = self.generate_verification_questions(query) if use_verify else []
 
+        pool_rrf = [float(h.get("rrf_score", 0.0)) for h in candidate_frames]
+        min_rrf = min(pool_rrf) if pool_rrf else 0.0
+        max_rrf = max(pool_rrf) if pool_rrf else 1.0
+        rrf_range = max(max_rrf - min_rrf, 1e-6)
+
         def _score_single_hit(hit: Dict[str, Any]) -> Dict[str, Any]:
             hit_copy = dict(hit)
             payload = hit_copy["payload"]
@@ -398,9 +403,10 @@ Score:"""
                 hit_copy["verification_ratio"] = verification_ratio
                 score = (1 - VERIFICATION_WEIGHT_TYPE1) * score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 
-            rrf_score = float(hit_copy.get("rrf_score", 0.0))
+            rrf_raw = float(hit_copy.get("rrf_score", 0.0))
+            norm_rrf = (rrf_raw - min_rrf) / rrf_range
             hit_copy["rerank_score"] = score
-            hit_copy["final_score"] = 0.4 * rrf_score + 0.6 * score
+            hit_copy["final_score"] = 0.5 * norm_rrf + 0.5 * score
             return hit_copy
 
         if not candidate_frames:
@@ -491,10 +497,13 @@ Score:"""
             if crop_img is not None:
                 vqa_prompt = f"""
 Question: {query}
-Return ONLY one JSON object with this exact schema:
-{{"found": true, "answer": "short answer", "confidence": 0.0, "reason": "..."}}
-Use found=false, answer="UNKNOWN", confidence=0.0 when the frame cannot answer the question.
-The answer must be grounded in this frame; do not guess.
+Inspect this image carefully.
+1. Determine if the entity, object, or subject mentioned in the question is genuinely and clearly visible in this image.
+2. If the entity is NOT clearly visible, or if the question asks about something not present (e.g. an alien spacecraft, submarine, dinosaur, or non-existent entity), you MUST output found=false, answer="UNKNOWN", confidence=0.0. Do NOT guess or hallucinate.
+3. If and only if the entity is genuinely visible, provide the concise grounded answer.
+
+Return ONLY valid JSON matching this schema:
+{{"found": true, "answer": "concise answer", "confidence": 0.9, "reason": "..."}}
 """
                 try:
                     parsed = parse_grounded_vqa_response(self.vlm.generate(crop_img, vqa_prompt))

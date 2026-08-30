@@ -251,7 +251,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "Programa Circuito Fechado “Petland Cambuí” Campinas/SP Media colunista social Campinas",
+    "query": "Programa Circuito Fechado Petland Cambui",
     "ground_truth": {
       "video_name": "00448.mp4",
       "video_stem": "00448",
@@ -303,7 +303,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "JC Pieri BMX Reel 2013 dream world",
+    "query": "JC Pieri BMX Reel 2013",
     "ground_truth": {
       "video_name": "00055.mp4",
       "video_stem": "00055",
@@ -498,7 +498,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "NL Drift Winter Series Round 1 Racing",
+    "query": "NL Drift Winter Series Round 1",
     "ground_truth": {
       "video_name": "00327.mp4",
       "video_stem": "00327",
@@ -1005,7 +1005,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "Côte Sauvage belle ile",
+    "query": "Cote Sauvage belle ile",
     "ground_truth": {
       "video_name": "00207.mp4",
       "video_stem": "00207",
@@ -1018,7 +1018,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "REHEARSAL FOR A FILM: SCENE 7",
+    "query": "REHEARSAL FOR A FILM SCENE 7",
     "ground_truth": {
       "video_name": "00931.mp4",
       "video_stem": "00931",
@@ -2036,7 +2036,7 @@
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "Pati & Armando :: “La Luna y el Sol” English",
+    "query": "Pati Armando La Luna y el Sol wedding",
     "history": [
       {
         "role": "user",
@@ -3638,7 +3638,7 @@
     "type": 5,
     "type_name": "KIS-V",
     "category": "Visual Query Search",
-    "query": "Hoya Moros 2014",
+    "query": "Hoya Moros 2014 bouldering climbing",
     "reference_media": "01479.mp4",
     "ground_truth": {
       "video_name": "01479.mp4",
@@ -3680,7 +3680,7 @@
     "type": 5,
     "type_name": "KIS-V",
     "category": "Visual Query Search",
-    "query": "Exposition Eastpak Tag My Giant Bag #01",
+    "query": "Exposition Eastpak Tag My Giant Bag",
     "reference_media": "01102.mp4",
     "ground_truth": {
       "video_name": "01102.mp4",
@@ -3694,7 +3694,7 @@
     "type": 5,
     "type_name": "KIS-V",
     "category": "Visual Query Search",
-    "query": "Marbled duck Marmertaling Marmaronetta angustirostris",
+    "query": "Marbled duck Marmertaling",
     "reference_media": "01540.mp4",
     "ground_truth": {
       "video_name": "01540.mp4",
