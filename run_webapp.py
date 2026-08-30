@@ -6,12 +6,19 @@ import time
 import signal
 import socket
 import shutil
+import threading
+import queue
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "webapp" / "backend"
 FRONTEND_DIR = ROOT_DIR / "webapp" / "frontend"
-VENV_PYTHON = ROOT_DIR / ".venv" / "bin" / "python"
+IS_WINDOWS = os.name == "nt"
+VENV_PYTHON = (
+    ROOT_DIR / ".venv" / "Scripts" / "python.exe"
+    if IS_WINDOWS
+    else ROOT_DIR / ".venv" / "bin" / "python"
+)
 
 processes = []
 
@@ -21,14 +28,28 @@ def check_port(port: int) -> bool:
         return s.connect_ex(('127.0.0.1', port)) == 0
 
 def kill_process_on_port(port: int):
-    """Attempt to free the port on MacOS/Linux."""
+    """Attempt to free the port (Windows: netstat+taskkill, POSIX: lsof)."""
     try:
-        output = subprocess.check_output(["lsof", "-t", f"-i:{port}"], text=True)
-        pids = [int(x) for x in output.strip().split("\n") if x]
+        if IS_WINDOWS:
+            output = subprocess.check_output(
+                ["netstat", "-ano"], text=True, errors="replace"
+            )
+            pids = {
+                int(line.split()[-1])
+                for line in output.splitlines()
+                if f":{port} " in line and "LISTENING" in line
+            }
+        else:
+            output = subprocess.check_output(["lsof", "-t", f"-i:{port}"], text=True)
+            pids = {int(x) for x in output.strip().split("\n") if x}
         for pid in pids:
             print(f"Port {port} is occupied. Terminating process PID {pid}...")
-            os.kill(pid, signal.SIGTERM)
-        time.sleep(1)
+            if IS_WINDOWS:
+                subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True)
+            else:
+                os.kill(pid, signal.SIGTERM)
+        if pids:
+            time.sleep(1)
     except Exception:
         pass
 
@@ -71,14 +92,33 @@ def ensure_backend_environment() -> str:
     return str(VENV_PYTHON)
 
 def ensure_qdrant_running():
-    """Start the local Qdrant vector database if it isn't already reachable."""
+    """Start the local Qdrant vector database if it isn't already reachable.
+
+    POSIX uses preprocessing/host_qdrant.sh; Windows starts the
+    preprocessing/docker-compose.yml service (host_qdrant.sh needs bash).
+    """
     if check_port(6333):
         print("Qdrant already running on port 6333.")
         return
 
-    qdrant_script = ROOT_DIR / "preprocessing" / "host_qdrant.sh"
     print("Qdrant not running. Starting local Qdrant server...")
-    subprocess.run(["bash", str(qdrant_script)], cwd=str(qdrant_script.parent), check=True)
+    if IS_WINDOWS:
+        if shutil.which("docker") is None:
+            print("Warning: docker is not available, so Qdrant cannot be started automatically.")
+            print("Start Qdrant manually (docker compose up -d in preprocessing/) and rerun.")
+            return
+        try:
+            subprocess.run(
+                ["docker", "compose", "up", "-d"],
+                cwd=str(ROOT_DIR / "preprocessing"),
+                check=True,
+            )
+        except subprocess.CalledProcessError as err:
+            print(f"Warning: docker compose failed ({err}); start Qdrant manually and rerun.")
+            return
+    else:
+        qdrant_script = ROOT_DIR / "preprocessing" / "host_qdrant.sh"
+        subprocess.run(["bash", str(qdrant_script)], cwd=str(qdrant_script.parent), check=True)
 
     for _ in range(30):
         if check_port(6333):
@@ -97,15 +137,26 @@ def signal_handler(sig, frame):
     print("Webapp shut down completed.")
     sys.exit(0)
 
+def stream_process_output(prefix: str, pipe, log_queue):
+    """Reader-thread body: pushes (prefix, line) tuples, then (prefix, None) on EOF."""
+    try:
+        for line in iter(pipe.readline, ""):
+            log_queue.put((prefix, line))
+    except Exception:
+        pass
+    finally:
+        log_queue.put((prefix, None))
+
 def npm_is_available() -> bool:
     return shutil.which("npm") is not None
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    if not IS_WINDOWS:
+        signal.signal(signal.SIGTERM, signal_handler)
 
     print("=== Antigravity WebApp Runner ===")
-    
+
     # 1. Free ports if occupied
     kill_process_on_port(8000)
     kill_process_on_port(5173)
@@ -128,13 +179,15 @@ def main():
     # 6. Start FastAPI Backend
     print("\nStarting Backend FastAPI Server (http://localhost:8000)...")
     backend_env = os.environ.copy()
-    
+
     p_backend = subprocess.Popen(
         [py_executable, "main.py"],
         cwd=str(BACKEND_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         env=backend_env
     )
     processes.append(p_backend)
@@ -147,20 +200,30 @@ def main():
             cwd=str(FRONTEND_DIR),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True
+            text=True,
+            encoding="utf-8",
+            errors="replace"
         )
         processes.append(p_frontend)
     else:
         print("Warning: npm is not available. Skipping frontend startup and keeping the backend running.")
         p_frontend = None
 
-    # 8. Stream Logs with prefixes
+    # 8. Stream Logs with prefixes - reader threads feed a queue, which works
+    # on every platform (os.set_blocking is Unix-only and would raise on
+    # Windows pipes).
     time.sleep(1.5)
-    
-    # Configure non-blocking stream reads
-    os.set_blocking(p_backend.stdout.fileno(), False)
+
+    log_queue = queue.Queue()
+    threads = [
+        threading.Thread(target=stream_process_output, args=("BACKEND ", p_backend.stdout, log_queue), daemon=True),
+    ]
     if p_frontend is not None:
-        os.set_blocking(p_frontend.stdout.fileno(), False)
+        threads.append(
+            threading.Thread(target=stream_process_output, args=("FRONTEND", p_frontend.stdout, log_queue), daemon=True)
+        )
+    for t in threads:
+        t.start()
 
     print("\nServers are now running! Press Ctrl+C to terminate both servers.")
     print("----------------------------------------------------------------")
@@ -170,30 +233,29 @@ def main():
         if p_backend.poll() is not None:
             print(f"Backend stopped with exit status {p_backend.poll()}")
             break
-            
+
         # Check if frontend stopped
         if p_frontend is not None and p_frontend.poll() is not None:
             print(f"Frontend stopped with exit status {p_frontend.poll()}")
             break
 
-        # Read backend logs
         try:
-            line = p_backend.stdout.readline()
-            if line:
-                print(f"[BACKEND]  {line.strip()}")
-        except Exception:
-            pass
+            prefix, line = log_queue.get(timeout=0.05)
+        except queue.Empty:
+            continue
+        if line is None:
+            continue
+        print(f"[{prefix}] {line.strip()}")
 
-        # Read frontend logs
-        if p_frontend is not None:
-            try:
-                line = p_frontend.stdout.readline()
-                if line:
-                    print(f"[FRONTEND] {line.strip()}")
-            except Exception:
-                pass
-
-        time.sleep(0.05)
+    # Drain any buffered log lines (e.g. the backend's crash traceback)
+    # before shutting down - losing them hides exactly what went wrong.
+    while True:
+        try:
+            prefix, line = log_queue.get_nowait()
+        except queue.Empty:
+            break
+        if line is not None:
+            print(f"[{prefix}] {line.strip()}")
 
     # Cleanup if loop exits
     signal_handler(None, None)
