@@ -288,9 +288,16 @@ export function ResultCard({
             Browse video
           </button>
           <button
-            onClick={() => onSubmitToDres(hit)}
+            onClick={() => {
+              // First submission carries a -10-point wrong-submission penalty
+              // (VBS scoring): make it a deliberate two-step action instead
+              // of a misclick next to Browse.
+              if (window.confirm("Nộp câu trả lời này lên DRES?\n(Nộp sai bị trừ 10 điểm)")) {
+                onSubmitToDres(hit)
+              }
+            }}
             title="Submit this answer to DRES"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors ml-auto"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors ml-auto border-l-4 border-indigo-900/20 pl-3"
           >
             <Send className="h-3 w-3" />
             Nộp câu trả lời

@@ -163,6 +163,11 @@ function SearchView() {
   const [dresLoggedIn, setDresLoggedIn] = useState(false)
   const [currentTask, setCurrentTask] = useState<any>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
+  // Live time-pressure aids: the DRES task rotates every 5-7 minutes, so the
+  // console shows an elapsed clock and refreshes the current task instead of
+  // letting the operator submit against a dead task_id.
+  const [taskElapsedSec, setTaskElapsedSec] = useState<number | null>(null)
+  const taskFetchedAtRef = useRef<number | null>(null)
 
   // Backend /api/search lanes: 1 = KIS-T *and* KIS-C (all conversational
   // machinery - clarification boost, negative feedback filter, ambiguity
@@ -363,11 +368,47 @@ function SearchView() {
       }
       setDresLoggedIn(true)
       const taskResponse = await fetch(`${BACKEND_URL}/api/dres/current-task`)
-      if (taskResponse.ok) setCurrentTask(await taskResponse.json())
+      if (taskResponse.ok) {
+        setCurrentTask(await taskResponse.json())
+        taskFetchedAtRef.current = Date.now()
+        setTaskElapsedSec(0)
+      }
     } catch (err: any) {
       setActionMessage(err.message || "DRES login failed")
     }
   }
+
+  // 1s clock for the elapsed timer + 30s current-task refresh (while logged
+  // in) so the operator never submits against a stale task_id after DRES
+  // rotates to the next task.
+  useEffect(() => {
+    if (!dresLoggedIn) {
+      setTaskElapsedSec(null)
+      taskFetchedAtRef.current = null
+      return
+    }
+    const tick = setInterval(() => {
+      if (taskFetchedAtRef.current) {
+        setTaskElapsedSec(Math.floor((Date.now() - taskFetchedAtRef.current) / 1000))
+      }
+    }, 1000)
+    const poll = setInterval(async () => {
+      try {
+        const taskResponse = await fetch(`${BACKEND_URL}/api/dres/current-task`)
+        if (taskResponse.ok) {
+          setCurrentTask(await taskResponse.json())
+          taskFetchedAtRef.current = Date.now()
+          setTaskElapsedSec(0)
+        }
+      } catch {
+        // keep the last known task on transient errors
+      }
+    }, 30000)
+    return () => {
+      clearInterval(tick)
+      clearInterval(poll)
+    }
+  }, [dresLoggedIn])
 
   const handleSubmitToDres = async (hit: ResultHit, force = false) => {
     if (!currentTask?.task_id) {
@@ -573,9 +614,22 @@ function SearchView() {
                 <div>
                   <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.16em] block mb-0.5">DRES session</span>
                 {currentTask ? (
-                  <span className="text-sm font-bold text-slate-800">
-                    Task loaded · {currentTask.task_id || currentTask.type || JSON.stringify(currentTask)}
-                  </span>
+                  <div className="text-left">
+                    <span className="text-sm font-bold text-slate-800 block">
+                      {String(currentTask.task_name || currentTask.name || "Task")} · #{String(currentTask.task_id || currentTask.id || "?")}
+                    </span>
+                    {currentTask.description && (
+                      <span className="text-xs text-slate-600 block max-w-2xl" title={String(currentTask.description)}>
+                        {String(currentTask.description).slice(0, 200)}
+                      </span>
+                    )}
+                    {taskElapsedSec !== null && (
+                      <span className="text-xs font-mono font-bold text-indigo-600 block mt-0.5">
+                        ⏱ {String(Math.floor(taskElapsedSec / 60)).padStart(2, "0")}:{String(taskElapsedSec % 60).padStart(2, "0")} elapsed
+                        {currentTask.duration ? ` / ${currentTask.duration}s limit` : ""}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-sm text-slate-500 font-semibold">{dresLoggedIn ? "Connected · no current task" : "Not connected"}</span>
                 )}
