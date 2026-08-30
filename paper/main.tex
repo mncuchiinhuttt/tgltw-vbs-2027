@@ -248,7 +248,8 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \label{sec:evaluation}
 
 \subsection{Experimental Setup}
-To evaluate the individual contributions of our architectural components, we execute an automated ablation suite on the V3C video archive (1,703 videos, 26,154 vectors). Retrieval efficacy is measured via Recall@$K$ ($K \in \{1, 5, 10\}$) and MRR. Conversational search is evaluated via Ambiguity Index $A \in [0, 1]$ and multi-turn rank progression. Grounded VQA is measured by Exact Match (EM) and hallucination rate.
+We evaluate AEGIS in two explicitly separated tracks. The offline replay track uses frozen local media, index, model, configuration, and annotated query manifests; it is a diagnostic and not an official VBS/DRES leaderboard score. Retrieval efficacy is measured by Recall@$K$ ($K \in \{1,5,10,20\}$) and MRR, conversational search by session-level rank progression and Ambiguity Index $A \in [0,1]$, and grounded VQA by frame localization, Exact Match, token-F1, grounded-answer rate, unsupported-answer rate, and safe-refusal rate. Task-specific denominators are retained. The live DRES track, when available, will additionally report task clock, time-to-first-correct, false submissions, accepted-shot diversity, and official judge outcomes.
+\input{benchmark_protocol.tex}
 
 \begin{table}[t]
 \centering
@@ -306,14 +307,16 @@ Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & ---
 \end{tabular}%
 }
 \end{table}
-
 \subsection{Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
+The measured replay should be read as a failure-oriented diagnostic, not as a leaderboard claim. On the ten-case suite, five cases entered the target top-20 (50.0\%; Wilson 95\% CI 23.7--76.3\%). KIS-T returned ranks 31, 4, and 10; ordinary VQA exact match was 0/2; the one negative VQA case passed fail-closed refusal (1/1); and both KIS-C targets were outside the top-20. Median end-to-end latency was 24.026\,s and p95 was 34.146\,s.
+
+The extended 18-query ablation replay considered 11 retrieval-evaluable cases. M1--M4 each produced R@1/R@5/R@10 of 9.1/9.1/9.1\% and MRR 0.097; M5--M6 produced 9.1/18.2/18.2\% and MRR 0.141. Because the current harness does not emit paired per-query outputs for every configuration and does not activate all named branches independently, these values cannot establish component-level causal effects. The current KIS-C, VQA, concurrency, and HNSW rows are configuration diagnostics and require instrumented repeated measurements before publication.
+
 \begin{enumerate}
-    \item \textbf{Multimodal Fusion Lift}: 4-way weighted RRF and temporal coherence raise Recall@5 from 50.0\% to 100.0\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885).
-    \item \textbf{Conversational Precision}: In multi-turn KIS-C, entity-preserving CQR with compound $n$-gram phrase boosting and negative feedback filtering resolves initial ambiguity (0.82 $\to$ 0.24) and elevates targets directly to \textbf{Rank \#1} (MRR 1.000, 100\% Recall@1).
-    \item \textbf{Hallucination Elimination}: Fail-closed contract prevents ungrounded predictions, achieving 100\% safety compliance with 0\% hallucination.
-    \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool achieves an $8.03\times$ latency reduction (from 14.85s down to 1.85s), enabling real-time interaction.
+    \item \textbf{Retrieval Reliability}: The direct replay exposes substantial head-ranking weakness despite a functioning search path.
+    \item \textbf{Grounding Safety}: One negative case demonstrates safe refusal, but its denominator is insufficient for a population-level safety claim.
+    \item \textbf{Operational Cost}: Current one-run latency is substantially above the sub-second claim; repeated warm trials and provider-independent traces are required.
+    \item \textbf{Reproducibility}: Future reporting must freeze media/index checksums, query labels, model revisions, seeds, and raw ranked outputs.
 \end{enumerate}
 
 \section{Conclusion}

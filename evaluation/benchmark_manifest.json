@@ -1,0 +1,41 @@
+{
+  "artifact_id": "aegis-vbs-offline-benchmark-2026-08-30",
+  "status": "ANALYZED",
+  "track": "offline_replay_diagnostic",
+  "official_vbs_score": false,
+  "commands": [
+    "uv run python evaluation/run_rag_benchmark.py",
+    "uv run python evaluation/run_comprehensive_ablation.py --queries evaluation/eval_queries_real_v3c.json --dataset_dir datasets --output_dir evaluation/benchmark_real_output/current_run"
+  ],
+  "query_manifests": {
+    "direct_replay": {"path": "queries/vbs_rag_benchmark.json", "count": 10, "task_counts": {"KIS-T": 3, "KIS-C": 2, "VQA": 3, "AVS": 1, "KIS-V": 1}},
+    "extended_replay": {"path": "evaluation/eval_queries_real_v3c.json", "count": 18, "task_counts": {"KIS-T": 10, "VQA": 4, "KIS-C": 2, "AVS": 1, "KIS-V": 1}}
+  },
+  "direct_replay_result": {
+    "path": "evaluation/vbs_rag_benchmark_results.json",
+    "total_queries": 10,
+    "top20_hits": 5,
+    "top20_rate_percent": 50.0,
+    "top20_wilson_95ci_percent": [23.7, 76.3],
+    "kist_ranks": [31, 4, 10],
+    "ordinary_vqa_exact_match": {"correct": 0, "n": 2},
+    "negative_vqa_safe_refusal": {"correct": 1, "n": 1},
+    "kisc_targets_in_top20": {"correct": 0, "n": 2},
+    "latency_seconds": {"mean": 18.006, "median": 24.026, "p95": 34.146}
+  },
+  "ablation_result": {
+    "path": "evaluation/benchmark_real_output/current_run/comprehensive_ablation_summary.json",
+    "retrieval_evaluable_n": 11,
+    "measured_observation": "M1-M4 R@1/R@5/R@10=9.1/9.1/9.1%, MRR=0.097; M5-M6=9.1/18.2/18.2%, MRR=0.141",
+    "causal_claim_allowed": false,
+    "reason": "The harness does not emit paired per-query results for each configuration and several named configuration values are fixed rows rather than independently activated branches."
+  },
+  "limitations": [
+    "Small annotated offline query set",
+    "No complete dataset/index checksum manifest in the current run",
+    "One latency observation per direct-replay case",
+    "No official DRES judge outcomes",
+    "KIS-C turns are nested in sessions",
+    "Current ablation rows require instrumentation before causal interpretation"
+  ]
+}
