@@ -634,6 +634,14 @@ class HybridSearcher:
             return candidates
 
         merged_by_id = {hit["id"]: hit for hit in candidates}
+        # Anchor newly-found frames to the candidate pool's actual score
+        # range: sim=1.0 ties the best fused candidate, weaker sims rank
+        # proportionally below it. The old fixed 1/(k+1) scale put a 0.95
+        # cosine (~0.016) below essentially every multi-list fused candidate
+        # (~0.02-0.03+), so newly-discovered frames almost never surfaced
+        # despite the "compete fairly" intent.
+        pool_max_score = max((h.get("rrf_score", 0.0) for h in candidates), default=0.0)
+        discover_scale = pool_max_score if pool_max_score > 0.0 else 1.0 / (RRF_CONSTANT + 1)
         for video in top_videos_list:
             video_points = self.get_all_points_for_video(video)
             scored_points = []
@@ -648,13 +656,9 @@ class HybridSearcher:
                 scored_points.append((sim, p))
             scored_points.sort(key=lambda x: x[0], reverse=True)
             for sim, p in scored_points[:top_frames_per_video]:
-                # Scale the raw cosine similarity into the same rrf_score
-                # range existing candidates use (rank-1 RRF hit = 1/(k+1))
-                # so newly-discovered frames compete fairly in the
-                # rrf_score-sorted flow without a second RRF pass.
                 merged_by_id[p["id"]] = {
                     "id": p["id"],
-                    "rrf_score": sim * (1.0 / (RRF_CONSTANT + 1)),
+                    "rrf_score": sim * discover_scale,
                     "payload": p["payload"],
                 }
 
