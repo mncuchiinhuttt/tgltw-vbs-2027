@@ -1,86 +1,64 @@
 [
   {
-    "id": "kist-01-red-motorcycle",
+    "id": "kist-01-maui-touring",
     "type": 1,
     "type_name": "KIS-T",
-    "query": "a person riding a red motorcycle on a mountain road in the morning",
-    "ground_truth": {
-      "video_name": "00001",
-      "timestamp": 45.5,
-      "frame_id": 1137
-    }
-  },
-  {
-    "id": "kist-02-yellow-excavator",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "a yellow excavator digging ground at a construction site near tall trees",
-    "ground_truth": {
-      "video_name": "00002",
-      "timestamp": 24.0,
-      "frame_id": 600
-    }
-  },
-  {
-    "id": "kist-03-white-sailboat",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "a white sailboat sailing on open blue sea under clear sunny sky",
-    "ground_truth": {
-      "video_name": "00003",
-      "timestamp": 82.0,
-      "frame_id": 2050
-    }
-  },
-  {
-    "id": "kist-04-cooking-vegetables",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "chef slicing fresh green vegetables and carrots on wooden cutting board",
+    "query": "Motorcycle & Helicopter Touring Maui 2016 scenic road and mountain view",
     "ground_truth": {
       "video_name": "00004",
-      "timestamp": 15.0,
-      "frame_id": 375
-    }
-  },
-  {
-    "id": "kist-05-dog-park",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "golden retriever running and playing with tennis ball on green grass lawn",
-    "ground_truth": {
-      "video_name": "00005",
-      "timestamp": 60.0,
-      "frame_id": 1500
-    }
-  },
-  {
-    "id": "kist-06-airplane-landing",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "commercial airplane landing on runway during sunset with orange sky",
-    "ground_truth": {
-      "video_name": "00006",
-      "timestamp": 35.0,
-      "frame_id": 875
-    }
-  },
-  {
-    "id": "kist-07-night-traffic",
-    "type": 1,
-    "type_name": "KIS-T",
-    "query": "timelapse of busy city street traffic light trails at night between skyscrapers",
-    "ground_truth": {
-      "video_name": "00007",
       "timestamp": 12.0,
       "frame_id": 300
     }
   },
   {
-    "id": "kist-08-waterfall-forest",
+    "id": "kist-02-wedding-film",
     "type": 1,
     "type_name": "KIS-T",
-    "query": "natural scenic waterfall cascading over rocks in lush tropical rainforest",
+    "query": "Ryan & Shaile Wedding Film romantic couple bride and groom ceremony",
+    "ground_truth": {
+      "video_name": "00005",
+      "timestamp": 15.0,
+      "frame_id": 375
+    }
+  },
+  {
+    "id": "kist-03-parisiana-jam",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "PARISIANA JAM street dance music performance in Paris urban plaza",
+    "ground_truth": {
+      "video_name": "00001",
+      "timestamp": 20.0,
+      "frame_id": 500
+    }
+  },
+  {
+    "id": "kist-04-hindu-wedding",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "the Great Hindu wedding Sudarmani & Ka traditional ritual celebration",
+    "ground_truth": {
+      "video_name": "00003",
+      "timestamp": 45.0,
+      "frame_id": 1125
+    }
+  },
+  {
+    "id": "kist-05-six-weeks-abroad",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "Six Weeks Abroad travel documentary sightseeing landmarks and streets",
+    "ground_truth": {
+      "video_name": "00002",
+      "timestamp": 30.0,
+      "frame_id": 750
+    }
+  },
+  {
+    "id": "kist-06-laje-santos",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "laje de santos scuba diving underwater ocean marine life and fish",
     "ground_truth": {
       "video_name": "00008",
       "timestamp": 50.0,
@@ -88,184 +66,153 @@
     }
   },
   {
-    "id": "kist-09-guitar-player",
+    "id": "kist-07-fantasy-illustrator",
     "type": 1,
     "type_name": "KIS-T",
-    "query": "musician playing acoustic guitar with fingers on fretboard in studio",
+    "query": "Marc McBride Fantasy Illustrator artist drawing mythical creatures in studio",
     "ground_truth": {
-      "video_name": "00009",
-      "timestamp": 28.0,
-      "frame_id": 700
+      "video_name": "00007",
+      "timestamp": 18.0,
+      "frame_id": 450
     }
   },
   {
-    "id": "kist-10-snowy-mountain",
+    "id": "kist-08-ghetto-milk",
     "type": 1,
     "type_name": "KIS-T",
-    "query": "snow covered alpine mountain peaks with ski tracks under bright sun",
+    "query": "Ghetto-Milk final cut short movie indie comedy cinematic scene",
     "ground_truth": {
       "video_name": "00010",
-      "timestamp": 90.0,
-      "frame_id": 2250
+      "timestamp": 10.0,
+      "frame_id": 250
+    }
+  },
+  {
+    "id": "kist-09-music-yusa",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "wemakemusic Yusa Parte 1 Tanto de acoustic singing live session",
+    "ground_truth": {
+      "video_name": "00009",
+      "timestamp": 25.0,
+      "frame_id": 625
+    }
+  },
+  {
+    "id": "kist-10-little-horribles",
+    "type": 1,
+    "type_name": "KIS-T",
+    "query": "Little Horribles LMFAO episode comedy web series funny talk",
+    "ground_truth": {
+      "video_name": "00006",
+      "timestamp": 15.0,
+      "frame_id": 375
     }
   },
   {
     "id": "vqa-01-car-color",
     "type": 2,
     "type_name": "VQA",
-    "query": "What color is the sports car parked in front of the modern glass building?",
+    "query": "What color is the motorcycle parked along the road?",
     "ground_truth": {
-      "video_name": "00011",
+      "video_name": "00004",
+      "timestamp": 12.0,
+      "frame_id": 300,
+      "answer": "black"
+    }
+  },
+  {
+    "id": "vqa-02-wedding-dress",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What color is the wedding dress worn by the bride?",
+    "ground_truth": {
+      "video_name": "00005",
+      "timestamp": 15.0,
+      "frame_id": 375,
+      "answer": "white"
+    }
+  },
+  {
+    "id": "vqa-03-artist-tool",
+    "type": 2,
+    "type_name": "VQA",
+    "query": "What drawing tool is the illustrator using in his hand?",
+    "ground_truth": {
+      "video_name": "00007",
       "timestamp": 18.0,
       "frame_id": 450,
-      "answer": "red"
+      "answer": "pen"
     }
   },
   {
-    "id": "vqa-02-sign-text",
-    "type": 2,
-    "type_name": "VQA",
-    "query": "What word is written on the large yellow street warning sign?",
-    "ground_truth": {
-      "video_name": "00012",
-      "timestamp": 40.0,
-      "frame_id": 1000,
-      "answer": "CAUTION"
-    }
-  },
-  {
-    "id": "vqa-03-clock-time",
-    "type": 2,
-    "type_name": "VQA",
-    "query": "What time is displayed on the train station analog clock?",
-    "ground_truth": {
-      "video_name": "00013",
-      "timestamp": 10.5,
-      "frame_id": 262,
-      "answer": "3:00"
-    }
-  },
-  {
-    "id": "vqa-04-shirt-number",
-    "type": 2,
-    "type_name": "VQA",
-    "query": "What number is printed on the back of the runner's blue jersey?",
-    "ground_truth": {
-      "video_name": "00014",
-      "timestamp": 55.0,
-      "frame_id": 1375,
-      "answer": "7"
-    }
-  },
-  {
-    "id": "vqa-05-fruit-type",
-    "type": 2,
-    "type_name": "VQA",
-    "query": "What kind of fruit is in the wooden basket on the kitchen table?",
-    "ground_truth": {
-      "video_name": "00015",
-      "timestamp": 22.0,
-      "frame_id": 550,
-      "answer": "apples"
-    }
-  },
-  {
-    "id": "vqa-06-missing-evidence",
+    "id": "vqa-04-missing-evidence",
     "type": 2,
     "type_name": "VQA",
     "query": "What is the license plate number of the spaceship on Mars?",
     "ground_truth": {
-      "video_name": "00016",
-      "timestamp": 30.0,
-      "frame_id": 750,
+      "video_name": "00001",
+      "timestamp": 20.0,
+      "frame_id": 500,
       "answer": "N/A"
     }
   },
   {
-    "id": "kisc-01-craft-pottery",
+    "id": "kisc-01-maui-helicopter",
     "type": 3,
     "type_name": "KIS-C",
-    "query": "find a craftsman shaping wet clay pottery on a spinning wheel",
+    "query": "find a helicopter tour flying over scenic green valleys and coastlines",
     "history": [
-      { "role": "user", "text": "find a craftsman making pottery" },
-      { "role": "system", "text": "Is the pottery wheel manual or electric in an indoor studio?" },
-      { "role": "user", "text": "it is a master artisan using hands on a spinning wheel in an indoor workshop studio" }
+      { "role": "user", "text": "find a helicopter flying" },
+      { "role": "system", "text": "Is it a military helicopter or a scenic tourist flight in Maui?" },
+      { "role": "user", "text": "it is a scenic helicopter touring flight over Maui valleys" }
     ],
-    "system_answer": "spinning wheel in an indoor workshop studio with clay vase",
+    "system_answer": "scenic helicopter touring flight over Maui valleys and coastline",
     "ground_truth": {
-      "video_name": "00017",
-      "timestamp": 48.0,
-      "frame_id": 1200
+      "video_name": "00004",
+      "timestamp": 12.0,
+      "frame_id": 300
     }
   },
   {
-    "id": "kisc-02-coffee-latte-art",
+    "id": "kisc-02-traditional-hindu",
     "type": 3,
     "type_name": "KIS-C",
-    "query": "barista pouring steamed milk to make heart rosette latte art in white ceramic cup",
+    "query": "traditional Hindu wedding ceremony with garlands and golden decorations",
     "history": [
-      { "role": "user", "text": "find coffee making" },
-      { "role": "system", "text": "Is the barista pouring milk into a cup or grinding coffee beans?" },
-      { "role": "user", "text": "pouring steamed milk to form latte art in a white cup at a cafe counter" }
+      { "role": "user", "text": "find a wedding ceremony" },
+      { "role": "system", "text": "Is it a Western wedding or an Indian traditional wedding with Sudarmani?" },
+      { "role": "user", "text": "it is a traditional Hindu wedding ceremony of Sudarmani" }
     ],
-    "system_answer": "pouring steamed milk latte art in white cup",
+    "system_answer": "traditional Hindu wedding ceremony of Sudarmani",
     "ground_truth": {
-      "video_name": "00018",
-      "timestamp": 33.0,
-      "frame_id": 825
+      "video_name": "00003",
+      "timestamp": 45.0,
+      "frame_id": 1125
     }
   },
   {
-    "id": "kisc-03-drone-beach",
-    "type": 3,
-    "type_name": "KIS-C",
-    "query": "aerial drone shot flying over turquoise ocean waves crashing on white sandy beach with palm trees",
-    "history": [
-      { "role": "user", "text": "drone ocean view" },
-      { "role": "system", "text": "Are there islands or a sandy beach with palm trees along the coast?" },
-      { "role": "user", "text": "coastal shoreline with white sand beach and tropical palm trees" }
-    ],
-    "system_answer": "coastal shoreline with white sand beach and tropical palm trees",
-    "ground_truth": {
-      "video_name": "00019",
-      "timestamp": 72.0,
-      "frame_id": 1800
-    }
-  },
-  {
-    "id": "avs-01-solar-panels",
+    "id": "avs-01-wedding-scenes",
     "type": 4,
     "type_name": "AVS",
-    "query": "shots showing solar panels installed on rooftops or in large solar farm fields",
+    "query": "shots showing weddings marriage celebrations brides and grooms",
     "ground_truth": {
-      "video_name": "00020",
-      "timestamp": 25.0,
-      "frame_id": 625,
-      "distinct_target_videos": ["00020", "00021", "00022", "00023"]
+      "video_name": "00003",
+      "timestamp": 45.0,
+      "frame_id": 1125,
+      "distinct_target_videos": ["00003", "00005"]
     }
   },
   {
-    "id": "avs-02-wind-turbines",
-    "type": 4,
-    "type_name": "AVS",
-    "query": "shots showing tall white wind turbines rotating on grassy hills or offshore",
-    "ground_truth": {
-      "video_name": "00024",
-      "timestamp": 42.0,
-      "frame_id": 1050,
-      "distinct_target_videos": ["00024", "00025", "00026"]
-    }
-  },
-  {
-    "id": "kisv-01-coral-reef",
+    "id": "kisv-01-dive-ocean",
     "type": 5,
     "type_name": "KIS-V",
-    "query": "visual match for underwater coral reef with tropical yellow fish swimming",
-    "reference_media": "00027.mp4",
+    "query": "visual match for scuba diver exploring underwater marine park reef",
+    "reference_media": "00008.mp4",
     "ground_truth": {
-      "video_name": "00027",
-      "timestamp": 15.0,
-      "frame_id": 375
+      "video_name": "00008",
+      "timestamp": 50.0,
+      "frame_id": 1250
     }
   }
 ]
