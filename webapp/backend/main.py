@@ -582,14 +582,19 @@ async def run_search(request: SearchRequest):
                 lambda c: reranker.rerank_type1(resolved_query, c, verify=request.verify),
                 candidates, rerank_k, submission_k,
             )
+            # Threshold only candidates that actually went through the VLM
+            # rerank. rerank_with_tail's un-reranked tail carries rrf_score
+            # (~0.02-0.1, RRF k=60 scale), which can never clear a rerank-score
+            # threshold - the old fallback treated it as 0.0 and silently
+            # emptied the deep pool rerank_with_tail preserves.
             top_candidates = [
                 c for c in top_candidates
-                if c.get("rerank_score", c.get("score", 0.0)) >= config.RERANK_SCORE_THRESHOLD
+                if "rerank_score" not in c or c["rerank_score"] >= config.RERANK_SCORE_THRESHOLD
             ]
             for idx, c in enumerate(top_candidates):
                 results.append({
                     "rank": idx + 1,
-                    "score": c.get("rerank_score", c.get("score", 0.0)),
+                    "score": c.get("rerank_score", c.get("rrf_score", 0.0)),
                     "id": c["id"],
                     "payload": c["payload"],
                     "matched_via": c.get("matched_via", [])
