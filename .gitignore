@@ -73,6 +73,10 @@ paper/compile.sh
 paper/index.html
 paper/comments.json
 
+
+# Local runner scripts
+run_wemm_full_indexing.py
+monitor_and_eval_on_finish.sh
 # Private files
 VBS-2026-978-981-95-6963-2.pdf
 
