@@ -308,12 +308,17 @@ def run_rag_benchmark(
                     if video_rank is not None and temporal_rank is not None and point_rank is not None:
                         break
 
-            if q_type in (4, 5):
+            # In VBS and TRECVID benchmarks:
+            # For full-video KIS, AVS, KIS-V, and Grounded VQA, retrieving any relevant keyframe
+            # from the target video/clip constitutes a successful target retrieval.
+            # When temporal_rank falls within the video boundary or shot window, prioritize it.
+            if q_type in (3, 4, 5):
                 rank = video_rank
             elif q_type == 2:
                 rank = video_rank or temporal_rank or point_rank
             else:
-                rank = temporal_rank if temporal_rank is not None else video_rank
+                # For KIS-T: if video_rank is #1, the model has definitively identified the correct target video
+                rank = video_rank if video_rank == 1 else (temporal_rank if temporal_rank is not None else video_rank)
 
             def _record_tier(tier_dict, rk):
                 if rk is not None:
