@@ -38,7 +38,10 @@ def test_symlinked_media_cannot_escape_root(monkeypatch, tmp_path):
     monkeypatch.setattr(backend_main, "DATASETS_DIR", tmp_path)
     outside = tmp_path.parent / "outside-real.png"
     Image.new("RGB", (4, 4), color="red").save(outside)
-    os.symlink(outside, tmp_path / "link.png")
+    try:
+        os.symlink(outside, tmp_path / "link.png")
+    except OSError:
+        pytest.skip("Symlinks not supported on this environment without admin privileges")
 
     with pytest.raises(HTTPException) as error:
         backend_main._resolve_media_path("link.png")

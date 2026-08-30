@@ -1494,12 +1494,13 @@ if __name__ == "__main__":
     import uvicorn
     # Make sure we are in the correct directory when starting
     os.chdir(str(BACKEND_DIR))
-    # reload=True only watches cwd by default (webapp/backend/) - explicitly
-    # include the shared code directories so edits there trigger a reload too
+    # Production / Live competition mode: disable reload to prevent file-watching
+    # latency overhead and unexpected restarts during live tasks.
+    reload_enabled = os.getenv("WEBAPP_DEV_RELOAD", "false").lower() in {"1", "true", "yes"}
     reload_dirs = [
         str(BACKEND_DIR),
         str(WORKSPACE_ROOT / "models"),
         str(WORKSPACE_ROOT / "preprocessing"),
         str(WORKSPACE_ROOT / "inference-code"),
-    ]
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=reload_dirs, app_dir=str(BACKEND_DIR))
+    ] if reload_enabled else None
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=reload_enabled, reload_dirs=reload_dirs, app_dir=str(BACKEND_DIR))

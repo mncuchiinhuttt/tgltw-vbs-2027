@@ -42,10 +42,10 @@ Because VBS 2027 experiments are performed through self-testing and offline repl
 ### A. Evidence-Backed Priors (`queries/vbs_audit.py`)
 - Provides curated, verified reference keyframes and answers for VBS benchmark queries across datasets (`V3C1`, `V3C2`, `Marine Video Kit`, and AIC reference datasets).
 - `apply_audit_priors(query_stem, query_type, rows, max_rows=100)`:
-  - Prepends audit priors to model candidates.
+  - Prepends audit priors to model candidates when explicitly enabled.
   - Normalizes video stems and deduplicates without dropping diverse tail candidates.
   - Adheres strictly to the maximum result cap.
-  - Can be deactivated globally via `VBS_DISABLE_AUDIT_PRIORS=1` or `AIC_DISABLE_AUDIT_PRIORS=1`.
+  - Disabled by default to prevent evaluation contamination; can be activated explicitly via `VBS_ENABLE_AUDIT_PRIORS=1` or `AIC_ENABLE_AUDIT_PRIORS=1`.
 - `audit_discrepancy(...)`: Computes fine-grained error metrics (Rank-1 video match, temporal error in seconds, and VQA answer correctness).
 
 ### B. Bounded Audit Runner (`queries/run_vbs_audit.py`)

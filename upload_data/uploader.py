@@ -31,10 +31,11 @@ except Exception as e:
 REPO_ID = f"{username}/AIC2025"
 print(f"Target repository ID: {REPO_ID}")
 
-# 3. Create the repository if it doesn't exist
+# 3. Create the repository if it doesn't exist (default to private=True for dataset security)
+IS_PRIVATE = os.getenv("HF_REPO_PRIVATE", "true").lower() in {"1", "true", "yes"}
 try:
-    create_repo(repo_id=REPO_ID, repo_type="dataset", token=HF_TOKEN, private=False, exist_ok=True)
-    print(f"Dataset repository {REPO_ID} checked/created successfully.")
+    create_repo(repo_id=REPO_ID, repo_type="dataset", token=HF_TOKEN, private=IS_PRIVATE, exist_ok=True)
+    print(f"Dataset repository {REPO_ID} checked/created successfully (private={IS_PRIVATE}).")
 except Exception as e:
     print(f"Failed to create/verify repository: {e}", file=sys.stderr)
     sys.exit(1)

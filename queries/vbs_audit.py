@@ -126,11 +126,16 @@ VBS_AUDIT_PRIORS: Dict[str, List[List[str]]] = {
 
 
 def is_audit_prior_active() -> bool:
-    """Return whether audit priors are active or disabled by environment variable."""
-    for var_name in ("VBS_DISABLE_AUDIT_PRIORS", "AIC_DISABLE_AUDIT_PRIORS"):
+    """Return whether audit priors are active.
+    
+    Default is FALSE to ensure unassisted, unbiased retrieval evaluation
+    and prevent benchmark contamination. Priors must be explicitly enabled
+    via environment variable (VBS_ENABLE_AUDIT_PRIORS=true or AIC_ENABLE_AUDIT_PRIORS=true).
+    """
+    for var_name in ("VBS_ENABLE_AUDIT_PRIORS", "AIC_ENABLE_AUDIT_PRIORS", "VBS_AUDIT_PRIORS_ENABLED"):
         if os.getenv(var_name, "").strip().lower() in {"1", "true", "yes"}:
-            return False
-    return True
+            return True
+    return False
 
 
 def normalize_video_stem(video_id: str) -> str:

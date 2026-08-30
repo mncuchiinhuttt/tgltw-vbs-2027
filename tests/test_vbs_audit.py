@@ -49,8 +49,11 @@ from run_vbs_audit import (
 class TestVBSAuditPriors(unittest.TestCase):
 
     def setUp(self):
-        os.environ.pop("VBS_DISABLE_AUDIT_PRIORS", None)
-        os.environ.pop("AIC_DISABLE_AUDIT_PRIORS", None)
+        os.environ["VBS_ENABLE_AUDIT_PRIORS"] = "true"
+
+    def tearDown(self):
+        os.environ.pop("VBS_ENABLE_AUDIT_PRIORS", None)
+        os.environ.pop("AIC_ENABLE_AUDIT_PRIORS", None)
 
     def test_normalize_video_stem(self):
         self.assertEqual(normalize_video_stem("video_0012.mp4"), "video_0012")
@@ -92,17 +95,10 @@ class TestVBSAuditPriors(unittest.TestCase):
         stem = "query-vbs-1-kist"
         model_candidates = [["candidate_1", "100"]]
         
-        orig_env = os.environ.get("VBS_DISABLE_AUDIT_PRIORS")
-        try:
-            os.environ["VBS_DISABLE_AUDIT_PRIORS"] = "1"
-            self.assertFalse(is_audit_prior_active())
-            result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
-            self.assertEqual(result, [["candidate_1", "100"]])
-        finally:
-            if orig_env is None:
-                os.environ.pop("VBS_DISABLE_AUDIT_PRIORS", None)
-            else:
-                os.environ["VBS_DISABLE_AUDIT_PRIORS"] = orig_env
+        os.environ.pop("VBS_ENABLE_AUDIT_PRIORS", None)
+        self.assertFalse(is_audit_prior_active())
+        result = apply_audit_priors(stem, query_type=1, rows=model_candidates, max_rows=10)
+        self.assertEqual(result, [["candidate_1", "100"]])
     def test_get_audit_prior_details(self):
         details = get_audit_prior_details("query-vbs-1-kist")
         self.assertIsNotNone(details)
