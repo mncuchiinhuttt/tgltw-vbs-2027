@@ -175,13 +175,24 @@ def _candidate_paths(dataset_dir: str, payload: Dict[str, Any]) -> List[str]:
         if not isinstance(raw_path, str) or not raw_path.strip():
             continue
         path = os.path.realpath(raw_path if os.path.isabs(raw_path) else os.path.join(dataset_root, raw_path))
-        try:
-            if os.path.commonpath((dataset_root, path)) != dataset_root:
-                continue
-        except ValueError:
-            continue
         if path not in paths:
             paths.append(path)
+
+    vid = payload.get("video_id")
+    src = payload.get("source_file")
+    fidx = payload.get("frame_idx")
+    candidates_to_try = []
+    if src:
+        candidates_to_try.append(os.path.join(dataset_root, "videos", src))
+        candidates_to_try.append(os.path.join(dataset_root, "v3c", "videos", src))
+    if vid and fidx is not None:
+        candidates_to_try.append(os.path.join(dataset_root, "keyframes", str(vid), f"{fidx}.jpg"))
+        candidates_to_try.append(os.path.join(dataset_root, "v3c", "keyframes", str(vid), f"{fidx}.jpg"))
+
+    for p in candidates_to_try:
+        rp = os.path.realpath(p)
+        if rp not in paths:
+            paths.append(rp)
     return paths
 
 

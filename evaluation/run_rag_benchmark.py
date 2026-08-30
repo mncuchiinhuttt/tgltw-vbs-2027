@@ -167,14 +167,16 @@ def run_rag_benchmark(
 
         if q_type in (1, 5):
             # KIS-T / KIS-V
-            reranked = reranker.rerank_type1(q_text, candidates[:SUBMISSION_TOP_K])
+            rerank_k = min(len(candidates), 20)
+            reranked = reranker.rerank_type1(q_text, candidates[:rerank_k]) + candidates[rerank_k:SUBMISSION_TOP_K]
             evaluated_candidates = reranked
 
         elif q_type == 2:
             # VQA
             decomp = query_proc.decompose_query(q_text)
             sub_q = decomp.get("sub_queries", [q_text])
-            reranked = reranker.rerank_type2_vqa(q_text, sub_q, candidates[:SUBMISSION_TOP_K], dataset_dir=dataset_dir)
+            vqa_k = min(len(candidates), 20)
+            reranked = reranker.rerank_type2_vqa(q_text, sub_q, candidates[:vqa_k], dataset_dir=dataset_dir) + candidates[vqa_k:SUBMISSION_TOP_K]
             evaluated_candidates = reranked
             if evaluated_candidates:
                 best_hit = evaluated_candidates[0]
@@ -204,8 +206,8 @@ def run_rag_benchmark(
             
             ambiguity_turn2 = searcher.compute_ambiguity_score(boosted_cands)
             delta_ambiguity = round(ambiguity_turn1 - ambiguity_turn2, 4)
-
-            reranked = reranker.rerank_type1(resolved_cqr, boosted_cands[:SUBMISSION_TOP_K])
+            kisc_rerank_k = min(len(boosted_cands), 20)
+            reranked = reranker.rerank_type1(resolved_cqr, boosted_cands[:kisc_rerank_k]) + boosted_cands[kisc_rerank_k:SUBMISSION_TOP_K]
             evaluated_candidates = reranked
             kisc_info = {
                 "cqr_query": resolved_cqr,

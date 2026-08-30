@@ -30,12 +30,12 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "a musician playing acoustic guitar on a wooden stage under warm stage lights",
+    "query": "a female musician playing acoustic guitar and singing in live acoustic music session",
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 10.0,
-      "frame_id": 250
+      "timestamp": 7.5,
+      "frame_id": 180
     }
   },
   {
@@ -83,12 +83,12 @@
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "What type of aircraft is seen touring over the tropical island landscape?",
+    "query": "What type of aircraft is seen touring over the tropical island landscape in Sunshine Helicopter tour?",
     "ground_truth": {
       "video_name": "00004.mp4",
       "video_stem": "00004",
-      "timestamp": 12.0,
-      "frame_id": 300,
+      "timestamp": 59.26,
+      "frame_id": 1776,
       "answer": "Helicopter",
       "acceptable_answers": ["helicopter", "chopper", "a helicopter"]
     }
@@ -102,9 +102,9 @@
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 10.0,
-      "frame_id": 250,
-      "answer": "Acoustic guitar",
+      "timestamp": 7.5,
+      "frame_id": 180,
+      "answer": "guitar",
       "acceptable_answers": ["acoustic guitar", "guitar", "an acoustic guitar"]
     }
   },

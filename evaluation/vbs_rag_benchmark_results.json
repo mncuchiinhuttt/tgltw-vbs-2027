@@ -1,50 +1,50 @@
 {
-  "timestamp": "2026-08-30 14:17:56 UTC",
+  "timestamp": "2026-08-30 15:16:02 UTC",
   "total_queries": 10,
-  "overall_rag_score": 34.4,
+  "overall_rag_score": 47.2,
   "pillar1_retrieval": {
-    "recall_1": 22.2,
-    "recall_5": 33.3,
-    "recall_10": 33.3,
-    "mrr": 0.2648,
+    "recall_1": 11.1,
+    "recall_5": 11.1,
+    "recall_10": 11.1,
+    "mrr": 0.1318,
     "video_level": {
-      "recall_1": 22.2,
-      "recall_5": 33.3,
-      "recall_10": 44.4,
-      "mrr": 0.2793
-    },
-    "temporal_segment": {
-      "recall_1": 22.2,
-      "recall_5": 33.3,
-      "recall_10": 33.3,
-      "mrr": 0.2536
-    },
-    "point_precision": {
       "recall_1": 11.1,
       "recall_5": 22.2,
       "recall_10": 22.2,
-      "mrr": 0.1412
+      "mrr": 0.186
+    },
+    "temporal_segment": {
+      "recall_1": 11.1,
+      "recall_5": 11.1,
+      "recall_10": 11.1,
+      "mrr": 0.1282
+    },
+    "point_precision": {
+      "recall_1": 11.1,
+      "recall_5": 11.1,
+      "recall_10": 11.1,
+      "mrr": 0.1215
     },
     "evaluable_items": 9
   },
   "pillar2_generation": {
-    "vqa_exact_match": 0.0,
-    "faithfulness": 0.0,
+    "vqa_exact_match": 100.0,
+    "faithfulness": 100.0,
     "fail_closed_safety_rate": 100.0,
     "vqa_evaluated": 2
   },
   "pillar3_conversational": {
-    "kisc_turn_2_recall_1": 50.0,
+    "kisc_turn_2_recall_1": 0.0,
     "mean_ambiguity_reduction": 0.01,
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 19.97,
-    "p50_latency_sec": 29.155,
-    "p95_latency_sec": 35.202,
-    "mean_hyde_sec": 2.031,
-    "mean_search_sec": 0.667,
-    "mean_rerank_sec": 17.272
+    "mean_latency_sec": 20.229,
+    "p50_latency_sec": 11.838,
+    "p95_latency_sec": 50.524,
+    "mean_hyde_sec": 1.979,
+    "mean_search_sec": 0.645,
+    "mean_rerank_sec": 17.604
   },
   "system_config": {
     "vlm_option": "openai",
@@ -66,77 +66,32 @@
         "timestamp": 7.2,
         "frame_id": 180
       },
-      "rank": 81,
-      "video_rank": 7,
-      "temporal_rank": 81,
+      "rank": 83,
+      "video_rank": 2,
+      "temporal_rank": 83,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #81 | V-Rank #7)",
+      "status": "PASS (Rank #83 | V-Rank #2)",
       "latency": {
-        "total_sec": 35.202,
-        "hyde_sec": 3.061,
-        "search_sec": 1.5,
-        "rerank_sec": 30.64
+        "total_sec": 14.906,
+        "hyde_sec": 2.638,
+        "search_sec": 1.523,
+        "rerank_sec": 10.744
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "c70ddfce-f284-513b-b700-4fb55b7084ab",
-          "score": 0.5466,
+          "id": "fb323c8e-be34-5d8d-a2a0-e42959ab8d7a",
+          "score": 0.5456,
           "video_name": "01639.mp4",
-          "frame_idx": 1298,
-          "timestamp": 54.14,
+          "frame_idx": 1239,
+          "timestamp": 51.68,
           "caption": "Hothead Bmx - Under The Sun"
         },
         {
           "rank": 2,
-          "id": "797c28a0-33a5-5fb2-b75b-7bcf67bfd645",
-          "score": 0.5459,
-          "video_name": "00343.mp4",
-          "frame_idx": 740,
-          "timestamp": 24.69,
-          "caption": "Hothead Bmx - Wintry Mix Edit 2013"
-        },
-        {
-          "rank": 3,
-          "id": "2da16937-1fa4-5e8c-b0b9-1ce8e5ddc031",
-          "score": 0.5447,
-          "video_name": "01639.mp4",
-          "frame_idx": 1357,
-          "timestamp": 56.6,
-          "caption": "Hothead Bmx - Under The Sun"
-        },
-        {
-          "rank": 4,
-          "id": "6404bb44-76e5-5507-88db-2452bb9d7bed",
-          "score": 0.5438,
-          "video_name": "01040.mp4",
-          "frame_idx": 1258,
-          "timestamp": 41.98,
-          "caption": "April April BMX Jam 2014"
-        },
-        {
-          "rank": 5,
-          "id": "33a80a47-5a4a-59ef-9c93-dad190730af1",
-          "score": 0.5431,
-          "video_name": "00343.mp4",
-          "frame_idx": 1776,
-          "timestamp": 59.26,
-          "caption": "Hothead Bmx - Wintry Mix Edit 2013"
-        },
-        {
-          "rank": 6,
-          "id": "934c503f-33b2-5038-8b9f-e9049985bf27",
-          "score": 0.4863,
-          "video_name": "00176.mp4",
-          "frame_idx": 1800,
-          "timestamp": 60.0,
-          "caption": "[SFG DIST] YNOT day #0002 // YNOT KOREA Team"
-        },
-        {
-          "rank": 7,
           "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
           "score": 0.4861,
           "video_name": "00001.mp4",
@@ -145,16 +100,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 8,
-          "id": "aacd487a-6118-564f-a3ec-f7eb5b739adf",
-          "score": 0.4858,
-          "video_name": "00205.mp4",
-          "frame_idx": 1332,
-          "timestamp": 44.44,
-          "caption": "Guillaume Marie-Sosnowski - Welcome to the team"
-        },
-        {
-          "rank": 9,
+          "rank": 3,
           "id": "834fc03d-270f-5324-a763-fa94eb9cee0f",
           "score": 0.4857,
           "video_name": "00343.mp4",
@@ -163,13 +109,67 @@
           "caption": "Hothead Bmx - Wintry Mix Edit 2013"
         },
         {
-          "rank": 10,
+          "rank": 4,
+          "id": "7e4fbad6-5e70-58e1-a077-f876c1a933f6",
+          "score": 0.485,
+          "video_name": "01639.mp4",
+          "frame_idx": 708,
+          "timestamp": 29.53,
+          "caption": "Hothead Bmx - Under The Sun"
+        },
+        {
+          "rank": 5,
+          "id": "c70ddfce-f284-513b-b700-4fb55b7084ab",
+          "score": 0.4266,
+          "video_name": "01639.mp4",
+          "frame_idx": 1298,
+          "timestamp": 54.14,
+          "caption": "Hothead Bmx - Under The Sun"
+        },
+        {
+          "rank": 6,
+          "id": "aacd487a-6118-564f-a3ec-f7eb5b739adf",
+          "score": 0.3658,
+          "video_name": "00205.mp4",
+          "frame_idx": 1332,
+          "timestamp": 44.44,
+          "caption": "Guillaume Marie-Sosnowski - Welcome to the team"
+        },
+        {
+          "rank": 7,
           "id": "00645c44-4b14-59fc-bdfc-d21c64eb8a4c",
-          "score": 0.4852,
+          "score": 0.3652,
           "video_name": "01040.mp4",
           "frame_idx": 1628,
           "timestamp": 54.32,
           "caption": "April April BMX Jam 2014"
+        },
+        {
+          "rank": 8,
+          "id": "13c3d22b-ae79-54bc-805a-67aeea670e9b",
+          "score": 0.3065,
+          "video_name": "00001.mp4",
+          "frame_idx": 744,
+          "timestamp": 29.76,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 9,
+          "id": "c31269a6-80b1-5b4a-ba29-5e02aa51440b",
+          "score": 0.306,
+          "video_name": "00001.mp4",
+          "frame_idx": 1240,
+          "timestamp": 49.6,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 10,
+          "id": "14ee60b7-fe67-5b21-bb55-c142251a7bd0",
+          "score": 0.3056,
+          "video_name": "00055.mp4",
+          "frame_idx": 1121,
+          "timestamp": 46.76,
+          "caption": "JC Pieri - BMX Reel 2013"
         }
       ]
     },
@@ -194,10 +194,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 31.328,
-        "hyde_sec": 3.202,
-        "search_sec": 0.525,
-        "rerank_sec": 27.6
+        "total_sec": 10.271,
+        "hyde_sec": 2.191,
+        "search_sec": 0.555,
+        "rerank_sec": 7.525
       },
       "top_candidates": [
         {
@@ -211,84 +211,84 @@
         },
         {
           "rank": 2,
+          "id": "f59c238a-2f02-5532-a871-22ae28822474",
+          "score": 0.4861,
+          "video_name": "00326.mp4",
+          "frame_idx": 434,
+          "timestamp": 17.36,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
+        },
+        {
+          "rank": 3,
+          "id": "29685b4f-d17c-5b64-83bf-38d6ab343625",
+          "score": 0.4858,
+          "video_name": "00326.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
+        },
+        {
+          "rank": 4,
           "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
-          "score": 0.4865,
+          "score": 0.4265,
           "video_name": "00326.mp4",
           "frame_idx": 868,
           "timestamp": 34.72,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 3,
+          "rank": 5,
+          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
+          "score": 0.425,
+          "video_name": "00498.mp4",
+          "frame_idx": 296,
+          "timestamp": 9.88,
+          "caption": "Nanakuli Soaring"
+        },
+        {
+          "rank": 6,
           "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
-          "score": 0.4855,
+          "score": 0.3655,
           "video_name": "00326.mp4",
           "frame_idx": 496,
           "timestamp": 19.84,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 4,
+          "rank": 7,
           "id": "67b6d4b5-b556-5b3d-b717-ceaf3f9be355",
-          "score": 0.4852,
+          "score": 0.3652,
           "video_name": "00326.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 5,
-          "id": "2b47130c-fd62-5440-86a8-4830532a0156",
-          "score": 0.4849,
-          "video_name": "00004.mp4",
-          "frame_idx": 1110,
-          "timestamp": 37.04,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
-        },
-        {
-          "rank": 6,
-          "id": "d9968760-489f-528d-aeb2-596aa15a08f8",
-          "score": 0.4849,
-          "video_name": "00004.mp4",
-          "frame_idx": 1258,
-          "timestamp": 41.98,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
-        },
-        {
-          "rank": 7,
-          "id": "44348da7-312d-5ed0-bda0-33eca85ce863",
-          "score": 0.4847,
-          "video_name": "00326.mp4",
-          "frame_idx": 1178,
-          "timestamp": 47.12,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
-        },
-        {
           "rank": 8,
-          "id": "5a4df26c-3a57-5912-a298-805fec2ba58e",
-          "score": 0.4846,
-          "video_name": "00498.mp4",
-          "frame_idx": 1258,
-          "timestamp": 41.98,
-          "caption": "Nanakuli Soaring"
+          "id": "31665996-5edb-5496-90de-5f1347fb561f",
+          "score": 0.3651,
+          "video_name": "00060.mp4",
+          "frame_idx": 444,
+          "timestamp": 14.81,
+          "caption": "Rota, Nature\u2019s Treasure Island"
         },
         {
           "rank": 9,
-          "id": "1def7c2c-e7d4-54b7-b09f-7e38bdc38e5f",
-          "score": 0.4844,
-          "video_name": "00004.mp4",
-          "frame_idx": 1184,
-          "timestamp": 39.51,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "f4ff4eca-78c5-5d68-bdeb-c7f2e5bb3b9a",
+          "score": 0.3062,
+          "video_name": "01523.mp4",
+          "frame_idx": 118,
+          "timestamp": 4.92,
+          "caption": "Gone to Hawaii"
         },
         {
           "rank": 10,
-          "id": "26992e69-7391-5e4a-ac57-1a32ca95bea0",
-          "score": 0.4839,
-          "video_name": "00326.mp4",
-          "frame_idx": 1116,
-          "timestamp": 44.64,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
+          "id": "f01f5b1e-94fe-505b-af92-9ec12aec93f7",
+          "score": 0.2456,
+          "video_name": "00060.mp4",
+          "frame_idx": 296,
+          "timestamp": 9.88,
+          "caption": "Rota, Nature\u2019s Treasure Island"
         }
       ]
     },
@@ -297,12 +297,12 @@
       "type": 1,
       "type_name": "KIS-T",
       "category": "Textual Known-Item Search",
-      "query": "a musician playing acoustic guitar on a wooden stage under warm stage lights",
+      "query": "a female musician playing acoustic guitar and singing in live acoustic music session",
       "ground_truth": {
         "video_name": "00009.mp4",
         "video_stem": "00009",
-        "timestamp": 10.0,
-        "frame_id": 250
+        "timestamp": 7.5,
+        "frame_id": 180
       },
       "rank": null,
       "video_rank": null,
@@ -313,101 +313,101 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 33.255,
-        "hyde_sec": 1.775,
-        "search_sec": 0.529,
-        "rerank_sec": 30.951
+        "total_sec": 7.96,
+        "hyde_sec": 2.05,
+        "search_sec": 0.532,
+        "rerank_sec": 5.377
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "4445369f-cc90-559d-b83c-70c82101d2b5",
-          "score": 0.6032,
-          "video_name": "00754.mp4",
-          "frame_idx": 900,
-          "timestamp": 37.5,
-          "caption": "Pageants - \u201cWords As Pictures\u201d"
-        },
-        {
-          "rank": 2,
-          "id": "b3c6d168-6687-5cad-acff-80d61a8a7e15",
-          "score": 0.5453,
-          "video_name": "01370.mp4",
-          "frame_idx": 806,
-          "timestamp": 32.24,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
-        },
-        {
-          "rank": 3,
           "id": "9629dd0d-9f11-5228-8741-70a0e3a3b799",
-          "score": 0.5451,
+          "score": 0.6059,
           "video_name": "01528.mp4",
           "frame_idx": 1116,
           "timestamp": 44.64,
           "caption": "Scarlette Fever - Sunday Best (Live @ Konk Studios)"
         },
         {
+          "rank": 2,
+          "id": "bc09383e-3084-58e5-8396-5c033e728af1",
+          "score": 0.5465,
+          "video_name": "00499.mp4",
+          "frame_idx": 992,
+          "timestamp": 39.68,
+          "caption": "Sparrow & the Workshop - The Gun (Toad Session)"
+        },
+        {
+          "rank": 3,
+          "id": "77f27c42-b485-527f-afef-f4bec617a5e3",
+          "score": 0.5463,
+          "video_name": "00499.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "Sparrow & the Workshop - The Gun (Toad Session)"
+        },
+        {
           "rank": 4,
-          "id": "36307e8b-4999-5174-9cf6-ad50eff1a5dd",
-          "score": 0.545,
-          "video_name": "01370.mp4",
-          "frame_idx": 0,
-          "timestamp": 0.0,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
+          "id": "1f1faa1b-b282-55d0-a8eb-bcd18877725c",
+          "score": 0.5461,
+          "video_name": "00499.mp4",
+          "frame_idx": 1054,
+          "timestamp": 42.16,
+          "caption": "Sparrow & the Workshop - The Gun (Toad Session)"
         },
         {
           "rank": 5,
+          "id": "4a83ed3c-46ce-588f-9efb-71cae951369a",
+          "score": 0.5456,
+          "video_name": "01528.mp4",
+          "frame_idx": 1364,
+          "timestamp": 54.56,
+          "caption": "Scarlette Fever - Sunday Best (Live @ Konk Studios)"
+        },
+        {
+          "rank": 6,
+          "id": "cf8e7cbb-81d5-5356-9c49-375d5e2ce81a",
+          "score": 0.4263,
+          "video_name": "00754.mp4",
+          "frame_idx": 420,
+          "timestamp": 17.5,
+          "caption": "Pageants - \u201cWords As Pictures\u201d"
+        },
+        {
+          "rank": 7,
+          "id": "c18bba77-2323-50e7-9423-9f88e602abc0",
+          "score": 0.3062,
+          "video_name": "00754.mp4",
+          "frame_idx": 240,
+          "timestamp": 10.0,
+          "caption": "Pageants - \u201cWords As Pictures\u201d"
+        },
+        {
+          "rank": 8,
+          "id": "3c761aab-7714-54e6-bcc6-c4375e7d1004",
+          "score": 0.2452,
+          "video_name": "00754.mp4",
+          "frame_idx": 480,
+          "timestamp": 20.0,
+          "caption": "Pageants - \u201cWords As Pictures\u201d"
+        },
+        {
+          "rank": 9,
+          "id": "5e3f016a-d89b-578c-9370-3765e8ea6591",
+          "score": 0.1857,
+          "video_name": "00754.mp4",
+          "frame_idx": 1020,
+          "timestamp": 42.5,
+          "caption": "Pageants - \u201cWords As Pictures\u201d"
+        },
+        {
+          "rank": 10,
           "id": "967dd3d6-4018-5bfc-9992-a8dcf0dfe265",
-          "score": 0.5449,
+          "score": 0.1266,
           "video_name": "00754.mp4",
           "frame_idx": 840,
           "timestamp": 35.0,
           "caption": "Pageants - \u201cWords As Pictures\u201d"
-        },
-        {
-          "rank": 6,
-          "id": "e4c82f36-6e63-5328-95cc-ff010cf8a9b5",
-          "score": 0.5448,
-          "video_name": "01370.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
-        },
-        {
-          "rank": 7,
-          "id": "63736e82-1197-5d28-99d4-617303598b35",
-          "score": 0.5446,
-          "video_name": "01370.mp4",
-          "frame_idx": 930,
-          "timestamp": 37.2,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
-        },
-        {
-          "rank": 8,
-          "id": "74f2f94c-2933-598a-a7d0-3859bc23320e",
-          "score": 0.5445,
-          "video_name": "01370.mp4",
-          "frame_idx": 868,
-          "timestamp": 34.72,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
-        },
-        {
-          "rank": 9,
-          "id": "0d096c59-1da7-512f-864e-2f10396f9095",
-          "score": 0.5443,
-          "video_name": "01370.mp4",
-          "frame_idx": 1054,
-          "timestamp": 42.16,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
-        },
-        {
-          "rank": 10,
-          "id": "3262a1f8-cb3e-534a-b782-bdca33bdacc3",
-          "score": 0.5443,
-          "video_name": "01370.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
         }
       ]
     },
@@ -423,115 +423,115 @@
         "timestamp": 14.0,
         "frame_id": 350
       },
-      "rank": 1,
-      "video_rank": 1,
-      "temporal_rank": 1,
+      "rank": 21,
+      "video_rank": 21,
+      "temporal_rank": 21,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find a traditional Hindu wedding ceremony with a peacock theme, golden garlands, and colorful decorations",
+        "cqr_query": "find a traditional Hindu wedding ceremony with colorful decorations, a peacock theme, and golden garlands",
         "ambiguity_turn1": 0.792,
         "ambiguity_turn2": 0.785,
         "delta_ambiguity": 0.0065
       },
-      "status": "PASS (Rank #1 | V-Rank #1)",
+      "status": "PASS (Rank #21 | V-Rank #21)",
       "latency": {
-        "total_sec": 26.2,
-        "hyde_sec": 2.156,
-        "search_sec": 0.705,
-        "rerank_sec": 23.339
+        "total_sec": 11.102,
+        "hyde_sec": 2.375,
+        "search_sec": 0.551,
+        "rerank_sec": 8.176
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "d8fd242e-65a2-5330-9c8f-fb380653e7f0",
-          "score": 0.5449,
-          "video_name": "00003.mp4",
-          "frame_idx": 666,
-          "timestamp": 22.22,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "de3d9084-aabc-53c0-af68-e135953b55f3",
+          "score": 0.1865,
+          "video_name": "01646.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "Eternal Love (Sunil & Sarita)"
         },
         {
           "rank": 2,
-          "id": "0adede2e-7966-5b76-9d79-026897530890",
-          "score": 0.5435,
-          "video_name": "00003.mp4",
-          "frame_idx": 740,
-          "timestamp": 24.69,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "9466d5b4-f8b4-5c98-800c-df901ad68d8e",
+          "score": 0.1263,
+          "video_name": "01575.mp4",
+          "frame_idx": 944,
+          "timestamp": 39.37,
+          "caption": "Inder and Navi Kansas Highlight Film"
         },
         {
           "rank": 3,
-          "id": "87c6c897-8362-5247-98fe-d323f6f13b05",
-          "score": 0.5434,
-          "video_name": "00003.mp4",
-          "frame_idx": 1776,
-          "timestamp": 59.26,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "5d507a7d-e3db-5619-860e-880ef56f7ab5",
+          "score": 0.1256,
+          "video_name": "01646.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "Eternal Love (Sunil & Sarita)"
         },
         {
           "rank": 4,
-          "id": "432400d5-6f2d-51f8-a840-4627409b0967",
-          "score": 0.5434,
-          "video_name": "00003.mp4",
-          "frame_idx": 962,
-          "timestamp": 32.1,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "66b195ee-0497-55c3-bf6d-665f4c17b342",
+          "score": 0.1254,
+          "video_name": "00088.mp4",
+          "frame_idx": 518,
+          "timestamp": 17.28,
+          "caption": "Shela & Jai : singapore wedding reception \u201cSIGNED, SEALED and MATE as JS\u201d by Digimax Video"
         },
         {
           "rank": 5,
-          "id": "1018a7a3-5377-500b-a868-b923a22d0e13",
-          "score": 0.5431,
-          "video_name": "00003.mp4",
-          "frame_idx": 1702,
-          "timestamp": 56.79,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "c92e16fd-b31e-53e0-a97e-ae6edf775120",
+          "score": 0.1251,
+          "video_name": "00088.mp4",
+          "frame_idx": 1036,
+          "timestamp": 34.57,
+          "caption": "Shela & Jai : singapore wedding reception \u201cSIGNED, SEALED and MATE as JS\u201d by Digimax Video"
         },
         {
           "rank": 6,
-          "id": "d9f3e40c-037c-5e82-b45b-a01ae69e5aa0",
-          "score": 0.5427,
-          "video_name": "00003.mp4",
-          "frame_idx": 814,
-          "timestamp": 27.16,
-          "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
+          "id": "e9a6286f-e40f-5efb-be65-954e6e25acc1",
+          "score": 0.0669,
+          "video_name": "01646.mp4",
+          "frame_idx": 62,
+          "timestamp": 2.48,
+          "caption": "Eternal Love (Sunil & Sarita)"
         },
         {
           "rank": 7,
-          "id": "b5d2574b-f3ea-508e-879d-4e99532e50e5",
-          "score": 0.3031,
-          "video_name": "01575.mp4",
-          "frame_idx": 413,
-          "timestamp": 17.23,
-          "caption": "Inder and Navi Kansas Highlight Film"
+          "id": "3a867fb4-354f-5936-8ce5-518b9d619072",
+          "score": 0.0653,
+          "video_name": "00551.mp4",
+          "frame_idx": 124,
+          "timestamp": 4.96,
+          "caption": "Patt ~ Yuth Thai Wedding Ceremony"
         },
         {
           "rank": 8,
-          "id": "31c99f81-a94d-520e-9c16-25289a46fa88",
-          "score": 0.2437,
-          "video_name": "01575.mp4",
-          "frame_idx": 1062,
-          "timestamp": 44.29,
-          "caption": "Inder and Navi Kansas Highlight Film"
+          "id": "de05b7b1-9c89-5c69-9b09-3e4085c43a3d",
+          "score": 0.0651,
+          "video_name": "00551.mp4",
+          "frame_idx": 62,
+          "timestamp": 2.48,
+          "caption": "Patt ~ Yuth Thai Wedding Ceremony"
         },
         {
           "rank": 9,
-          "id": "a3c26416-da2f-5795-96e1-8154332e371c",
-          "score": 0.1836,
-          "video_name": "01575.mp4",
-          "frame_idx": 1357,
-          "timestamp": 56.6,
-          "caption": "Inder and Navi Kansas Highlight Film"
+          "id": "e3004a9d-d86c-5d85-95fa-6a44ae775ac4",
+          "score": 0.0067,
+          "video_name": "00077.mp4",
+          "frame_idx": 1258,
+          "timestamp": 41.98,
+          "caption": "Ly and Andy, Nha Trang, November 2013"
         },
         {
           "rank": 10,
-          "id": "f6720642-f0fc-5a7c-a356-b2e8cc3745ae",
-          "score": 0.1827,
-          "video_name": "01646.mp4",
-          "frame_idx": 310,
-          "timestamp": 12.4,
-          "caption": "Eternal Love (Sunil & Sarita)"
+          "id": "e8c6bd6c-b0bc-55c2-b08d-72996a7d381c",
+          "score": 0.0066,
+          "video_name": "01696.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "Rachel + Josh // Hertfordshire - Shoot Me Now Films"
         }
       ]
     },
@@ -547,64 +547,37 @@
         "timestamp": 20.0,
         "frame_id": 500
       },
-      "rank": 4,
-      "video_rank": 4,
-      "temporal_rank": 4,
-      "point_rank": 4,
+      "rank": 59,
+      "video_rank": 59,
+      "temporal_rank": 59,
+      "point_rank": 59,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "scuba divers swimming and exploring marine life and tropical fish near coral reefs",
+        "cqr_query": "scuba divers swimming with tropical fish and exploring marine life near coral reefs",
         "ambiguity_turn1": 0.742,
         "ambiguity_turn2": 0.728,
         "delta_ambiguity": 0.014
       },
-      "status": "PASS (Rank #4 | V-Rank #4)",
+      "status": "PASS (Rank #59 | V-Rank #59)",
       "latency": {
-        "total_sec": 30.929,
-        "hyde_sec": 4.433,
-        "search_sec": 0.661,
-        "rerank_sec": 25.835
+        "total_sec": 11.838,
+        "hyde_sec": 3.661,
+        "search_sec": 0.556,
+        "rerank_sec": 7.621
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "92a2b316-02f2-5a66-b518-bf14d5c3bb5f",
-          "score": 0.5432,
-          "video_name": "00470.mp4",
-          "frame_idx": 354,
-          "timestamp": 14.76,
-          "caption": "V3C Video 00470"
-        },
-        {
-          "rank": 2,
-          "id": "1c3e300f-cd37-55e6-b6f4-7c94486e9394",
-          "score": 0.483,
-          "video_name": "00286.mp4",
-          "frame_idx": 1480,
-          "timestamp": 49.38,
-          "caption": "Escambron Up-Close"
-        },
-        {
-          "rank": 3,
           "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
-          "score": 0.427,
+          "score": 0.367,
           "video_name": "00250.mp4",
           "frame_idx": 354,
           "timestamp": 14.76,
           "caption": "Deep South Maldives"
         },
         {
-          "rank": 4,
-          "id": "90d230d3-a8d9-5fb6-a414-43489800e41e",
-          "score": 0.4229,
-          "video_name": "00008.mp4",
-          "frame_idx": 434,
-          "timestamp": 17.36,
-          "caption": "laje de santos"
-        },
-        {
-          "rank": 5,
+          "rank": 2,
           "id": "274f6250-a1c2-591b-8223-dc803cef2ebb",
           "score": 0.3667,
           "video_name": "00250.mp4",
@@ -613,34 +586,25 @@
           "caption": "Deep South Maldives"
         },
         {
-          "rank": 6,
-          "id": "4b295d3d-a842-5bd2-921d-f7e114a02036",
-          "score": 0.3652,
-          "video_name": "00250.mp4",
-          "frame_idx": 1239,
-          "timestamp": 51.68,
-          "caption": "Deep South Maldives"
+          "rank": 3,
+          "id": "85048158-58c0-571b-9b85-c33eb2d98344",
+          "score": 0.3662,
+          "video_name": "00609.mp4",
+          "frame_idx": 372,
+          "timestamp": 14.88,
+          "caption": "116 bonaire 1"
         },
         {
-          "rank": 7,
-          "id": "ec249a7c-6e75-597a-9a16-7d619c043530",
-          "score": 0.3636,
-          "video_name": "00250.mp4",
-          "frame_idx": 59,
-          "timestamp": 2.46,
-          "caption": "Deep South Maldives"
+          "rank": 4,
+          "id": "6e7fb955-954a-5fe2-997a-50031e1fd042",
+          "score": 0.3657,
+          "video_name": "00609.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "116 bonaire 1"
         },
         {
-          "rank": 8,
-          "id": "b5a3c1c4-db32-5238-8ef1-bdb73898c0d8",
-          "score": 0.3633,
-          "video_name": "00008.mp4",
-          "frame_idx": 1302,
-          "timestamp": 52.08,
-          "caption": "laje de santos"
-        },
-        {
-          "rank": 9,
+          "rank": 5,
           "id": "a7a4c4b0-09ec-55e3-a818-eacf9690505a",
           "score": 0.3063,
           "video_name": "00250.mp4",
@@ -649,13 +613,49 @@
           "caption": "Deep South Maldives"
         },
         {
+          "rank": 6,
+          "id": "e930f883-5dfa-5793-99ff-f6b3f27ee520",
+          "score": 0.3061,
+          "video_name": "00609.mp4",
+          "frame_idx": 682,
+          "timestamp": 27.28,
+          "caption": "116 bonaire 1"
+        },
+        {
+          "rank": 7,
+          "id": "1a012c6e-5be9-5230-bc90-da245bcb2df0",
+          "score": 0.306,
+          "video_name": "00609.mp4",
+          "frame_idx": 434,
+          "timestamp": 17.36,
+          "caption": "116 bonaire 1"
+        },
+        {
+          "rank": 8,
+          "id": "fdbdc508-35ee-5875-b6ff-feea5a7d759f",
+          "score": 0.3053,
+          "video_name": "00609.mp4",
+          "frame_idx": 620,
+          "timestamp": 24.8,
+          "caption": "116 bonaire 1"
+        },
+        {
+          "rank": 9,
+          "id": "4b295d3d-a842-5bd2-921d-f7e114a02036",
+          "score": 0.3052,
+          "video_name": "00250.mp4",
+          "frame_idx": 1239,
+          "timestamp": 51.68,
+          "caption": "Deep South Maldives"
+        },
+        {
           "rank": 10,
-          "id": "20e586d1-b34f-596f-9ae4-08ed8f31c2b3",
-          "score": 0.3047,
-          "video_name": "01672.mp4",
-          "frame_idx": 1178,
-          "timestamp": 47.12,
-          "caption": "South Komodo 2012"
+          "id": "16bafeca-6f0b-5fd7-8132-e4bb2a46acad",
+          "score": 0.1856,
+          "video_name": "00609.mp4",
+          "frame_idx": 310,
+          "timestamp": 12.4,
+          "caption": "116 bonaire 1"
         }
       ]
     },
@@ -664,12 +664,12 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What type of aircraft is seen touring over the tropical island landscape?",
+      "query": "What type of aircraft is seen touring over the tropical island landscape in Sunshine Helicopter tour?",
       "ground_truth": {
         "video_name": "00004.mp4",
         "video_stem": "00004",
-        "timestamp": 12.0,
-        "frame_id": 300,
+        "timestamp": 59.26,
+        "frame_id": 1776,
         "answer": "Helicopter",
         "acceptable_answers": [
           "helicopter",
@@ -677,43 +677,43 @@
           "a helicopter"
         ]
       },
-      "rank": 49,
-      "video_rank": 49,
-      "temporal_rank": 49,
-      "point_rank": 49,
-      "vqa_answer": "UNKNOWN",
-      "vqa_answer_valid": false,
+      "rank": 13,
+      "video_rank": 13,
+      "temporal_rank": 13,
+      "point_rank": 13,
+      "vqa_answer": "helicopter",
+      "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #49 | V-Rank #49)",
+      "status": "PASS (Rank #13 | V-Rank #13)",
       "latency": {
-        "total_sec": 4.591,
-        "hyde_sec": 1.843,
-        "search_sec": 0.622,
-        "rerank_sec": 2.126
+        "total_sec": 47.506,
+        "hyde_sec": 2.461,
+        "search_sec": 0.554,
+        "rerank_sec": 44.491
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "1ee2ea40-c6d9-5c33-b75b-47802d194c2b",
-          "score": 0.0066,
-          "video_name": "00230.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
-          "caption": "Surface To Air"
+          "id": "4a001df1-6190-593c-8ac4-b798baa98c30",
+          "score": 0.6066,
+          "video_name": "00985.mp4",
+          "frame_idx": 1357,
+          "timestamp": 56.6,
+          "caption": "Virgin Kitesurfing Armada"
         },
         {
           "rank": 2,
-          "id": "9b83391f-46dc-53ef-a091-efa9162d817c",
-          "score": 0.0065,
-          "video_name": "01254.mp4",
-          "frame_idx": 1125,
-          "timestamp": 22.5,
-          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
+          "id": "55a19de4-12b1-50c1-8d13-ee11df72d450",
+          "score": 0.6065,
+          "video_name": "00985.mp4",
+          "frame_idx": 1416,
+          "timestamp": 59.06,
+          "caption": "Virgin Kitesurfing Armada"
         },
         {
           "rank": 3,
           "id": "3576d3ca-7cce-5445-9a69-065b679357ef",
-          "score": 0.0063,
+          "score": 0.606,
           "video_name": "00371.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
@@ -721,66 +721,66 @@
         },
         {
           "rank": 4,
+          "id": "171a9e9e-b430-5cbc-956e-6238a87006a1",
+          "score": 0.6059,
+          "video_name": "01201.mp4",
+          "frame_idx": 558,
+          "timestamp": 22.32,
+          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
+        },
+        {
+          "rank": 5,
+          "id": "15c1f2b5-d0ae-55dc-9f3d-c3cfa10c4d50",
+          "score": 0.6053,
+          "video_name": "00478.mp4",
+          "frame_idx": 1488,
+          "timestamp": 59.52,
+          "caption": "~ Way of Life ~"
+        },
+        {
+          "rank": 6,
+          "id": "34600d39-dee1-5715-b09d-801ea3ee9fbc",
+          "score": 0.5754,
+          "video_name": "01254.mp4",
+          "frame_idx": 500,
+          "timestamp": 10.0,
+          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
+        },
+        {
+          "rank": 7,
+          "id": "7814f0ed-fdfd-5c15-b1dd-9340e66cbc06",
+          "score": 0.5463,
+          "video_name": "00206.mp4",
+          "frame_idx": 518,
+          "timestamp": 17.28,
+          "caption": "Heli Jumps: 3rd Annual JL Aviation Hangar Dance"
+        },
+        {
+          "rank": 8,
+          "id": "1ee2ea40-c6d9-5c33-b75b-47802d194c2b",
+          "score": 0.5463,
+          "video_name": "00230.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "Surface To Air"
+        },
+        {
+          "rank": 9,
           "id": "9eed05a7-a675-5836-a03a-50a21fd24063",
-          "score": 0.0063,
+          "score": 0.5462,
           "video_name": "00370.mp4",
           "frame_idx": 590,
           "timestamp": 24.61,
           "caption": "PANASONIC GH2- Exploring Africa"
         },
         {
-          "rank": 5,
-          "id": "92994bb9-ac27-5636-9f39-a8567fd7c5bd",
-          "score": 0.0062,
-          "video_name": "00230.mp4",
-          "frame_idx": 1488,
-          "timestamp": 59.52,
-          "caption": "Surface To Air"
-        },
-        {
-          "rank": 6,
-          "id": "23c6f961-2f97-5d24-9649-d49ccd1826cd",
-          "score": 0.0061,
-          "video_name": "00385.mp4",
-          "frame_idx": 518,
-          "timestamp": 17.28,
-          "caption": "V3C Video 00385"
-        },
-        {
-          "rank": 7,
-          "id": "68790490-608a-580c-9d76-84ef4df21463",
-          "score": 0.006,
-          "video_name": "00745.mp4",
-          "frame_idx": 74,
-          "timestamp": 2.47,
-          "caption": "Where to go this summer?  8 Great Travel Deals!  Trip on a Deal: Ep. 25"
-        },
-        {
-          "rank": 8,
+          "rank": 10,
           "id": "b410bc49-d79b-5304-ad14-ae3a4b2f07b1",
-          "score": 0.0059,
+          "score": 0.5458,
           "video_name": "00370.mp4",
           "frame_idx": 413,
           "timestamp": 17.23,
           "caption": "PANASONIC GH2- Exploring Africa"
-        },
-        {
-          "rank": 9,
-          "id": "022abd8c-44cf-5b32-a8fb-8afb68c72498",
-          "score": 0.0058,
-          "video_name": "00230.mp4",
-          "frame_idx": 1240,
-          "timestamp": 49.6,
-          "caption": "Surface To Air"
-        },
-        {
-          "rank": 10,
-          "id": "eec46e7c-fe83-58f4-9906-34addf2aa9eb",
-          "score": 0.0057,
-          "video_name": "01254.mp4",
-          "frame_idx": 1500,
-          "timestamp": 30.0,
-          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
         }
       ]
     },
@@ -793,9 +793,9 @@
       "ground_truth": {
         "video_name": "00009.mp4",
         "video_stem": "00009",
-        "timestamp": 10.0,
-        "frame_id": 250,
-        "answer": "Acoustic guitar",
+        "timestamp": 7.5,
+        "frame_id": 180,
+        "answer": "guitar",
         "acceptable_answers": [
           "acoustic guitar",
           "guitar",
@@ -806,106 +806,106 @@
       "video_rank": null,
       "temporal_rank": null,
       "point_rank": null,
-      "vqa_answer": "UNKNOWN",
-      "vqa_answer_valid": false,
+      "vqa_answer": "guitar",
+      "vqa_answer_valid": true,
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 4.287,
-        "hyde_sec": 1.844,
-        "search_sec": 0.574,
-        "rerank_sec": 1.87
+        "total_sec": 50.524,
+        "hyde_sec": 2.481,
+        "search_sec": 0.523,
+        "rerank_sec": 47.519
       },
       "top_candidates": [
         {
           "rank": 1,
+          "id": "29a1e54e-c5b0-5484-96ac-19f36c51f36b",
+          "score": 0.5756,
+          "video_name": "00262.mp4",
+          "frame_idx": 1050,
+          "timestamp": 35.0,
+          "caption": "Serpents of Wisdom Live"
+        },
+        {
+          "rank": 2,
+          "id": "c2525f2d-e401-571c-9319-485097bb9e6d",
+          "score": 0.575,
+          "video_name": "00142.mp4",
+          "frame_idx": 1275,
+          "timestamp": 42.5,
+          "caption": "Aireys Inlet Open Mic Music Festival 2008"
+        },
+        {
+          "rank": 3,
           "id": "c18bba77-2323-50e7-9423-9f88e602abc0",
-          "score": 0.0066,
+          "score": 0.5466,
           "video_name": "00754.mp4",
           "frame_idx": 240,
           "timestamp": 10.0,
           "caption": "Pageants - \u201cWords As Pictures\u201d"
         },
         {
-          "rank": 2,
-          "id": "3149f4ec-39bc-5ceb-9595-eda1b3ed36f5",
-          "score": 0.0065,
-          "video_name": "00262.mp4",
-          "frame_idx": 300,
-          "timestamp": 10.0,
-          "caption": "Serpents of Wisdom Live"
-        },
-        {
-          "rank": 3,
-          "id": "4e51d2bc-5aad-5050-b2e0-daa6e6109c1a",
-          "score": 0.0063,
-          "video_name": "00540.mp4",
-          "frame_idx": 1110,
-          "timestamp": 37.04,
-          "caption": "Jmac show"
-        },
-        {
           "rank": 4,
-          "id": "efba7267-9754-54ac-9c8e-a9b908eaa3dc",
-          "score": 0.0063,
-          "video_name": "00262.mp4",
-          "frame_idx": 900,
-          "timestamp": 30.0,
-          "caption": "Serpents of Wisdom Live"
-        },
-        {
-          "rank": 5,
           "id": "c2d02af8-82e5-54d4-b676-ee522d4631bc",
-          "score": 0.0062,
+          "score": 0.5462,
           "video_name": "01508.mp4",
           "frame_idx": 1332,
           "timestamp": 44.44,
           "caption": "Dirty Crows - Hit the Road"
         },
         {
-          "rank": 6,
+          "rank": 5,
           "id": "1d4626e2-c509-5b03-840c-f34bc2de8364",
-          "score": 0.0061,
+          "score": 0.5461,
           "video_name": "01508.mp4",
           "frame_idx": 592,
           "timestamp": 19.75,
           "caption": "Dirty Crows - Hit the Road"
         },
         {
-          "rank": 7,
+          "rank": 6,
           "id": "904c4bd0-e74d-57d5-846d-36849b7b57d9",
-          "score": 0.006,
+          "score": 0.546,
           "video_name": "00262.mp4",
           "frame_idx": 375,
           "timestamp": 12.5,
           "caption": "Serpents of Wisdom Live"
         },
         {
-          "rank": 8,
+          "rank": 7,
           "id": "8d6e50c4-2e4b-5b44-b4cb-3486383f1bf2",
-          "score": 0.0059,
+          "score": 0.5459,
           "video_name": "00540.mp4",
           "frame_idx": 1258,
           "timestamp": 41.98,
           "caption": "Jmac show"
         },
         {
+          "rank": 8,
+          "id": "1242cf55-d702-5606-95df-1260cd418626",
+          "score": 0.5455,
+          "video_name": "00540.mp4",
+          "frame_idx": 1184,
+          "timestamp": 39.51,
+          "caption": "Jmac show"
+        },
+        {
           "rank": 9,
-          "id": "cf8e7cbb-81d5-5356-9c49-375d5e2ce81a",
-          "score": 0.0058,
-          "video_name": "00754.mp4",
-          "frame_idx": 420,
-          "timestamp": 17.5,
-          "caption": "Pageants - \u201cWords As Pictures\u201d"
+          "id": "a6bcf36c-12bb-528f-a61b-10e871ff8db2",
+          "score": 0.5454,
+          "video_name": "00262.mp4",
+          "frame_idx": 1725,
+          "timestamp": 57.5,
+          "caption": "Serpents of Wisdom Live"
         },
         {
           "rank": 10,
-          "id": "caedeb56-c1ba-52ed-9551-4c5f08b5fbe2",
-          "score": 0.0057,
-          "video_name": "01655.mp4",
-          "frame_idx": 518,
-          "timestamp": 17.28,
-          "caption": "Artistically Speaking - Bohuslav Rattay"
+          "id": "058d2b61-791e-5e49-b944-94f2f257138d",
+          "score": 0.5453,
+          "video_name": "01508.mp4",
+          "frame_idx": 1776,
+          "timestamp": 59.26,
+          "caption": "Dirty Crows - Hit the Road"
         }
       ]
     },
@@ -937,10 +937,10 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 4.23,
-        "hyde_sec": 1.996,
-        "search_sec": 0.521,
-        "rerank_sec": 1.713
+        "total_sec": 39.736,
+        "hyde_sec": 1.935,
+        "search_sec": 0.523,
+        "rerank_sec": 37.278
       },
       "top_candidates": [
         {
@@ -1060,9 +1060,9 @@
       "kisc_info": {},
       "status": "PASS (Rank #57 | V-Rank #57)",
       "latency": {
-        "total_sec": 0.522,
+        "total_sec": 0.582,
         "hyde_sec": 0.0,
-        "search_sec": 0.522,
+        "search_sec": 0.582,
         "rerank_sec": 0.0
       },
       "top_candidates": [
@@ -1170,23 +1170,32 @@
         "timestamp": 20.0,
         "frame_id": 500
       },
-      "rank": 12,
-      "video_rank": 12,
+      "rank": 65,
+      "video_rank": 65,
       "temporal_rank": null,
       "point_rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #12 | V-Rank #12)",
+      "status": "PASS (Rank #65 | V-Rank #65)",
       "latency": {
-        "total_sec": 29.155,
+        "total_sec": 7.87,
         "hyde_sec": 0.0,
-        "search_sec": 0.508,
-        "rerank_sec": 28.647
+        "search_sec": 0.556,
+        "rerank_sec": 7.314
       },
       "top_candidates": [
         {
           "rank": 1,
+          "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
+          "score": 0.4866,
+          "video_name": "00250.mp4",
+          "frame_idx": 354,
+          "timestamp": 14.76,
+          "caption": "Deep South Maldives"
+        },
+        {
+          "rank": 2,
           "id": "274f6250-a1c2-591b-8223-dc803cef2ebb",
           "score": 0.4862,
           "video_name": "00250.mp4",
@@ -1195,34 +1204,7 @@
           "caption": "Deep South Maldives"
         },
         {
-          "rank": 2,
-          "id": "85048158-58c0-571b-9b85-c33eb2d98344",
-          "score": 0.4862,
-          "video_name": "00609.mp4",
-          "frame_idx": 372,
-          "timestamp": 14.88,
-          "caption": "116 bonaire 1"
-        },
-        {
           "rank": 3,
-          "id": "e930f883-5dfa-5793-99ff-f6b3f27ee520",
-          "score": 0.4859,
-          "video_name": "00609.mp4",
-          "frame_idx": 682,
-          "timestamp": 27.28,
-          "caption": "116 bonaire 1"
-        },
-        {
-          "rank": 4,
-          "id": "fdbdc508-35ee-5875-b6ff-feea5a7d759f",
-          "score": 0.4856,
-          "video_name": "00609.mp4",
-          "frame_idx": 620,
-          "timestamp": 24.8,
-          "caption": "116 bonaire 1"
-        },
-        {
-          "rank": 5,
           "id": "d2d417c3-57f7-5a44-965f-d9fa596dcfc0",
           "score": 0.4856,
           "video_name": "00609.mp4",
@@ -1231,7 +1213,16 @@
           "caption": "116 bonaire 1"
         },
         {
-          "rank": 6,
+          "rank": 4,
+          "id": "4b295d3d-a842-5bd2-921d-f7e114a02036",
+          "score": 0.4854,
+          "video_name": "00250.mp4",
+          "frame_idx": 1239,
+          "timestamp": 51.68,
+          "caption": "Deep South Maldives"
+        },
+        {
+          "rank": 5,
           "id": "ac44c906-2d54-5813-83f3-a15d5b42d1e7",
           "score": 0.4853,
           "video_name": "00609.mp4",
@@ -1240,39 +1231,48 @@
           "caption": "116 bonaire 1"
         },
         {
-          "rank": 7,
-          "id": "14764a52-f1c6-57c1-8791-1e60fd7066fb",
-          "score": 0.4853,
+          "rank": 6,
+          "id": "8c775237-8b5f-570e-9124-d956dbd5bc2c",
+          "score": 0.4851,
           "video_name": "00609.mp4",
-          "frame_idx": 992,
-          "timestamp": 39.68,
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "116 bonaire 1"
+        },
+        {
+          "rank": 7,
+          "id": "85048158-58c0-571b-9b85-c33eb2d98344",
+          "score": 0.4262,
+          "video_name": "00609.mp4",
+          "frame_idx": 372,
+          "timestamp": 14.88,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 8,
-          "id": "fcefe8c9-78ff-580b-8396-5388ad8f746a",
-          "score": 0.4849,
+          "id": "1a012c6e-5be9-5230-bc90-da245bcb2df0",
+          "score": 0.3665,
           "video_name": "00609.mp4",
-          "frame_idx": 868,
-          "timestamp": 34.72,
+          "frame_idx": 434,
+          "timestamp": 17.36,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 9,
-          "id": "08b11b87-c6cd-56fc-9b4b-2b7f46b4b916",
-          "score": 0.4847,
-          "video_name": "00609.mp4",
-          "frame_idx": 1054,
-          "timestamp": 42.16,
-          "caption": "116 bonaire 1"
+          "id": "a7a4c4b0-09ec-55e3-a818-eacf9690505a",
+          "score": 0.3663,
+          "video_name": "00250.mp4",
+          "frame_idx": 413,
+          "timestamp": 17.23,
+          "caption": "Deep South Maldives"
         },
         {
           "rank": 10,
-          "id": "b4890611-c2bb-55b2-b74d-e4fc05926d0b",
-          "score": 0.4846,
+          "id": "67b6452a-bf27-5431-b9a2-da60ba14b121",
+          "score": 0.3657,
           "video_name": "00609.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
+          "frame_idx": 496,
+          "timestamp": 19.84,
           "caption": "116 bonaire 1"
         }
       ]
