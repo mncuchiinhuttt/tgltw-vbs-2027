@@ -75,3 +75,9 @@ paper/comments.json
 
 # Private files
 VBS-2026-978-981-95-6963-2.pdf
+
+# AI assistant, agent skills, and planning directories
+.claude/
+.agents/skills/
+/plans/
+plans/
