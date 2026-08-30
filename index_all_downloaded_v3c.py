@@ -32,7 +32,7 @@ from config import (
     VISUAL_COLLECTION_NAME, EMBEDDING_MRL_DIM,
 )
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, VectorParams, PointStruct, TextIndexParams, TextIndexType, TokenizerType
 from models.embedding import WeMMEmbedding4BEmbedder
 
 
@@ -68,6 +68,11 @@ def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, 
             "source_file": video_path.name,
             "frame_idx": frame_idx,
             "timestamp": ts,
+            # Pseudo-scene: a ~10s bucket of the fixed 3s sampling grid. This
+            # lightweight pipeline runs no shot detection, but diversify_by_scene
+            # keys on (source_file, scene_id) - without a scene_id every frame
+            # collapses to one result per video in every search pool.
+            "scene_id": frame_idx // max(1, int(fps * 10)),
             "keyframe_path": str(save_path),
             "image": img_rgb,
         })
@@ -99,6 +104,22 @@ def main():
         client.create_collection(
             collection_name=VISUAL_COLLECTION_NAME,
             vectors_config=VectorParams(size=visual_dim, distance=Distance.COSINE)
+        )
+
+    # The lexical lane (sparse_search) matches MatchText on text_blob - it
+    # silently matches nothing without a full-text payload index.
+    payload_schema = client.get_collection(VISUAL_COLLECTION_NAME).payload_schema or {}
+    if "text_blob" not in payload_schema:
+        print(f"Creating full-text index on '{VISUAL_COLLECTION_NAME}.text_blob'...")
+        client.create_payload_index(
+            collection_name=VISUAL_COLLECTION_NAME,
+            field_name="text_blob",
+            field_schema=TextIndexParams(
+                type=TextIndexType.TEXT,
+                tokenizer=TokenizerType.MULTILINGUAL,
+                min_token_len=2,
+                lowercase=True,
+            ),
         )
 
     print("Loading Tencent WeMM-Embedding-4B...")
@@ -146,6 +167,7 @@ def main():
                     "source_file": kf["source_file"],
                     "frame_idx": kf["frame_idx"],
                     "timestamp": kf["timestamp"],
+                    "scene_id": kf["scene_id"],
                     "caption": title,
                     "text_blob": text_blob,
                     "modality": "visual",
