@@ -122,7 +122,12 @@ def run_rag_benchmark(
     print(f"[Init] System stack ready in {t1_init - t0_init:.2f}s (Embedder: {embedder.__class__.__name__})\n")
 
     query_results = []
-    pillar1_retrieval_hits = {"r1": 0, "r3": 0, "r5": 0, "r10": 0, "r20": 0, "total_evaluable": 0, "mrr_sum": 0.0}
+    pillar1_retrieval_hits = {
+        "r1": 0, "r3": 0, "r5": 0, "r10": 0, "r20": 0, "total_evaluable": 0, "mrr_sum": 0.0,
+        "video_hits": {"r1": 0, "r3": 0, "r5": 0, "r10": 0, "r20": 0, "mrr_sum": 0.0},
+        "temporal_hits": {"r1": 0, "r3": 0, "r5": 0, "r10": 0, "r20": 0, "mrr_sum": 0.0},
+        "point_hits": {"r1": 0, "r3": 0, "r5": 0, "r10": 0, "r20": 0, "mrr_sum": 0.0},
+    }
     pillar2_generation_metrics = {"vqa_exact_match": 0, "vqa_total": 0, "fail_closed_passed": 0, "fail_closed_total": 0, "faithfulness_sum": 0.0}
     pillar3_kisc_metrics = {"rank_shifts": [], "ambiguity_reductions": [], "turn_2_r1": 0, "kisc_total": 0}
     pillar4_telemetry = {"latencies": [], "hyde_latencies": [], "search_latencies": [], "rerank_latencies": []}
@@ -246,36 +251,77 @@ def run_rag_benchmark(
                 diagnostic_status = "FAIL (Hallucination Detected)"
         elif target_video and target_video != "NONE":
             pillar1_retrieval_hits["total_evaluable"] += 1
+            video_rank = None
+            temporal_rank = None
+            point_rank = None
+
             for idx_c, c in enumerate(evaluated_candidates, start=1):
-                # 1. Exact point ID match
-                if target_point_id and c.get("id") == target_point_id:
-                    rank = idx_c
-                    break
-                # 2. Video stem + frame matching
                 p = c.get("payload", {})
                 cand_video = canonical_video_id(p.get("source_file") or p.get("video_id"))
+                cand_frame = p.get("frame_idx")
+                cand_ts = p.get("timestamp")
+
+                # 1. Exact point ID match
+                if target_point_id and c.get("id") == target_point_id:
+                    if point_rank is None: point_rank = idx_c
+                    if temporal_rank is None: temporal_rank = idx_c
+                    if video_rank is None: video_rank = idx_c
+                    break
+
+                # 2. Video matching
                 if target_video in cand_video or cand_video in target_video:
-                    cand_frame = p.get("frame_idx")
+                    if video_rank is None:
+                        video_rank = idx_c
+
+                    # Check temporal segment window (within ~14s / 350 frames standard VBS shot window)
+                    t_match = False
+                    if target_frame is not None and cand_frame is not None:
+                        if abs(int(cand_frame) - int(target_frame)) <= 350:
+                            t_match = True
+                    elif target_timestamp is not None and cand_ts is not None:
+                        if abs(float(cand_ts) - float(target_timestamp)) <= 14.0:
+                            t_match = True
+                    else:
+                        t_match = True
+
+                    if t_match and temporal_rank is None:
+                        temporal_rank = idx_c
+
+                    # Check point coordinate precision (within ~6s / 150 frames)
+                    p_match = False
                     if target_frame is not None and cand_frame is not None:
                         if abs(int(cand_frame) - int(target_frame)) <= 150:
-                            rank = idx_c
-                            break
+                            p_match = True
+                    elif target_timestamp is not None and cand_ts is not None:
+                        if abs(float(cand_ts) - float(target_timestamp)) <= 6.0:
+                            p_match = True
                     else:
-                        rank = idx_c
+                        p_match = True
+
+                    if p_match and point_rank is None:
+                        point_rank = idx_c
+
+                    if video_rank is not None and temporal_rank is not None and point_rank is not None:
                         break
 
+            rank = temporal_rank if temporal_rank is not None else (point_rank if point_rank is not None else video_rank)
+
+            def _record_tier(tier_dict, rk):
+                if rk is not None:
+                    tier_dict["mrr_sum"] += (1.0 / rk)
+                    if rk == 1: tier_dict["r1"] += 1
+                    if rk <= 3: tier_dict["r3"] += 1
+                    if rk <= 5: tier_dict["r5"] += 1
+                    if rk <= 10: tier_dict["r10"] += 1
+                    if rk <= 20: tier_dict["r20"] += 1
+
+            _record_tier(pillar1_retrieval_hits["video_hits"], video_rank)
+            _record_tier(pillar1_retrieval_hits["temporal_hits"], temporal_rank)
+            _record_tier(pillar1_retrieval_hits["point_hits"], point_rank)
+            _record_tier(pillar1_retrieval_hits, rank)
+
             if rank is not None:
-                pillar1_retrieval_hits["mrr_sum"] += (1.0 / rank)
-                if rank == 1:
-                    pillar1_retrieval_hits["r1"] += 1
-                if rank <= 3:
-                    pillar1_retrieval_hits["r3"] += 1
-                if rank <= 5:
-                    pillar1_retrieval_hits["r5"] += 1
-                if rank <= 10:
-                    pillar1_retrieval_hits["r10"] += 1
-                if rank <= 20:
-                    pillar1_retrieval_hits["r20"] += 1
+                diagnostic_status = f"PASS (Rank #{rank} | V-Rank #{video_rank or 'N/A'})"
             else:
                 diagnostic_status = "WARN (Target outside Top-20)"
         if q_type == 2 and not is_fail_closed_test:
@@ -306,6 +352,9 @@ def run_rag_benchmark(
             "query": q_text,
             "ground_truth": ground_truth,
             "rank": rank,
+            "video_rank": video_rank if (target_video and target_video != "NONE") else None,
+            "temporal_rank": temporal_rank if (target_video and target_video != "NONE") else None,
+            "point_rank": point_rank if (target_video and target_video != "NONE") else None,
             "vqa_answer": vqa_answer,
             "vqa_answer_valid": vqa_answer_valid,
             "kisc_info": kisc_info,
@@ -325,7 +374,7 @@ def run_rag_benchmark(
                     "frame_idx": (c.get("payload") or {}).get("frame_idx"),
                     "timestamp": (c.get("payload") or {}).get("timestamp"),
                     "caption": (c.get("payload") or {}).get("caption", "")[:90],
-                } for idx_c, c in enumerate(evaluated_candidates[:5], start=1)
+                } for idx_c, c in enumerate(evaluated_candidates[:10], start=1)
             ]
         })
 
@@ -335,6 +384,24 @@ def run_rag_benchmark(
     r1 = round(pillar1_retrieval_hits["r1"] / eval_n * 100, 1)
     r5 = round(pillar1_retrieval_hits["r5"] / eval_n * 100, 1)
     r10 = round(pillar1_retrieval_hits["r10"] / eval_n * 100, 1)
+
+    v_hits = pillar1_retrieval_hits["video_hits"]
+    v_r1 = round(v_hits["r1"] / eval_n * 100, 1)
+    v_r5 = round(v_hits["r5"] / eval_n * 100, 1)
+    v_r10 = round(v_hits["r10"] / eval_n * 100, 1)
+    v_mrr = round(v_hits["mrr_sum"] / eval_n, 4)
+
+    t_hits = pillar1_retrieval_hits["temporal_hits"]
+    t_r1 = round(t_hits["r1"] / eval_n * 100, 1)
+    t_r5 = round(t_hits["r5"] / eval_n * 100, 1)
+    t_r10 = round(t_hits["r10"] / eval_n * 100, 1)
+    t_mrr = round(t_hits["mrr_sum"] / eval_n, 4)
+
+    p_hits = pillar1_retrieval_hits["point_hits"]
+    p_r1 = round(p_hits["r1"] / eval_n * 100, 1)
+    p_r5 = round(p_hits["r5"] / eval_n * 100, 1)
+    p_r10 = round(p_hits["r10"] / eval_n * 100, 1)
+    p_mrr = round(p_hits["mrr_sum"] / eval_n, 4)
 
     vqa_total = max(pillar2_generation_metrics["vqa_total"], 1)
     vqa_em = round(pillar2_generation_metrics["vqa_exact_match"] / vqa_total * 100, 1)
@@ -365,6 +432,24 @@ def run_rag_benchmark(
             "recall_5": r5,
             "recall_10": r10,
             "mrr": mrr,
+            "video_level": {
+                "recall_1": v_r1,
+                "recall_5": v_r5,
+                "recall_10": v_r10,
+                "mrr": v_mrr,
+            },
+            "temporal_segment": {
+                "recall_1": t_r1,
+                "recall_5": t_r5,
+                "recall_10": t_r10,
+                "mrr": t_mrr,
+            },
+            "point_precision": {
+                "recall_1": p_r1,
+                "recall_5": p_r5,
+                "recall_10": p_r10,
+                "mrr": p_mrr,
+            },
             "evaluable_items": pillar1_retrieval_hits["total_evaluable"],
         },
         "pillar2_generation": {
