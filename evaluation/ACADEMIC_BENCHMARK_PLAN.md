@@ -13,9 +13,8 @@ Replace illustrative benchmark rows with reproducible, evidence-bounded offline 
 
 ## Implemented in this pass
 
-- `run_comprehensive_ablation.py` now measures the production retrieval path and writes per-query ranks for M1–M6-compatible configurations.
+- `run_comprehensive_ablation.py` measures only the production retrieval path and writes per-query ranks for M1--M5; M6 fails closed unless a VLM client is explicitly supplied.
 - The runner reports explicit evaluable denominators and marks itself `MEASURED_RETRIEVAL_ONLY`.
-- M6 refuses a missing VLM client instead of silently assigning all candidates score zero.
 - `capture_benchmark_manifest.py` records code/query hashes, Git revision, Python version, and platform.
 - Contract tests cover exact point matching, frame tolerance, denominator preservation, and official-score boundary.
 - `academic_benchmark_report.md`, `academic_benchmark_audit.md`, and `benchmark_manifest.json` record current observations and limitations.

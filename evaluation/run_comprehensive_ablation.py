@@ -76,7 +76,6 @@ def _run_retrieval_config(searcher: HybridSearcher, query: dict, config: dict) -
     return {"query_id": query.get("id"), "rank": _target_rank(candidates, query.get("ground_truth", {}))}
 
 
-
 def run_full_ablation_matrix(query_file: str, dataset_dir: str, output_dir: str) -> Dict[str, Any]:
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
@@ -103,7 +102,11 @@ def run_full_ablation_matrix(query_file: str, dataset_dir: str, output_dir: str)
         rows = []
         for query in retrieval_queries:
             started = time.perf_counter()
-            row = _run_retrieval_config(searcher, query, config)
+            try:
+                row = _run_retrieval_config(searcher, query, config)
+                row["error"] = None
+            except Exception as exc:
+                row = {"query_id": query.get("id"), "rank": None, "error": type(exc).__name__}
             row["latency_sec"] = round(time.perf_counter() - started, 6)
             rows.append(row)
         results.append({"config": config["name"], "metrics": _retrieval_metrics(rows), "per_query": rows})
