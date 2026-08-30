@@ -33,6 +33,12 @@ for p in (str(REPO_ROOT), str(INFERENCE_DIR)):
     if p not in sys.path:
         sys.path.insert(0, p)
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(REPO_ROOT / ".env")
+except ImportError:
+    pass
+
 from config import (
     QDRANT_HOST, QDRANT_PORT, QDRANT_API_KEY,
     VISUAL_COLLECTION_NAME, EMBEDDING_MRL_DIM,
@@ -42,8 +48,8 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from models.embedding import WeMMEmbedding4BEmbedder
 
 SFTP_BASE = "sftp://ftp.itec.aau.at/V3C"
-SFTP_USER = "v3c"
-SFTP_PASS = "Wnic1snoecSC"
+SFTP_USER = os.getenv("V3C_SFTP_USER", "v3c")
+SFTP_PASS = os.getenv("V3C_SFTP_PASS", "")
 
 
 def _remove_partial(local_path: Path) -> None:
@@ -149,6 +155,11 @@ def load_video_metadata(video_id: str) -> Dict[str, Any]:
 
 
 def main():
+    if not SFTP_PASS:
+        print("[ERROR] V3C_SFTP_PASS is not set - add it to .env (see .env.template) or export it.")
+        print("        The official V3C SFTP credentials are published on the AAU V3C dataset page.")
+        sys.exit(1)
+
     target_gb = 50.0
     target_bytes = int(target_gb * 1024 * 1024 * 1024)
     workers = 16

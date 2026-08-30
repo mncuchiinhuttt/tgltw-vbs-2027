@@ -13,14 +13,20 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except ImportError:
+    pass
+
 REPO_ROOT = Path(__file__).resolve().parent
 DATASET_DIR = REPO_ROOT / "datasets" / "v3c"
 VIDEO_DIR = DATASET_DIR / "videos"
 METADATA_DIR = DATASET_DIR / "metadata"
 
 SFTP_BASE = "sftp://ftp.itec.aau.at/V3C"
-SFTP_USER = "v3c"
-SFTP_PASS = "Wnic1snoecSC"
+SFTP_USER = os.getenv("V3C_SFTP_USER", "v3c")
+SFTP_PASS = os.getenv("V3C_SFTP_PASS", "")
 
 
 def run_curl_download(video_id: str) -> tuple[str, bool, int]:
@@ -50,6 +56,11 @@ def main():
     target_gb = float(sys.argv[1]) if len(sys.argv) > 1 else 10.0
     target_bytes = int(target_gb * 1024 * 1024 * 1024)
     workers = int(sys.argv[2]) if len(sys.argv) > 2 else 6
+
+    if not SFTP_PASS:
+        print("[ERROR] V3C_SFTP_PASS is not set - add it to .env (see .env.template) or export it.")
+        print("        The official V3C SFTP credentials are published on the AAU V3C dataset page.")
+        sys.exit(1)
 
     print(f"=== V3C Multithreaded Dataset Downloader ===")
     print(f"Target Size: {target_gb:.1f} GB | Workers: {workers}")
