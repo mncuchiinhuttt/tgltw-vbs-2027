@@ -84,6 +84,16 @@ def resolve_folder_path(folder_str: str) -> Path:
     return folder_path
 
 
+_QUERY_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_. -]*$")
+
+
+def validate_query_id(query_id: str) -> str:
+    """Reject path separators / traversal payloads before query_id touches the filesystem."""
+    if not query_id or ".." in query_id or not _QUERY_ID_PATTERN.fullmatch(query_id):
+        raise HTTPException(status_code=400, detail=f"Invalid query_id: {query_id!r}")
+    return query_id
+
+
 def parse_query_type_from_filename(filename: str) -> int:
     stem = Path(filename).stem.lower()
     if stem.endswith("-kist") or "kis-t" in stem or stem.endswith("-kis"):
@@ -283,6 +293,7 @@ def list_queries(folder: str = "queries"):
 @sotuyen_router.get("/query-detail")
 def get_query_detail(folder: str = "queries", query_id: str = Query(...)):
     """Retrieve detailed candidate list and visual provenance for a query."""
+    query_id = validate_query_id(query_id)
     folder_path = resolve_folder_path(folder)
     sub_dir = folder_path / "submission"
     details_dir = sub_dir / ".details"
@@ -470,6 +481,7 @@ def _run_query_worker(folder: str, query_id: str, fast_mode: bool, top_k: int):
 @sotuyen_router.post("/run-query")
 def run_query(payload: RunQueryPayload, bg: BackgroundTasks):
     """Trigger background search and verification for a single query."""
+    validate_query_id(payload.query_id)
     bg.add_task(_run_query_worker, payload.folder, payload.query_id, payload.fast_mode, payload.top_k)
     return {"status": "dispatched", "query_id": payload.query_id}
 
@@ -515,6 +527,7 @@ def get_jobs():
 @sotuyen_router.post("/update-ranks")
 def update_query_ranks(payload: UpdateRanksPayload):
     """Save manual reordering, candidate exclusions, or QA answer edits."""
+    validate_query_id(payload.query_id)
     folder_path = resolve_folder_path(payload.folder)
     sub_dir = folder_path / "submission"
     details_dir = sub_dir / ".details"
