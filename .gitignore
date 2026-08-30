@@ -50,8 +50,8 @@ evaluation/eval_audit_results.json
 evaluation/v3c_eval_results.json
 evaluation/benchmark_real_output/
 evaluation/indexing_logs/
-queries/audit_output/
 queries/v3c_audit_output/
+queries/weMM_audit_output/
 queries/ablation_*/
 queries/submission/
 queries/submission.zip
