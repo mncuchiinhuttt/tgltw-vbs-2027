@@ -42,9 +42,13 @@ def login(base_url: str, username: str, password: str, timeout: float = 10.0) ->
     try:
         resp = requests.post(url, json={"username": username, "password": password}, timeout=timeout)
         resp.raise_for_status()
+        data = resp.json()
     except requests.RequestException as e:
         raise DresError(f"DRES login failed: {e}") from e
-    data = resp.json()
+    except ValueError as e:
+        # Non-JSON body (HTML proxy page, empty reply) - JSONDecodeError is a
+        # RequestException subclass on requests >= 2.27, ValueError below.
+        raise DresError(f"DRES login returned a non-JSON response: {e}") from e
     session_id = data.get("sessionId") or data.get("session_id")
     if not session_id:
         raise DresError(f"DRES login response missing sessionId: {data}")
@@ -62,9 +66,11 @@ def get_current_task(base_url: str, session_id: str, evaluation_id: str, timeout
     try:
         resp = requests.get(url, params={"session": session_id}, timeout=timeout)
         resp.raise_for_status()
+        return resp.json()
     except requests.RequestException as e:
         raise DresError(f"DRES get_current_task failed: {e}") from e
-    return resp.json()
+    except ValueError as e:
+        raise DresError(f"DRES get_current_task returned a non-JSON response: {e}") from e
 
 
 def submit_answer(
@@ -93,9 +99,11 @@ def submit_answer(
             url, params={"session": session_id}, json={"taskId": task_id, **payload}, timeout=timeout
         )
         resp.raise_for_status()
+        return resp.json()
     except requests.RequestException as e:
         raise DresError(f"DRES submit_answer failed: {e}") from e
-    return resp.json()
+    except ValueError as e:
+        raise DresError(f"DRES submit_answer returned a non-JSON response: {e}") from e
 
 
 def submit_query_log(
@@ -117,7 +125,7 @@ def submit_query_log(
         resp = requests.post(url, params={"session": session_id}, json=query_log, timeout=timeout)
         resp.raise_for_status()
         return resp.json()
-    except requests.RequestException:
+    except (requests.RequestException, ValueError):
         return None
 
 
@@ -139,5 +147,5 @@ def submit_interaction_log(
         resp = requests.post(url, params={"session": session_id}, json=interaction_log, timeout=timeout)
         resp.raise_for_status()
         return resp.json()
-    except requests.RequestException:
+    except (requests.RequestException, ValueError):
         return None
