@@ -10,6 +10,7 @@ from typing import Callable, List, Dict, Any, Optional
 from config import (
     TRAKE_MAX_VIDEOS_TO_ALIGN,
     VERIFICATION_RERANK_ENABLED, VERIFICATION_NUM_QUESTIONS, VERIFICATION_WEIGHT_TYPE1,
+    TYPE1_RRF_WEIGHT, TYPE1_VLM_WEIGHT,
     TYPE2_RRF_WEIGHT, TYPE2_VQA_WEIGHT, TYPE2_VERIFICATION_WEIGHT,
 )
 
@@ -338,7 +339,12 @@ JSON:"""
         return matches / len(questions)
 
     def rerank_type1(
-        self, query: str, candidate_frames: List[Dict[str, Any]], verify: Optional[bool] = None
+        self,
+        query: str,
+        candidate_frames: List[Dict[str, Any]],
+        verify: Optional[bool] = None,
+        dataset_dir: Optional[str] = None,
+        image_conditioned: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Rerank candidates using VLM comparing query with frame data.
@@ -346,6 +352,10 @@ JSON:"""
         `verify`, when not None, overrides VERIFICATION_RERANK_ENABLED for
         this call - lets an operator escalate to verification reranking
         on-demand for a stuck query without editing .env/restarting.
+
+        `image_conditioned`, when True and dataset_dir is provided, loads the
+        actual visual keyframe image to prompt the VLM directly instead of
+        using text metadata alone.
         """
         print(f"Reranking {len(candidate_frames)} candidates for Type 1 query...")
         use_verify = verify if verify is not None else VERIFICATION_RERANK_ENABLED
@@ -356,18 +366,34 @@ JSON:"""
             payload = hit_copy["payload"]
 
             frame_description = f"Caption: {payload.get('caption', '')}. Narrative: {payload.get('scene_narrative', '')}. OCR: {payload.get('ocr_text', '')}."
+            frame_img = None
+            if image_conditioned and dataset_dir:
+                evidence = resolve_candidate_evidence(dataset_dir, payload)
+                if evidence is not None and evidence.get("image") is not None:
+                    frame_img = evidence["image"]
 
-            prompt = f"""
+            if frame_img is not None:
+                prompt = f"""
+Query: "{query}"
+Compare the query with this frame and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
+Score:"""
+                try:
+                    score_str = self.vlm.generate(frame_img, prompt).strip()
+                except Exception as exc:
+                    print(f"VLM image rerank failed for candidate, falling back to text metadata: {exc}")
+                    score_str = None
+
+            if frame_img is None or score_str is None:
+                prompt = f"""
 Query: "{query}"
 Frame info: {frame_description}
 Compare the query with the frame metadata and rate how well this frame matches the query from 0.0 (no match) to 1.0 (perfect match). Output only the score as a float.
 Score:"""
-
-            try:
-                score_str = self.vlm.generate(None, prompt).strip()
-            except Exception as exc:
-                print(f"VLM rerank failed for candidate, failing closed with score 0.0: {exc}")
-                score_str = None
+                try:
+                    score_str = self.vlm.generate(None, prompt).strip()
+                except Exception as exc:
+                    print(f"VLM rerank failed for candidate, failing closed with score 0.0: {exc}")
+                    score_str = None
 
             if score_str is None:
                 score = 0.0
@@ -383,13 +409,13 @@ Score:"""
                     hit_copy["rerank_score_valid"] = True
 
             if questions:
-                verification_ratio = self.verify_candidate(None, frame_description, questions)
+                verification_ratio = self.verify_candidate(frame_img, frame_description, questions)
                 hit_copy["verification_ratio"] = verification_ratio
                 score = (1 - VERIFICATION_WEIGHT_TYPE1) * score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 
             rrf_score = float(hit_copy.get("rrf_score", 0.0))
             hit_copy["rerank_score"] = score
-            hit_copy["final_score"] = 0.4 * rrf_score + 0.6 * score
+            hit_copy["final_score"] = TYPE1_RRF_WEIGHT * rrf_score + TYPE1_VLM_WEIGHT * score
             return hit_copy
 
         if not candidate_frames:

@@ -458,10 +458,12 @@ async def run_search(request: SearchRequest):
         hyde_query = query_proc.generate_hyde(resolved_query)
 
         # 2. Candidate Retrieval
-        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
-        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        import config
+        retrieval_k = getattr(config, "TOP_K_RETRIEVAL", 50)
+        query_hits = searcher.search(resolved_query, top_k=retrieval_k, exact=request.exact, hnsw_ef=request.hnsw_ef)
+        hyde_hits = searcher.search(hyde_query, top_k=retrieval_k, exact=request.exact, hnsw_ef=request.hnsw_ef)
         secondary_hits = searcher.dense_search_secondary(
-            resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef
+            resolved_query, top_k=retrieval_k, exact=request.exact, hnsw_ef=request.hnsw_ef
         )
         # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
         # VBS2026): tags each fused hit with which source(s) it came from

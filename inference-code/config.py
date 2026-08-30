@@ -49,7 +49,7 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 VISUAL_COLLECTION_NAME = os.getenv("VISUAL_COLLECTION_NAME", os.getenv("QDRANT_COLLECTION_NAME", "visual_keyframes_v1"))
 QDRANT_COLLECTION_NAME = VISUAL_COLLECTION_NAME
 # Search settings
-TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 20))
+TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 50))
 RRF_CONSTANT = int(os.getenv("RRF_CONSTANT", 60))
 
 # H-EAGLE-lite coarse-to-fine retrieval.  The shot collection is populated by
@@ -99,6 +99,9 @@ VERIFICATION_RERANK_ENABLED = os.getenv("VERIFICATION_RERANK_ENABLED", "false").
 VERIFICATION_NUM_QUESTIONS = int(os.getenv("VERIFICATION_NUM_QUESTIONS", 3))
 # Type 1 blend: (1 - VERIFICATION_WEIGHT_TYPE1) * vlm_score + VERIFICATION_WEIGHT_TYPE1 * verification_ratio
 VERIFICATION_WEIGHT_TYPE1 = float(os.getenv("VERIFICATION_WEIGHT_TYPE1", 0.3))
+# Type 1 blend weights
+TYPE1_RRF_WEIGHT = float(os.getenv("TYPE1_RRF_WEIGHT", 0.4))
+TYPE1_VLM_WEIGHT = float(os.getenv("TYPE1_VLM_WEIGHT", 0.6))
 # Type 2 blend replaces the old fixed 0.4 rrf / 0.6 vqa split with a 3-way
 # weighted sum (should sum to 1.0)
 TYPE2_RRF_WEIGHT = float(os.getenv("TYPE2_RRF_WEIGHT", 0.3))

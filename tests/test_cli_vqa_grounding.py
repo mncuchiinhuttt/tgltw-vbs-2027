@@ -53,6 +53,10 @@ def test_type2_vqa_preserves_grounded_candidate_answers(capsys, monkeypatch):
     monkeypatch.setattr(cli_main, "HybridSearcher", lambda **kw: fake_searcher)
     monkeypatch.setattr(cli_main, "Reranker", lambda **kw: fake_reranker)
     monkeypatch.setattr(cli_main, "SigLIPEmbedder", lambda **kw: fake_embedder)
+    monkeypatch.setattr(cli_main, "ObjectDetector", lambda **kw: MagicMock())
+    monkeypatch.setattr(cli_main, "load_embedder", lambda: fake_embedder)
+    monkeypatch.setattr(cli_main, "load_vlm", lambda: fake_vlm)
+    monkeypatch.setattr(cli_main, "load_secondary_embedder", lambda: None)
     test_args = ["main.py", "--query", "where is the red car?", "--type", "2", "--dataset_dir", "/tmp"]
     monkeypatch.setattr(sys, "argv", test_args)
 

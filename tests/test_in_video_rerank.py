@@ -27,7 +27,7 @@ class TestInVideoAndParallelReranker(unittest.TestCase):
 
     def test_parallel_type1_rerank(self):
         candidates = [
-            {"id": f"hit_{i}", "payload": {"caption": f"Sample frame {i}", "ocr_text": "text", "source_file": "video_0001.mp4"}}
+            {"id": f"hit_{i}", "rrf_score": 0.05, "payload": {"caption": f"Sample frame {i}", "ocr_text": "text", "source_file": "video_0001.mp4"}}
             for i in range(10)
         ]
         results = self.reranker.rerank_type1("find red car", candidates)
@@ -35,6 +35,8 @@ class TestInVideoAndParallelReranker(unittest.TestCase):
         for r in results:
             self.assertTrue(r.get("rerank_score_valid"))
             self.assertAlmostEqual(r["rerank_score"], 0.85)
+            # 0.4 * 0.05 + 0.6 * 0.85 = 0.02 + 0.51 = 0.53
+            self.assertAlmostEqual(r["final_score"], 0.4 * 0.05 + 0.6 * 0.85)
 
     def test_parallel_type2_vqa_rerank(self):
         candidates = [
