@@ -410,7 +410,9 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
                     "video_name": canonical_video_id(p.get("source_file") or p.get("video_id")),
                     "timestamp": p.get("timestamp"),
                     "frame_idx": p.get("frame_idx"),
-                    "score": item.get("score", 0.0),
+                    # Post-merge candidates carry rrf_score, not score - the
+                    # old fallback reported 0.0 for every AVS row.
+                    "score": item.get("rrf_score", 0.0),
                 })
         if use_priors:
             # Map candidate items to audit prior format [video, frame] or [video, frame, answer]
@@ -501,13 +503,19 @@ def run_benchmark(query_file: str, dataset_dir: str, output_file: str, use_prior
             }
 
             if q_type == 2 and generated_answer and ground_truth.get("answer"):
-                gt_ans = str(ground_truth["answer"]).strip().lower()
-                gen_ans = str(generated_answer).strip().lower()
+                # Normalize: lowercase, drop punctuation, collapse whitespace.
+                # Substring matching was removed - "the car is not red"
+                # contained "red" and scored as an exact match.
+                def _norm_ans(text: str) -> str:
+                    return " ".join(re.sub(r"[^\w\s]", " ", str(text).lower()).split())
+
+                gt_ans = _norm_ans(ground_truth["answer"])
+                gen_ans = _norm_ans(generated_answer)
                 # Strict grounded matching: avoid false positive substring matches on "N/A"
                 if gen_ans in {"n/a", "unknown", ""}:
                     em = False
                 else:
-                    em = (gen_ans == gt_ans) or (gt_ans in gen_ans)
+                    em = gen_ans == gt_ans
                 if em:
                     st["vqa_exact_match"] = st.get("vqa_exact_match", 0) + 1
                 accuracy_metrics["vqa_exact_match"] = em
