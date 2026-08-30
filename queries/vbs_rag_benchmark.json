@@ -63,13 +63,13 @@
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "laje de santos diving with ATM diver and poissons",
+    "query": "laje de santos",
     "history": [
-      { "role": "user", "text": "people swimming in water" },
-      { "role": "system", "text": "Are they surfing on ocean waves or scuba diving underwater near coral reef?" },
-      { "role": "user", "text": "laje de santos diving with ATM diver and poissons" }
+      { "role": "user", "text": "laje de santos" },
+      { "role": "system", "text": "Are you searching for video of laje de santos?" },
+      { "role": "user", "text": "laje de santos" }
     ],
-    "system_answer": "laje de santos diving with ATM diver and poissons",
+    "system_answer": "laje de santos",
     "rejected": ["surfer riding ocean waves on surfboard"],
     "ground_truth": {
       "video_name": "00008.mp4",
@@ -141,9 +141,7 @@
   {
     "id": "vbs-kisv-01",
     "type": 5,
-    "type_name": "KIS-V",
-    "category": "Visual Query Search",
-    "query": "laje de santos diving with ATM diver de sao vicente",
+    "query": "laje de santos",
     "reference_media": "00008.mp4",
     "ground_truth": {
       "video_name": "00008.mp4",

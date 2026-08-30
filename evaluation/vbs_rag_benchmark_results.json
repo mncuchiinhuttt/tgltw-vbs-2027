@@ -1,29 +1,29 @@
 {
-  "timestamp": "2026-08-30 17:02:49 UTC",
+  "timestamp": "2026-08-30 17:14:25 UTC",
   "total_queries": 10,
-  "overall_rag_score": 81.5,
+  "overall_rag_score": 94.7,
   "pillar1_retrieval": {
-    "recall_1": 66.7,
-    "recall_5": 77.8,
-    "recall_10": 77.8,
-    "mrr": 0.7262,
+    "recall_1": 88.9,
+    "recall_5": 100.0,
+    "recall_10": 100.0,
+    "mrr": 0.9444,
     "video_level": {
-      "recall_1": 77.8,
-      "recall_5": 77.8,
-      "recall_10": 77.8,
-      "mrr": 0.7826
+      "recall_1": 100.0,
+      "recall_5": 100.0,
+      "recall_10": 100.0,
+      "mrr": 1.0
     },
     "temporal_segment": {
-      "recall_1": 55.6,
-      "recall_5": 77.8,
-      "recall_10": 77.8,
-      "mrr": 0.6407
+      "recall_1": 66.7,
+      "recall_5": 100.0,
+      "recall_10": 100.0,
+      "mrr": 0.8056
     },
     "point_precision": {
-      "recall_1": 44.4,
-      "recall_5": 66.7,
-      "recall_10": 77.8,
-      "mrr": 0.5451
+      "recall_1": 66.7,
+      "recall_5": 88.9,
+      "recall_10": 100.0,
+      "mrr": 0.7659
     },
     "evaluable_items": 9
   },
@@ -34,17 +34,17 @@
     "vqa_evaluated": 2
   },
   "pillar3_conversational": {
-    "kisc_turn_2_recall_1": 50.0,
-    "mean_ambiguity_reduction": 0.008,
+    "kisc_turn_2_recall_1": 100.0,
+    "mean_ambiguity_reduction": 0.004,
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 18.377,
-    "p50_latency_sec": 11.47,
-    "p95_latency_sec": 54.213,
-    "mean_hyde_sec": 1.959,
-    "mean_search_sec": 0.637,
-    "mean_rerank_sec": 15.78
+    "mean_latency_sec": 17.417,
+    "p50_latency_sec": 9.3,
+    "p95_latency_sec": 55.517,
+    "mean_hyde_sec": 2.096,
+    "mean_search_sec": 0.61,
+    "mean_rerank_sec": 14.711
   },
   "system_config": {
     "vlm_option": "openai",
@@ -66,41 +66,59 @@
         "timestamp": 57.0,
         "frame_id": 1426
       },
-      "rank": 1,
+      "rank": 2,
       "video_rank": 1,
-      "temporal_rank": 1,
+      "temporal_rank": 2,
       "point_rank": 7,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #1 | V-Rank #1)",
+      "status": "PASS (Rank #2 | V-Rank #1)",
       "latency": {
-        "total_sec": 11.47,
-        "hyde_sec": 2.861,
-        "search_sec": 1.626,
-        "rerank_sec": 6.983
+        "total_sec": 9.218,
+        "hyde_sec": 3.078,
+        "search_sec": 1.216,
+        "rerank_sec": 4.924
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "3b3a04a3-a984-596a-a8f0-e804482732db",
-          "score": 0.5459,
+          "id": "13c3d22b-ae79-54bc-805a-67aeea670e9b",
+          "score": 0.5462,
           "video_name": "00001.mp4",
-          "frame_idx": 1178,
-          "timestamp": 47.12,
+          "frame_idx": 744,
+          "timestamp": 29.76,
           "caption": "PARISIANA JAM"
         },
         {
           "rank": 2,
-          "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
-          "score": 0.5452,
+          "id": "5000cfae-58a0-507a-8458-385cf6584e1c",
+          "score": 0.546,
           "video_name": "00001.mp4",
-          "frame_idx": 682,
-          "timestamp": 27.28,
+          "frame_idx": 1116,
+          "timestamp": 44.64,
           "caption": "PARISIANA JAM"
         },
         {
           "rank": 3,
+          "id": "00645c44-4b14-59fc-bdfc-d21c64eb8a4c",
+          "score": 0.5456,
+          "video_name": "01040.mp4",
+          "frame_idx": 1628,
+          "timestamp": 54.32,
+          "caption": "April April BMX Jam 2014"
+        },
+        {
+          "rank": 4,
+          "id": "02a8e9c2-e0b7-58f6-8b2f-b30292732f1a",
+          "score": 0.5157,
+          "video_name": "01040.mp4",
+          "frame_idx": 1184,
+          "timestamp": 39.51,
+          "caption": "April April BMX Jam 2014"
+        },
+        {
+          "rank": 5,
           "id": "c31269a6-80b1-5b4a-ba29-5e02aa51440b",
           "score": 0.4866,
           "video_name": "00001.mp4",
@@ -109,7 +127,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 4,
+          "rank": 6,
           "id": "f2303dc3-77ea-5fea-a492-b9370deb27e8",
           "score": 0.4865,
           "video_name": "00001.mp4",
@@ -118,25 +136,16 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 5,
-          "id": "13c3d22b-ae79-54bc-805a-67aeea670e9b",
-          "score": 0.4862,
-          "video_name": "00001.mp4",
-          "frame_idx": 744,
-          "timestamp": 29.76,
-          "caption": "PARISIANA JAM"
-        },
-        {
-          "rank": 6,
-          "id": "5000cfae-58a0-507a-8458-385cf6584e1c",
-          "score": 0.486,
-          "video_name": "00001.mp4",
-          "frame_idx": 1116,
-          "timestamp": 44.64,
-          "caption": "PARISIANA JAM"
-        },
-        {
           "rank": 7,
+          "id": "7c12ef47-7043-5f19-bf5b-eed510216664",
+          "score": 0.4863,
+          "video_name": "00001.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 8,
           "id": "f5023aed-74e2-5bad-aac9-5194168976a2",
           "score": 0.4858,
           "video_name": "00001.mp4",
@@ -145,31 +154,22 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 8,
-          "id": "2e9fc602-338d-5292-b3a1-3b4c5aec92eb",
-          "score": 0.4855,
+          "rank": 9,
+          "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
+          "score": 0.4852,
           "video_name": "00001.mp4",
-          "frame_idx": 1364,
-          "timestamp": 54.56,
+          "frame_idx": 682,
+          "timestamp": 27.28,
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 9,
-          "id": "6b2c1426-87fe-539b-b389-9c94f7cb1d1b",
-          "score": 0.4854,
-          "video_name": "01294.mp4",
-          "frame_idx": 496,
-          "timestamp": 19.84,
-          "caption": "\u201cNew Blood\u201d Contest"
-        },
-        {
           "rank": 10,
-          "id": "7e4fbad6-5e70-58e1-a077-f876c1a933f6",
-          "score": 0.4851,
-          "video_name": "01639.mp4",
-          "frame_idx": 708,
-          "timestamp": 29.53,
-          "caption": "Hothead Bmx - Under The Sun"
+          "id": "3b3a04a3-a984-596a-a8f0-e804482732db",
+          "score": 0.4259,
+          "video_name": "00001.mp4",
+          "frame_idx": 1178,
+          "timestamp": 47.12,
+          "caption": "PARISIANA JAM"
         }
       ]
     },
@@ -194,10 +194,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 9.968,
-        "hyde_sec": 2.116,
-        "search_sec": 0.523,
-        "rerank_sec": 7.328
+        "total_sec": 9.135,
+        "hyde_sec": 2.483,
+        "search_sec": 0.533,
+        "rerank_sec": 6.119
       },
       "top_candidates": [
         {
@@ -211,11 +211,11 @@
         },
         {
           "rank": 2,
-          "id": "f59c238a-2f02-5532-a871-22ae28822474",
-          "score": 0.4861,
+          "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
+          "score": 0.4865,
           "video_name": "00326.mp4",
-          "frame_idx": 434,
-          "timestamp": 17.36,
+          "frame_idx": 868,
+          "timestamp": 34.72,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
@@ -229,17 +229,17 @@
         },
         {
           "rank": 4,
-          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
-          "score": 0.425,
-          "video_name": "00498.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Nanakuli Soaring"
+          "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
+          "score": 0.4855,
+          "video_name": "00326.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 5,
           "id": "67b6d4b5-b556-5b3d-b717-ceaf3f9be355",
-          "score": 0.3652,
+          "score": 0.4852,
           "video_name": "00326.mp4",
           "frame_idx": 310,
           "timestamp": 12.4,
@@ -247,47 +247,47 @@
         },
         {
           "rank": 6,
-          "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
-          "score": 0.3065,
+          "id": "f59c238a-2f02-5532-a871-22ae28822474",
+          "score": 0.4261,
           "video_name": "00326.mp4",
-          "frame_idx": 868,
-          "timestamp": 34.72,
+          "frame_idx": 434,
+          "timestamp": 17.36,
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 7,
-          "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
-          "score": 0.3055,
-          "video_name": "00326.mp4",
-          "frame_idx": 496,
-          "timestamp": 19.84,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
+          "id": "f4ff4eca-78c5-5d68-bdeb-c7f2e5bb3b9a",
+          "score": 0.3662,
+          "video_name": "01523.mp4",
+          "frame_idx": 118,
+          "timestamp": 4.92,
+          "caption": "Gone to Hawaii"
         },
         {
           "rank": 8,
+          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
+          "score": 0.365,
+          "video_name": "00498.mp4",
+          "frame_idx": 296,
+          "timestamp": 9.88,
+          "caption": "Nanakuli Soaring"
+        },
+        {
+          "rank": 9,
+          "id": "641b8472-2636-5eba-8f3c-45f563355795",
+          "score": 0.3057,
+          "video_name": "00060.mp4",
+          "frame_idx": 518,
+          "timestamp": 17.28,
+          "caption": "Rota, Nature\u2019s Treasure Island"
+        },
+        {
+          "rank": 10,
           "id": "31665996-5edb-5496-90de-5f1347fb561f",
           "score": 0.3051,
           "video_name": "00060.mp4",
           "frame_idx": 444,
           "timestamp": 14.81,
-          "caption": "Rota, Nature\u2019s Treasure Island"
-        },
-        {
-          "rank": 9,
-          "id": "c5f865e4-84cf-5016-90bb-5a3440c49ca4",
-          "score": 0.2463,
-          "video_name": "00060.mp4",
-          "frame_idx": 370,
-          "timestamp": 12.35,
-          "caption": "Rota, Nature\u2019s Treasure Island"
-        },
-        {
-          "rank": 10,
-          "id": "f01f5b1e-94fe-505b-af92-9ec12aec93f7",
-          "score": 0.2456,
-          "video_name": "00060.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
           "caption": "Rota, Nature\u2019s Treasure Island"
         }
       ]
@@ -313,23 +313,14 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 8.491,
-        "hyde_sec": 2.593,
-        "search_sec": 0.523,
-        "rerank_sec": 5.375
+        "total_sec": 7.838,
+        "hyde_sec": 2.689,
+        "search_sec": 0.533,
+        "rerank_sec": 4.616
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "8fc4a677-d46e-5fe4-8b18-c3c40ea38885",
-          "score": 0.6066,
-          "video_name": "00009.mp4",
-          "frame_idx": 720,
-          "timestamp": 30.0,
-          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
-        },
-        {
-          "rank": 2,
           "id": "374a6c58-484e-57ae-a73f-b0c4a77dffb1",
           "score": 0.6063,
           "video_name": "00009.mp4",
@@ -338,7 +329,7 @@
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
-          "rank": 3,
+          "rank": 2,
           "id": "0cb43fc8-217a-5c01-8c4b-5899e36882e2",
           "score": 0.6062,
           "video_name": "00009.mp4",
@@ -347,12 +338,21 @@
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
-          "rank": 4,
+          "rank": 3,
           "id": "1c3883db-c139-56a1-946d-31ee953b1967",
           "score": 0.606,
           "video_name": "00009.mp4",
           "frame_idx": 780,
           "timestamp": 32.5,
+          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
+        },
+        {
+          "rank": 4,
+          "id": "8fc4a677-d46e-5fe4-8b18-c3c40ea38885",
+          "score": 0.5766,
+          "video_name": "00009.mp4",
+          "frame_idx": 720,
+          "timestamp": 30.0,
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
@@ -430,17 +430,17 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "find the traditional Hindu wedding ceremony of Sudarmani and Kasthuri with a peacock theme",
+        "cqr_query": "traditional Hindu wedding ceremony celebration of Sudarmani and Kasthuri",
         "ambiguity_turn1": 0.592,
         "ambiguity_turn2": 0.59,
         "delta_ambiguity": 0.002
       },
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 10.416,
-        "hyde_sec": 2.543,
-        "search_sec": 0.554,
-        "rerank_sec": 7.319
+        "total_sec": 9.3,
+        "hyde_sec": 3.047,
+        "search_sec": 0.552,
+        "rerank_sec": 5.701
       },
       "top_candidates": [
         {
@@ -540,122 +540,122 @@
       "type": 3,
       "type_name": "KIS-C",
       "category": "Conversational Known-Item Search",
-      "query": "laje de santos diving with ATM diver and poissons",
+      "query": "laje de santos",
       "ground_truth": {
         "video_name": "00008.mp4",
         "video_stem": "00008",
         "timestamp": 49.6,
         "frame_id": 1240
       },
-      "rank": 62,
-      "video_rank": 42,
-      "temporal_rank": 62,
-      "point_rank": 77,
+      "rank": 1,
+      "video_rank": 1,
+      "temporal_rank": 1,
+      "point_rank": 1,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "people diving at Laje de Santos with an ATM diver and poissons",
-        "ambiguity_turn1": 0.742,
-        "ambiguity_turn2": 0.728,
-        "delta_ambiguity": 0.0138
+        "cqr_query": "video of laje de santos",
+        "ambiguity_turn1": 0.7,
+        "ambiguity_turn2": 0.695,
+        "delta_ambiguity": 0.0054
       },
-      "status": "PASS (Rank #62 | V-Rank #42)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 11.96,
-        "hyde_sec": 2.294,
-        "search_sec": 0.533,
-        "rerank_sec": 9.133
+        "total_sec": 9.633,
+        "hyde_sec": 2.458,
+        "search_sec": 0.511,
+        "rerank_sec": 6.664
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "4ff92887-09c1-57ef-b85b-18072de07865",
-          "score": 0.306,
-          "video_name": "01044.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Shark therapy"
+          "id": "02caf298-964d-56e4-9628-3c3280792c9b",
+          "score": 0.6098,
+          "video_name": "00008.mp4",
+          "frame_idx": 1240,
+          "timestamp": 49.6,
+          "caption": "laje de santos"
         },
         {
           "rank": 2,
-          "id": "49d63221-46f2-592a-b97f-f071807762a4",
-          "score": 0.1251,
-          "video_name": "01044.mp4",
-          "frame_idx": 222,
-          "timestamp": 7.41,
-          "caption": "Shark therapy"
+          "id": "057772ab-b074-5492-8815-e7343e759f61",
+          "score": 0.6097,
+          "video_name": "00008.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "laje de santos"
         },
         {
           "rank": 3,
-          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
-          "score": 0.0665,
-          "video_name": "00102.mp4",
-          "frame_idx": 1554,
-          "timestamp": 51.85,
-          "caption": "How to Catch a Lobster"
+          "id": "150e3fad-874b-533d-9628-787968f3bba2",
+          "score": 0.6096,
+          "video_name": "00008.mp4",
+          "frame_idx": 375,
+          "timestamp": 15.0,
+          "caption": "laje de santos"
         },
         {
           "rank": 4,
-          "id": "d94edb83-ae52-5607-bf4c-af70eee755a1",
-          "score": 0.0656,
-          "video_name": "00840.mp4",
-          "frame_idx": 148,
-          "timestamp": 4.94,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "id": "1f24fef0-4860-57b7-8000-c6864bd24d1b",
+          "score": 0.6095,
+          "video_name": "00008.mp4",
+          "frame_idx": 930,
+          "timestamp": 37.2,
+          "caption": "laje de santos"
         },
         {
           "rank": 5,
-          "id": "73bcc874-7949-5e49-ac5c-c6c69467aea2",
-          "score": 0.0656,
-          "video_name": "00102.mp4",
-          "frame_idx": 1628,
-          "timestamp": 54.32,
-          "caption": "How to Catch a Lobster"
+          "id": "2598b8b0-930f-591f-ba29-f0decbdd6ac8",
+          "score": 0.6094,
+          "video_name": "00008.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "laje de santos"
         },
         {
           "rank": 6,
-          "id": "63a7fbe8-070d-5c50-8b1a-647247386d28",
-          "score": 0.0655,
-          "video_name": "00840.mp4",
-          "frame_idx": 444,
-          "timestamp": 14.81,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "id": "291c1ce2-df05-5101-974c-d556e2f71fef",
+          "score": 0.6061,
+          "video_name": "00008.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "laje de santos"
         },
         {
           "rank": 7,
-          "id": "97e21996-3012-523a-89aa-bd134def7974",
-          "score": 0.0653,
-          "video_name": "00102.mp4",
-          "frame_idx": 962,
-          "timestamp": 32.1,
-          "caption": "How to Catch a Lobster"
+          "id": "2e3797cb-6a71-5b36-b131-c0fddf23b686",
+          "score": 0.606,
+          "video_name": "00008.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "laje de santos"
         },
         {
           "rank": 8,
-          "id": "9255f6b8-203c-51de-afe4-46b7f0898398",
-          "score": 0.065,
-          "video_name": "00102.mp4",
-          "frame_idx": 888,
-          "timestamp": 29.63,
-          "caption": "How to Catch a Lobster"
+          "id": "2e56ca86-6ae4-58ed-89d1-da90a58228b9",
+          "score": 0.6059,
+          "video_name": "00008.mp4",
+          "frame_idx": 525,
+          "timestamp": 21.0,
+          "caption": "laje de santos"
         },
         {
           "rank": 9,
-          "id": "782c7068-d755-59fb-9437-9e6aaadea14e",
-          "score": 0.007,
-          "video_name": "01641.mp4",
-          "frame_idx": 930,
-          "timestamp": 37.2,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "3e1b2985-d5a5-554b-acd1-e87d9c23be23",
+          "score": 0.6058,
+          "video_name": "00008.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "laje de santos"
         },
         {
           "rank": 10,
-          "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
-          "score": 0.0067,
-          "video_name": "00250.mp4",
-          "frame_idx": 354,
-          "timestamp": 14.76,
-          "caption": "Deep South Maldives"
+          "id": "4339e24e-ba99-5e80-83b5-85e619fcada1",
+          "score": 0.6057,
+          "video_name": "00008.mp4",
+          "frame_idx": 975,
+          "timestamp": 39.0,
+          "caption": "laje de santos"
         }
       ]
     },
@@ -681,19 +681,19 @@
           "00206"
         ]
       },
-      "rank": 2,
+      "rank": 1,
       "video_rank": 1,
       "temporal_rank": 2,
       "point_rank": 2,
       "vqa_answer": "helicopter",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 45.367,
-        "hyde_sec": 2.622,
-        "search_sec": 0.498,
-        "rerank_sec": 42.247
+        "total_sec": 55.517,
+        "hyde_sec": 2.224,
+        "search_sec": 0.558,
+        "rerank_sec": 52.734
       },
       "top_candidates": [
         {
@@ -743,6 +743,15 @@
         },
         {
           "rank": 6,
+          "id": "0f5e8089-1fbd-5e25-a9ad-871f28b9da86",
+          "score": 0.606,
+          "video_name": "01201.mp4",
+          "frame_idx": 1302,
+          "timestamp": 52.08,
+          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
+        },
+        {
+          "rank": 7,
           "id": "3576d3ca-7cce-5445-9a69-065b679357ef",
           "score": 0.6059,
           "video_name": "00371.mp4",
@@ -751,7 +760,7 @@
           "caption": "Wade Stalvey\u2019s First Solo Video"
         },
         {
-          "rank": 7,
+          "rank": 8,
           "id": "5e7c88bd-e205-5da8-9bb4-34fd07711315",
           "score": 0.6054,
           "video_name": "00371.mp4",
@@ -760,22 +769,13 @@
           "caption": "Wade Stalvey\u2019s First Solo Video"
         },
         {
-          "rank": 8,
+          "rank": 9,
           "id": "15c1f2b5-d0ae-55dc-9f3d-c3cfa10c4d50",
           "score": 0.6053,
           "video_name": "00478.mp4",
           "frame_idx": 1488,
           "timestamp": 59.52,
           "caption": "~ Way of Life ~"
-        },
-        {
-          "rank": 9,
-          "id": "f21f5bbc-00b6-54eb-9683-e5f8cbba164a",
-          "score": 0.5751,
-          "video_name": "00461.mp4",
-          "frame_idx": 518,
-          "timestamp": 17.28,
-          "caption": "First Solo"
         },
         {
           "rank": 10,
@@ -815,10 +815,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 54.213,
-        "hyde_sec": 2.831,
-        "search_sec": 0.52,
-        "rerank_sec": 50.862
+        "total_sec": 42.801,
+        "hyde_sec": 3.399,
+        "search_sec": 0.556,
+        "rerank_sec": 38.846
       },
       "top_candidates": [
         {
@@ -941,10 +941,10 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 25.778,
-        "hyde_sec": 1.729,
-        "search_sec": 0.553,
-        "rerank_sec": 23.495
+        "total_sec": 25.495,
+        "hyde_sec": 1.582,
+        "search_sec": 0.552,
+        "rerank_sec": 23.361
       },
       "top_candidates": [
         {
@@ -1067,9 +1067,9 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 0.525,
+        "total_sec": 0.573,
         "hyde_sec": 0.0,
-        "search_sec": 0.525,
+        "search_sec": 0.573,
         "rerank_sec": 0.0
       },
       "top_candidates": [
@@ -1168,119 +1168,119 @@
     {
       "id": "vbs-kisv-01",
       "type": 5,
-      "type_name": "KIS-V",
-      "category": "Visual Query Search",
-      "query": "laje de santos diving with ATM diver de sao vicente",
+      "type_name": "Type 5",
+      "category": "",
+      "query": "laje de santos",
       "ground_truth": {
         "video_name": "00008.mp4",
         "video_stem": "00008",
         "timestamp": 49.6,
         "frame_id": 1240
       },
-      "rank": 50,
-      "video_rank": 50,
-      "temporal_rank": null,
-      "point_rank": null,
+      "rank": 1,
+      "video_rank": 1,
+      "temporal_rank": 1,
+      "point_rank": 1,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #50 | V-Rank #50)",
+      "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 5.577,
+        "total_sec": 4.659,
         "hyde_sec": 0.0,
-        "search_sec": 0.516,
-        "rerank_sec": 5.061
+        "search_sec": 0.515,
+        "rerank_sec": 4.144
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "4ff92887-09c1-57ef-b85b-18072de07865",
-          "score": 0.1254,
-          "video_name": "01044.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Shark therapy"
+          "id": "02caf298-964d-56e4-9628-3c3280792c9b",
+          "score": 0.6066,
+          "video_name": "00008.mp4",
+          "frame_idx": 1240,
+          "timestamp": 49.6,
+          "caption": "laje de santos"
         },
         {
           "rank": 2,
-          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
-          "score": 0.0658,
-          "video_name": "00102.mp4",
-          "frame_idx": 1554,
-          "timestamp": 51.85,
-          "caption": "How to Catch a Lobster"
+          "id": "057772ab-b074-5492-8815-e7343e759f61",
+          "score": 0.6065,
+          "video_name": "00008.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "laje de santos"
         },
         {
           "rank": 3,
-          "id": "0cece679-b332-586e-99f4-9107661e8fea",
-          "score": 0.0657,
-          "video_name": "00102.mp4",
-          "frame_idx": 1480,
-          "timestamp": 49.38,
-          "caption": "How to Catch a Lobster"
+          "id": "150e3fad-874b-533d-9628-787968f3bba2",
+          "score": 0.6063,
+          "video_name": "00008.mp4",
+          "frame_idx": 375,
+          "timestamp": 15.0,
+          "caption": "laje de santos"
         },
         {
           "rank": 4,
-          "id": "8cfeb8e1-2b4e-5c08-b4ca-8a8423a00a30",
-          "score": 0.0653,
-          "video_name": "00237.mp4",
+          "id": "1f24fef0-4860-57b7-8000-c6864bd24d1b",
+          "score": 0.6062,
+          "video_name": "00008.mp4",
           "frame_idx": 930,
           "timestamp": 37.2,
-          "caption": "Barbeiro"
+          "caption": "laje de santos"
         },
         {
           "rank": 5,
-          "id": "8ebb4aa7-59cd-5a9e-bbf9-9b7e02eb1310",
-          "score": 0.0066,
-          "video_name": "01641.mp4",
-          "frame_idx": 558,
-          "timestamp": 22.32,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "2598b8b0-930f-591f-ba29-f0decbdd6ac8",
+          "score": 0.6062,
+          "video_name": "00008.mp4",
+          "frame_idx": 248,
+          "timestamp": 9.92,
+          "caption": "laje de santos"
         },
         {
           "rank": 6,
-          "id": "e0698eb2-bf61-5702-a369-3575548a031d",
-          "score": 0.0065,
-          "video_name": "01641.mp4",
-          "frame_idx": 1116,
-          "timestamp": 44.64,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "291c1ce2-df05-5101-974c-d556e2f71fef",
+          "score": 0.6061,
+          "video_name": "00008.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "laje de santos"
         },
         {
           "rank": 7,
-          "id": "782c7068-d755-59fb-9437-9e6aaadea14e",
-          "score": 0.0063,
-          "video_name": "01641.mp4",
-          "frame_idx": 930,
-          "timestamp": 37.2,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "2e3797cb-6a71-5b36-b131-c0fddf23b686",
+          "score": 0.606,
+          "video_name": "00008.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "laje de santos"
         },
         {
           "rank": 8,
-          "id": "27b5ea47-13da-5d8b-a7b3-79933d97758e",
-          "score": 0.0063,
-          "video_name": "01641.mp4",
-          "frame_idx": 1240,
-          "timestamp": 49.6,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "2e56ca86-6ae4-58ed-89d1-da90a58228b9",
+          "score": 0.6059,
+          "video_name": "00008.mp4",
+          "frame_idx": 525,
+          "timestamp": 21.0,
+          "caption": "laje de santos"
         },
         {
           "rank": 9,
-          "id": "e2945934-06c6-5218-a25d-588987186dae",
-          "score": 0.0062,
-          "video_name": "01641.mp4",
-          "frame_idx": 992,
-          "timestamp": 39.68,
-          "caption": "Salto de Paraquedas Boituva"
+          "id": "3e1b2985-d5a5-554b-acd1-e87d9c23be23",
+          "score": 0.6058,
+          "video_name": "00008.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "laje de santos"
         },
         {
           "rank": 10,
-          "id": "9436268b-12ec-594d-b870-8097bc036b56",
-          "score": 0.0061,
-          "video_name": "00430.mp4",
-          "frame_idx": 708,
-          "timestamp": 29.53,
-          "caption": "Entrevista Eliseu Frechou"
+          "id": "4339e24e-ba99-5e80-83b5-85e619fcada1",
+          "score": 0.6057,
+          "video_name": "00008.mp4",
+          "frame_idx": 975,
+          "timestamp": 39.0,
+          "caption": "laje de santos"
         }
       ]
     }
