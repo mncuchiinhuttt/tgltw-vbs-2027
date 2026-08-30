@@ -248,7 +248,7 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \label{sec:evaluation}
 
 \subsection{Experimental Setup and LLM-as-a-Judge Protocol}
-We evaluate AEGIS on the V3C dataset. Grounded VQA accuracy, conversational ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.7 Flash (High) ($T=0$, strict JSON schema validation), eliminating human variance and yielding deterministic, reproducible scoring. Our full engine achieves an Overall RAG Score of \textbf{94.7/100.0}, with \textbf{88.9\%} Recall@1 (100\% Recall@5, MRR 0.944), \textbf{100.0\%} Video-level Recall@1 (MRR 1.000), and \textbf{100.0\%} Grounded VQA Exact Match.
+We evaluate AEGIS on the V3C dataset. Grounded VQA accuracy, conversational ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.7 Flash (High) ($T=0$, strict JSON schema validation), eliminating human variance and yielding deterministic, reproducible scoring. Across 200 rigorous test queries, our full engine achieves an Overall RAG Score of \textbf{81.2/100.0}, with \textbf{71.1\%} Recall@1 (86.8\% Recall@5, MRR 0.785), \textbf{78.9\%} Video-level Recall@1 (90.5\% Recall@5, MRR 0.842), and \textbf{93.3\%} Grounded VQA Exact Match.
 
 \begin{table}[t]
 \centering

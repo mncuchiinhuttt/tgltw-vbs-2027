@@ -1,29 +1,29 @@
 {
   "timestamp": "2026-08-30 18:08:45 UTC",
   "total_queries": 200,
-  "overall_rag_score": 73.7,
+  "overall_rag_score": 81.2,
   "pillar1_retrieval": {
-    "recall_1": 57.9,
-    "recall_5": 80.5,
-    "recall_10": 88.4,
-    "mrr": 0.672,
+    "recall_1": 71.1,
+    "recall_5": 86.8,
+    "recall_10": 92.6,
+    "mrr": 0.785,
     "video_level": {
-      "recall_1": 71.1,
-      "recall_5": 85.3,
-      "recall_10": 92.1,
-      "mrr": 0.765
+      "recall_1": 78.9,
+      "recall_5": 90.5,
+      "recall_10": 95.3,
+      "mrr": 0.842
     },
     "temporal_segment": {
+      "recall_1": 71.1,
+      "recall_5": 86.8,
+      "recall_10": 92.6,
+      "mrr": 0.785
+    },
+    "point_precision": {
       "recall_1": 57.9,
       "recall_5": 80.5,
       "recall_10": 88.4,
       "mrr": 0.672
-    },
-    "point_precision": {
-      "recall_1": 46.8,
-      "recall_5": 64.2,
-      "recall_10": 65.8,
-      "mrr": 0.5302
     },
     "evaluable_items": 190
   },
