@@ -164,7 +164,13 @@ function SearchView() {
   const [currentTask, setCurrentTask] = useState<any>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
 
-  const queryType = taskMode === "vqa" ? 2 : taskMode === "kis-c" ? 3 : taskMode === "avs" ? 4 : taskMode === "kis-v" ? 5 : 1
+  // Backend /api/search lanes: 1 = KIS-T *and* KIS-C (all conversational
+  // machinery - clarification boost, negative feedback filter, ambiguity
+  // question - is gated behind request.type == 1 in main.py), 2 = VQA,
+  // 3 = TRAKE temporal, 4 = AVS. Visual (kis-v) tasks short-circuit to
+  // /api/search-by-video, so the numeric type is unused there; sending 5
+  // would be rejected by the backend (valid: 1-4).
+  const queryType = taskMode === "vqa" ? 2 : taskMode === "avs" ? 4 : 1
   const isVisualTask = taskMode === "kis-v"
   const isConversationalTask = taskMode === "kis-c"
   const isAvsTask = taskMode === "avs"
