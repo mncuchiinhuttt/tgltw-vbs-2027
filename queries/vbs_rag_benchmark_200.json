@@ -1,0 +1,3706 @@
+[
+  {
+    "id": "vbs-kist-001",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Remember Zamyn Uud Mongolian children",
+    "ground_truth": {
+      "video_name": "01312.mp4",
+      "video_stem": "01312",
+      "timestamp": 17.5,
+      "frame_id": 420
+    }
+  },
+  {
+    "id": "vbs-kist-002",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "After Dark: Canberra Time-lapse time-lapse. time lapse canberra",
+    "ground_truth": {
+      "video_name": "00229.mp4",
+      "video_stem": "00229",
+      "timestamp": 2.48,
+      "frame_id": 62
+    }
+  },
+  {
+    "id": "vbs-kist-003",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "2012 We Will! Trailer - JMotowerkz Canon Camera",
+    "ground_truth": {
+      "video_name": "00052.mp4",
+      "video_stem": "00052",
+      "timestamp": 26.65,
+      "frame_id": 639
+    }
+  },
+  {
+    "id": "vbs-kist-004",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "LUCIANA E FABIANO - i’m felling good-TRAILER videografos banda fantasy",
+    "ground_truth": {
+      "video_name": "01521.mp4",
+      "video_stem": "01521",
+      "timestamp": 49.22,
+      "frame_id": 1180
+    }
+  },
+  {
+    "id": "vbs-kist-005",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Good News",
+    "ground_truth": {
+      "video_name": "00565.mp4",
+      "video_stem": "00565",
+      "timestamp": 56.79,
+      "frame_id": 1702
+    }
+  },
+  {
+    "id": "vbs-kist-006",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Campeonato de España de Escalada en Dificultad y Paraescalada #escalada #climbing #paraescalad",
+    "ground_truth": {
+      "video_name": "00502.mp4",
+      "video_stem": "00502",
+      "timestamp": 22.32,
+      "frame_id": 558
+    }
+  },
+  {
+    "id": "vbs-kist-007",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "NY Jets : Eric Decker 2015-16 Season Highlights ericdecker nyjets",
+    "ground_truth": {
+      "video_name": "00458.mp4",
+      "video_stem": "00458",
+      "timestamp": 0.0,
+      "frame_id": 0
+    }
+  },
+  {
+    "id": "vbs-kist-008",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Escambron Up-Close Premiere_Elements_13",
+    "ground_truth": {
+      "video_name": "00286.mp4",
+      "video_stem": "00286",
+      "timestamp": 11.88,
+      "frame_id": 356
+    }
+  },
+  {
+    "id": "vbs-kist-009",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Luisa Miller de Verdi  lOpra Royal de Wallonie opra Wallonie",
+    "ground_truth": {
+      "video_name": "01511.mp4",
+      "video_stem": "01511",
+      "timestamp": 44.64,
+      "frame_id": 1116
+    }
+  },
+  {
+    "id": "vbs-kist-010",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "At The Market Canon Nacht",
+    "ground_truth": {
+      "video_name": "00210.mp4",
+      "video_stem": "00210",
+      "timestamp": 37.5,
+      "frame_id": 1125
+    }
+  },
+  {
+    "id": "vbs-kist-011",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Blue bolero meri autumn",
+    "ground_truth": {
+      "video_name": "01388.mp4",
+      "video_stem": "01388",
+      "timestamp": 34.72,
+      "frame_id": 868
+    }
+  },
+  {
+    "id": "vbs-kist-012",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Nika and Brad | Tryon Palace Wedding | New Bern, NC Tryon Palace Destination Wedding",
+    "ground_truth": {
+      "video_name": "01519.mp4",
+      "video_stem": "01519",
+      "timestamp": 36.0,
+      "frame_id": 1080
+    }
+  },
+  {
+    "id": "vbs-kist-013",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Canon C500 - 4 k ProRes 4:4:4 films shootools",
+    "ground_truth": {
+      "video_name": "01119.mp4",
+      "video_stem": "01119",
+      "timestamp": 42.16,
+      "frame_id": 1054
+    }
+  },
+  {
+    "id": "vbs-kist-014",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Cassini Mission to Saturn: A Decade of Exploration NASA Space",
+    "ground_truth": {
+      "video_name": "00179.mp4",
+      "video_stem": "00179",
+      "timestamp": 18.0,
+      "frame_id": 432
+    }
+  },
+  {
+    "id": "vbs-kist-015",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Ambrose Bierce’s A Watcher by the Dead - 52 Films in 52 Weeks watcher by the dead frank gonzalez",
+    "ground_truth": {
+      "video_name": "01212.mp4",
+      "video_stem": "01212",
+      "timestamp": 30.0,
+      "frame_id": 720
+    }
+  },
+  {
+    "id": "vbs-kist-016",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Making of the Love to Code Holiday Card love to code",
+    "ground_truth": {
+      "video_name": "00867.mp4",
+      "video_stem": "00867",
+      "timestamp": 42.26,
+      "frame_id": 2533
+    }
+  },
+  {
+    "id": "vbs-kist-017",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "LINKIN PARK - Not Alone  (Official Music Video) linkin park park",
+    "ground_truth": {
+      "video_name": "00066.mp4",
+      "video_stem": "00066",
+      "timestamp": 53.45,
+      "frame_id": 1602
+    }
+  },
+  {
+    "id": "vbs-kist-018",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Post Lunch Gender Chat with Emma - KinkForAll New York City 2 kfanyc2 kinkforall",
+    "ground_truth": {
+      "video_name": "00062.mp4",
+      "video_stem": "00062",
+      "timestamp": 37.04,
+      "frame_id": 1110
+    }
+  },
+  {
+    "id": "vbs-kist-019",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Herkules III 8S vs. Axi 4120/20 (DJI Wookong, 13,4kg lift off) wkm ppm",
+    "ground_truth": {
+      "video_name": "00192.mp4",
+      "video_stem": "00192",
+      "timestamp": 42.0,
+      "frame_id": 1260
+    }
+  },
+  {
+    "id": "vbs-kist-020",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Programa Circuito Fechado - “Petland Cambuí” - Campinas/SP Circuito Fechado Media colunista social Campinas",
+    "ground_truth": {
+      "video_name": "00448.mp4",
+      "video_stem": "00448",
+      "timestamp": 29.63,
+      "frame_id": 888
+    }
+  },
+  {
+    "id": "vbs-kist-021",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Brent and Mel wedding gay wedding",
+    "ground_truth": {
+      "video_name": "00477.mp4",
+      "video_stem": "00477",
+      "timestamp": 9.88,
+      "frame_id": 296
+    }
+  },
+  {
+    "id": "vbs-kist-022",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Rally Against Displacement. ashland housing",
+    "ground_truth": {
+      "video_name": "01037.mp4",
+      "video_stem": "01037",
+      "timestamp": 5.92,
+      "frame_id": 142
+    }
+  },
+  {
+    "id": "vbs-kist-023",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Mammoth’s Juniper Single Track mammoth lakes gopo",
+    "ground_truth": {
+      "video_name": "01235.mp4",
+      "video_stem": "01235",
+      "timestamp": 34.57,
+      "frame_id": 1036
+    }
+  },
+  {
+    "id": "vbs-kist-024",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "JC Pieri - BMX Reel 2013 dream world",
+    "ground_truth": {
+      "video_name": "00055.mp4",
+      "video_stem": "00055",
+      "timestamp": 9.84,
+      "frame_id": 236
+    }
+  },
+  {
+    "id": "vbs-kist-025",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "small flights on a windy morning quadrixette quadricopter",
+    "ground_truth": {
+      "video_name": "01152.mp4",
+      "video_stem": "01152",
+      "timestamp": 35.64,
+      "frame_id": 1068
+    }
+  },
+  {
+    "id": "vbs-kist-026",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Emalcsa, memoria y futuro - Trailer del Proyecto #dMudanza coruña emalcsa",
+    "ground_truth": {
+      "video_name": "00408.mp4",
+      "video_stem": "00408",
+      "timestamp": 37.2,
+      "frame_id": 930
+    }
+  },
+  {
+    "id": "vbs-kist-027",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Metamorformations - The Sculpture of Lynn Northrop Film Buffalo",
+    "ground_truth": {
+      "video_name": "01469.mp4",
+      "video_stem": "01469",
+      "timestamp": 38.61,
+      "frame_id": 1157
+    }
+  },
+  {
+    "id": "vbs-kist-028",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Reasons to Stay - Limor Ballas",
+    "ground_truth": {
+      "video_name": "01333.mp4",
+      "video_stem": "01333",
+      "timestamp": 32.24,
+      "frame_id": 806
+    }
+  },
+  {
+    "id": "vbs-kist-029",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Hans Dahl,  Norwegian painter (1849-1937)  ~  Edward Grieg (Peer Gynt) Norwegian Painter Traditional Costumes",
+    "ground_truth": {
+      "video_name": "01439.mp4",
+      "video_stem": "01439",
+      "timestamp": 38.61,
+      "frame_id": 1157
+    }
+  },
+  {
+    "id": "vbs-kist-030",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Rumble in the Concrete Jungle Alleycat Race colossi mash",
+    "ground_truth": {
+      "video_name": "00862.mp4",
+      "video_stem": "00862",
+      "timestamp": 34.72,
+      "frame_id": 868
+    }
+  },
+  {
+    "id": "vbs-kist-031",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "The Beige Visitors - Marquee Moon (Television)- SLAM Anniversary ‘Tote Jukebox’ Unholy Collaborations @ Tote (23rd Feb 2011)",
+    "ground_truth": {
+      "video_name": "00452.mp4",
+      "video_stem": "00452",
+      "timestamp": 27.28,
+      "frame_id": 682
+    }
+  },
+  {
+    "id": "vbs-kist-032",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "GARAGE RACE 2016 fixed gear contest",
+    "ground_truth": {
+      "video_name": "00922.mp4",
+      "video_stem": "00922",
+      "timestamp": 39.0,
+      "frame_id": 975
+    }
+  },
+  {
+    "id": "vbs-kist-033",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Naoimh O’Hagan - “Rolling In The Deep” (Adele) in stores now adele",
+    "ground_truth": {
+      "video_name": "01209.mp4",
+      "video_stem": "01209",
+      "timestamp": 44.64,
+      "frame_id": 1116
+    }
+  },
+  {
+    "id": "vbs-kist-034",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Day 7 Missoula to Glacier National Park Montana Fire and Ice Tour USA 2016 Lake McDonald Kalispell",
+    "ground_truth": {
+      "video_name": "00571.mp4",
+      "video_stem": "00571",
+      "timestamp": 12.35,
+      "frame_id": 370
+    }
+  },
+  {
+    "id": "vbs-kist-035",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "FOLDING | pattern ONE art generative",
+    "ground_truth": {
+      "video_name": "01660.mp4",
+      "video_stem": "01660",
+      "timestamp": 22.32,
+      "frame_id": 558
+    }
+  },
+  {
+    "id": "vbs-kist-036",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "A Love For Life ~ Yanni A Love For Life Yanni",
+    "ground_truth": {
+      "video_name": "00014.mp4",
+      "video_stem": "00014",
+      "timestamp": 9.88,
+      "frame_id": 296
+    }
+  },
+  {
+    "id": "vbs-kist-037",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Mountain Gate Country Club Wedding Videographer | Andrea plus Luke indie wedding videographer aepxwedding",
+    "ground_truth": {
+      "video_name": "01557.mp4",
+      "video_stem": "01557",
+      "timestamp": 27.07,
+      "frame_id": 649
+    }
+  },
+  {
+    "id": "vbs-kist-038",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Wonderful Paradise .. The Skies!!!! - Gopro Hero 3 Flight Gopro",
+    "ground_truth": {
+      "video_name": "01653.mp4",
+      "video_stem": "01653",
+      "timestamp": 0.0,
+      "frame_id": 0
+    }
+  },
+  {
+    "id": "vbs-kist-039",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "NL Drift Winter Series Round 1 Racing Series",
+    "ground_truth": {
+      "video_name": "00327.mp4",
+      "video_stem": "00327",
+      "timestamp": 17.36,
+      "frame_id": 434
+    }
+  },
+  {
+    "id": "vbs-kist-040",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "The Absent Column architecture bertrand goldberg",
+    "ground_truth": {
+      "video_name": "01432.mp4",
+      "video_stem": "01432",
+      "timestamp": 29.61,
+      "frame_id": 710
+    }
+  },
+  {
+    "id": "vbs-kist-041",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Average Hospital",
+    "ground_truth": {
+      "video_name": "00868.mp4",
+      "video_stem": "00868",
+      "timestamp": 55.0,
+      "frame_id": 3300
+    }
+  },
+  {
+    "id": "vbs-kist-042",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Bayoux 2016 - Version officielle allier synergie",
+    "ground_truth": {
+      "video_name": "00698.mp4",
+      "video_stem": "00698",
+      "timestamp": 8.91,
+      "frame_id": 267
+    }
+  },
+  {
+    "id": "vbs-kist-043",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Lo básico amanda comedia",
+    "ground_truth": {
+      "video_name": "00319.mp4",
+      "video_stem": "00319",
+      "timestamp": 49.6,
+      "frame_id": 1240
+    }
+  },
+  {
+    "id": "vbs-kist-044",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "A Tale of Two Cancers bernie healthcare",
+    "ground_truth": {
+      "video_name": "00441.mp4",
+      "video_stem": "00441",
+      "timestamp": 51.68,
+      "frame_id": 1239
+    }
+  },
+  {
+    "id": "vbs-kist-045",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Cuba Black & White P1 Black & White Cuba",
+    "ground_truth": {
+      "video_name": "01566.mp4",
+      "video_stem": "01566",
+      "timestamp": 0.0,
+      "frame_id": 0
+    }
+  },
+  {
+    "id": "vbs-kist-046",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "“PAYMENT” 48 hour noir",
+    "ground_truth": {
+      "video_name": "00691.mp4",
+      "video_stem": "00691",
+      "timestamp": 51.85,
+      "frame_id": 1554
+    }
+  },
+  {
+    "id": "vbs-kist-047",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "YASIIN and TALIB are BLACK STAR / a Mr.Mass™ P.O.V. TALIB KWELI EXCLUSIVE",
+    "ground_truth": {
+      "video_name": "00190.mp4",
+      "video_stem": "00190",
+      "timestamp": 42.5,
+      "frame_id": 1275
+    }
+  },
+  {
+    "id": "vbs-kist-048",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "berlin, germany day 001 / hotel berlin life",
+    "ground_truth": {
+      "video_name": "00781.mp4",
+      "video_stem": "00781",
+      "timestamp": 29.63,
+      "frame_id": 888
+    }
+  },
+  {
+    "id": "vbs-kist-049",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Landscapes and Crucifixes in N?gr?d Szanda HD",
+    "ground_truth": {
+      "video_name": "00199.mp4",
+      "video_stem": "00199",
+      "timestamp": 34.72,
+      "frame_id": 868
+    }
+  },
+  {
+    "id": "vbs-kist-050",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Education rights protest",
+    "ground_truth": {
+      "video_name": "00737.mp4",
+      "video_stem": "00737",
+      "timestamp": 54.32,
+      "frame_id": 1628
+    }
+  },
+  {
+    "id": "vbs-kist-051",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "PIECES OF NEPAL Pokhara Himalayas",
+    "ground_truth": {
+      "video_name": "00706.mp4",
+      "video_stem": "00706",
+      "timestamp": 7.44,
+      "frame_id": 186
+    }
+  },
+  {
+    "id": "vbs-kist-052",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Zu Besuch im Wildpark Bad-Marienberg ? 2 Wildpark Esel",
+    "ground_truth": {
+      "video_name": "01239.mp4",
+      "video_stem": "01239",
+      "timestamp": 30.0,
+      "frame_id": 750
+    }
+  },
+  {
+    "id": "vbs-kist-053",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Trahison, extrait du “Richard III” des Dramaticules (HD) Compagnie des Dramaticules troupe",
+    "ground_truth": {
+      "video_name": "00543.mp4",
+      "video_stem": "00543",
+      "timestamp": 14.88,
+      "frame_id": 372
+    }
+  },
+  {
+    "id": "vbs-kist-054",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Artistically Speaking - Bohuslav Rattay community 2012",
+    "ground_truth": {
+      "video_name": "01655.mp4",
+      "video_stem": "01655",
+      "timestamp": 51.85,
+      "frame_id": 1554
+    }
+  },
+  {
+    "id": "vbs-kist-055",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Lisbon Coimbra City",
+    "ground_truth": {
+      "video_name": "00089.mp4",
+      "video_stem": "00089",
+      "timestamp": 42.0,
+      "frame_id": 1050
+    }
+  },
+  {
+    "id": "vbs-kist-056",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Packing for a day on the hill snowline productions backpacking",
+    "ground_truth": {
+      "video_name": "01497.mp4",
+      "video_stem": "01497",
+      "timestamp": 57.04,
+      "frame_id": 1426
+    }
+  },
+  {
+    "id": "vbs-kist-057",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Construyendo Comunidad: Austria Lima love",
+    "ground_truth": {
+      "video_name": "00943.mp4",
+      "video_stem": "00943",
+      "timestamp": 14.85,
+      "frame_id": 445
+    }
+  },
+  {
+    "id": "vbs-kist-058",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Simulacra and Simulation, 2016 Downer Comedy",
+    "ground_truth": {
+      "video_name": "01101.mp4",
+      "video_stem": "01101",
+      "timestamp": 7.41,
+      "frame_id": 222
+    }
+  },
+  {
+    "id": "vbs-kist-059",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Coachella 2012 sahara tent music",
+    "ground_truth": {
+      "video_name": "00256.mp4",
+      "video_stem": "00256",
+      "timestamp": 40.0,
+      "frame_id": 960
+    }
+  },
+  {
+    "id": "vbs-kist-060",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Deep Explorer sofia bulgaria",
+    "ground_truth": {
+      "video_name": "00778.mp4",
+      "video_stem": "00778",
+      "timestamp": 14.85,
+      "frame_id": 445
+    }
+  },
+  {
+    "id": "vbs-kist-061",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Imprisoned Paradise snowdonia nant gwynant",
+    "ground_truth": {
+      "video_name": "00162.mp4",
+      "video_stem": "00162",
+      "timestamp": 2.46,
+      "frame_id": 59
+    }
+  },
+  {
+    "id": "vbs-kist-062",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Freebord Pascal - 33 2-2 - 090711 - Represent Tour Grenoble 09 freebord longboard",
+    "ground_truth": {
+      "video_name": "01133.mp4",
+      "video_stem": "01133",
+      "timestamp": 37.2,
+      "frame_id": 930
+    }
+  },
+  {
+    "id": "vbs-kist-063",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Club Zand Gig gig Jack Johnson",
+    "ground_truth": {
+      "video_name": "00602.mp4",
+      "video_stem": "00602",
+      "timestamp": 18.0,
+      "frame_id": 450
+    }
+  },
+  {
+    "id": "vbs-kist-064",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "You never know shortfilm",
+    "ground_truth": {
+      "video_name": "01701.mp4",
+      "video_stem": "01701",
+      "timestamp": 44.64,
+      "frame_id": 1116
+    }
+  },
+  {
+    "id": "vbs-kist-065",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Parapente itinrant Maroc (2014) Morocco Maroc",
+    "ground_truth": {
+      "video_name": "01290.mp4",
+      "video_stem": "01290",
+      "timestamp": 49.6,
+      "frame_id": 1240
+    }
+  },
+  {
+    "id": "vbs-kist-066",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "one man show 8 sport k?nigstuhl",
+    "ground_truth": {
+      "video_name": "01269.mp4",
+      "video_stem": "01269",
+      "timestamp": 54.56,
+      "frame_id": 1364
+    }
+  },
+  {
+    "id": "vbs-kist-067",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "EXPOSANT C | S2-4 | Ying Gao Robotique Texile",
+    "ground_truth": {
+      "video_name": "00742.mp4",
+      "video_stem": "00742",
+      "timestamp": 37.04,
+      "frame_id": 1110
+    }
+  },
+  {
+    "id": "vbs-kist-068",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "👑⚽ DISCO KINGZ CUP 2017 👑⚽ Hermann Kessler Halle Disco",
+    "ground_truth": {
+      "video_name": "01185.mp4",
+      "video_stem": "01185",
+      "timestamp": 3.0,
+      "frame_id": 75
+    }
+  },
+  {
+    "id": "vbs-kist-069",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Maladies rares : enjeux fondamentaux et dynamiques d’innovation - François Faurisson",
+    "ground_truth": {
+      "video_name": "00394.mp4",
+      "video_stem": "00394",
+      "timestamp": 29.76,
+      "frame_id": 744
+    }
+  },
+  {
+    "id": "vbs-kist-070",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "RINQUELLE - JOHN VOLANTHEN Rinquelle CDG",
+    "ground_truth": {
+      "video_name": "01445.mp4",
+      "video_stem": "01445",
+      "timestamp": 5.94,
+      "frame_id": 178
+    }
+  },
+  {
+    "id": "vbs-kist-071",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Alexis and Aris sjsu dslr",
+    "ground_truth": {
+      "video_name": "00143.mp4",
+      "video_stem": "00143",
+      "timestamp": 9.84,
+      "frame_id": 236
+    }
+  },
+  {
+    "id": "vbs-kist-072",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Brewster Breaks Ground on New Fire/Rescue Complex brewster ground breaking",
+    "ground_truth": {
+      "video_name": "00094.mp4",
+      "video_stem": "00094",
+      "timestamp": 44.54,
+      "frame_id": 1335
+    }
+  },
+  {
+    "id": "vbs-kist-073",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Montana 2014 Flathead Lake lake summer",
+    "ground_truth": {
+      "video_name": "01357.mp4",
+      "video_stem": "01357",
+      "timestamp": 8.88,
+      "frame_id": 213
+    }
+  },
+  {
+    "id": "vbs-kist-074",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "R317Pelvis - BASIC EVALUATION PRINCIPLES Dennis Eaton embryology",
+    "ground_truth": {
+      "video_name": "00467.mp4",
+      "video_stem": "00467",
+      "timestamp": 20.0,
+      "frame_id": 600
+    }
+  },
+  {
+    "id": "vbs-kist-075",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Student Sport Student Sport How to play football",
+    "ground_truth": {
+      "video_name": "01586.mp4",
+      "video_stem": "01586",
+      "timestamp": 34.57,
+      "frame_id": 1036
+    }
+  },
+  {
+    "id": "vbs-kist-076",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "CASUAL with Andrew Serrano biquilha art",
+    "ground_truth": {
+      "video_name": "00594.mp4",
+      "video_stem": "00594",
+      "timestamp": 44.29,
+      "frame_id": 1062
+    }
+  },
+  {
+    "id": "vbs-kist-077",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Purim Festival Haifa 2008 latvia purim",
+    "ground_truth": {
+      "video_name": "00164.mp4",
+      "video_stem": "00164",
+      "timestamp": 29.61,
+      "frame_id": 710
+    }
+  },
+  {
+    "id": "vbs-kist-078",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "Côte Sauvage belle-ile",
+    "ground_truth": {
+      "video_name": "00207.mp4",
+      "video_stem": "00207",
+      "timestamp": 4.96,
+      "frame_id": 124
+    }
+  },
+  {
+    "id": "vbs-kist-079",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "REHEARSAL FOR A FILM: SCENE 7",
+    "ground_truth": {
+      "video_name": "00931.mp4",
+      "video_stem": "00931",
+      "timestamp": 47.12,
+      "frame_id": 1178
+    }
+  },
+  {
+    "id": "vbs-kist-080",
+    "type": 1,
+    "type_name": "KIS-T",
+    "category": "Textual Known-Item Search",
+    "query": "J. Cole @ The Electric Factory | Kanye West, The Sideline Story, & Radio Biz out j.",
+    "ground_truth": {
+      "video_name": "01304.mp4",
+      "video_stem": "01304",
+      "timestamp": 4.92,
+      "frame_id": 118
+    }
+  },
+  {
+    "id": "vbs-kisc-001",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Kbye. byron ready mike mains",
+    "history": [
+      {
+        "role": "user",
+        "text": "find byron ready mike mains scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Kbye.?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Kbye. byron ready mike mains"
+      }
+    ],
+    "system_answer": "Kbye.",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00750.mp4",
+      "video_stem": "00750",
+      "timestamp": 17.28,
+      "frame_id": 518
+    }
+  },
+  {
+    "id": "vbs-kisc-002",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "BIGGER BETTER politics Superman",
+    "history": [
+      {
+        "role": "user",
+        "text": "find politics Superman scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for BIGGER BETTER?"
+      },
+      {
+        "role": "user",
+        "text": "yes find BIGGER BETTER politics Superman"
+      }
+    ],
+    "system_answer": "BIGGER BETTER",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00334.mp4",
+      "video_stem": "00334",
+      "timestamp": 27.0,
+      "frame_id": 675
+    }
+  },
+  {
+    "id": "vbs-kisc-003",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Temple Mt Failure doronkeidar jerusalem",
+    "history": [
+      {
+        "role": "user",
+        "text": "find doronkeidar jerusalem scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Temple Mt Failure?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Temple Mt Failure doronkeidar jerusalem"
+      }
+    ],
+    "system_answer": "Temple Mt Failure",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00761.mp4",
+      "video_stem": "00761",
+      "timestamp": 50.0,
+      "frame_id": 1200
+    }
+  },
+  {
+    "id": "vbs-kisc-004",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Maze 2014 short documentary music paris",
+    "history": [
+      {
+        "role": "user",
+        "text": "find music paris scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Maze 2014 short documentary?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Maze 2014 short documentary music paris"
+      }
+    ],
+    "system_answer": "Maze 2014 short documentary",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00729.mp4",
+      "video_stem": "00729",
+      "timestamp": 24.0,
+      "frame_id": 600
+    }
+  },
+  {
+    "id": "vbs-kisc-005",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Entrevista Eliseu Frechou clip",
+    "history": [
+      {
+        "role": "user",
+        "text": "find clip scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Entrevista Eliseu Frechou?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Entrevista Eliseu Frechou clip"
+      }
+    ],
+    "system_answer": "Entrevista Eliseu Frechou",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00430.mp4",
+      "video_stem": "00430",
+      "timestamp": 34.45,
+      "frame_id": 826
+    }
+  },
+  {
+    "id": "vbs-kisc-006",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Persistence of Flight II sky london",
+    "history": [
+      {
+        "role": "user",
+        "text": "find sky london scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Persistence of Flight II?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Persistence of Flight II sky london"
+      }
+    ],
+    "system_answer": "Persistence of Flight II",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01375.mp4",
+      "video_stem": "01375",
+      "timestamp": 30.0,
+      "frame_id": 750
+    }
+  },
+  {
+    "id": "vbs-kisc-007",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015) tábor tarapaca",
+    "history": [
+      {
+        "role": "user",
+        "text": "find tábor tarapaca scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Tarapaca “Záletník” (LIVE RECORDING SESSION 2015) tábor tarapaca"
+      }
+    ],
+    "system_answer": "Tarapaca “Záletník” (LIVE RECORDING SESSION 2015)",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00548.mp4",
+      "video_stem": "00548",
+      "timestamp": 0.0,
+      "frame_id": 0
+    }
+  },
+  {
+    "id": "vbs-kisc-008",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "HETANE - Golden Snakes rock wroc?aw",
+    "history": [
+      {
+        "role": "user",
+        "text": "find rock wroc?aw scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for HETANE - Golden Snakes?"
+      },
+      {
+        "role": "user",
+        "text": "yes find HETANE - Golden Snakes rock wroc?aw"
+      }
+    ],
+    "system_answer": "HETANE - Golden Snakes",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01440.mp4",
+      "video_stem": "01440",
+      "timestamp": 49.22,
+      "frame_id": 1180
+    }
+  },
+  {
+    "id": "vbs-kisc-009",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Hal Grades Your Bike Locking Hal Grades Your Bike Locking New York City",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Hal Grades Your Bike Locking New York City scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Hal Grades Your Bike Locking?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Hal Grades Your Bike Locking Hal Grades Your Bike Locking New York City"
+      }
+    ],
+    "system_answer": "Hal Grades Your Bike Locking",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01402.mp4",
+      "video_stem": "01402",
+      "timestamp": 12.0,
+      "frame_id": 360
+    }
+  },
+  {
+    "id": "vbs-kisc-010",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Hacker Manifesto - zum Tode von Aaron Swartz clip",
+    "history": [
+      {
+        "role": "user",
+        "text": "find clip scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Hacker Manifesto - zum Tode von Aaron Swartz?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Hacker Manifesto - zum Tode von Aaron Swartz clip"
+      }
+    ],
+    "system_answer": "Hacker Manifesto - zum Tode von Aaron Swartz",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01330.mp4",
+      "video_stem": "01330",
+      "timestamp": 45.0,
+      "frame_id": 1350
+    }
+  },
+  {
+    "id": "vbs-kisc-011",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Malinas Warehouse hangar skateboard",
+    "history": [
+      {
+        "role": "user",
+        "text": "find hangar skateboard scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Malinas Warehouse?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Malinas Warehouse hangar skateboard"
+      }
+    ],
+    "system_answer": "Malinas Warehouse",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00147.mp4",
+      "video_stem": "00147",
+      "timestamp": 6.0,
+      "frame_id": 150
+    }
+  },
+  {
+    "id": "vbs-kisc-012",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Flight, an Adventure in Light flight astral projection",
+    "history": [
+      {
+        "role": "user",
+        "text": "find flight astral projection scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Flight, an Adventure in Light?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Flight, an Adventure in Light flight astral projection"
+      }
+    ],
+    "system_answer": "Flight, an Adventure in Light",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01250.mp4",
+      "video_stem": "01250",
+      "timestamp": 41.57,
+      "frame_id": 1246
+    }
+  },
+  {
+    "id": "vbs-kisc-013",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "OKUPA (SQUATTING), chronicle of a social fight spain squatting",
+    "history": [
+      {
+        "role": "user",
+        "text": "find spain squatting scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for OKUPA (SQUATTING), chronicle of a social fight?"
+      },
+      {
+        "role": "user",
+        "text": "yes find OKUPA (SQUATTING), chronicle of a social fight spain squatting"
+      }
+    ],
+    "system_answer": "OKUPA (SQUATTING), chronicle of a social fight",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01303.mp4",
+      "video_stem": "01303",
+      "timestamp": 15.0,
+      "frame_id": 375
+    }
+  },
+  {
+    "id": "vbs-kisc-014",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Dance With Stars on murheroTV: Youth Inspired Spring Break - Ep. 2 American student spring break drunk spread break students",
+    "history": [
+      {
+        "role": "user",
+        "text": "find American student spring break drunk spread break students scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Dance With Stars on murheroTV: Youth Inspired Spring Break - Ep. 2?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Dance With Stars on murheroTV: Youth Inspired Spring Break - Ep. 2 American student spring break drunk spread break students"
+      }
+    ],
+    "system_answer": "Dance With Stars on murheroTV: Youth Inspired Spring Break - Ep. 2",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00351.mp4",
+      "video_stem": "00351",
+      "timestamp": 29.63,
+      "frame_id": 888
+    }
+  },
+  {
+    "id": "vbs-kisc-015",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "RiAus PDplus: Wind Technology wind technology solar energy",
+    "history": [
+      {
+        "role": "user",
+        "text": "find wind technology solar energy scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for RiAus PDplus: Wind Technology?"
+      },
+      {
+        "role": "user",
+        "text": "yes find RiAus PDplus: Wind Technology wind technology solar energy"
+      }
+    ],
+    "system_answer": "RiAus PDplus: Wind Technology",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01096.mp4",
+      "video_stem": "01096",
+      "timestamp": 47.12,
+      "frame_id": 1178
+    }
+  },
+  {
+    "id": "vbs-kisc-016",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Demonstration of Self NSCC music",
+    "history": [
+      {
+        "role": "user",
+        "text": "find NSCC music scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Demonstration of Self?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Demonstration of Self NSCC music"
+      }
+    ],
+    "system_answer": "Demonstration of Self",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01496.mp4",
+      "video_stem": "01496",
+      "timestamp": 51.85,
+      "frame_id": 1554
+    }
+  },
+  {
+    "id": "vbs-kisc-017",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "His daughter - Short film (EngSub) short film gaetan selle",
+    "history": [
+      {
+        "role": "user",
+        "text": "find short film gaetan selle scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for His daughter - Short film (EngSub)?"
+      },
+      {
+        "role": "user",
+        "text": "yes find His daughter - Short film (EngSub) short film gaetan selle"
+      }
+    ],
+    "system_answer": "His daughter - Short film (EngSub)",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00335.mp4",
+      "video_stem": "00335",
+      "timestamp": 12.0,
+      "frame_id": 300
+    }
+  },
+  {
+    "id": "vbs-kisc-018",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Tropical Music - Episode 28 jazz ensemble",
+    "history": [
+      {
+        "role": "user",
+        "text": "find jazz ensemble scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Tropical Music - Episode 28?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Tropical Music - Episode 28 jazz ensemble"
+      }
+    ],
+    "system_answer": "Tropical Music - Episode 28",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00949.mp4",
+      "video_stem": "00949",
+      "timestamp": 59.52,
+      "frame_id": 1488
+    }
+  },
+  {
+    "id": "vbs-kisc-019",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "From The Eyes of The Dragon - Episode 9 - Final Battles of Great Western War 2013 sca great western war",
+    "history": [
+      {
+        "role": "user",
+        "text": "find sca great western war scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for From The Eyes of The Dragon - Episode 9 - Final Battles of Great Western War 2013?"
+      },
+      {
+        "role": "user",
+        "text": "yes find From The Eyes of The Dragon - Episode 9 - Final Battles of Great Western War 2013 sca great western war"
+      }
+    ],
+    "system_answer": "From The Eyes of The Dragon - Episode 9 - Final Battles of Great Western War 2013",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00780.mp4",
+      "video_stem": "00780",
+      "timestamp": 2.47,
+      "frame_id": 74
+    }
+  },
+  {
+    "id": "vbs-kisc-020",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Rescuedays 2016 Aftermovie rescuedays rd2016",
+    "history": [
+      {
+        "role": "user",
+        "text": "find rescuedays rd2016 scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Rescuedays 2016 Aftermovie?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Rescuedays 2016 Aftermovie rescuedays rd2016"
+      }
+    ],
+    "system_answer": "Rescuedays 2016 Aftermovie",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00554.mp4",
+      "video_stem": "00554",
+      "timestamp": 33.0,
+      "frame_id": 1980
+    }
+  },
+  {
+    "id": "vbs-kisc-021",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "MOTIVATION / MAKING OF making dji",
+    "history": [
+      {
+        "role": "user",
+        "text": "find making dji scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for MOTIVATION / MAKING OF?"
+      },
+      {
+        "role": "user",
+        "text": "yes find MOTIVATION / MAKING OF making dji"
+      }
+    ],
+    "system_answer": "MOTIVATION / MAKING OF",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01313.mp4",
+      "video_stem": "01313",
+      "timestamp": 39.68,
+      "frame_id": 992
+    }
+  },
+  {
+    "id": "vbs-kisc-022",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Memorial for Michael White Spiritual Jazz Violinist Spiritual Jazz Jazz Violin",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Spiritual Jazz Jazz Violin scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Memorial for Michael White Spiritual Jazz Violinist?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Memorial for Michael White Spiritual Jazz Violinist Spiritual Jazz Jazz Violin"
+      }
+    ],
+    "system_answer": "Memorial for Michael White Spiritual Jazz Violinist",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01412.mp4",
+      "video_stem": "01412",
+      "timestamp": 51.68,
+      "frame_id": 1239
+    }
+  },
+  {
+    "id": "vbs-kisc-023",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "The D-Files: Ghost Hunters (A Horror/Comedy Shortfilm) Ghosts Found Footage",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Ghosts Found Footage scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for The D-Files: Ghost Hunters (A Horror/Comedy Shortfilm)?"
+      },
+      {
+        "role": "user",
+        "text": "yes find The D-Files: Ghost Hunters (A Horror/Comedy Shortfilm) Ghosts Found Footage"
+      }
+    ],
+    "system_answer": "The D-Files: Ghost Hunters (A Horror/Comedy Shortfilm)",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01143.mp4",
+      "video_stem": "01143",
+      "timestamp": 44.44,
+      "frame_id": 1332
+    }
+  },
+  {
+    "id": "vbs-kisc-024",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Girls Kite Camp in The Philippines- Julia Castro kite camp julia castro",
+    "history": [
+      {
+        "role": "user",
+        "text": "find kite camp julia castro scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Girls Kite Camp in The Philippines- Julia Castro?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Girls Kite Camp in The Philippines- Julia Castro kite camp julia castro"
+      }
+    ],
+    "system_answer": "Girls Kite Camp in The Philippines- Julia Castro",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00450.mp4",
+      "video_stem": "00450",
+      "timestamp": 7.44,
+      "frame_id": 186
+    }
+  },
+  {
+    "id": "vbs-kisc-025",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Retrato de Sego - Parte de La Ciudad cc street art",
+    "history": [
+      {
+        "role": "user",
+        "text": "find cc street art scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Retrato de Sego - Parte de La Ciudad?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Retrato de Sego - Parte de La Ciudad cc street art"
+      }
+    ],
+    "system_answer": "Retrato de Sego - Parte de La Ciudad",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01405.mp4",
+      "video_stem": "01405",
+      "timestamp": 4.92,
+      "frame_id": 118
+    }
+  },
+  {
+    "id": "vbs-kisc-026",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Auf großer Tour durch den den Freiberger Hospitalwald - 2 Bäume Mitteldeutschland",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Bäume Mitteldeutschland scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Auf großer Tour durch den den Freiberger Hospitalwald - 2?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Auf großer Tour durch den den Freiberger Hospitalwald - 2 Bäume Mitteldeutschland"
+      }
+    ],
+    "system_answer": "Auf großer Tour durch den den Freiberger Hospitalwald - 2",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00666.mp4",
+      "video_stem": "00666",
+      "timestamp": 39.0,
+      "frame_id": 975
+    }
+  },
+  {
+    "id": "vbs-kisc-027",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Soon I Will Be Free by Jon Hammond In Louisville Kentucky Composer Kentucky",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Composer Kentucky scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Soon I Will Be Free by Jon Hammond In Louisville Kentucky?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Soon I Will Be Free by Jon Hammond In Louisville Kentucky Composer Kentucky"
+      }
+    ],
+    "system_answer": "Soon I Will Be Free by Jon Hammond In Louisville Kentucky",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01576.mp4",
+      "video_stem": "01576",
+      "timestamp": 20.79,
+      "frame_id": 623
+    }
+  },
+  {
+    "id": "vbs-kisc-028",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "14-04-13 - La Grande Sure La Grande Sure randonn?e",
+    "history": [
+      {
+        "role": "user",
+        "text": "find La Grande Sure randonn?e scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for 14-04-13 - La Grande Sure?"
+      },
+      {
+        "role": "user",
+        "text": "yes find 14-04-13 - La Grande Sure La Grande Sure randonn?e"
+      }
+    ],
+    "system_answer": "14-04-13 - La Grande Sure",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01592.mp4",
+      "video_stem": "01592",
+      "timestamp": 0.0,
+      "frame_id": 0
+    }
+  },
+  {
+    "id": "vbs-kisc-029",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Eine Philippinische Reise Travel HV 30",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Travel HV 30 scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Eine Philippinische Reise?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Eine Philippinische Reise Travel HV 30"
+      }
+    ],
+    "system_answer": "Eine Philippinische Reise",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00115.mp4",
+      "video_stem": "00115",
+      "timestamp": 7.44,
+      "frame_id": 186
+    }
+  },
+  {
+    "id": "vbs-kisc-030",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "ANCHOR - China 2015 Edouard Delpero Emilien Fleury",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Edouard Delpero Emilien Fleury scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for ANCHOR - China 2015?"
+      },
+      {
+        "role": "user",
+        "text": "yes find ANCHOR - China 2015 Edouard Delpero Emilien Fleury"
+      }
+    ],
+    "system_answer": "ANCHOR - China 2015",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00470.mp4",
+      "video_stem": "00470",
+      "timestamp": 19.69,
+      "frame_id": 472
+    }
+  },
+  {
+    "id": "vbs-kisc-031",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Nuestra Tradiciones La Comunidad Ind?gena de La 18 Documentary Young documentary",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Documentary Young documentary scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Nuestra Tradiciones La Comunidad Ind?gena de La 18?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Nuestra Tradiciones La Comunidad Ind?gena de La 18 Documentary Young documentary"
+      }
+    ],
+    "system_answer": "Nuestra Tradiciones La Comunidad Ind?gena de La 18",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01686.mp4",
+      "video_stem": "01686",
+      "timestamp": 32.1,
+      "frame_id": 962
+    }
+  },
+  {
+    "id": "vbs-kisc-032",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "The Real Madrid (Madrid, Spain) S3E20 flamenco dancing Madrid",
+    "history": [
+      {
+        "role": "user",
+        "text": "find flamenco dancing Madrid scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for The Real Madrid (Madrid, Spain) S3E20?"
+      },
+      {
+        "role": "user",
+        "text": "yes find The Real Madrid (Madrid, Spain) S3E20 flamenco dancing Madrid"
+      }
+    ],
+    "system_answer": "The Real Madrid (Madrid, Spain) S3E20",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01651.mp4",
+      "video_stem": "01651",
+      "timestamp": 19.75,
+      "frame_id": 592
+    }
+  },
+  {
+    "id": "vbs-kisc-033",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Pati & Armando :: “La Luna y el Sol” || English Subs. love bride",
+    "history": [
+      {
+        "role": "user",
+        "text": "find love bride scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Pati & Armando :: “La Luna y el Sol” || English Subs.?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Pati & Armando :: “La Luna y el Sol” || English Subs. love bride"
+      }
+    ],
+    "system_answer": "Pati & Armando :: “La Luna y el Sol” || English Subs.",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00648.mp4",
+      "video_stem": "00648",
+      "timestamp": 19.69,
+      "frame_id": 472
+    }
+  },
+  {
+    "id": "vbs-kisc-034",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Comment vient l’inspiration pour improviser improviser inspiration",
+    "history": [
+      {
+        "role": "user",
+        "text": "find improviser inspiration scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Comment vient l’inspiration pour improviser?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Comment vient l’inspiration pour improviser improviser inspiration"
+      }
+    ],
+    "system_answer": "Comment vient l’inspiration pour improviser",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00824.mp4",
+      "video_stem": "00824",
+      "timestamp": 27.0,
+      "frame_id": 675
+    }
+  },
+  {
+    "id": "vbs-kisc-035",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Santorini Yachting red beach santorini santorini sailing",
+    "history": [
+      {
+        "role": "user",
+        "text": "find red beach santorini santorini sailing scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Santorini Yachting?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Santorini Yachting red beach santorini santorini sailing"
+      }
+    ],
+    "system_answer": "Santorini Yachting",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00550.mp4",
+      "video_stem": "00550",
+      "timestamp": 7.44,
+      "frame_id": 186
+    }
+  },
+  {
+    "id": "vbs-kisc-036",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "ZU betty lafete ljubljana",
+    "history": [
+      {
+        "role": "user",
+        "text": "find betty lafete ljubljana scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for ZU?"
+      },
+      {
+        "role": "user",
+        "text": "yes find ZU betty lafete ljubljana"
+      }
+    ],
+    "system_answer": "ZU",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00136.mp4",
+      "video_stem": "00136",
+      "timestamp": 9.92,
+      "frame_id": 248
+    }
+  },
+  {
+    "id": "vbs-kisc-037",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Bruno Mattiello e Dani Breda - Trailer Wedding CineWedding",
+    "history": [
+      {
+        "role": "user",
+        "text": "find Wedding CineWedding scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Bruno Mattiello e Dani Breda - Trailer?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Bruno Mattiello e Dani Breda - Trailer Wedding CineWedding"
+      }
+    ],
+    "system_answer": "Bruno Mattiello e Dani Breda - Trailer",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00433.mp4",
+      "video_stem": "00433",
+      "timestamp": 17.23,
+      "frame_id": 413
+    }
+  },
+  {
+    "id": "vbs-kisc-038",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "“Reasonable Man” - Henry P. Funkuncle. (demo version) henry funkuncle",
+    "history": [
+      {
+        "role": "user",
+        "text": "find henry funkuncle scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for “Reasonable Man” - Henry P. Funkuncle. (demo version)?"
+      },
+      {
+        "role": "user",
+        "text": "yes find “Reasonable Man” - Henry P. Funkuncle. (demo version) henry funkuncle"
+      }
+    ],
+    "system_answer": "“Reasonable Man” - Henry P. Funkuncle. (demo version)",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01164.mp4",
+      "video_stem": "01164",
+      "timestamp": 34.57,
+      "frame_id": 1036
+    }
+  },
+  {
+    "id": "vbs-kisc-039",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "The Grackles of Lamar and 6th, Austin, Texas - HD atx grackles",
+    "history": [
+      {
+        "role": "user",
+        "text": "find atx grackles scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for The Grackles of Lamar and 6th, Austin, Texas - HD?"
+      },
+      {
+        "role": "user",
+        "text": "yes find The Grackles of Lamar and 6th, Austin, Texas - HD atx grackles"
+      }
+    ],
+    "system_answer": "The Grackles of Lamar and 6th, Austin, Texas - HD",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "01473.mp4",
+      "video_stem": "01473",
+      "timestamp": 39.0,
+      "frame_id": 975
+    }
+  },
+  {
+    "id": "vbs-kisc-040",
+    "type": 3,
+    "type_name": "KIS-C",
+    "category": "Conversational Known-Item Search",
+    "query": "Santa Gadea (one day) clip",
+    "history": [
+      {
+        "role": "user",
+        "text": "find clip scene"
+      },
+      {
+        "role": "system",
+        "text": "Are you looking for Santa Gadea (one day)?"
+      },
+      {
+        "role": "user",
+        "text": "yes find Santa Gadea (one day) clip"
+      }
+    ],
+    "system_answer": "Santa Gadea (one day)",
+    "rejected": [
+      "unrelated commercial advertisement"
+    ],
+    "ground_truth": {
+      "video_name": "00646.mp4",
+      "video_stem": "00646",
+      "timestamp": 23.69,
+      "frame_id": 568
+    }
+  },
+  {
+    "id": "vbs-vqa-001",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Jorge Oliveira Paragliding in Madeira - Tandem Flight at Madalena do Mar?",
+    "ground_truth": {
+      "video_name": "00436.mp4",
+      "video_stem": "00436",
+      "timestamp": 22.32,
+      "frame_id": 558,
+      "answer": "Jorge Oliveira Paraglidin",
+      "acceptable_answers": [
+        "jorge oliveira paraglidin",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-002",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in 2016 03 ??????????????????",
+    "ground_truth": {
+      "video_name": "01345.mp4",
+      "video_stem": "01345",
+      "timestamp": 22.5,
+      "frame_id": 1125,
+      "answer": "2016 03 ?????????????????",
+      "acceptable_answers": [
+        "2016 03 ?????????????????",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-003",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Muchtar Pakbahan  gevangen vakbondsleider 15 8 97?",
+    "ground_truth": {
+      "video_name": "01025.mp4",
+      "video_stem": "01025",
+      "timestamp": 15.0,
+      "frame_id": 375,
+      "answer": "Muchtar Pakbahan  gevange",
+      "acceptable_answers": [
+        "muchtar pakbahan  gevange",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-004",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in 2016.05.24 mother (part.2)?",
+    "ground_truth": {
+      "video_name": "00813.mp4",
+      "video_stem": "00813",
+      "timestamp": 9.88,
+      "frame_id": 296,
+      "answer": "2016.05.24 mother (part.2",
+      "acceptable_answers": [
+        "2016.05.24 mother (part.2",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-005",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Pathway of Pride?",
+    "ground_truth": {
+      "video_name": "01319.mp4",
+      "video_stem": "01319",
+      "timestamp": 46.76,
+      "frame_id": 1121,
+      "answer": "Pathway of Pride",
+      "acceptable_answers": [
+        "pathway of pride",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-006",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Dreamergency?",
+    "ground_truth": {
+      "video_name": "00942.mp4",
+      "video_stem": "00942",
+      "timestamp": 18.0,
+      "frame_id": 450,
+      "answer": "Dreamergency",
+      "acceptable_answers": [
+        "dreamergency",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-007",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in 30e FESTIVAL CHOPIN à PARIS?",
+    "ground_truth": {
+      "video_name": "00293.mp4",
+      "video_stem": "00293",
+      "timestamp": 27.28,
+      "frame_id": 682,
+      "answer": "30e FESTIVAL CHOPIN à PAR",
+      "acceptable_answers": [
+        "30e festival chopin à par",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-008",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Food Fight Movie Trailer and Interview * Chris Taylor * AFI Film Festival?",
+    "ground_truth": {
+      "video_name": "00544.mp4",
+      "video_stem": "00544",
+      "timestamp": 29.7,
+      "frame_id": 890,
+      "answer": "Food Fight Movie Trailer ",
+      "acceptable_answers": [
+        "food fight movie trailer ",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-009",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Finale Flow?",
+    "ground_truth": {
+      "video_name": "00506.mp4",
+      "video_stem": "00506",
+      "timestamp": 17.36,
+      "frame_id": 434,
+      "answer": "Finale Flow",
+      "acceptable_answers": [
+        "finale flow",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-010",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Scarlette Fever - Sunday Best (Live @ Konk Studios)?",
+    "ground_truth": {
+      "video_name": "01528.mp4",
+      "video_stem": "01528",
+      "timestamp": 2.48,
+      "frame_id": 62,
+      "answer": "Scarlette Fever - Sunday ",
+      "acceptable_answers": [
+        "scarlette fever - sunday ",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-011",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Programa Circuito Fechado - Edi??o 1.012?",
+    "ground_truth": {
+      "video_name": "01106.mp4",
+      "video_stem": "01106",
+      "timestamp": 19.75,
+      "frame_id": 592,
+      "answer": "Programa Circuito Fechado",
+      "acceptable_answers": [
+        "programa circuito fechado",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-012",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Jmac show?",
+    "ground_truth": {
+      "video_name": "00540.mp4",
+      "video_stem": "00540",
+      "timestamp": 32.1,
+      "frame_id": 962,
+      "answer": "Jmac show",
+      "acceptable_answers": [
+        "jmac show",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-013",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in These Chicks Bad?",
+    "ground_truth": {
+      "video_name": "01532.mp4",
+      "video_stem": "01532",
+      "timestamp": 37.04,
+      "frame_id": 1110,
+      "answer": "These Chicks Bad",
+      "acceptable_answers": [
+        "these chicks bad",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-014",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Sarah & Joel?",
+    "ground_truth": {
+      "video_name": "01200.mp4",
+      "video_stem": "01200",
+      "timestamp": 5.94,
+      "frame_id": 178,
+      "answer": "Sarah & Joel",
+      "acceptable_answers": [
+        "sarah & joel",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-015",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in L.A. Sessions 2?",
+    "ground_truth": {
+      "video_name": "00880.mp4",
+      "video_stem": "00880",
+      "timestamp": 25.0,
+      "frame_id": 750,
+      "answer": "L.A. Sessions 2",
+      "acceptable_answers": [
+        "l.a. sessions 2",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-016",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Lawless Family Courts: Judicial Immunity is Limited, Not Absolute, You Can Sue Your Judge, Lawyer, Any Government Official?",
+    "ground_truth": {
+      "video_name": "01198.mp4",
+      "video_stem": "01198",
+      "timestamp": 29.63,
+      "frame_id": 888,
+      "answer": "Lawless Family Courts: Ju",
+      "acceptable_answers": [
+        "lawless family courts: ju",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-017",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Downloading and Using our Fugleflick eBook?",
+    "ground_truth": {
+      "video_name": "00820.mp4",
+      "video_stem": "00820",
+      "timestamp": 47.5,
+      "frame_id": 2850,
+      "answer": "Downloading and Using our",
+      "acceptable_answers": [
+        "downloading and using our",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-018",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Kismet Diner?",
+    "ground_truth": {
+      "video_name": "00743.mp4",
+      "video_stem": "00743",
+      "timestamp": 7.38,
+      "frame_id": 177,
+      "answer": "Kismet Diner",
+      "acceptable_answers": [
+        "kismet diner",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-019",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Sneak Preview - Genre de Vie?",
+    "ground_truth": {
+      "video_name": "00284.mp4",
+      "video_stem": "00284",
+      "timestamp": 24.8,
+      "frame_id": 620,
+      "answer": "Sneak Preview - Genre de ",
+      "acceptable_answers": [
+        "sneak preview - genre de ",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-020",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Crawdad Republic | When No One is Around?",
+    "ground_truth": {
+      "video_name": "01046.mp4",
+      "video_stem": "01046",
+      "timestamp": 2.46,
+      "frame_id": 59,
+      "answer": "Crawdad Republic | When N",
+      "acceptable_answers": [
+        "crawdad republic | when n",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-021",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Slow Death - Short Film?",
+    "ground_truth": {
+      "video_name": "01013.mp4",
+      "video_stem": "01013",
+      "timestamp": 14.81,
+      "frame_id": 355,
+      "answer": "Slow Death - Short Film",
+      "acceptable_answers": [
+        "slow death - short film",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-022",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in ２０１６夏休み８月11～17日 美乃里のフッテージ！！！?",
+    "ground_truth": {
+      "video_name": "00187.mp4",
+      "video_stem": "00187",
+      "timestamp": 14.85,
+      "frame_id": 445,
+      "answer": "２０１６夏休み８月11～17日 美乃里のフッテーシ",
+      "acceptable_answers": [
+        "２０１６夏休み８月11～17日 美乃里のフッテーシ",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-023",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in TIGERBERRY — Break the Lies [Official Music Video]?",
+    "ground_truth": {
+      "video_name": "01550.mp4",
+      "video_stem": "01550",
+      "timestamp": 24.0,
+      "frame_id": 600,
+      "answer": "TIGERBERRY — Break the Li",
+      "acceptable_answers": [
+        "tigerberry — break the li",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-024",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Yoga with Melissa 341 Poetry in Motion Perfectionism?",
+    "ground_truth": {
+      "video_name": "00097.mp4",
+      "video_stem": "00097",
+      "timestamp": 36.91,
+      "frame_id": 885,
+      "answer": "Yoga with Melissa 341 Poe",
+      "acceptable_answers": [
+        "yoga with melissa 341 poe",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-025",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Arctic Comet Motion?",
+    "ground_truth": {
+      "video_name": "00225.mp4",
+      "video_stem": "00225",
+      "timestamp": 9.92,
+      "frame_id": 248,
+      "answer": "Arctic Comet Motion",
+      "acceptable_answers": [
+        "arctic comet motion",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-026",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in SkyWatchTV News 5/4/17: Justen Faull - The Hollow Earth?",
+    "ground_truth": {
+      "video_name": "00314.mp4",
+      "video_stem": "00314",
+      "timestamp": 11.88,
+      "frame_id": 356,
+      "answer": "SkyWatchTV News 5/4/17: J",
+      "acceptable_answers": [
+        "skywatchtv news 5/4/17: j",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-027",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Hiking Volcan Baru Panama - Mix Extremo?",
+    "ground_truth": {
+      "video_name": "01288.mp4",
+      "video_stem": "01288",
+      "timestamp": 41.57,
+      "frame_id": 1246,
+      "answer": "Hiking Volcan Baru Panama",
+      "acceptable_answers": [
+        "hiking volcan baru panama",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-028",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in Carvey Crew Press Conference - King of Fayetteville ‘09 Part 2?",
+    "ground_truth": {
+      "video_name": "00328.mp4",
+      "video_stem": "00328",
+      "timestamp": 7.45,
+      "frame_id": 186,
+      "answer": "Carvey Crew Press Confere",
+      "acceptable_answers": [
+        "carvey crew press confere",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-029",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in WILLMAR, MN | Broadcast Documentary?",
+    "ground_truth": {
+      "video_name": "01625.mp4",
+      "video_stem": "01625",
+      "timestamp": 36.91,
+      "frame_id": 885,
+      "answer": "WILLMAR, MN | Broadcast D",
+      "acceptable_answers": [
+        "willmar, mn | broadcast d",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-030",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Grounded)",
+    "query": "What event is featured in End 16-8-14?",
+    "ground_truth": {
+      "video_name": "01396.mp4",
+      "video_stem": "01396",
+      "timestamp": 37.04,
+      "frame_id": 1110,
+      "answer": "End 16-8-14",
+      "acceptable_answers": [
+        "end 16-8-14",
+        "scene",
+        "event",
+        "video"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-031",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the nuclear submarine in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-032",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the alien spacecraft in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-033",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the lunar rover on mars in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-034",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the polar bear in sahara in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-035",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the dinosaur skeleton running in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-036",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the medieval castle in tokyo in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-037",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the flying saucer over pyarmids in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-038",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the underwater volcano eruption in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-039",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the iceberg in amazon river in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-vqa-040",
+    "type": 2,
+    "type_name": "VQA",
+    "category": "Visual Question Answering (Fail-Closed Safety)",
+    "query": "What is the color of the space shuttle docking in the video?",
+    "ground_truth": {
+      "video_name": "none",
+      "timestamp": 0.0,
+      "frame_id": 0,
+      "answer": "UNKNOWN/N/A",
+      "fail_closed_required": true,
+      "acceptable_answers": [
+        "UNKNOWN",
+        "N/A",
+        "UNKNOWN/N/A",
+        "none"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-001",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing wedding celebrations",
+    "ground_truth": {
+      "video_name": "00003.mp4",
+      "video_stem": "00003",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00003",
+        "00005"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-002",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing scuba diving underwater ocean",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00008",
+        "00250",
+        "00609"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-003",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing bmx cycling tricks",
+    "ground_truth": {
+      "video_name": "00001.mp4",
+      "video_stem": "00001",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00001"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-004",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing helicopter flights over landscape",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00004",
+        "00206"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-005",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing acoustic guitar music performances",
+    "ground_truth": {
+      "video_name": "00009.mp4",
+      "video_stem": "00009",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00009"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-006",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing travel documentary sightseeing",
+    "ground_truth": {
+      "video_name": "00002.mp4",
+      "video_stem": "00002",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00002"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-007",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing artists drawing sketch",
+    "ground_truth": {
+      "video_name": "00007.mp4",
+      "video_stem": "00007",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00007"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-008",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing motorcycle touring on road",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00004"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-009",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing comedy web episode",
+    "ground_truth": {
+      "video_name": "00006.mp4",
+      "video_stem": "00006",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00006"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-010",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing underwater marine life reef",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00008",
+        "00250"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-011",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing wedding celebrations",
+    "ground_truth": {
+      "video_name": "00003.mp4",
+      "video_stem": "00003",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00003",
+        "00005"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-012",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing scuba diving underwater ocean",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00008",
+        "00250",
+        "00609"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-013",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing bmx cycling tricks",
+    "ground_truth": {
+      "video_name": "00001.mp4",
+      "video_stem": "00001",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00001"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-014",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing helicopter flights over landscape",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00004",
+        "00206"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-015",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing acoustic guitar music performances",
+    "ground_truth": {
+      "video_name": "00009.mp4",
+      "video_stem": "00009",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00009"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-016",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing travel documentary sightseeing",
+    "ground_truth": {
+      "video_name": "00002.mp4",
+      "video_stem": "00002",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00002"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-017",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing artists drawing sketch",
+    "ground_truth": {
+      "video_name": "00007.mp4",
+      "video_stem": "00007",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00007"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-018",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing motorcycle touring on road",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00004"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-019",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing comedy web episode",
+    "ground_truth": {
+      "video_name": "00006.mp4",
+      "video_stem": "00006",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00006"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-020",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing underwater marine life reef",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00008",
+        "00250"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-021",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing wedding celebrations",
+    "ground_truth": {
+      "video_name": "00003.mp4",
+      "video_stem": "00003",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00003",
+        "00005"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-022",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing scuba diving underwater ocean",
+    "ground_truth": {
+      "video_name": "00008.mp4",
+      "video_stem": "00008",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00008",
+        "00250",
+        "00609"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-023",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing bmx cycling tricks",
+    "ground_truth": {
+      "video_name": "00001.mp4",
+      "video_stem": "00001",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00001"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-024",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing helicopter flights over landscape",
+    "ground_truth": {
+      "video_name": "00004.mp4",
+      "video_stem": "00004",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00004",
+        "00206"
+      ]
+    }
+  },
+  {
+    "id": "vbs-avs-025",
+    "type": 4,
+    "type_name": "AVS",
+    "category": "Ad-hoc Video Search (Cross-Video Diversity)",
+    "query": "find shots showing acoustic guitar music performances",
+    "ground_truth": {
+      "video_name": "00009.mp4",
+      "video_stem": "00009",
+      "timestamp": 20.0,
+      "frame_id": 500,
+      "distinct_target_videos": [
+        "00009"
+      ]
+    }
+  },
+  {
+    "id": "vbs-kisv-001",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "DESIGNING MICROSOFT | Corporate Documentary",
+    "reference_media": "01224.mp4",
+    "ground_truth": {
+      "video_name": "01224.mp4",
+      "video_stem": "01224",
+      "timestamp": 38.5,
+      "frame_id": 923
+    }
+  },
+  {
+    "id": "vbs-kisv-002",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Spring onions in tempura with romesco sauce",
+    "reference_media": "00131.mp4",
+    "ground_truth": {
+      "video_name": "00131.mp4",
+      "video_stem": "00131",
+      "timestamp": 19.84,
+      "frame_id": 496
+    }
+  },
+  {
+    "id": "vbs-kisv-003",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Arizona Collective Expedition to Marble Canyon and Toroweep",
+    "reference_media": "00791.mp4",
+    "ground_truth": {
+      "video_name": "00791.mp4",
+      "video_stem": "00791",
+      "timestamp": 12.35,
+      "frame_id": 370
+    }
+  },
+  {
+    "id": "vbs-kisv-004",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Podd?bice",
+    "reference_media": "00784.mp4",
+    "ground_truth": {
+      "video_name": "00784.mp4",
+      "video_stem": "00784",
+      "timestamp": 15.0,
+      "frame_id": 375
+    }
+  },
+  {
+    "id": "vbs-kisv-005",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Weddings by MM Studio",
+    "reference_media": "01223.mp4",
+    "ground_truth": {
+      "video_name": "01223.mp4",
+      "video_stem": "01223",
+      "timestamp": 17.36,
+      "frame_id": 434
+    }
+  },
+  {
+    "id": "vbs-kisv-006",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "M?nchen 2011-Vf.",
+    "reference_media": "00961.mp4",
+    "ground_truth": {
+      "video_name": "00961.mp4",
+      "video_stem": "00961",
+      "timestamp": 34.72,
+      "frame_id": 868
+    }
+  },
+  {
+    "id": "vbs-kisv-007",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Talega New Years Event",
+    "reference_media": "01086.mp4",
+    "ground_truth": {
+      "video_name": "01086.mp4",
+      "video_stem": "01086",
+      "timestamp": 22.22,
+      "frame_id": 666
+    }
+  },
+  {
+    "id": "vbs-kisv-008",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "RONDE TAFEL GEOGRAFISCHE INFORMATIE - Gent - Oktober 2016",
+    "reference_media": "00515.mp4",
+    "ground_truth": {
+      "video_name": "00515.mp4",
+      "video_stem": "00515",
+      "timestamp": 27.28,
+      "frame_id": 682
+    }
+  },
+  {
+    "id": "vbs-kisv-009",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "smell of spring",
+    "reference_media": "01136.mp4",
+    "ground_truth": {
+      "video_name": "01136.mp4",
+      "video_stem": "01136",
+      "timestamp": 7.44,
+      "frame_id": 186
+    }
+  },
+  {
+    "id": "vbs-kisv-010",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "F.A.T. GOLD - Panel: Artists as Hackers (Part 1 of 4)",
+    "reference_media": "00024.mp4",
+    "ground_truth": {
+      "video_name": "00024.mp4",
+      "video_stem": "00024",
+      "timestamp": 27.16,
+      "frame_id": 814
+    }
+  },
+  {
+    "id": "vbs-kisv-011",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Hoya Moros 2014",
+    "reference_media": "01479.mp4",
+    "ground_truth": {
+      "video_name": "01479.mp4",
+      "video_stem": "01479",
+      "timestamp": 52.08,
+      "frame_id": 1302
+    }
+  },
+  {
+    "id": "vbs-kisv-012",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "samuel curtis - say, what i won’t say",
+    "reference_media": "00235.mp4",
+    "ground_truth": {
+      "video_name": "00235.mp4",
+      "video_stem": "00235",
+      "timestamp": 57.5,
+      "frame_id": 1380
+    }
+  },
+  {
+    "id": "vbs-kisv-013",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Dancing in living room",
+    "reference_media": "01399.mp4",
+    "ground_truth": {
+      "video_name": "01399.mp4",
+      "video_stem": "01399",
+      "timestamp": 32.67,
+      "frame_id": 979
+    }
+  },
+  {
+    "id": "vbs-kisv-014",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Exposition Eastpak Tag My Giant Bag #01",
+    "reference_media": "01102.mp4",
+    "ground_truth": {
+      "video_name": "01102.mp4",
+      "video_stem": "01102",
+      "timestamp": 33.0,
+      "frame_id": 825
+    }
+  },
+  {
+    "id": "vbs-kisv-015",
+    "type": 5,
+    "type_name": "KIS-V",
+    "category": "Visual Query Search",
+    "query": "Marbled duck - Marmertaling - Marmaronetta angustirostris",
+    "reference_media": "01540.mp4",
+    "ground_truth": {
+      "video_name": "01540.mp4",
+      "video_stem": "01540",
+      "timestamp": 49.38,
+      "frame_id": 1480
+    }
+  }
+]
