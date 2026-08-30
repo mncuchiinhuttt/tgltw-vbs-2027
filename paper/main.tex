@@ -307,8 +307,13 @@ Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & ---
 \end{table}
 
 \subsection{Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}: (1)~\textbf{Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 to 100\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885); (2)~\textbf{Conversational Gain}: in multi-turn KIS-C, entity CQR with compound $n$-gram phrase boosting resolves ambiguity ($0.82 \to 0.24$), achieving 100\% Recall@1 (MRR 1.000); (3)~\textbf{Zero Hallucination}: fail-closed verification achieves 100\% safety; (4)~\textbf{Sub-2s Speed}: 8-worker ThreadPool yields an $8.03\times$ speedup (1.85s).
-
+As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
+\begin{enumerate}
+    \item \textbf{Multimodal Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 to 100\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885).
+    \item \textbf{Conversational Precision}: In multi-turn KIS-C, entity CQR with compound $n$-gram phrase boosting resolves ambiguity ($0.82 \to 0.24$), achieving 100\% Recall@1 (MRR 1.000).
+    \item \textbf{Hallucination Elimination}: Fail-closed verification prevents ungrounded predictions, achieving 100\% safety compliance with 0\% hallucination.
+    \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool yields an $8.03\times$ speedup (1.85s).
+\end{enumerate}
 \section{Conclusion}
 \label{sec:conclusion}
 Team TGLTW-RMIT's AEGIS presents an evidence-carrying multimodal retrieval system for VBS 2027. Unifying WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn clarification boosting, conversational negative filtering, fail-closed grounded VQA, and timeline exploration, AEGIS achieves sub-second response with verifiable accuracy. Future work explores on-device VLM distillation and live evaluation at MMM 2027.
