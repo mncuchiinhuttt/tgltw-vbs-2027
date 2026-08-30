@@ -512,4 +512,14 @@ def run_rag_benchmark(
 
 
 if __name__ == "__main__":
-    run_rag_benchmark()
+    import argparse
+    parser = argparse.ArgumentParser(description="Multimodal Video RAG Benchmark Suite")
+    parser.add_argument("--query_file", type=str, default="queries/vbs_rag_benchmark.json")
+    parser.add_argument("--dataset_dir", type=str, default="datasets")
+    parser.add_argument("--output_file", type=str, default="evaluation/vbs_rag_benchmark_results.json")
+    args = parser.parse_args()
+    run_rag_benchmark(
+        benchmark_file=args.query_file,
+        dataset_dir=args.dataset_dir,
+        output_file=args.output_file,
+    )
