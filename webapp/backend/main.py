@@ -1286,12 +1286,15 @@ def run_preprocess_sync():
             str(DATASETS_DIR)
         ]
         
-        with open(LOG_FILE_PATH, "w") as log_f:
+        with open(LOG_FILE_PATH, "w", encoding="utf-8") as log_f:
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
                 cwd=str(WORKSPACE_ROOT / "preprocessing")
             )
             
@@ -1310,7 +1313,7 @@ def run_preprocess_sync():
     except Exception as e:
         error_line = f"ERROR executing preprocessing: {str(e)}"
         _preprocess_logs.append(error_line)
-        with open(LOG_FILE_PATH, "a") as log_f:
+        with open(LOG_FILE_PATH, "a", encoding="utf-8") as log_f:
             log_f.write(error_line + "\n")
     finally:
         _preprocess_process = None
@@ -1346,7 +1349,7 @@ def get_preprocess_logs():
     logs = list(_preprocess_logs)
     if not logs and LOG_FILE_PATH.exists():
         try:
-            with open(LOG_FILE_PATH, "r") as f:
+            with open(LOG_FILE_PATH, "r", encoding="utf-8") as f:
                 logs = [line.strip() for line in f.readlines()]
         except Exception:
             pass
@@ -1380,12 +1383,15 @@ def run_batch_sync():
             "--dataset_dir", str(DATASETS_DIR)
         ]
         
-        with open(BATCH_LOG_FILE_PATH, "w") as log_f:
+        with open(BATCH_LOG_FILE_PATH, "w", encoding="utf-8") as log_f:
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
                 cwd=str(WORKSPACE_ROOT / "inference-code")
             )
             
@@ -1402,7 +1408,7 @@ def run_batch_sync():
     except Exception as e:
         error_line = f"ERROR executing batch query: {str(e)}"
         _batch_logs.append(error_line)
-        with open(BATCH_LOG_FILE_PATH, "a") as log_f:
+        with open(BATCH_LOG_FILE_PATH, "a", encoding="utf-8") as log_f:
             log_f.write(error_line + "\n")
     finally:
         _batch_process = None
@@ -1459,7 +1465,7 @@ def get_batch_logs():
     logs = list(_batch_logs)
     if not logs and BATCH_LOG_FILE_PATH.exists():
         try:
-            with open(BATCH_LOG_FILE_PATH, "r") as f:
+            with open(BATCH_LOG_FILE_PATH, "r", encoding="utf-8") as f:
                 logs = [line.strip() for line in f.readlines()]
         except Exception:
             pass
