@@ -2,6 +2,7 @@ import sys
 import os
 import uuid
 import argparse
+import traceback
 from PIL import Image
 import numpy as np
 from pathlib import Path
@@ -160,292 +161,303 @@ def main():
     print(f"Found {len(video_files)} videos, {len(image_files)} images, {len(audio_files)} audio files.")
 
     # 2. Process Videos
+    consecutive_video_failures = 0
     for video_path in video_files:
-        video_name = os.path.basename(video_path)
-        print(f"\n--- Processing Video: {video_name} ---")
-        # H-EAGLE-lite has its own collection.  Rebuilding one video should
-        # replace its shot parents without touching the frame index.
-        if QDRANT_REBUILD_VIDEO_ON_START:
-            indexer.delete_visual_for_video(video_name)
-        indexer.delete_shots_for_video(video_name)
+        try:
+            video_name = os.path.basename(video_path)
+            print(f"\n--- Processing Video: {video_name} ---")
+            # H-EAGLE-lite has its own collection.  Rebuilding one video should
+            # replace its shot parents without touching the frame index.
+            if QDRANT_REBUILD_VIDEO_ON_START:
+                indexer.delete_visual_for_video(video_name)
+            indexer.delete_shots_for_video(video_name)
 
-        # V3C assets are optional and independently fall back below.  The
-        # official shot map is also used to attach an auditable shot_id to
-        # every indexed keyframe when the matching assets are present.
-        official_shots = v3c_assets.attach_keyframes(video_name, v3c_assets.load_shots(video_name))
-        official_metadata = v3c_assets.load_metadata(video_name)
-        official_keyframe_count = sum(1 for shot in official_shots if shot.keyframe_path is not None)
-        official_text_parts = [
-            str(official_metadata.get(key, ""))
-            for key in ("title", "name", "description", "keywords", "category", "categories")
-            if official_metadata.get(key)
-        ]
-        official_metadata_text = " . ".join(p for p in official_text_parts if p)
-
-        # Audio Extraction & Processing
-        print("Extracting audio track...")
-        wav_path = os.path.join(args.temp_dir, f"{uuid.uuid4()}.wav")
-        extracted_wav = audio_engine.extract_audio(video_path, wav_path)
-
-        official_transcripts = v3c_assets.load_asr(video_name)
-        transcripts = official_transcripts
-        print(
-            "V3C asset status: "
-            f"shots={'hit' if official_shots else 'miss'}, "
-            f"keyframes={official_keyframe_count}/{len(official_shots)}, "
-            f"metadata={'hit' if official_metadata else 'miss'}, "
-            f"asr={'hit' if official_transcripts else 'miss'}"
-        )
-        if transcripts:
-            print(f"Using {len(transcripts)} official V3C ASR segments; skipping duplicate transcription.")
-        elif extracted_wav:
-            # Transcript Speech
-            print("Transcribing speech (ASR)...")
-            transcripts = audio_engine.transcribe_audio(extracted_wav)
-            print(f"Transcribed {len(transcripts)} speech segments.")
-
-        # Index supplied or locally generated speech segments in the same
-        # visual/text collection used by the retrieval engine.
-        for seg in transcripts:
-            seg_text = seg["text"]
-            start_t = seg["start"]
-            end_t = seg["end"]
-            speech_vector = embedder.embed_text(seg_text)
-            payload = {
-                "modality": "speech",
-                "source_file": video_name,
-                "timestamp": start_t,
-                "timestamp_end": end_t,
-                "caption": f"Speech transcript: {seg_text}",
-                "transcript": seg_text,
-                "text_blob": seg_text,
-                "words": seg.get("words", []),
-                "asr_avg_logprob": seg.get("avg_logprob"),
-                "asset_source": "v3c_asr" if official_transcripts else "local_asr",
-            }
-            speech_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-speech:{video_name}:{start_t:.2f}_{end_t:.2f}"))
-            indexer.index_visual_point(speech_point_id, speech_vector, payload)
-        
-        # Scene Boundary Detection
-        if official_shots:
-            scenes = [(shot.start, shot.end) for shot in official_shots]
-            print(f"Using {len(scenes)} official V3C shot boundaries.")
-        else:
-            scenes = detect_scenes(video_path)
-        if SCENE_MERGE_ENABLED and not official_shots:
-            pre_merge_count = len(scenes)
-            scenes = refine_scene_boundaries(video_path, scenes, clip_embedder)
-            print(f"Scene merge (VIREO-inspired): {pre_merge_count} -> {len(scenes)} scenes.")
-
-
-        for scene_idx, (start_sec, end_sec) in enumerate(scenes):
-            print(f"Processing Scene {scene_idx}: {start_sec:.2f}s - {end_sec:.2f}s")
-            official_shot = official_shots[scene_idx] if scene_idx < len(official_shots) else None
-            shot_id = stable_shot_id(video_name, scene_idx, official_shot.shot_id if official_shot else None)
-            
-            # Extract candidates
-            candidates = []
-            if V3C_OFFICIAL_KEYFRAMES_ENABLED and official_shot is not None:
-                candidate = v3c_assets.load_keyframe_candidate(official_shot)
-                if candidate is not None:
-                    candidates = [candidate]
-                    print(f"  Using official V3C keyframe for {official_shot.shot_id}.")
-            if not candidates:
-                candidates = extract_candidate_frames(video_path, start_sec, end_sec)
-            if not candidates:
-                continue
-
-            # DAKE pre-filter (training-free, no model inference): drops the
-            # candidates with the least JPEG-size "steepness" (U-CESE
-            # arXiv:2605.23274) before the much more expensive CLIP/Qwen
-            # embedding passes below ever see them. Supplementary to AKS, not
-            # a replacement - AKS's own variance budget + farthest-point
-            # sampling still run afterward on whatever this keeps.
-            if KEYFRAME_DAKE_ENABLED:
-                pre_dake_count = len(candidates)
-                candidates = dake_prefilter_candidates(
-                    candidates, keep_ratio=KEYFRAME_DAKE_RATIO,
-                    window=KEYFRAME_DAKE_WINDOW, max_gap=KEYFRAME_DAKE_MAX_GAP,
-                )
-                print(f"Scene {scene_idx}: DAKE pre-filter kept {len(candidates)}/{pre_dake_count} candidates.")
-
-            # Adaptive Keyframe Sampling: a cheap CLIP pass over this scene's
-            # candidates decides how many keyframes it needs (static scenes
-            # keep few, dynamic scenes keep more), then farthest-point
-            # sampling picks that many via the real (Qwen) embedding space.
-            variance = compute_scene_variance(candidates, clip_embedder)
-            budget = get_adaptive_budget(variance)
-            print(f"Scene {scene_idx}: variance={variance:.4f} -> keyframe budget={budget}")
-            diverse_keyframes = select_diverse_keyframes(candidates, embedder, budget=budget)
-            print(f"Scene {scene_idx}: Selected {len(diverse_keyframes)} / {len(candidates)} keyframes.")
-            
-            # Environmental Audio processing per scene
-            if extracted_wav:
-                print(f"  Extracting ambient audio (CLAP) embedding for scene {scene_idx}...")
-                clap_vector = audio_engine.extract_clap_embedding(extracted_wav, start_sec, end_sec)
-                audio_payload = {
-                    "modality": "ambient_audio",
-                    "source_file": video_name,
-                    "scene_id": scene_idx,
-                    "timestamp_start": start_sec,
-                    "timestamp_end": end_sec,
-                    "caption": f"Ambient sounds from scene {scene_idx}"
-                }
-                clap_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-audio:{video_name}:scene_{scene_idx}:{start_sec:.2f}_{end_sec:.2f}"))
-                indexer.index_audio_point(clap_point_id, clap_vector, audio_payload)
-
-            # Convert numpy frames to PIL for VLMs
-            pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
-
-            # Fast pathway: independent of AKS above - denser, motion-weighted
-            # frames (via optical flow, see motion_sampling.py) for temporal
-            # coverage, at a much lower per-frame token budget than the Slow
-            # keyframes above (enforced inside generate_multi_image()).
-            print(f"  Selecting Fast-pathway motion frames for scene {scene_idx}...")
-            fast_frames = select_fast_pathway_frames_for_scene(video_path, start_sec, end_sec)
-            pil_fast_frames = [Image.fromarray(f["frame_img"]) for f in fast_frames]
-            print(f"Scene {scene_idx}: Selected {len(pil_fast_frames)} Fast-pathway frames.")
-
-            # Generate Scene-level Narrative Caption
-            print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
-            scene_narrative = captioner.generate_scene_narrative(pil_keyframes, pil_fast_frames)
-
-            # Unified per-frame VLM analysis (temporal caption + structured
-            # attributes in ONE call per frame instead of two), batched
-            # across all of this scene's keyframes in a single generate_batch()
-            # call so a concurrent/batch-serving VLM backend (e.g. vLLM, see
-            # host_vllm.sh) processes them together instead of one at a time.
-            print(f"  Analyzing {len(pil_keyframes)} keyframes with VLM (batched, unified prompt)...")
-            frame_analyses = captioner.generate_frame_analysis_batch(pil_keyframes)
-
-            # Segment-level Structured Events (ordered_events/actions): a
-            # text-only synthesis call over this scene's own per-frame
-            # captions + real timestamps, built here (before the per-keyframe
-            # loop below pops "caption" off each analysis dict).
-            print(f"  Extracting ordered events (VLM, text-only) for scene {scene_idx}...")
-            scene_frame_captions = [
-                {"timestamp": kf["timestamp"], "caption": analysis.get("caption", "")}
-                for kf, analysis in zip(diverse_keyframes, frame_analyses)
+            # V3C assets are optional and independently fall back below.  The
+            # official shot map is also used to attach an auditable shot_id to
+            # every indexed keyframe when the matching assets are present.
+            official_shots = v3c_assets.attach_keyframes(video_name, v3c_assets.load_shots(video_name))
+            official_metadata = v3c_assets.load_metadata(video_name)
+            official_keyframe_count = sum(1 for shot in official_shots if shot.keyframe_path is not None)
+            official_text_parts = [
+                str(official_metadata.get(key, ""))
+                for key in ("title", "name", "description", "keywords", "category", "categories")
+                if official_metadata.get(key)
             ]
-            scene_events = captioner.generate_scene_events(scene_frame_captions)
+            official_metadata_text = " . ".join(p for p in official_text_parts if p)
 
-            # Process each keyframe in the scene
-            shot_frame_vectors = []
-            shot_quality_scores = []
-            shot_frame_point_ids = []
-            shot_frame_timestamps = []
-            shot_text_parts = []
-            for kf_idx, kf in enumerate(diverse_keyframes):
-                frame_img = pil_keyframes[kf_idx]
-                timestamp = kf["timestamp"]
-                frame_vector = kf["embed"]
-                secondary_vector = secondary_embedder.embed_image(frame_img) if secondary_embedder else None
-                analysis = frame_analyses[kf_idx]
+            # Audio Extraction & Processing
+            print("Extracting audio track...")
+            wav_path = os.path.join(args.temp_dir, f"{uuid.uuid4()}.wav")
+            extracted_wav = audio_engine.extract_audio(video_path, wav_path)
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
-                # SAM3-gated Object Detection
-                detected = detect_objects(region_proposer, detector, frame_img)
+            official_transcripts = v3c_assets.load_asr(video_name)
+            transcripts = official_transcripts
+            print(
+                "V3C asset status: "
+                f"shots={'hit' if official_shots else 'miss'}, "
+                f"keyframes={official_keyframe_count}/{len(official_shots)}, "
+                f"metadata={'hit' if official_metadata else 'miss'}, "
+                f"asr={'hit' if official_transcripts else 'miss'}"
+            )
+            if transcripts:
+                print(f"Using {len(transcripts)} official V3C ASR segments; skipping duplicate transcription.")
+            elif extracted_wav:
+                # Transcript Speech
+                print("Transcribing speech (ASR)...")
+                transcripts = audio_engine.transcribe_audio(extracted_wav)
+                print(f"Transcribed {len(transcripts)} speech segments.")
 
-                print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6)...")
-                # SAM3-gated OCR extraction and normalization
-                ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
-                ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
-
-                temporal_caption = analysis.pop("caption", "")
-
-                # Merge structured attributes with detector results
-                final_attrs = captioner.merge_attributes_with_detections(analysis, detected)
-                
-                # Flatten detected labels for BM25 text blob
-                detected_labels = final_attrs.get("objects", [])
-                
-                # Find overlapping speech transcripts within 3s of keyframe
-                nearby_speech = [
-                    seg["text"] for seg in transcripts
-                    if (seg["start"] - 3.0) <= timestamp <= (seg["end"] + 3.0)
-                ]
-                speech_segment_text = " ".join(nearby_speech)
-                
-                # Construct BM25 Text Blob
-                text_blob_elements = [
-                    temporal_caption,
-                    scene_narrative,
-                    ocr_text,
-                    " ".join(detected_labels),
-                    " ".join(scene_events.get("actions", [])),
-                    speech_segment_text,
-                    official_metadata_text,
-                ]
-                text_blob = " . ".join([elem for elem in text_blob_elements if elem])
-
-                # Build metadata payload
+            # Index supplied or locally generated speech segments in the same
+            # visual/text collection used by the retrieval engine.
+            for seg in transcripts:
+                seg_text = seg["text"]
+                start_t = seg["start"]
+                end_t = seg["end"]
+                speech_vector = embedder.embed_text(seg_text)
                 payload = {
-                    "modality": "visual",
+                    "modality": "speech",
                     "source_file": video_name,
-                    "timestamp": timestamp,
-                    # Native video frame index (from extract_candidate_frames),
-                    # not a re-derived/estimated value - this is what the AIC
-                    # submission format's <frame_id> actually refers to, not
-                    # `timestamp`. See "Our method" -> Frame-accurate output.
-                    "frame_idx": kf["frame_idx"],
-                    "scene_id": scene_idx,
-                    "caption": temporal_caption,
-                    "scene_narrative": scene_narrative,
-                    "ocr_text": ocr_text,
-                    "detected_text": ocr_results,
-                    "structured_attrs": final_attrs,
-                    "detected_objects": detected,
-                    "ordered_events": scene_events.get("ordered_events", []),
-                    "actions": scene_events.get("actions", []),
-                    "video_metadata": official_metadata,
-                    "shot_id": shot_id,
-                    "official_shot_id": official_shot.shot_id if official_shot else None,
-                    "asset_source": (
-                        "v3c_keyframe" if kf.get("asset_source") == "v3c_keyframe"
-                        else ("v3c_shot_boundary" if official_shot else "local_sampling")
-                    ),
-                    "keyframe_sharpness": kf.get("sharpness"),
-                    "text_blob": text_blob
+                    "timestamp": start_t,
+                    "timestamp_end": end_t,
+                    "caption": f"Speech transcript: {seg_text}",
+                    "transcript": seg_text,
+                    "text_blob": seg_text,
+                    "words": seg.get("words", []),
+                    "asr_avg_logprob": seg.get("avg_logprob"),
+                    "asset_source": "v3c_asr" if official_transcripts else "local_asr",
                 }
+                speech_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-speech:{video_name}:{start_t:.2f}_{end_t:.2f}"))
+                indexer.index_visual_point(speech_point_id, speech_vector, payload)
+        
+            # Scene Boundary Detection
+            if official_shots:
+                scenes = [(shot.start, shot.end) for shot in official_shots]
+                print(f"Using {len(scenes)} official V3C shot boundaries.")
+            else:
+                scenes = detect_scenes(video_path)
+            if SCENE_MERGE_ENABLED and not official_shots:
+                pre_merge_count = len(scenes)
+                scenes = refine_scene_boundaries(video_path, scenes, clip_embedder)
+                print(f"Scene merge (VIREO-inspired): {pre_merge_count} -> {len(scenes)} scenes.")
 
-                frame_key = (
-                    str(kf["frame_idx"])
-                    if kf.get("frame_idx") is not None
-                    else f"{timestamp:.6f}:{kf_idx}"
-                )
-                point_id = stable_frame_point_id(video_name, frame_key)
-                indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
-                shot_frame_vectors.append(frame_vector)
-                shot_quality_scores.append(kf.get("sharpness"))
-                shot_frame_point_ids.append(point_id)
-                shot_frame_timestamps.append(timestamp)
-                shot_text_parts.append(text_blob)
 
-            if shot_frame_vectors:
-                shot_vector = aggregate_shot_embedding(shot_frame_vectors, shot_quality_scores)
-                shot_payload_data = shot_payload(
-                    video_name=video_name,
-                    shot_id=shot_id,
-                    scene_idx=scene_idx,
-                    start_sec=start_sec,
-                    end_sec=end_sec,
-                    frame_point_ids=shot_frame_point_ids,
-                    frame_timestamps=shot_frame_timestamps,
-                    frame_count=len(shot_frame_vectors),
-                    text_blob=" . ".join(shot_text_parts)[:8000],
-                )
-                indexer.index_shot_point(
-                    stable_shot_point_id(video_name, shot_id),
-                    shot_vector,
-                    shot_payload_data,
-                )
-                print(f"  Indexed H-EAGLE-lite shot parent {shot_id} ({len(shot_frame_vectors)} frame children).")
+            for scene_idx, (start_sec, end_sec) in enumerate(scenes):
+                print(f"Processing Scene {scene_idx}: {start_sec:.2f}s - {end_sec:.2f}s")
+                official_shot = official_shots[scene_idx] if scene_idx < len(official_shots) else None
+                shot_id = stable_shot_id(video_name, scene_idx, official_shot.shot_id if official_shot else None)
+            
+                # Extract candidates
+                candidates = []
+                if V3C_OFFICIAL_KEYFRAMES_ENABLED and official_shot is not None:
+                    candidate = v3c_assets.load_keyframe_candidate(official_shot)
+                    if candidate is not None:
+                        candidates = [candidate]
+                        print(f"  Using official V3C keyframe for {official_shot.shot_id}.")
+                if not candidates:
+                    candidates = extract_candidate_frames(video_path, start_sec, end_sec)
+                if not candidates:
+                    continue
 
-        # Clean up temp WAV file
-        if extracted_wav and os.path.exists(extracted_wav):
-            os.remove(extracted_wav)
-        indexer.flush()
+                # DAKE pre-filter (training-free, no model inference): drops the
+                # candidates with the least JPEG-size "steepness" (U-CESE
+                # arXiv:2605.23274) before the much more expensive CLIP/Qwen
+                # embedding passes below ever see them. Supplementary to AKS, not
+                # a replacement - AKS's own variance budget + farthest-point
+                # sampling still run afterward on whatever this keeps.
+                if KEYFRAME_DAKE_ENABLED:
+                    pre_dake_count = len(candidates)
+                    candidates = dake_prefilter_candidates(
+                        candidates, keep_ratio=KEYFRAME_DAKE_RATIO,
+                        window=KEYFRAME_DAKE_WINDOW, max_gap=KEYFRAME_DAKE_MAX_GAP,
+                    )
+                    print(f"Scene {scene_idx}: DAKE pre-filter kept {len(candidates)}/{pre_dake_count} candidates.")
 
+                # Adaptive Keyframe Sampling: a cheap CLIP pass over this scene's
+                # candidates decides how many keyframes it needs (static scenes
+                # keep few, dynamic scenes keep more), then farthest-point
+                # sampling picks that many via the real (Qwen) embedding space.
+                variance = compute_scene_variance(candidates, clip_embedder)
+                budget = get_adaptive_budget(variance)
+                print(f"Scene {scene_idx}: variance={variance:.4f} -> keyframe budget={budget}")
+                diverse_keyframes = select_diverse_keyframes(candidates, embedder, budget=budget)
+                print(f"Scene {scene_idx}: Selected {len(diverse_keyframes)} / {len(candidates)} keyframes.")
+            
+                # Environmental Audio processing per scene
+                if extracted_wav:
+                    print(f"  Extracting ambient audio (CLAP) embedding for scene {scene_idx}...")
+                    clap_vector = audio_engine.extract_clap_embedding(extracted_wav, start_sec, end_sec)
+                    audio_payload = {
+                        "modality": "ambient_audio",
+                        "source_file": video_name,
+                        "scene_id": scene_idx,
+                        "timestamp_start": start_sec,
+                        "timestamp_end": end_sec,
+                        "caption": f"Ambient sounds from scene {scene_idx}"
+                    }
+                    clap_point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"vbs-audio:{video_name}:scene_{scene_idx}:{start_sec:.2f}_{end_sec:.2f}"))
+                    indexer.index_audio_point(clap_point_id, clap_vector, audio_payload)
+
+                # Convert numpy frames to PIL for VLMs
+                pil_keyframes = [Image.fromarray(kf["frame_img"]) for kf in diverse_keyframes]
+
+                # Fast pathway: independent of AKS above - denser, motion-weighted
+                # frames (via optical flow, see motion_sampling.py) for temporal
+                # coverage, at a much lower per-frame token budget than the Slow
+                # keyframes above (enforced inside generate_multi_image()).
+                print(f"  Selecting Fast-pathway motion frames for scene {scene_idx}...")
+                fast_frames = select_fast_pathway_frames_for_scene(video_path, start_sec, end_sec)
+                pil_fast_frames = [Image.fromarray(f["frame_img"]) for f in fast_frames]
+                print(f"Scene {scene_idx}: Selected {len(pil_fast_frames)} Fast-pathway frames.")
+
+                # Generate Scene-level Narrative Caption
+                print(f"  Generating scene-level narrative caption (VLM) for scene {scene_idx}...")
+                scene_narrative = captioner.generate_scene_narrative(pil_keyframes, pil_fast_frames)
+
+                # Unified per-frame VLM analysis (temporal caption + structured
+                # attributes in ONE call per frame instead of two), batched
+                # across all of this scene's keyframes in a single generate_batch()
+                # call so a concurrent/batch-serving VLM backend (e.g. vLLM, see
+                # host_vllm.sh) processes them together instead of one at a time.
+                print(f"  Analyzing {len(pil_keyframes)} keyframes with VLM (batched, unified prompt)...")
+                frame_analyses = captioner.generate_frame_analysis_batch(pil_keyframes)
+
+                # Segment-level Structured Events (ordered_events/actions): a
+                # text-only synthesis call over this scene's own per-frame
+                # captions + real timestamps, built here (before the per-keyframe
+                # loop below pops "caption" off each analysis dict).
+                print(f"  Extracting ordered events (VLM, text-only) for scene {scene_idx}...")
+                scene_frame_captions = [
+                    {"timestamp": kf["timestamp"], "caption": analysis.get("caption", "")}
+                    for kf, analysis in zip(diverse_keyframes, frame_analyses)
+                ]
+                scene_events = captioner.generate_scene_events(scene_frame_captions)
+
+                # Process each keyframe in the scene
+                shot_frame_vectors = []
+                shot_quality_scores = []
+                shot_frame_point_ids = []
+                shot_frame_timestamps = []
+                shot_text_parts = []
+                for kf_idx, kf in enumerate(diverse_keyframes):
+                    frame_img = pil_keyframes[kf_idx]
+                    timestamp = kf["timestamp"]
+                    frame_vector = kf["embed"]
+                    secondary_vector = secondary_embedder.embed_image(frame_img) if secondary_embedder else None
+                    analysis = frame_analyses[kf_idx]
+
+                    print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)} (t={timestamp:.2f}s): detecting objects (SAM3-gated)...")
+                    # SAM3-gated Object Detection
+                    detected = detect_objects(region_proposer, detector, frame_img)
+
+                    print(f"  Keyframe {kf_idx + 1}/{len(diverse_keyframes)}: running OCR (SAM3-gated PP-OCRv6)...")
+                    # SAM3-gated OCR extraction and normalization
+                    ocr_results = ocr_engine.extract_ocr_detailed(frame_img)
+                    ocr_text = ocr_engine.flatten_ocr_text(ocr_results)
+
+                    temporal_caption = analysis.pop("caption", "")
+
+                    # Merge structured attributes with detector results
+                    final_attrs = captioner.merge_attributes_with_detections(analysis, detected)
+                
+                    # Flatten detected labels for BM25 text blob
+                    detected_labels = final_attrs.get("objects", [])
+                
+                    # Find overlapping speech transcripts within 3s of keyframe
+                    nearby_speech = [
+                        seg["text"] for seg in transcripts
+                        if (seg["start"] - 3.0) <= timestamp <= (seg["end"] + 3.0)
+                    ]
+                    speech_segment_text = " ".join(nearby_speech)
+                
+                    # Construct BM25 Text Blob
+                    text_blob_elements = [
+                        temporal_caption,
+                        scene_narrative,
+                        ocr_text,
+                        " ".join(detected_labels),
+                        " ".join(scene_events.get("actions", [])),
+                        speech_segment_text,
+                        official_metadata_text,
+                    ]
+                    text_blob = " . ".join([elem for elem in text_blob_elements if elem])
+
+                    # Build metadata payload
+                    payload = {
+                        "modality": "visual",
+                        "source_file": video_name,
+                        "timestamp": timestamp,
+                        # Native video frame index (from extract_candidate_frames),
+                        # not a re-derived/estimated value - this is what the AIC
+                        # submission format's <frame_id> actually refers to, not
+                        # `timestamp`. See "Our method" -> Frame-accurate output.
+                        "frame_idx": kf["frame_idx"],
+                        "scene_id": scene_idx,
+                        "caption": temporal_caption,
+                        "scene_narrative": scene_narrative,
+                        "ocr_text": ocr_text,
+                        "detected_text": ocr_results,
+                        "structured_attrs": final_attrs,
+                        "detected_objects": detected,
+                        "ordered_events": scene_events.get("ordered_events", []),
+                        "actions": scene_events.get("actions", []),
+                        "video_metadata": official_metadata,
+                        "shot_id": shot_id,
+                        "official_shot_id": official_shot.shot_id if official_shot else None,
+                        "asset_source": (
+                            "v3c_keyframe" if kf.get("asset_source") == "v3c_keyframe"
+                            else ("v3c_shot_boundary" if official_shot else "local_sampling")
+                        ),
+                        "keyframe_sharpness": kf.get("sharpness"),
+                        "text_blob": text_blob
+                    }
+
+                    frame_key = (
+                        str(kf["frame_idx"])
+                        if kf.get("frame_idx") is not None
+                        else f"{timestamp:.6f}:{kf_idx}"
+                    )
+                    point_id = stable_frame_point_id(video_name, frame_key)
+                    indexer.index_visual_point(point_id, frame_vector, payload, secondary_vector=secondary_vector)
+                    shot_frame_vectors.append(frame_vector)
+                    shot_quality_scores.append(kf.get("sharpness"))
+                    shot_frame_point_ids.append(point_id)
+                    shot_frame_timestamps.append(timestamp)
+                    shot_text_parts.append(text_blob)
+
+                if shot_frame_vectors:
+                    shot_vector = aggregate_shot_embedding(shot_frame_vectors, shot_quality_scores)
+                    shot_payload_data = shot_payload(
+                        video_name=video_name,
+                        shot_id=shot_id,
+                        scene_idx=scene_idx,
+                        start_sec=start_sec,
+                        end_sec=end_sec,
+                        frame_point_ids=shot_frame_point_ids,
+                        frame_timestamps=shot_frame_timestamps,
+                        frame_count=len(shot_frame_vectors),
+                        text_blob=" . ".join(shot_text_parts)[:8000],
+                    )
+                    indexer.index_shot_point(
+                        stable_shot_point_id(video_name, shot_id),
+                        shot_vector,
+                        shot_payload_data,
+                    )
+                    print(f"  Indexed H-EAGLE-lite shot parent {shot_id} ({len(shot_frame_vectors)} frame children).")
+
+            # Clean up temp WAV file
+            if extracted_wav and os.path.exists(extracted_wav):
+                os.remove(extracted_wav)
+            indexer.flush()
+
+        except Exception as video_err:
+            consecutive_video_failures += 1
+            print(f"[ERROR] Video failed after possible partial indexing, continuing: {video_err}")
+            traceback.print_exc()
+            if consecutive_video_failures >= 20:
+                print("[ABORT] 20 consecutive video failures - aborting preprocessing.")
+                raise
+            continue
+        consecutive_video_failures = 0
     # 3. Process Raw Images (Non-video standalone images)
     for img_path in image_files:
         img_name = os.path.basename(img_path)
