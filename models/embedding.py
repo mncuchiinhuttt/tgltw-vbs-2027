@@ -48,7 +48,14 @@ class WeMMEmbedding4BEmbedder:
         self.model.eval()
         print("Tencent WeMM-Embedding-4B loaded successfully.")
     def embed_images_batch(self, images: List[Union[Image.Image, np.ndarray]]) -> List[np.ndarray]:
-        """Embed keyframes with Tencent WeMM-Embedding-4B only."""
+        """Embed keyframes with Tencent WeMM-Embedding-4B only.
+
+        Forward passes are chunked (16 frames each): full-duration indexing
+        produces 100+ frames per video, and one fused forward over all of
+        them exhausts GPU memory because output_hidden_states=True retains
+        every layer's activations. Frames are independent, so chunked
+        results equal whole-list results.
+        """
         if not images:
             return []
         pil_images = [
@@ -63,25 +70,32 @@ class WeMMEmbedding4BEmbedder:
             for img in pil_images
         ]
         texts = [self.processor.apply_chat_template(conv, tokenize=False, add_generation_prompt=False) for conv in conversations]
-        inputs = self.processor(text=texts, images=pil_images, padding=True, return_tensors="pt").to(self.device)
-        with torch.no_grad():
-            outputs = self.model(**inputs, output_hidden_states=True)
-            hidden_state = (
-                outputs.hidden_states[-1]
-                if getattr(outputs, "hidden_states", None)
-                else outputs.last_hidden_state
-            )
-            attention_mask = inputs.get("attention_mask")
-            if attention_mask is not None:
-                mask = attention_mask.unsqueeze(-1).to(hidden_state.dtype)
-                embs = (hidden_state * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
-            else:
-                embs = hidden_state.mean(dim=1)
-            results = []
+        results: List[np.ndarray] = []
+        chunk_size = 16
+        for start in range(0, len(pil_images), chunk_size):
+            inputs = self.processor(
+                text=texts[start:start + chunk_size],
+                images=pil_images[start:start + chunk_size],
+                padding=True,
+                return_tensors="pt",
+            ).to(self.device)
+            with torch.no_grad():
+                outputs = self.model(**inputs, output_hidden_states=True)
+                hidden_state = (
+                    outputs.hidden_states[-1]
+                    if getattr(outputs, "hidden_states", None)
+                    else outputs.last_hidden_state
+                )
+                attention_mask = inputs.get("attention_mask")
+                if attention_mask is not None:
+                    mask = attention_mask.unsqueeze(-1).to(hidden_state.dtype)
+                    embs = (hidden_state * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+                else:
+                    embs = hidden_state.mean(dim=1)
             for emb in embs.float().cpu().numpy():
                 norm = np.linalg.norm(emb)
                 results.append(_apply_mrl_truncation(emb / norm if norm > 0 else emb, self.mrl_dim))
-            return results
+        return results
 
     def embed_image(self, image: Union[Image.Image, np.ndarray]) -> np.ndarray:
         return self.embed_images_batch([image])[0]

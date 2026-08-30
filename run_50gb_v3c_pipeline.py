@@ -98,7 +98,7 @@ def run_curl_download(video_id: str) -> tuple[str, bool, int]:
         return video_id, False, 0
 
 
-def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, max_frames: int = 20) -> List[Dict[str, Any]]:
+def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, max_frames: int = 0) -> List[Dict[str, Any]]:
     """Extract keyframes from an MP4 video at fixed intervals."""
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -141,7 +141,7 @@ def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, 
             "image": img_rgb,
         })
         frame_count += 1
-        if frame_count >= max_frames:
+        if max_frames > 0 and frame_count >= max_frames:
             break
 
     cap.release()
@@ -165,6 +165,11 @@ def main():
         print("        The official V3C SFTP credentials are published on the AAU V3C dataset page.")
         sys.exit(1)
 
+    # 0 = no cap: sample the ENTIRE video duration (3s stride). A positive
+    # V3C_MAX_FRAMES_PER_VIDEO caps frames per video for quick test runs -
+    # capping was the bug that made the index blind to everything after
+    # the first ~60s of every video.
+    max_frames_env = max(0, int(os.getenv("V3C_MAX_FRAMES_PER_VIDEO", "0") or 0))
     target_gb = 50.0
     target_bytes = int(target_gb * 1024 * 1024 * 1024)
     workers = 16
@@ -284,7 +289,7 @@ def main():
                     tags = " ".join(meta.get("tags", [])) if isinstance(meta.get("tags"), list) else ""
                     text_blob = f"{title} {desc} {tags}".strip()
 
-                    kfs = extract_video_keyframes(vid_path, sample_interval_sec=3.0, max_frames=20)
+                    kfs = extract_video_keyframes(vid_path, sample_interval_sec=3.0, max_frames=max_frames_env)
                     if kfs:
                         images = [kf["image"] for kf in kfs]
                         try:
