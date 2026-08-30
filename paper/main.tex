@@ -219,7 +219,7 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
 \label{fig:task-lanes}
 \end{figure}
-\paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
+\paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. Top candidates are reranked via parallel VLM scoring against keyframe captions.
 
 \paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy:
 \begin{enumerate}
@@ -227,93 +227,74 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
     \begin{equation}
     A = (1 - \lambda) \cdot DVR + \lambda \cdot \left(1.0 - \frac{s_1 - s_2}{s_1}\right)
     \end{equation}
-    where $s_1, s_2$ are top-1 and top-2 candidate scores ($\lambda=0.5$). When $A \ge 0.7$, the VLM generates a facet-discriminating question.
-    \item \emph{Compound N-gram \& Phrase Clarification Boost}: When the operator answers, candidate scores are boosted by semantic overlap across unigrams and 2-gram/3-gram phrases:
+    where $s_1, s_2$ are top-1/2 candidate scores ($\lambda=0.5$). When $A \ge 0.7$, the VLM generates a clarifying question.
+    \item \emph{Compound N-gram Boost}: Candidate scores are boosted by unigram and $n$-gram phrase overlap with the user's reply:
     \begin{equation}
     s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}
     \end{equation}
-    \item \emph{Conversational Negative Feedback Filtering}: Visual descriptions rejected by the operator are tracked. Candidates containing overlapping rejected terms receive a calibrated dampening penalty, preventing redundant false positives.
+    \item \emph{Conversational Negative Feedback Filtering}: Visual descriptions rejected by the operator are tracked, dampening overlapping false positives.
 \end{enumerate}
 
-\paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical keyframe media inside the dataset root. If object labels are present, YOLOE-26 generates localized bounding-box crops. The cropped frame is evaluated by the VLM with a strict JSON contract requiring \code{found=true}, concise answer ($<15$ words), and confidence $\in [0, 1]$. Missing media or ungrounded predictions immediately return \code{UNKNOWN/N/A} with score 0, ensuring zero hallucination.
+\paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical media in the dataset root, applies YOLOE-26 bounding-box crops, and enforces a strict JSON contract (\code{found=true}, answer $<15$ words, confidence $\in [0, 1]$). Missing media or ungrounded predictions return \code{UNKNOWN/N/A} (score 0), eliminating hallucinations.
 
-\paragraph{AVS (Ad-hoc Video Search).} AVS maximizes cross-video coverage. Scene diversification suppresses near-duplicate frames from the same video. A duplicate-video submission guard prevents submitting already-scored videos for the same task.
+\paragraph{AVS, KIS-V \& Intra-Video Explorer.} AVS maximizes cross-video diversity. KIS-V samples up to 8 keyframes from visual clips. When an operator spots a promising video, \code{/api/video/timeline} inspects surrounding keyframes and \code{/api/video/rerank} scores intra-video frames.
 
-\paragraph{KIS-V (Visual Prompt Search).} Uploaded video clips are sampled at up to 8 representative timestamps, dense-searched in parallel across Qdrant, and merged by point ID.
-
-\paragraph{Intra-Video Timeline Exploration.} When an operator spots a promising video, the backend exposes \code{/api/video/timeline} to inspect $\pm 30$ seconds of surrounding keyframes and \code{/api/video/rerank} to score intra-video frames against sub-queries.
+\clearpage
+\begin{table}[t]
+\centering
+\caption{Comprehensive Empirical Ablations across Retrieval, KIS-C, VQA, and Scaling.}
+\label{tab:ablation-full}
+\resizebox{0.95\textwidth}{!}{%
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.92}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Ablation Dimension / Configuration} & \textbf{Primary Metric} & \textbf{Secondary} & \textbf{Coverage / Score} & \textbf{MRR / Faith} & \textbf{Latency / Speed} \\
+\midrule
+\multicolumn{6}{l}{\emph{Ablation 1: Multimodal Retrieval \& Fusion Components (KIS-T)}} \\
+(M1) Dense Only (WeMM-4B) & R@1: 20.0\% & R@5: 50.0\% & R@10: 70.0\% & MRR: 0.342 & 38ms \\
+(M2) Dense + Sparse BM25 Payload & R@1: 30.0\% & R@5: 70.0\% & R@10: 80.0\% & MRR: 0.468 & 52ms \\
+(M3) Dense + BM25 + SigLIP Secondary & R@1: 40.0\% & R@5: 80.0\% & R@10: 90.0\% & MRR: 0.541 & 76ms \\
+(M4) + 4-Way Weighted RRF Fusion & R@1: 50.0\% & R@5: 90.0\% & R@10: 100.0\% & MRR: 0.655 & 84ms \\
+(M5) + Temporal Coherence \& Diversify & R@1: 60.0\% & R@5: 100.0\% & R@10: 100.0\% & MRR: 0.748 & 91ms \\
+(M6) + Parallel VLM Rerank (Full Engine) & \textbf{R@1: 80.0\%} & \textbf{R@5: 100.0\%} & \textbf{R@10: 100.0\%} & \textbf{MRR: 0.885} & 1.48s \\
+\midrule
+\multicolumn{6}{l}{\emph{Ablation 2: Conversational KIS-C Multi-Turn Dynamics}} \\
+(C1) Turn 1: Initial Vague Query & R@1: 0.0\% & R@3: 40.0\% & Ambiguity: 0.82 & MRR: 0.285 & 88ms \\
+(C2) Turn 2: Naive History Concat & R@1: 30.0\% & R@3: 60.0\% & Ambiguity: 0.74 & MRR: 0.472 & 92ms \\
+(C3) Turn 2: + Entity-Preserving CQR & R@1: 60.0\% & R@3: 80.0\% & Ambiguity: 0.58 & MRR: 0.715 & 110ms \\
+(C4) Turn 2: + Compound N-gram Boost & R@1: 90.0\% & R@3: 100.0\% & Ambiguity: 0.42 & MRR: 0.945 & 115ms \\
+(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{R@1: 100.0\%} & \textbf{R@3: 100.0\%} & \textbf{Ambiguity: 0.24} & \textbf{MRR: 1.000} & 120ms \\
+\midrule
+\multicolumn{6}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
+Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & Faithfulness: 62\% & Hallucination: 38\% & Score: 0.55 & 1.42s \\
+Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & Faithfulness: 86\% & Hallucination: 14\% & Score: 0.80 & 1.55s \\
+AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 100\%} & \textbf{Faithfulness: 100\%} & \textbf{Hallucination: 0\%} & \textbf{Score: 1.00} & \textbf{1.62s} \\
+\midrule
+\multicolumn{6}{l}{\emph{Ablation 4 \& 5: Concurrency Scaling \& HNSW Precision Ladder}} \\
+Sequential Scoring ($N=1$ worker) & Latency: 14.85s & Throughput: 0.67 QPS & --- & --- & $1.0\times$ \\
+Parallel Scoring ($N=8$ workers) & \textbf{Latency: 1.85s} & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{$8.03\times$} \\
+HNSW Fast Mode ($ef=64$) & \textbf{Latency: 12.4ms} & Recall vs Exact: 97.8\% & Instant Screen & --- & --- \\
+Exact Brute-Force Scan & Latency: 118.5ms & Recall vs Exact: 100\% & Deterministic & --- & --- \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
 
 \subsection{Experimental Setup}
 To evaluate our system, we execute an automated ablation suite on the V3C video archive (1,703 videos, 26,154 vectors). Retrieval efficacy is measured via Recall@$K$ ($K \in \{1, 5, 10\}$) and MRR. Conversational search is evaluated via Ambiguity Index $A \in [0, 1]$ and multi-turn rank progression. Grounded VQA is measured by Exact Match (EM) and hallucination rate.
-
-\begin{table}[t]
-\centering
-\caption{Ablation Study 1 \& 2: Retrieval fusion and multi-turn KIS-C progression.}
-\label{tab:ablation-retrieval-kisc}
-\resizebox{0.93\textwidth}{!}{%
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Pipeline Configuration / Stage} & \textbf{R@1 (\%)} & \textbf{R@5 (\%)} & \textbf{R@10 (\%)} & \textbf{MRR} & \textbf{p50 Lat (s)} \\
-\midrule
-\multicolumn{6}{l}{\emph{Ablation 1: Multimodal Retrieval \& Fusion Components}} \\
-(M1) Dense Only (WeMM-4B) & 20.0 & 50.0 & 70.0 & 0.342 & 0.038 \\
-(M2) Dense + Sparse BM25 Payload & 30.0 & 70.0 & 80.0 & 0.468 & 0.052 \\
-(M3) Dense + BM25 + SigLIP Secondary & 40.0 & 80.0 & 90.0 & 0.541 & 0.076 \\
-(M4) + 4-Way Weighted RRF Fusion & 50.0 & 90.0 & 100.0 & 0.655 & 0.084 \\
-(M5) + Temporal Coherence \& Diversify & 60.0 & 100.0 & 100.0 & 0.748 & 0.091 \\
-(M6) + Parallel VLM Rerank (Full Engine) & \textbf{80.0} & \textbf{100.0} & \textbf{100.0} & \textbf{0.885} & 1.480 \\
-\midrule
-\multicolumn{6}{l}{\emph{Ablation 2: Conversational KIS-C Multi-Turn Dynamics}} \\
-(C1) Turn 1: Initial Vague Query & 0.0 & 40.0 (R@3) & 60.0 & 0.285 & 0.088 (Amb 0.82) \\
-(C2) Turn 2: Naive History Concat & 30.0 & 60.0 (R@3) & 80.0 & 0.472 & 0.092 (Amb 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & 60.0 & 80.0 (R@3) & 100.0 & 0.715 & 0.110 (Amb 0.58) \\
-(C4) Turn 2: + Compound N-gram Boost & 90.0 & 100.0 (R@3) & 100.0 & 0.945 & 0.115 (Amb 0.42) \\
-(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{100.0} & \textbf{100.0 (R@3)} & \textbf{100.0} & \textbf{1.000} & \textbf{0.120 (Amb 0.24)} \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Ablation Study 3, 4 \& 5: VQA Grounding, Concurrency, and Precision Ladder.}
-\label{tab:ablation-vqa-scaling}
-\resizebox{0.93\textwidth}{!}{%
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Ablation Dimension \& Setting} & \textbf{Primary Metric} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
-\midrule
-\multicolumn{5}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
-Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & 62.0\% & 38.0\% (Hazardous) & 1.42s \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & 86.0\% & 14.0\% & 1.55s \\
-AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 100.0\%} & \textbf{100.0\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
-\midrule
-\multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
-Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
-Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & --- & --- & 3.98s ($3.73\times$) \\
-Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$ speedup)} \\
-\midrule
-\multicolumn{5}{l}{\emph{Ablation 5: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
-Fast Mode (HNSW $ef=64$) & Recall vs Exact: 97.8\% & Instant Screen & --- & \textbf{12.4ms} \\
-Standard Mode (HNSW $ef=128$) & Recall vs Exact: 99.2\% & Balanced Live & --- & 22.8ms \\
-Deep Mode (HNSW $ef=512$) & Recall vs Exact: 99.9\% & High Ambiguity & --- & 48.6ms \\
-Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & --- & 118.5ms \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
 \subsection{Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
+As demonstrated in Table~\ref{tab:ablation-full}:
 \begin{enumerate}
     \item \textbf{Multimodal Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 to 100\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885).
     \item \textbf{Conversational Precision}: In multi-turn KIS-C, entity CQR with compound $n$-gram phrase boosting resolves ambiguity ($0.82 \to 0.24$), achieving 100\% Recall@1 (MRR 1.000).
     \item \textbf{Hallucination Elimination}: Fail-closed verification prevents ungrounded predictions, achieving 100\% safety compliance with 0\% hallucination.
     \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool yields an $8.03\times$ speedup (1.85s).
 \end{enumerate}
+
 \section{Conclusion}
 \label{sec:conclusion}
 Team TGLTW-RMIT's AEGIS presents an evidence-carrying multimodal retrieval system for VBS 2027. Unifying WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn clarification boosting, conversational negative filtering, fail-closed grounded VQA, and timeline exploration, AEGIS achieves sub-second response with verifiable accuracy. Future work explores on-device VLM distillation and live evaluation at MMM 2027.
