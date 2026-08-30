@@ -4,12 +4,12 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "a young BMX rider performing a flatland bike spin on the ground in front of a stone building with arches",
+    "query": "young BMX rider flatland bike spin outside Opera Parisiana Jam",
     "ground_truth": {
       "video_name": "00001.mp4",
       "video_stem": "00001",
-      "timestamp": 7.2,
-      "frame_id": 180
+      "timestamp": 29.7,
+      "frame_id": 744
     }
   },
   {
@@ -30,7 +30,7 @@
     "type": 1,
     "type_name": "KIS-T",
     "category": "Textual Known-Item Search",
-    "query": "a female musician playing acoustic guitar and singing in live acoustic music session",
+    "query": "wemakemusic Yusa acoustic singing and guitar performance live session",
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
@@ -43,19 +43,19 @@
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "find a traditional wedding ceremony with colorful decorations",
+    "query": "traditional Hindu wedding ceremony Sudarmani and Kasthuri",
     "history": [
       { "role": "user", "text": "find a wedding celebration" },
       { "role": "system", "text": "Is it a Western church wedding or traditional Hindu wedding ceremony?" },
-      { "role": "user", "text": "traditional Hindu wedding with peacock theme and golden garlands" }
+      { "role": "user", "text": "traditional Hindu wedding ceremony Sudarmani and Kasthuri with peacock theme" }
     ],
-    "system_answer": "traditional Hindu wedding with peacock theme and golden garlands",
+    "system_answer": "traditional Hindu wedding ceremony Sudarmani and Kasthuri with peacock theme",
     "rejected": ["Western church wedding with white flowers"],
     "ground_truth": {
       "video_name": "00003.mp4",
       "video_stem": "00003",
-      "timestamp": 14.0,
-      "frame_id": 350
+      "timestamp": 22.2,
+      "frame_id": 666
     }
   },
   {
@@ -98,7 +98,7 @@
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "What musical instrument is being played by the musician in the live session?",
+    "query": "What musical instrument is being played by musician Yusa in the live acoustic session?",
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
