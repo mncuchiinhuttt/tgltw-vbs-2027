@@ -55,14 +55,14 @@ class WeMMEmbedding4BEmbedder:
             Image.fromarray(img).convert("RGB") if isinstance(img, np.ndarray) else img.convert("RGB")
             for img in images
         ]
-        messages = [
-            {"role": "user", "content": [
+        conversations = [
+            [{"role": "user", "content": [
                 {"type": "image", "image": img},
                 {"type": "text", "text": "a video keyframe"},
-            ]}
+            ]}]
             for img in pil_images
         ]
-        texts = [self.processor.apply_chat_template(m, tokenize=False, add_generation_prompt=False) for m in messages]
+        texts = [self.processor.apply_chat_template(conv, tokenize=False, add_generation_prompt=False) for conv in conversations]
         inputs = self.processor(text=texts, images=pil_images, padding=True, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
