@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-30 05:07:24 UTC",
+  "timestamp": "2026-08-30 10:21:53 UTC",
   "total_queries": 10,
-  "overall_rag_score": 21.2,
+  "overall_rag_score": 20.7,
   "pillar1_retrieval": {
     "recall_1": 0.0,
     "recall_5": 11.1,
-    "recall_10": 22.2,
-    "mrr": 0.0467,
+    "recall_10": 11.1,
+    "mrr": 0.0289,
     "evaluable_items": 9
   },
   "pillar2_generation": {
@@ -17,22 +17,22 @@
   },
   "pillar3_conversational": {
     "kisc_turn_2_recall_1": 0.0,
-    "mean_ambiguity_reduction": -0.001,
+    "mean_ambiguity_reduction": 0.01,
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 18.006,
-    "p50_latency_sec": 24.28,
-    "p95_latency_sec": 34.146,
-    "mean_hyde_sec": 1.767,
-    "mean_search_sec": 0.25,
-    "mean_rerank_sec": 15.989
+    "mean_latency_sec": 21.145,
+    "p50_latency_sec": 27.928,
+    "p95_latency_sec": 40.671,
+    "mean_hyde_sec": 2.12,
+    "mean_search_sec": 0.592,
+    "mean_rerank_sec": 18.434
   },
   "system_config": {
     "vlm_option": "openai",
     "embedding_option": "local",
-    "visual_embedder": "QwenVL8BEmbedder",
-    "visual_model_id": "Qwen/Qwen3-VL-Embedding-2B",
+    "visual_embedder": "WeMMEmbedding4BEmbedder",
+    "visual_model_id": "tencent/WeMM-Embedding-4B",
     "secondary_embedder": "Disabled"
   },
   "queries": [
@@ -48,62 +48,62 @@
         "timestamp": 7.2,
         "frame_id": 180
       },
-      "rank": 31,
+      "rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 34.146,
-        "hyde_sec": 1.928,
-        "search_sec": 0.598,
-        "rerank_sec": 31.62
+        "total_sec": 32.671,
+        "hyde_sec": 2.937,
+        "search_sec": 1.153,
+        "rerank_sec": 28.581
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "fbd86a65-41bc-5a86-875a-e2a82e084153",
-          "score": 0.6029,
-          "video_name": "01639.mp4",
-          "frame_idx": 639,
-          "timestamp": 26.651625,
-          "caption": "Hothead Bmx - Under The Sun"
+          "id": "934c503f-33b2-5038-8b9f-e9049985bf27",
+          "score": 0.5463,
+          "video_name": "00176.mp4",
+          "frame_idx": 1800,
+          "timestamp": 60.0,
+          "caption": "[SFG DIST] YNOT day #0002 // YNOT KOREA Team"
         },
         {
           "rank": 2,
-          "id": "51047da2-7684-5776-bb3f-ac6d93ae00d8",
-          "score": 0.6025,
-          "video_name": "01529.mp4",
-          "frame_idx": 750,
-          "timestamp": 30.0,
-          "caption": "ontime - Andreas Purkart"
+          "id": "14ee60b7-fe67-5b21-bb55-c142251a7bd0",
+          "score": 0.5456,
+          "video_name": "00055.mp4",
+          "frame_idx": 1121,
+          "timestamp": 46.76,
+          "caption": "JC Pieri - BMX Reel 2013"
         },
         {
           "rank": 3,
-          "id": "2c5ebd0c-59de-5905-aa50-f91e2e86d22f",
-          "score": 0.5466,
-          "video_name": "00055.mp4",
-          "frame_idx": 213,
-          "timestamp": 8.883875,
-          "caption": "JC Pieri - BMX Reel 2013"
+          "id": "e0573b13-f922-58b4-83a0-3a396a37db9a",
+          "score": 0.5433,
+          "video_name": "00176.mp4",
+          "frame_idx": 1200,
+          "timestamp": 40.0,
+          "caption": "[SFG DIST] YNOT day #0002 // YNOT KOREA Team"
         },
         {
           "rank": 4,
-          "id": "a25e75fa-e207-507a-aa81-9be9fc927542",
-          "score": 0.5462,
-          "video_name": "00055.mp4",
-          "frame_idx": 852,
-          "timestamp": 35.5355,
-          "caption": "JC Pieri - BMX Reel 2013"
+          "id": "e290f96e-5c61-597f-9dc3-f1d3001175b4",
+          "score": 0.5432,
+          "video_name": "01639.mp4",
+          "frame_idx": 944,
+          "timestamp": 39.37,
+          "caption": "Hothead Bmx - Under The Sun"
         },
         {
           "rank": 5,
-          "id": "0ac72ac8-b0bb-5626-b7f2-16d153c2e95d",
-          "score": 0.5461,
-          "video_name": "00176.mp4",
-          "frame_idx": 360,
-          "timestamp": 12.0,
-          "caption": "[SFG DIST] YNOT day #0002 // YNOT KOREA Team"
+          "id": "0a5d416c-f203-53e1-9256-332f138b6537",
+          "score": 0.5431,
+          "video_name": "00055.mp4",
+          "frame_idx": 531,
+          "timestamp": 22.15,
+          "caption": "JC Pieri - BMX Reel 2013"
         }
       ]
     },
@@ -119,62 +119,62 @@
         "timestamp": 12.0,
         "frame_id": 300
       },
-      "rank": 4,
+      "rank": 5,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
       "status": "PASS",
       "latency": {
-        "total_sec": 24.28,
-        "hyde_sec": 1.62,
-        "search_sec": 0.218,
-        "rerank_sec": 22.441
+        "total_sec": 40.671,
+        "hyde_sec": 3.332,
+        "search_sec": 0.518,
+        "rerank_sec": 36.821
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "5cf9c334-c82c-596f-b478-897eb51b5e64",
-          "score": 0.5438,
-          "video_name": "00004.mp4",
-          "frame_idx": 1776,
-          "timestamp": 59.26,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "67b6d4b5-b556-5b3d-b717-ceaf3f9be355",
+          "score": 0.5452,
+          "video_name": "00326.mp4",
+          "frame_idx": 310,
+          "timestamp": 12.4,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 2,
-          "id": "19138161-a226-558f-8a08-7c002b8c2786",
-          "score": 0.543,
-          "video_name": "00004.mp4",
-          "frame_idx": 149,
-          "timestamp": 4.97,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "819c5122-1c00-5c09-83ac-6a7bc756da6e",
+          "score": 0.5445,
+          "video_name": "00326.mp4",
+          "frame_idx": 620,
+          "timestamp": 24.8,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 3,
-          "id": "245e8f36-a957-5939-ab39-2a651ab28eb0",
-          "score": 0.5429,
-          "video_name": "00004.mp4",
-          "frame_idx": 148,
-          "timestamp": 4.94,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "fea6147a-2fb6-5ccb-ab08-9bf79ea1a921",
+          "score": 0.5435,
+          "video_name": "00326.mp4",
+          "frame_idx": 682,
+          "timestamp": 27.28,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 4,
-          "id": "f4ee1ca9-e99a-506b-8678-a187505dd420",
-          "score": 0.5126,
-          "video_name": "00004.mp4",
-          "frame_idx": 178,
-          "timestamp": 5.939266666666667,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
+          "score": 0.4865,
+          "video_name": "00326.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
           "rank": 5,
-          "id": "17106fbe-c00e-52b0-93c2-d2fd7511d17c",
-          "score": 0.486,
-          "video_name": "00326.mp4",
-          "frame_idx": 225,
-          "timestamp": 9.0,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
+          "id": "d4aa0569-bf17-51e9-a41e-2e2539d3ba7e",
+          "score": 0.4862,
+          "video_name": "00004.mp4",
+          "frame_idx": 222,
+          "timestamp": 7.41,
+          "caption": "Motorcycle & Helicopter Touring Maui  2016"
         }
       ]
     },
@@ -190,61 +190,61 @@
         "timestamp": 10.0,
         "frame_id": 250
       },
-      "rank": 10,
+      "rank": null,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 29.135,
-        "hyde_sec": 2.259,
-        "search_sec": 0.212,
-        "rerank_sec": 26.665
+        "total_sec": 39.25,
+        "hyde_sec": 3.21,
+        "search_sec": 0.52,
+        "rerank_sec": 35.52
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "d1328359-fd5b-565b-8cc9-2e00183d6080",
-          "score": 0.5453,
+          "id": "93e10b66-2386-51f9-8e45-962998307c25",
+          "score": 0.5458,
           "video_name": "01370.mp4",
-          "frame_idx": 525,
-          "timestamp": 21.0,
+          "frame_idx": 1364,
+          "timestamp": 54.56,
           "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
         },
         {
           "rank": 2,
-          "id": "24d78ebc-eacc-531c-954b-a3e09ebd2cb9",
-          "score": 0.5452,
+          "id": "b3c6d168-6687-5cad-acff-80d61a8a7e15",
+          "score": 0.5453,
           "video_name": "01370.mp4",
-          "frame_idx": 450,
-          "timestamp": 18.0,
+          "frame_idx": 806,
+          "timestamp": 32.24,
           "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
         },
         {
           "rank": 3,
-          "id": "42ce1483-3b23-50ce-a69d-3f0977bf3086",
-          "score": 0.5451,
-          "video_name": "01370.mp4",
-          "frame_idx": 600,
-          "timestamp": 24.0,
-          "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
+          "id": "f6aaa777-660e-586c-a639-bb06667a1461",
+          "score": 0.5452,
+          "video_name": "01333.mp4",
+          "frame_idx": 310,
+          "timestamp": 12.4,
+          "caption": "Reasons to Stay - Limor Ballas"
         },
         {
           "rank": 4,
-          "id": "4114f18c-f0d2-58b3-8947-a77bdabb9fd9",
-          "score": 0.5449,
+          "id": "36307e8b-4999-5174-9cf6-ad50eff1a5dd",
+          "score": 0.545,
           "video_name": "01370.mp4",
-          "frame_idx": 900,
-          "timestamp": 36.0,
+          "frame_idx": 0,
+          "timestamp": 0.0,
           "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
         },
         {
           "rank": 5,
-          "id": "42119ddc-fe85-53f0-8300-a7370661e057",
-          "score": 0.5447,
+          "id": "74f2f94c-2933-598a-a7d0-3859bc23320e",
+          "score": 0.5445,
           "video_name": "01370.mp4",
-          "frame_idx": 300,
-          "timestamp": 12.0,
+          "frame_idx": 868,
+          "timestamp": 34.72,
           "caption": "Jeff Martin - Medley (Nobody?s Fault But Mine, Black Snake Blues, Five To One) @ Cherry Ba"
         }
       ]
@@ -267,30 +267,30 @@
       "kisc_info": {
         "cqr_query": "find a traditional Hindu wedding ceremony with a peacock theme, golden garlands, and colorful decorations",
         "ambiguity_turn1": 0.792,
-        "ambiguity_turn2": 0.794,
-        "delta_ambiguity": -0.0021
+        "ambiguity_turn2": 0.785,
+        "delta_ambiguity": 0.0065
       },
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 25.159,
-        "hyde_sec": 2.477,
-        "search_sec": 0.224,
-        "rerank_sec": 22.458
+        "total_sec": 27.928,
+        "hyde_sec": 2.425,
+        "search_sec": 0.56,
+        "rerank_sec": 24.943
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "5f7f5a72-5be8-54a6-b685-1d917d17a4f3",
-          "score": 0.5485,
+          "id": "d8fd242e-65a2-5330-9c8f-fb380653e7f0",
+          "score": 0.5449,
           "video_name": "00003.mp4",
-          "frame_idx": 712,
-          "timestamp": 23.757066666666667,
+          "frame_idx": 666,
+          "timestamp": 22.22,
           "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
         },
         {
           "rank": 2,
           "id": "0adede2e-7966-5b76-9d79-026897530890",
-          "score": 0.5484,
+          "score": 0.5435,
           "video_name": "00003.mp4",
           "frame_idx": 740,
           "timestamp": 24.69,
@@ -298,29 +298,29 @@
         },
         {
           "rank": 3,
-          "id": "f3975f74-6e98-5a34-82f3-1e54a59adc68",
-          "score": 0.548,
+          "id": "87c6c897-8362-5247-98fe-d323f6f13b05",
+          "score": 0.5434,
           "video_name": "00003.mp4",
-          "frame_idx": 1036,
-          "timestamp": 34.57,
+          "frame_idx": 1776,
+          "timestamp": 59.26,
           "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
         },
         {
           "rank": 4,
-          "id": "d8fd242e-65a2-5330-9c8f-fb380653e7f0",
-          "score": 0.5455,
+          "id": "432400d5-6f2d-51f8-a840-4627409b0967",
+          "score": 0.5434,
           "video_name": "00003.mp4",
-          "frame_idx": 666,
-          "timestamp": 22.22,
+          "frame_idx": 962,
+          "timestamp": 32.1,
           "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
         },
         {
           "rank": 5,
-          "id": "432400d5-6f2d-51f8-a840-4627409b0967",
-          "score": 0.5452,
+          "id": "1018a7a3-5377-500b-a868-b923a22d0e13",
+          "score": 0.5431,
           "video_name": "00003.mp4",
-          "frame_idx": 962,
-          "timestamp": 32.1,
+          "frame_idx": 1702,
+          "timestamp": 56.79,
           "caption": "the Great Hindu wedding : Sudarmani & Kasthuri \u201cthe VIP.. PEACOCK \u201c"
         }
       ]
@@ -337,67 +337,67 @@
         "timestamp": 20.0,
         "frame_id": 500
       },
-      "rank": null,
+      "rank": 25,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
         "cqr_query": "scuba divers swimming with tropical fish and exploring marine life near coral reefs",
         "ambiguity_turn1": 0.742,
-        "ambiguity_turn2": 0.742,
-        "delta_ambiguity": -0.0005
+        "ambiguity_turn2": 0.728,
+        "delta_ambiguity": 0.014
       },
-      "status": "WARN (Target outside Top-20)",
+      "status": "PASS",
       "latency": {
-        "total_sec": 27.893,
-        "hyde_sec": 1.599,
-        "search_sec": 0.215,
-        "rerank_sec": 26.079
+        "total_sec": 34.142,
+        "hyde_sec": 2.294,
+        "search_sec": 0.574,
+        "rerank_sec": 31.274
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "45036725-3ecd-5fd2-b55a-cd7dcbcf6f9e",
-          "score": 0.5438,
+          "id": "92a2b316-02f2-5a66-b518-bf14d5c3bb5f",
+          "score": 0.6032,
           "video_name": "00470.mp4",
-          "frame_idx": 355,
-          "timestamp": 14.806458333333332,
+          "frame_idx": 354,
+          "timestamp": 14.76,
           "caption": "V3C Video 00470"
         },
         {
           "rank": 2,
-          "id": "1201e6b5-c293-5bd6-8dce-43c7f073e2d9",
-          "score": 0.5426,
-          "video_name": "00470.mp4",
-          "frame_idx": 426,
-          "timestamp": 17.76775,
-          "caption": "V3C Video 00470"
+          "id": "a7a4c4b0-09ec-55e3-a818-eacf9690505a",
+          "score": 0.4863,
+          "video_name": "00250.mp4",
+          "frame_idx": 413,
+          "timestamp": 17.23,
+          "caption": "Deep South Maldives"
         },
         {
           "rank": 3,
-          "id": "6706ce2f-17d9-56e1-b1a4-8fae83fb091a",
-          "score": 0.4849,
-          "video_name": "00609.mp4",
-          "frame_idx": 975,
-          "timestamp": 39.0,
-          "caption": "116 bonaire 1"
+          "id": "44339482-aed4-5060-9edb-e5bc28bf2452",
+          "score": 0.4833,
+          "video_name": "00286.mp4",
+          "frame_idx": 1554,
+          "timestamp": 51.85,
+          "caption": "Escambron Up-Close"
         },
         {
           "rank": 4,
-          "id": "b9a69de7-05b0-5106-9e72-bb297ce99df8",
-          "score": 0.4838,
-          "video_name": "00609.mp4",
-          "frame_idx": 750,
-          "timestamp": 30.0,
-          "caption": "116 bonaire 1"
+          "id": "274f6250-a1c2-591b-8223-dc803cef2ebb",
+          "score": 0.4267,
+          "video_name": "00250.mp4",
+          "frame_idx": 295,
+          "timestamp": 12.3,
+          "caption": "Deep South Maldives"
         },
         {
           "rank": 5,
-          "id": "f9475937-db69-52e8-a36b-e0c5dc95891e",
-          "score": 0.4826,
-          "video_name": "00008.mp4",
-          "frame_idx": 675,
-          "timestamp": 27.0,
-          "caption": "laje de santos"
+          "id": "16bafeca-6f0b-5fd7-8132-e4bb2a46acad",
+          "score": 0.4256,
+          "video_name": "00609.mp4",
+          "frame_idx": 310,
+          "timestamp": 12.4,
+          "caption": "116 bonaire 1"
         }
       ]
     },
@@ -419,62 +419,62 @@
           "a helicopter"
         ]
       },
-      "rank": 48,
+      "rank": 49,
       "vqa_answer": "UNKNOWN",
       "vqa_answer_valid": false,
       "kisc_info": {},
       "status": "PASS",
       "latency": {
-        "total_sec": 6.392,
-        "hyde_sec": 2.262,
-        "search_sec": 0.229,
-        "rerank_sec": 3.901
+        "total_sec": 4.081,
+        "hyde_sec": 2.117,
+        "search_sec": 0.532,
+        "rerank_sec": 1.432
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "17106fbe-c00e-52b0-93c2-d2fd7511d17c",
+          "id": "1ee2ea40-c6d9-5c33-b75b-47802d194c2b",
           "score": 0.0066,
-          "video_name": "00326.mp4",
-          "frame_idx": 225,
-          "timestamp": 9.0,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
+          "video_name": "00230.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "Surface To Air"
         },
         {
           "rank": 2,
-          "id": "daebea35-7259-5921-abac-5ea956b9127e",
+          "id": "9b83391f-46dc-53ef-a091-efa9162d817c",
           "score": 0.0065,
-          "video_name": "00326.mp4",
-          "frame_idx": 150,
-          "timestamp": 6.0,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
-        },
-        {
-          "rank": 3,
-          "id": "c21ee688-c0b6-5c20-93f4-e21f752dbbe9",
-          "score": 0.0063,
           "video_name": "01254.mp4",
-          "frame_idx": 1200,
-          "timestamp": 24.0,
+          "frame_idx": 1125,
+          "timestamp": 22.5,
           "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
         },
         {
+          "rank": 3,
+          "id": "3576d3ca-7cce-5445-9a69-065b679357ef",
+          "score": 0.0063,
+          "video_name": "00371.mp4",
+          "frame_idx": 370,
+          "timestamp": 12.35,
+          "caption": "Wade Stalvey\u2019s First Solo Video"
+        },
+        {
           "rank": 4,
-          "id": "82aa4c39-6278-5914-9249-8ec1ff25106d",
+          "id": "9eed05a7-a675-5836-a03a-50a21fd24063",
           "score": 0.0063,
           "video_name": "00370.mp4",
-          "frame_idx": 426,
-          "timestamp": 17.76776776776777,
+          "frame_idx": 590,
+          "timestamp": 24.61,
           "caption": "PANASONIC GH2- Exploring Africa"
         },
         {
           "rank": 5,
-          "id": "1adeae71-0d20-54e6-a28f-fbf8b726111a",
+          "id": "92994bb9-ac27-5636-9f39-a8567fd7c5bd",
           "score": 0.0062,
-          "video_name": "00370.mp4",
-          "frame_idx": 568,
-          "timestamp": 23.690357023690357,
-          "caption": "PANASONIC GH2- Exploring Africa"
+          "video_name": "00230.mp4",
+          "frame_idx": 1488,
+          "timestamp": 59.52,
+          "caption": "Surface To Air"
         }
       ]
     },
@@ -496,62 +496,62 @@
           "an acoustic guitar"
         ]
       },
-      "rank": 57,
+      "rank": null,
       "vqa_answer": "UNKNOWN",
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS",
+      "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 3.67,
-        "hyde_sec": 1.671,
-        "search_sec": 0.217,
-        "rerank_sec": 1.782
+        "total_sec": 4.695,
+        "hyde_sec": 2.69,
+        "search_sec": 0.529,
+        "rerank_sec": 1.476
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "06915b22-1cfd-5157-955c-f5a923ebe935",
+          "id": "c18bba77-2323-50e7-9423-9f88e602abc0",
           "score": 0.0066,
           "video_name": "00754.mp4",
-          "frame_idx": 432,
-          "timestamp": 18.0,
+          "frame_idx": 240,
+          "timestamp": 10.0,
           "caption": "Pageants - \u201cWords As Pictures\u201d"
         },
         {
           "rank": 2,
-          "id": "c66ce107-b23c-54e3-a348-e52f6acbbad3",
+          "id": "3149f4ec-39bc-5ceb-9595-eda1b3ed36f5",
           "score": 0.0065,
-          "video_name": "01578.mp4",
-          "frame_idx": 225,
-          "timestamp": 9.0,
-          "caption": "Meursault - Crank Resolutions (In the Toad Van after too much wine.)"
+          "video_name": "00262.mp4",
+          "frame_idx": 300,
+          "timestamp": 10.0,
+          "caption": "Serpents of Wisdom Live"
         },
         {
           "rank": 3,
-          "id": "8bc28bdf-dc83-5646-a933-383c1dbc2393",
+          "id": "4e51d2bc-5aad-5050-b2e0-daa6e6109c1a",
           "score": 0.0063,
-          "video_name": "00686.mp4",
-          "frame_idx": 675,
-          "timestamp": 27.0,
-          "caption": "GENERATION Live Jacques d?Arbaud - Saison 1 - ?JMB Juillet 2016"
+          "video_name": "00540.mp4",
+          "frame_idx": 1110,
+          "timestamp": 37.04,
+          "caption": "Jmac show"
         },
         {
           "rank": 4,
-          "id": "3b6f57ad-a8da-5b7e-97ff-ae9aec7d4e14",
+          "id": "efba7267-9754-54ac-9c8e-a9b908eaa3dc",
           "score": 0.0063,
-          "video_name": "01560.mp4",
-          "frame_idx": 1050,
-          "timestamp": 42.0,
-          "caption": "Mick Harvey, Phill Calvert, Angela Howard & Ron Rude - Broken Hands (Rowland S Howard trib"
+          "video_name": "00262.mp4",
+          "frame_idx": 900,
+          "timestamp": 30.0,
+          "caption": "Serpents of Wisdom Live"
         },
         {
           "rank": 5,
-          "id": "b8344221-2c7e-5ab3-ae39-db388ba9c2be",
+          "id": "c2d02af8-82e5-54d4-b676-ee522d4631bc",
           "score": 0.0062,
-          "video_name": "00501.mp4",
-          "frame_idx": 71,
-          "timestamp": 2.9612916666666664,
-          "caption": "The Mighty Sequoyah ?The Ghost of my Past?"
+          "video_name": "01508.mp4",
+          "frame_idx": 1332,
+          "timestamp": 44.44,
+          "caption": "Dirty Crows - Hit the Road"
         }
       ]
     },
@@ -580,56 +580,56 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 5.409,
-        "hyde_sec": 3.856,
-        "search_sec": 0.204,
-        "rerank_sec": 1.349
+        "total_sec": 5.012,
+        "hyde_sec": 2.193,
+        "search_sec": 0.507,
+        "rerank_sec": 2.311
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "e5d47bad-5683-5eb5-a432-c9078c15b096",
+          "id": "37dd4e51-0c83-5a69-95bb-8440fd0b2ea8",
           "score": 0.0066,
-          "video_name": "00609.mp4",
-          "frame_idx": 300,
-          "timestamp": 12.0,
-          "caption": "116 bonaire 1"
+          "video_name": "01405.mp4",
+          "frame_idx": 0,
+          "timestamp": 0.0,
+          "caption": "Retrato de Sego - Parte de La Ciudad"
         },
         {
           "rank": 2,
-          "id": "293ce953-5a9a-5a0c-9c04-4858b8a03e4f",
+          "id": "6026af42-82cc-5c06-87b3-061ae489ba42",
           "score": 0.0065,
-          "video_name": "00609.mp4",
-          "frame_idx": 150,
-          "timestamp": 6.0,
-          "caption": "116 bonaire 1"
+          "video_name": "00162.mp4",
+          "frame_idx": 177,
+          "timestamp": 7.38,
+          "caption": "Imprisoned Paradise"
         },
         {
           "rank": 3,
-          "id": "82f58dc2-9f23-504b-adba-cdf50c8ebd99",
+          "id": "2088afa6-e6e4-5b6c-9789-0094a6c2d92f",
           "score": 0.0063,
-          "video_name": "00609.mp4",
-          "frame_idx": 675,
-          "timestamp": 27.0,
-          "caption": "116 bonaire 1"
+          "video_name": "01273.mp4",
+          "frame_idx": 62,
+          "timestamp": 2.48,
+          "caption": "Timelapse Bremen II"
         },
         {
           "rank": 4,
-          "id": "d241885d-a5f1-5eb5-8eec-b538d64b16a8",
+          "id": "14f98171-a986-5d36-a0c8-9a9497e3a2c5",
           "score": 0.0063,
-          "video_name": "00609.mp4",
-          "frame_idx": 375,
-          "timestamp": 15.0,
-          "caption": "116 bonaire 1"
+          "video_name": "00738.mp4",
+          "frame_idx": 413,
+          "timestamp": 17.23,
+          "caption": "Gert Hoekman - RX7 V8 -  BDC Round 2 - Pembrey Circuit"
         },
         {
           "rank": 5,
-          "id": "523e246a-c329-5d5b-8bd4-336733c8f47e",
+          "id": "e39d64e5-a7f1-5b9c-ab3f-bf03a68c63c8",
           "score": 0.0062,
-          "video_name": "00609.mp4",
-          "frame_idx": 450,
-          "timestamp": 18.0,
-          "caption": "116 bonaire 1"
+          "video_name": "00107.mp4",
+          "frame_idx": 0,
+          "timestamp": 0.0,
+          "caption": "PIONEER ONE Video Blog #28"
         }
       ]
     },
@@ -655,56 +655,56 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 0.202,
+        "total_sec": 0.532,
         "hyde_sec": 0.0,
-        "search_sec": 0.202,
+        "search_sec": 0.532,
         "rerank_sec": 0.0
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "1658a11c-d8ed-5244-9559-6448cb6dc101",
+          "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
           "score": 0.0,
           "video_name": "00250.mp4",
-          "frame_idx": 355,
-          "timestamp": 14.806458333333332,
+          "frame_idx": 354,
+          "timestamp": 14.76,
           "caption": "Deep South Maldives"
         },
         {
           "rank": 2,
-          "id": "006d1e9f-3bd1-5f1f-b838-63a298698da7",
+          "id": "274f6250-a1c2-591b-8223-dc803cef2ebb",
           "score": 0.0,
           "video_name": "00250.mp4",
-          "frame_idx": 284,
-          "timestamp": 11.845166666666666,
+          "frame_idx": 295,
+          "timestamp": 12.3,
           "caption": "Deep South Maldives"
         },
         {
           "rank": 3,
-          "id": "05df8ac9-8846-5344-b9ee-8ecc51f7256f",
+          "id": "a7a4c4b0-09ec-55e3-a818-eacf9690505a",
           "score": 0.0,
-          "video_name": "01044.mp4",
-          "frame_idx": 267,
-          "timestamp": 8.908900000000001,
-          "caption": "Shark therapy"
+          "video_name": "00250.mp4",
+          "frame_idx": 413,
+          "timestamp": 17.23,
+          "caption": "Deep South Maldives"
         },
         {
           "rank": 4,
-          "id": "563e1153-b4fd-53ac-9d7c-3579cccc457a",
+          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
           "score": 0.0,
-          "video_name": "00840.mp4",
-          "frame_idx": 623,
-          "timestamp": 20.787433333333333,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "video_name": "00102.mp4",
+          "frame_idx": 1554,
+          "timestamp": 51.85,
+          "caption": "How to Catch a Lobster"
         },
         {
           "rank": 5,
-          "id": "1d2e0ce4-6fba-51e7-a12d-b02a393bad81",
+          "id": "0cece679-b332-586e-99f4-9107661e8fea",
           "score": 0.0,
-          "video_name": "00840.mp4",
-          "frame_idx": 267,
-          "timestamp": 8.908900000000001,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+          "video_name": "00102.mp4",
+          "frame_idx": 1480,
+          "timestamp": 49.38,
+          "caption": "How to Catch a Lobster"
         }
       ]
     },
@@ -726,56 +726,56 @@
       "kisc_info": {},
       "status": "WARN (Target outside Top-20)",
       "latency": {
-        "total_sec": 23.771,
+        "total_sec": 22.469,
         "hyde_sec": 0.0,
-        "search_sec": 0.179,
-        "rerank_sec": 23.592
+        "search_sec": 0.491,
+        "rerank_sec": 21.978
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "1658a11c-d8ed-5244-9559-6448cb6dc101",
-          "score": 0.4866,
-          "video_name": "00250.mp4",
-          "frame_idx": 355,
-          "timestamp": 14.806458333333332,
-          "caption": "Deep South Maldives"
+          "id": "1a012c6e-5be9-5230-bc90-da245bcb2df0",
+          "score": 0.4865,
+          "video_name": "00609.mp4",
+          "frame_idx": 434,
+          "timestamp": 17.36,
+          "caption": "116 bonaire 1"
         },
         {
           "rank": 2,
-          "id": "006d1e9f-3bd1-5f1f-b838-63a298698da7",
+          "id": "85048158-58c0-571b-9b85-c33eb2d98344",
           "score": 0.4862,
-          "video_name": "00250.mp4",
-          "frame_idx": 284,
-          "timestamp": 11.845166666666666,
-          "caption": "Deep South Maldives"
+          "video_name": "00609.mp4",
+          "frame_idx": 372,
+          "timestamp": 14.88,
+          "caption": "116 bonaire 1"
         },
         {
           "rank": 3,
-          "id": "82f58dc2-9f23-504b-adba-cdf50c8ebd99",
-          "score": 0.4862,
+          "id": "16bafeca-6f0b-5fd7-8132-e4bb2a46acad",
+          "score": 0.4861,
           "video_name": "00609.mp4",
-          "frame_idx": 675,
-          "timestamp": 27.0,
+          "frame_idx": 310,
+          "timestamp": 12.4,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 4,
-          "id": "7a4fe2ce-05cf-5952-bdf0-05ca19daebef",
-          "score": 0.4853,
+          "id": "e930f883-5dfa-5793-99ff-f6b3f27ee520",
+          "score": 0.4859,
           "video_name": "00609.mp4",
-          "frame_idx": 1050,
-          "timestamp": 42.0,
+          "frame_idx": 682,
+          "timestamp": 27.28,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 5,
-          "id": "0f6dd284-9a76-5918-b5e5-8079face0bb6",
-          "score": 0.4842,
-          "video_name": "01672.mp4",
-          "frame_idx": 825,
-          "timestamp": 33.0,
-          "caption": "South Komodo 2012"
+          "id": "67b6452a-bf27-5431-b9a2-da60ba14b121",
+          "score": 0.4857,
+          "video_name": "00609.mp4",
+          "frame_idx": 496,
+          "timestamp": 19.84,
+          "caption": "116 bonaire 1"
         }
       ]
     }
