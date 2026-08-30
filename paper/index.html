@@ -370,68 +370,101 @@
         }
 
         // PDF.JS Rendering Implementation
-        async function loadPdfDocument(pdfUrl) {
+        // High-DPI / Retina Crisp PDF Rendering Implementation
+        async function renderCurrentPdfPages() {
+            if (!currentPdfDoc) return;
             const container = document.getElementById("pdfScrollView");
             const pageInfo = document.getElementById("pdfPageInfo");
             const notice = document.getElementById("pdfLoadingNotice");
 
+            // Retain scroll position ratio during zoom
+            const prevScrollRatio = container.scrollTop / Math.max(container.scrollHeight - container.clientHeight, 1);
+
+            if (notice) notice.style.display = "none";
+            container.innerHTML = "";
+
+            pageInfo.textContent = `${currentPdfDoc.numPages} Pages`;
+
+            // Device pixel ratio for ultra-sharp vector text (minimum 2.0x supersampling)
+            const dpr = Math.max(window.devicePixelRatio || 1, 2.0);
+
+            for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+                const page = await currentPdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: pdfScale });
+                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
+
+                const pageContainer = document.createElement("div");
+                pageContainer.className = "pdf-page-container relative mb-6 shadow-2xl rounded";
+                pageContainer.id = `pdf-page-${i}`;
+                pageContainer.dataset.pageNum = i;
+                pageContainer.style.width = `${Math.floor(viewport.width)}px`;
+                pageContainer.style.height = `${Math.floor(viewport.height)}px`;
+
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d", { alpha: false });
+                
+                // Set internal canvas bitmap size to high-res
+                canvas.width = Math.floor(renderViewport.width);
+                canvas.height = Math.floor(renderViewport.height);
+                
+                // Set CSS display size to match unscaled viewport
+                canvas.style.width = `${Math.floor(viewport.width)}px`;
+                canvas.style.height = `${Math.floor(viewport.height)}px`;
+                canvas.className = "block w-full h-full rounded";
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: renderViewport,
+                    transform: [dpr, 0, 0, dpr, 0, 0]
+                };
+
+                pageContainer.appendChild(canvas);
+
+                // Interactive Text Layer for selection and quote grabbing
+                const textContent = await page.getTextContent();
+                const textLayerDiv = document.createElement("div");
+                textLayerDiv.className = "textLayer absolute inset-0 rounded";
+                textLayerDiv.style.width = `${Math.floor(viewport.width)}px`;
+                textLayerDiv.style.height = `${Math.floor(viewport.height)}px`;
+                pageContainer.appendChild(textLayerDiv);
+
+                pdfjsLib.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
+                    viewport: viewport,
+                    textDivs: []
+                });
+
+                // Page number badge
+                const pageBadge = document.createElement("div");
+                pageBadge.className = "absolute top-2 right-2 bg-slate-900/85 backdrop-blur text-slate-200 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700/60 pointer-events-none shadow";
+                pageBadge.textContent = `P. ${i} / ${currentPdfDoc.numPages}`;
+                pageContainer.appendChild(pageBadge);
+
+                container.appendChild(pageContainer);
+                await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+            }
+
+            // Restore proportional scroll position
+            container.scrollTop = prevScrollRatio * (container.scrollHeight - container.clientHeight);
+            refreshIcons();
+        }
+
+        async function loadPdfDocument(pdfUrl) {
+            const notice = document.getElementById("pdfLoadingNotice");
             try {
                 if (notice) notice.style.display = "flex";
-                const loadingTask = pdfjsLib.getDocument(`${pdfUrl}?t=${Date.now()}`);
+                const loadingTask = pdfjsLib.getDocument({
+                    url: `${pdfUrl}?t=${Date.now()}`,
+                    cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+                    cMapPacked: true
+                });
                 currentPdfDoc = await loadingTask.promise;
-
-                if (notice) notice.style.display = "none";
-                container.innerHTML = ""; // Clear existing rendered canvases
-
-                pageInfo.textContent = `${currentPdfDoc.numPages} Pages`;
-
-                for (let i = 1; i <= currentPdfDoc.numPages; i++) {
-                    const page = await currentPdfDoc.getPage(i);
-                    const viewport = page.getViewport({ scale: pdfScale });
-
-                    const pageContainer = document.createElement("div");
-                    pageContainer.className = "pdf-page-container relative mb-6";
-                    pageContainer.id = `pdf-page-${i}`;
-                    pageContainer.dataset.pageNum = i;
-
-                    const canvas = document.createElement("canvas");
-                    const context = canvas.getContext("2d");
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-
-                    pageContainer.appendChild(canvas);
-
-                    // Text Layer for selection and quote grabbing
-                    const textContent = await page.getTextContent();
-                    const textLayerDiv = document.createElement("div");
-                    textLayerDiv.className = "textLayer absolute inset-0";
-                    pageContainer.appendChild(textLayerDiv);
-
-                    pdfjsLib.renderTextLayer({
-                        textContentSource: textContent,
-                        container: textLayerDiv,
-                        viewport: viewport,
-                        textDivs: []
-                    });
-
-                    // Page number badge
-                    const pageBadge = document.createElement("div");
-                    pageBadge.className = "absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-slate-300 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700/50 pointer-events-none shadow";
-                    pageBadge.textContent = `P. ${i}`;
-                    pageContainer.appendChild(pageBadge);
-
-                    container.appendChild(pageContainer);
-                    await page.render(renderContext).promise;
-                }
+                await renderCurrentPdfPages();
             } catch (err) {
-                console.error("PDF Render error:", err);
+                console.error("PDF Load error:", err);
                 if (notice) {
-                    notice.innerHTML = `<span class="text-rmit-red"><i data-lucide="alert-triangle" class="w-4 h-4 inline"></i> PDF render failed: ${err.message}</span>`;
+                    notice.innerHTML = `<span class="text-rmit-red"><i data-lucide="alert-triangle" class="w-4 h-4 inline"></i> PDF load failed: ${err.message}</span>`;
                     refreshIcons();
                 }
             }
@@ -441,19 +474,23 @@
             loadPdfDocument("main.pdf");
         }
 
+        let zoomTimeout = null;
         function adjustZoom(delta) {
-            pdfScale = Math.max(0.6, Math.min(2.5, pdfScale + delta));
+            pdfScale = Math.max(0.5, Math.min(3.0, Math.round((pdfScale + delta) * 10) / 10));
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             if (currentPdfDoc) {
-                loadPdfDocument("main.pdf");
+                clearTimeout(zoomTimeout);
+                zoomTimeout = setTimeout(() => {
+                    renderCurrentPdfPages();
+                }, 100);
             }
         }
 
         function resetZoom() {
-            pdfScale = 1.15;
-            document.getElementById("zoomLevel").textContent = "115%";
+            pdfScale = 1.25;
+            document.getElementById("zoomLevel").textContent = "125%";
             if (currentPdfDoc) {
-                loadPdfDocument("main.pdf");
+                renderCurrentPdfPages();
             }
         }
 
@@ -462,12 +499,11 @@
             pdfContainer.addEventListener("wheel", (e) => {
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
-                    adjustZoom(e.deltaY < 0 ? 0.1 : -0.1);
+                    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                    adjustZoom(delta);
                 }
             }, { passive: false });
         }
-
-        function setupTextSelectionListener() {
             document.addEventListener("selectionchange", () => {
                 const selection = window.getSelection();
                 const text = selection.toString().trim();
