@@ -31,7 +31,7 @@ from models.object_detector import ObjectDetector
 from models.region_proposer import RegionProposer
 from models.super_resolution import SuperResolutionUpscaler
 from models.fallback_vlm import SmolVLM2FallbackVLM
-from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+from models.embedding import WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
 from models.clip_embedder import LightweightCLIPEmbedder
 from models.siglip_embedder import SigLIPEmbedder
 
@@ -65,7 +65,7 @@ def load_vlm():
 
 def load_embedder():
     if EMBEDDING_OPTION == "local":
-        return QwenVL8BEmbedder()
+        return WeMMEmbedding4BEmbedder()
     elif EMBEDDING_OPTION == "cloud":
         return DashScopeCloudEmbedder()
     else:

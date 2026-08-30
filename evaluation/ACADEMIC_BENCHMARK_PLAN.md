@@ -13,21 +13,17 @@ Replace illustrative benchmark rows with reproducible, evidence-bounded offline 
 
 ## Implemented in this pass
 
-- `run_comprehensive_ablation.py` measures only the production retrieval path and writes per-query ranks for M1--M5; M6 fails closed unless a VLM client is explicitly supplied.
-- The runner reports explicit evaluable denominators and marks itself `MEASURED_RETRIEVAL_ONLY`.
+- Model dispatch uses `WeMMEmbedding4BEmbedder` for local visual/text embeddings across inference, preprocessing, batch, and webapp entrypoints.
+- The configured checkpoint is fixed to `tencent/WeMM-Embedding-4B`; Qwen is not an embedding substitute. The VLM remains a separate, optional component.
 - `capture_benchmark_manifest.py` records code/query hashes, Git revision, Python version, and platform.
 - Contract tests cover exact point matching, frame tolerance, denominator preservation, and official-score boundary.
 - `academic_benchmark_report.md`, `academic_benchmark_audit.md`, and `benchmark_manifest.json` record current observations and limitations.
 
-## Remaining experiment work
+## Required before valid WeMM results
 
-- Add an explicit VLM client/configuration to M6 and retain per-candidate error states.
-- Implement paired KIS-C sessions with fixed turn scripts; treat sessions, not turns, as independent units.
-- Implement positive and negative VQA cases with frame localization, token-F1, grounded-answer, unsupported-answer, and safe-refusal metrics.
-- Implement repeated warm latency trials for concurrency and HNSW `ef_search` values, including p50/p95/p99 and GPU telemetry.
-- Expand independent annotated queries and freeze media/index checksums.
-- Run paired bootstrap/randomization tests, Wilson intervals, and Holm correction after the larger set is available.
-
+- Reindex the benchmark corpus using `tencent/WeMM-Embedding-4B`; dimensional equality alone does not prove model identity.
+- Capture the exact checkpoint revision/hash and collection metadata.
+- Rerun the direct replay, retrieval ablation, KIS-C, VQA, concurrency, and HNSW experiments after reindexing.
 ## Publication rules
 
 Do not report fixed configuration rows as measured evidence. Do not call offline replay an official score. Keep `N/A` for unavailable metrics, preserve every denominator, and separate safety refusal from answer correctness. Use causal language only when paired per-query outputs show the component was actually toggled.

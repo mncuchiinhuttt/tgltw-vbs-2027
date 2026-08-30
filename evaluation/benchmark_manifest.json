@@ -3,6 +3,12 @@
   "schema_version": "aegis-benchmark-v2",
   "track": "offline_replay_diagnostic",
   "official_vbs_score": false,
+  "embedding_contract": {
+    "model": "tencent/WeMM-Embedding-4B",
+    "dimension": 2048,
+    "qwen_embedding_allowed": false,
+    "reindex_required_after_model_change": true
+  },
   "commands": [
     "uv run python evaluation/run_rag_benchmark.py",
     "uv run python evaluation/run_comprehensive_ablation.py --queries evaluation/eval_queries_real_v3c.json --dataset_dir datasets --output_dir evaluation/benchmark_real_output/current_run"
@@ -13,6 +19,8 @@
   },
   "direct_replay_result": {
     "path": "evaluation/vbs_rag_benchmark_results.json",
+    "status": "INVALID_FOR_WEMM",
+    "reason": "This artifact was generated before the WeMM-only correction under Qwen3-VL-Embedding-2B.",
     "total_queries": 10,
     "top20_hits": 5,
     "top20_rate_percent": 50.0,
@@ -26,17 +34,31 @@
   "ablation_result": {
     "path": "evaluation/benchmark_real_output/current_run/comprehensive_ablation_summary.json",
     "retrieval_evaluable_n": 11,
-    "measured_observation": "M1-M4 R@1/R@5/R@10=9.1/9.1/9.1%, MRR=0.097; M5-M6=9.1/18.2/18.2%, MRR=0.141",
+    "measured_observation": "Historical output was generated before the WeMM-only correction and is not valid for the WeMM claim.",
     "causal_claim_allowed": false,
-    "reason": "The harness does not emit paired per-query results for each configuration and several named configuration values are fixed rows rather than independently activated branches."
+    "reason": "The historical artifact used Qwen3-VL-Embedding-2B and the current Qdrant collection must be reindexed with WeMM before replay."
+  },
+  "weMM_runtime_probe": {
+    "path": "evaluation/weMM_runtime_probe.json",
+    "model": "tencent/WeMM-Embedding-4B",
+    "effective_class": "WeMMEmbedding4BEmbedder",
+    "dimension": 2048,
+    "qdrant_collection": "visual_keyframes_v1",
+    "qdrant_dimension": 2048,
+    "reindex_required": true
+  },
+  "weMM_audit_run": {
+    "path": "queries/weMM_audit_output/audit_benchmark_summary.json",
+    "mode": "fast",
+    "query_count": 10,
+    "result_status": "MODEL_CORRECTED_BUT_INDEX_NOT_REBUILT",
+    "interpretation": "The runner executed with WeMM query embeddings against an index whose points have not yet been reindexed under WeMM; do not report accuracy as a valid WeMM score."
   },
   "limitations": [
-    "Small annotated offline query set",
-    "No complete dataset/index checksum manifest in the current run",
-    "One latency observation per direct-replay case",
+    "Existing Qdrant points require WeMM reindexing",
     "No official DRES judge outcomes",
     "KIS-C turns are nested in sessions",
-    "Current ablation rows require instrumentation before causal interpretation"
+    "Previous replay artifacts are invalid for current WeMM claim"
   ],
   "statistical_rules": {
     "ranking": "paired bootstrap or paired randomization test over query IDs",

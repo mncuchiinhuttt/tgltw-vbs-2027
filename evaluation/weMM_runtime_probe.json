@@ -1,0 +1,8 @@
+{
+  "model_id": "tencent/WeMM-Embedding-4B",
+  "effective_model_id": "tencent/WeMM-Embedding-4B",
+  "class": "WeMMEmbedding4BEmbedder",
+  "dimension": 2048,
+  "qdrant_dimension": 2048,
+  "index_model_identity": "UNKNOWN_REINDEX_REQUIRED"
+}

@@ -25,26 +25,15 @@ OPENAI_VLM_TIMEOUT_SEC = float(os.getenv("OPENAI_VLM_TIMEOUT_SEC", 45.0))
 VLM_BATCH_CONCURRENCY = int(os.getenv("VLM_BATCH_CONCURRENCY", 4))
 
 # Model configuration options
-# Options: "local" (uses Qwen3-VL locally) or "openai" (uses GPT 5.5 Pro / GPT-4o style API)
+# VLM is independent; the visual/text embedding is fixed to WeMM-Embedding-4B.
 VLM_OPTION = os.getenv("VLM_OPTION", "openai")
-# Options: "local" (QwenVL8BEmbedder loading QWEN_EMBEDDING_MODEL_ID below - ~4-5GB
-# for the default 2B checkpoint, ~15GB if overridden to the 8B one) or "cloud"
-# (DashScopeCloudEmbedder via OPENAI_API_KEY/OPENAI_BASE_URL, no local weights)
-EMBEDDING_OPTION = os.getenv("EMBEDDING_OPTION", "local")
-# Model name DashScopeCloudEmbedder calls via dashscope.MultiModalEmbedding
+EMBEDDING_OPTION = "local"
 DASHSCOPE_EMBEDDING_MODEL_NAME = os.getenv("DASHSCOPE_EMBEDDING_MODEL_NAME", "tongyi-embedding-vision-plus")
 
-# Model Checkpoints (used if VLM_OPTION="local" or during local embeddings)
+# Model checkpoints
 QWEN_VLM_MODEL_ID = os.getenv("QWEN_VLM_MODEL_ID", "Qwen/Qwen2.5-VL-7B-Instruct")
-# Default visual embedding model: Tencent WeMM-Embedding-4B (4B params multimodal embedder)
-VISUAL_EMBEDDING_MODEL_ID = os.getenv("VISUAL_EMBEDDING_MODEL_ID", "tencent/WeMM-Embedding-4B")
-QWEN_EMBEDDING_MODEL_ID = os.getenv("QWEN_EMBEDDING_MODEL_ID", VISUAL_EMBEDDING_MODEL_ID)
-# Optional MRL truncation: truncate + re-normalize QwenVL8BEmbedder's output
-# to this many leading dimensions (e.g. 512) for a smaller/faster Qdrant
-# index at a small recall cost - a train-time property of the Qwen3-VL-Embedding
-# checkpoints (arXiv:2601.04720), not something that needs retraining or a
-# second model. Leave unset to keep the full embedding dimension (no-op,
-# same behavior as before this option existed).
+VISUAL_EMBEDDING_MODEL_ID = "tencent/WeMM-Embedding-4B"
+QWEN_EMBEDDING_MODEL_ID = VISUAL_EMBEDDING_MODEL_ID
 EMBEDDING_MRL_DIM = int(os.getenv("EMBEDDING_MRL_DIM")) if os.getenv("EMBEDDING_MRL_DIM") else None
 M2D_CLAP_MODEL_ID = os.getenv("M2D_CLAP_MODEL_ID", "weights/m2d_clap_vit_base-80x1001p16x16p16kpBpTI-2025/checkpoint-30.pth")
 

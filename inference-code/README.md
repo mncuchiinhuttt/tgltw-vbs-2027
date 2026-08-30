@@ -34,7 +34,7 @@ Install requirements:
 pip install -r requirements.txt
 ```
 
-Set up your `.env` variables (e.g. `OPENAI_API_KEY`, `QDRANT_HOST`, `VLM_OPTION`).
+Set `.env` with `VISUAL_EMBEDDING_MODEL_ID=tencent/WeMM-Embedding-4B`. The visual/text embedding model is fixed to Tencent WeMM-Embedding-4B; Qwen is used only for optional local VLM generation, never for embeddings.
 
 For batch/concurrent VLM inference (e.g. when running `batch_query.py` against many queries), point `OPENAI_BASE_URL` at a self-hosted vLLM server instead of loading a local HF model - see `host_vllm.sh` at the repo root (GPU required) and raise `VLM_BATCH_CONCURRENCY` to actually use its continuous batching.
 

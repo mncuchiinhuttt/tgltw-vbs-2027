@@ -1,0 +1,13 @@
+{
+  "status": "CONFIGURATION_CORRECTED_REINDEX_REQUIRED",
+  "paper_claimed_model": "tencent/WeMM-Embedding-4B",
+  "paper_claimed_dimension": 2048,
+  "configured_model": "tencent/WeMM-Embedding-4B",
+  "configured_dimension_target": 2048,
+  "runtime_class": "WeMMEmbedding4BEmbedder",
+  "qdrant_collection": "visual_keyframes_v1",
+  "qdrant_vector_dimension": 2048,
+  "finding": "VBS embedding dispatch is WeMM-only. The previous replay artifact was generated under Qwen3-VL-Embedding-2B and is invalid for the WeMM claim. Existing Qdrant points must be reindexed before any new WeMM score is reported.",
+  "benchmark_status": "Previous replay results are historical non-WeMM diagnostics.",
+  "next_required_action": "Reindex the benchmark corpus with tencent/WeMM-Embedding-4B, capture exact checkpoint revision/hash and collection metadata, then rerun replay and audit benchmarks."
+}

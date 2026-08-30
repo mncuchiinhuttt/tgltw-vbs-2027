@@ -6,15 +6,12 @@
 - **Artifact type:** Offline replay benchmark and ablation audit
 - **Status:** ANALYZED; not an official VBS/DRES score
 - **Code revision:** current local `main` checkout at benchmark execution
-- **Primary commands:**
-  - `uv run python evaluation/run_rag_benchmark.py`
-  - `uv run python evaluation/run_comprehensive_ablation.py --queries evaluation/eval_queries_real_v3c.json --dataset_dir datasets --output_dir evaluation/benchmark_real_output/current_run`
-- **Runtime:** CUDA-enabled local environment; Qwen3-VL-Embedding-2B, OpenAI-compatible VLM `ag/gemini-3.5-flash-low`, YOLOE-26, Qdrant at `localhost:6333`
+- **Primary commands:** `uv run python evaluation/run_rag_benchmark.py`; `uv run python evaluation/run_comprehensive_ablation.py`
 - **Query sources:** `queries/vbs_rag_benchmark.json` (10 annotated examples) and `evaluation/eval_queries_real_v3c.json` (18 annotated examples)
 
 ## Abstract
 
-We evaluated AEGIS, an evidence-grounded multimodal retrieval system for Video Browser Showdown-style tasks, using offline replay over a small annotated query suite and a five-axis ablation harness. The direct 10-query replay completed successfully but produced weak retrieval evidence: five of ten cases entered the top 20, with KIS-T ranks 31, 4, and 10, no KIS-C target in the top 20, and no ordinary VQA answer exact matches. The fail-closed negative VQA case passed. Median end-to-end latency was 24.026 s and p95 latency was 34.146 s. The current ablation harness reproduced M5's improvement from R@5 9.1% to 18.2% on the 18-query manifest, but M1–M4 were identical and the KIS-C, VQA, concurrency, and HNSW rows are configuration literals rather than independent measured runs. Therefore, the evidence supports a diagnostic finding—not the stronger manuscript claims of 80–100% retrieval, 1.000 MRR, zero hallucination in a general VQA population, or 8.03x production speedup.
+The prior direct replay is retained only as a historical non-WeMM diagnostic. It was generated while the environment selected Qwen3-VL-Embedding-2B, whereas the paper specifies Tencent WeMM-Embedding-4B. It must not be used to evaluate the WeMM system. After the configuration correction, a fresh reindex and replay are required before any new accuracy or latency claim.
 
 ## Research questions and hypotheses
 

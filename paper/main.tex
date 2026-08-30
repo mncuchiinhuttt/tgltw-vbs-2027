@@ -83,8 +83,7 @@ The Video Browser Showdown (VBS) evaluates exploratory and interactive video ret
 Recent winning systems, such as PraK V4~\cite{jackl2026prak}, NII-UIT~\cite{tran2026niiuit}, and Exquisitor~\cite{khan2026exquisitor}, demonstrate that competitive success requires both sub-second query latency and high-precision discrimination across visually confusing scenes. However, existing pipelines often suffer from three critical bottlenecks: (1) \emph{Index Dilution and Semantic Drift}: flat keyframe indexing over millions of frames causes repetitive hits from identical videos to crowd out relevant candidates; (2) \emph{Conversational Degradation}: multi-turn KIS-C queries lose persistent entity constraints and fail to penalize operator-rejected attributes; and (3) \emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s delays, while ungrounded VQA models invent plausible answers on missing or corrupt video frames, incurring heavy submission penalties.
 
 To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), an evidence-carrying multimodal retrieval architecture engineered for VBS 2027. The core technical contributions of our system are:
-\begin{enumerate}
-    \item \textbf{High-Capacity Multimodal Representation with MRL}: We integrate the 4-billion-parameter Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (MRL), generating unified 2,048-dimensional dense vectors indexed via Hierarchical Navigable Small World (HNSW)~\cite{malkov2018efficient} on Qdrant~\cite{qdrant}.
+    \item \textbf{High-Capacity Multimodal Representation with MRL}: We integrate Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (MRL), generating unified 2,048-dimensional dense vectors indexed via Hierarchical Navigable Small World (HNSW)~\cite{malkov2018efficient} on Qdrant~\cite{qdrant}. The exact checkpoint revision is frozen in the reproducibility manifest for each experiment.
     \item \textbf{Peak Conversational Retrieval Engine (KIS-C)}: We establish an entity-preserving multi-turn CQR pipeline coupled with dynamic ambiguity detection (Distinct Video Ratio + Score Margin Ambiguity), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative feedback filtering that immediately dampens rejected visual features.
     \item \textbf{Parallelized Fail-Closed Grounded VQA}: We implement an $8\times$ concurrent ThreadPool scoring pipeline that verifies physical media provenance, applies object detector crops, and enforces a strict fail-closed contract (\code{UNKNOWN/N/A} on missing/invalid evidence), eliminating hallucinations.
     \item \textbf{Intra-Video Timeline Explorer \& Decoupled RAG Benchmark}: We introduce a sub-shot reranker allowing operators to search within a confirmed video, accompanied by an empirical multi-axis ablation suite.
@@ -109,7 +108,7 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
   arrow/.style={-{Latex[length=2mm]}, thick}
 ]
 \node[box, minimum width=2.6cm] (assets) {\textbf{Video assets}\\V3C1--3, MVK, LHE,\\metadata, ASR, shots};
-\node[stage, right=6mm of assets, minimum width=2.8cm] (offline) {\textbf{Offline processing}\\WeMM-4B + SigLIP,\\PP-OCRv6, Whisper, ASR};
+\node[stage, right=6mm of assets, minimum width=2.8cm] (offline) {\textbf{Offline processing}\\selected embedding + SigLIP,\\PP-OCRv6, Whisper, ASR};
 \node[stage, right=6mm of offline, minimum width=2.8cm] (index) {\textbf{Qdrant HNSW index}\\2048d visual vectors,\\text\_blob, payload schema};
 \node[stage, right=6mm of index, minimum width=2.9cm] (retrieve) {\textbf{Hybrid fast search}\\HNSW + BM25 payload,\\4-way RRF, coherence};
 \node[box, right=6mm of retrieve, minimum width=2.8cm] (operator) {\textbf{Operator Console}\\ranked evidence, VQA,\\timeline, DRES submit};
@@ -134,12 +133,11 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 \label{sec:architecture}
 
 \subsection{Offline Indexing and Multimodal Representation}
-The offline ingestion pipeline consumes official V3C Master Shot Boundaries (\code{msb.tar.gz}) and Video Metadata (\code{info.tar.gz}) supplemented by TransNetV2~\cite{soucek2020transnetv2}. For each shot, representative keyframes are extracted via farthest-point visual variance and sharpness scoring. 
+The offline ingestion pipeline consumes official V3C Master Shot Boundaries (\code{msb.tar.gz}) and Video Metadata (\code{info.tar.gz}) supplemented by TransNetV2~\cite{soucek2020transnetv2}. For each shot, representative keyframes are extracted via coverage and sharpness scoring.
 
-Each keyframe is encoded with Tencent WeMM-Embedding-4B~\cite{wemm2025}, producing unified 2,048-dimensional multimodal vectors with MRL truncation. Speech transcripts extracted via faster-whisper~\cite{radford2022whisper}, bounding boxes from YOLOE-26, and on-screen text from PP-OCRv6 are joined into a composite full-text \code{text\_blob} field. Vectors and payloads are stored in Qdrant collections (\code{visual\_keyframes\_v1} with 177k+ points, \code{speech\_segments\_v1}, and \code{audio\_segments\_v1}).
-
+Each keyframe is encoded with the selected multimodal embedding checkpoint, producing unified 2,048-dimensional vectors with MRL truncation when configured. Speech transcripts extracted via faster-whisper~\cite{radford2022whisper}, bounding boxes from YOLOE-26, and on-screen text from PP-OCRv6 are joined into a composite full-text \code{text\_blob} field. Vectors and payloads are stored in Qdrant; the exact checkpoint identity and collection dimension are recorded per benchmark manifest.
 \subsection{Hybrid Retrieval and Fusion}
-Online text queries undergo contextual query rewriting (CQR) and optional hypothetical document expansion (HyDE). Dense vector search on WeMM-4B, secondary SigLIP dense search~\cite{zhai2023sigmoid}, and lexical payload full-text search are fused via weighted Reciprocal Rank Fusion (RRF):
+Online text queries undergo contextual query rewriting (CQR) and optional hypothetical document expansion (HyDE). Dense vector search using the selected embedding checkpoint, secondary SigLIP dense search~\cite{zhai2023sigmoid}, and lexical payload full-text search are fused via weighted Reciprocal Rank Fusion (RRF):
 \begin{equation}
 \operatorname{RRF}(d) = \sum_{m \in \mathcal{M}} \frac{w_m}{k + \operatorname{rank}_m(d)}
 \end{equation}
@@ -168,20 +166,18 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \node[lane] (l1) at (0, 0) {KIS-V};
 \node[pbox, right=3mm of l1] (v1) {visual clip / img};
 \node[pstage, right=3mm of v1] (v2) {sample $\leq$8 frames};
-\node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
+\node[pstage, right=3mm of v2] (v3) {selected embed};
 \node[pstage, right=3mm of v3] (v4) {parallel HNSW};
 \node[pbox, right=3mm of v4] (v5) {merge \& submit};
 \foreach \a/\b in {v1/v2,v2/v3,v3/v4,v4/v5} {\draw[arrow] (\a) -- (\b);}
-
 % Lane 2: KIS-T
 \node[lane, below=7mm of l1] (l2) {KIS-T};
 \node[pbox, right=3mm of l2] (t1) {text query};
 \node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
-\node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
+\node[pstage, right=3mm of t2] (t3) {selected embed + BM25};
 \node[pstage, right=3mm of t3] (t4) {RRF + diversify};
 \node[pbox, right=3mm of t4] (t5) {parallel VLM $\to$ submit};
 \foreach \a/\b in {t1/t2,t2/t3,t3/t4,t4/t5} {\draw[arrow] (\a) -- (\b);}
-
 % Lane 3: KIS-C
 \node[lane, below=7mm of l2] (l3) {KIS-C};
 \node[pbox, right=3mm of l3] (c1) {turn + history};
@@ -248,7 +244,7 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \label{sec:evaluation}
 
 \subsection{Experimental Setup}
-We evaluate AEGIS in two explicitly separated tracks. The offline replay track uses frozen local media, index, model, configuration, and annotated query manifests; it is a diagnostic and not an official VBS/DRES leaderboard score. Retrieval efficacy is measured by Recall@$K$ ($K \in \{1,5,10,20\}$) and MRR, conversational search by session-level rank progression and Ambiguity Index $A \in [0,1]$, and grounded VQA by frame localization, Exact Match, token-F1, grounded-answer rate, unsupported-answer rate, and safe-refusal rate. Task-specific denominators are retained. The live DRES track, when available, will additionally report task clock, time-to-first-correct, false submissions, accepted-shot diversity, and official judge outcomes.
+We evaluate AEGIS in two explicitly separated tracks. The offline replay track uses frozen local media, index, model, configuration, and annotated query manifests; it is a diagnostic and not an official VBS/DRES leaderboard score. Retrieval efficacy is measured by Recall@$K$ ($K \in \{1,5,10,20\}$) and MRR, conversational search by session-level rank progression and Ambiguity Index $A \in [0,1]$, and grounded VQA by frame localization, Exact Match, token-F1, grounded-answer rate, unsupported-answer rate, and safe-refusal rate. Task-specific denominators are retained. The live DRES track, when available, will additionally report task clock, time-to-first-correct, false submissions, accepted-shot diversity, and official judge outcomes. The visual/text embedding is Tencent WeMM-Embedding-4B; Qwen is used only as an optional VLM generator and never as the embedding model.
 \input{benchmark_protocol.tex}
 
 \begin{table}[t]
@@ -260,20 +256,16 @@ We evaluate AEGIS in two explicitly separated tracks. The offline replay track u
 \begin{tabular}{lccccc}
 \textbf{Pipeline Configuration / Stage} & \textbf{R@1 (\%)} & \textbf{R@5 (\%)} & \textbf{R@10 (\%)} & \textbf{MRR} & \textbf{p50 Lat (s)} \\
 \midrule
-\multicolumn{6}{l}{\emph{Ablation 1: Multimodal Retrieval \& Fusion Components}} \\
-(M1) Dense Only (WeMM-4B) & 20.0 & 50.0 & 70.0 & 0.342 & 0.038 \\
-(M2) Dense + Sparse BM25 Payload & 30.0 & 70.0 & 80.0 & 0.468 & 0.052 \\
-(M3) Dense + BM25 + SigLIP Secondary & 40.0 & 80.0 & 90.0 & 0.541 & 0.076 \\
-(M4) + 4-Way Weighted RRF Fusion & 50.0 & 90.0 & 100.0 & 0.655 & 0.084 \\
-(M5) + Temporal Coherence \& Diversify & 60.0 & 100.0 & 100.0 & 0.748 & 0.091 \\
-(M6) + Parallel VLM Rerank (Full Engine) & \textbf{80.0} & \textbf{100.0} & \textbf{100.0} & \textbf{0.885} & 1.480 \\
+\multicolumn{6}{l}{\emph{Illustrative ablation layout; measured replay results are reported below.}} \\
+(M1) Dense Only (selected checkpoint) & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+(M2) Dense + Sparse BM25 Payload & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+(M3) Dense + BM25 + SigLIP Secondary & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+(M4) + 4-Way Weighted RRF Fusion & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+(M5) + Temporal Coherence \& Diversify & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+(M6) + Parallel VLM Rerank (requires configured VLM) & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
 \midrule
-\multicolumn{6}{l}{\emph{Ablation 2: Conversational KIS-C Multi-Turn Dynamics}} \\
-(C1) Turn 1: Initial Vague Query & 0.0 & 40.0 (R@3) & 60.0 & 0.285 & 0.088 (Amb 0.82) \\
-(C2) Turn 2: Naive History Concat & 30.0 & 60.0 (R@3) & 80.0 & 0.472 & 0.092 (Amb 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & 60.0 & 80.0 (R@3) & 100.0 & 0.715 & 0.110 (Amb 0.58) \\
-(C4) Turn 2: + Compound N-gram Boost & 90.0 & 100.0 (R@3) & 100.0 & 0.945 & 0.115 (Amb 0.42) \\
-(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{100.0} & \textbf{100.0 (R@3)} & \textbf{100.0} & \textbf{1.000} & \textbf{0.120 (Amb 0.24)} \\
+\multicolumn{6}{l}{\emph{KIS-C rows require paired session-level measurements and are not populated here.}} \\
+(C1--C5) Multi-turn KIS-C stages & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
 \bottomrule
 \end{tabular}%
 }
@@ -288,30 +280,15 @@ We evaluate AEGIS in two explicitly separated tracks. The offline replay track u
 \begin{tabular}{lcccc}
 \textbf{Ablation Dimension \& Setting} & \textbf{Primary Metric} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
 \midrule
-\multicolumn{5}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
-Ungrounded Whole-Frame VLM & Exact Match: 55.0\% & 62.0\% & 38.0\% (Hazardous) & 1.42s \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 80.0\% & 86.0\% & 14.0\% & 1.55s \\
-AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 100.0\%} & \textbf{100.0\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
-\midrule
-\multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
-Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
-Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & --- & --- & 3.98s ($3.73\times$) \\
-Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$ speedup)} \\
-\midrule
-\multicolumn{5}{l}{\emph{Ablation 5: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
-Fast Mode (HNSW $ef=64$) & Recall vs Exact: 97.8\% & Instant Screen & --- & \textbf{12.4ms} \\
-Standard Mode (HNSW $ef=128$) & Recall vs Exact: 99.2\% & Balanced Live & --- & 22.8ms \\
-Deep Mode (HNSW $ef=512$) & Recall vs Exact: 99.9\% & High Ambiguity & --- & 48.6ms \\
-Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & --- & 118.5ms \\
+\multicolumn{5}{l}{\emph{Measured replay summary; unsupported configurations remain N/A.}} \\
+VQA grounding and safety & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+Concurrency scaling & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
+HNSW precision ladder & \textit{N/A} & \textit{N/A} & \textit{N/A} & \textit{N/A} \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 \subsection{Empirical Findings}
-The measured replay should be read as a failure-oriented diagnostic, not as a leaderboard claim. On the ten-case suite, five cases entered the target top-20 (50.0\%; Wilson 95\% CI 23.7--76.3\%). KIS-T returned ranks 31, 4, and 10; ordinary VQA exact match was 0/2; the one negative VQA case passed fail-closed refusal (1/1); and both KIS-C targets were outside the top-20. Median end-to-end latency was 24.026\,s and p95 was 34.146\,s.
-
-The extended 18-query ablation replay considered 11 retrieval-evaluable cases. M1--M4 each produced R@1/R@5/R@10 of 9.1/9.1/9.1\% and MRR 0.097; M5--M6 produced 9.1/18.2/18.2\% and MRR 0.141. Because the current harness does not emit paired per-query outputs for every configuration and does not activate all named branches independently, these values cannot establish component-level causal effects. The current KIS-C, VQA, concurrency, and HNSW rows are configuration diagnostics and require instrumented repeated measurements before publication.
-
 \begin{enumerate}
     \item \textbf{Retrieval Reliability}: The direct replay exposes substantial head-ranking weakness despite a functioning search path.
     \item \textbf{Grounding Safety}: One negative case demonstrates safe refusal, but its denominator is insufficient for a population-level safety claim.

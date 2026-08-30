@@ -63,11 +63,9 @@ def load_vlm():
 
 def load_embedder():
     import config
-    from models.embedding import QwenVL8BEmbedder, WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
+    from models.embedding import WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
     if config.EMBEDDING_OPTION == "local":
-        if "wemm" in str(config.VISUAL_EMBEDDING_MODEL_ID).lower():
-            return WeMMEmbedding4BEmbedder()
-        return QwenVL8BEmbedder()
+        return WeMMEmbedding4BEmbedder()
     elif config.EMBEDDING_OPTION == "cloud":
         return DashScopeCloudEmbedder()
     else:

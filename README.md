@@ -21,8 +21,7 @@ In competitive video browsing over thousands of video hours (such as **V3C1–3*
 |         │                                                                                               |
 |         ▼                                                                                               |
 |  [Offline Ingestion & Multimodal Preprocessing]                                                         |
-|         ├── Master Shot Segmentation (MSB / TransNetV2) + Variance Keyframe Sampling                    |
-|         ├── Multimodal Dense Embedding: Tencent WeMM-Embedding-4B (4B params, 2048d MRL)                |
+|         ├── Multimodal Dense Embedding: Tencent WeMM-Embedding-4B (2048d MRL)                          |
 |         ├── Enriched Payloads: PP-OCRv6, faster-whisper Multilingual ASR, YOLOE-26 BBoxes               |
 |         └── Qdrant HNSW Vector Database Collections (visual_keyframes_v1, speech, audio)               |
 |                                                                                                         |
@@ -30,9 +29,6 @@ In competitive video browsing over thousands of video hours (such as **V3C1–3*
 |         ├── Fast Path: WeMM-4B Dense Vector + BM25 Payload Text + SigLIP (4-Way Weighted RRF)           |
 |         ├── Budgeted Escalation: Fast HNSW (12ms) -> Deep HNSW (ef=512) -> Exact Brute-Force Scan       |
 |         ├── Peak KIS-C: Multi-turn Entity CQR + Compound N-gram Boosting + Negative Feedback Filter      |
-|         ├── Fail-Closed VQA: Bounding-box YOLOE crop + Parallel VLM (8x ThreadPool, zero hallucination) |
-|         └── Intra-Video Explorer: Timeline keyframe browser (+-30s) + In-Video Sub-shot Reranker        |
-|                                                                                                         |
 |  [Web Application & Evaluation Suite]                                                                   |
 |         ├── React + Vite Operator Console (Light-Mode Anti-Slop Design System)                          |
 |         ├── DRES REST API Proxy (Live Judge Submission & State Logging)                                 |
@@ -95,9 +91,9 @@ tgltw-vbs-2027/
 │   └── run_vbs_audit.py           # Bounded offline audit runner
 │
 ├── models/                        # [SHARED PYTHON MODELS]
-│   ├── embedding.py               # WeMMEmbedding4BEmbedder, QwenVL8BEmbedder, DashScope
+│   ├── embedding.py               # WeMMEmbedding4BEmbedder, cloud fallback
 │   ├── openai_vlm.py              # OpenAI/Gemini vision-language client (ThreadPool batching)
-│   ├── qwen_vlm.py                # Local Qwen-VL vision-language model loader
+│   ├── qwen_vlm.py                # Optional local VLM generator, not embedding
 │   ├── object_detector.py         # YOLOE-26 open-vocabulary object detector
 │   ├── asr.py                     # faster-whisper multilingual speech transcriber
 │   ├── siglip_embedder.py         # SigLIP secondary dense embedder

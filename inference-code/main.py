@@ -14,7 +14,7 @@ from config import (
 )
 from models.qwen_vlm import QwenVLM
 from models.openai_vlm import OpenAIVLM
-from models.embedding import QwenVL8BEmbedder, DashScopeCloudEmbedder
+from models.embedding import WeMMEmbedding4BEmbedder, DashScopeCloudEmbedder
 from models.siglip_embedder import SigLIPEmbedder
 from models.object_detector import ObjectDetector
 
@@ -32,7 +32,7 @@ def load_vlm():
 
 def load_embedder():
     if EMBEDDING_OPTION == "local":
-        return QwenVL8BEmbedder()
+        return WeMMEmbedding4BEmbedder()
     elif EMBEDDING_OPTION == "cloud":
         return DashScopeCloudEmbedder()
     else:

@@ -31,11 +31,11 @@ preprocessing/
 
 ## Features
 
-1. **Shot Boundary Detection & Adaptive Keyframe Sampling**: Uses official V3C shot boundaries and representative keyframes when they are mounted. For raw videos it uses streaming TransNetV2 by default, with PySceneDetect as a runtime fallback. Local candidates use CLIP variance to size a per-shot budget and Qwen3-Embedding-VL farthest-point sampling, with a small configurable Laplacian-sharpness bonus (`KEYFRAME_SHARPNESS_WEIGHT`) to prefer readable frames.
-2. **Flexible VLM, Embedding & Object Detection Engines**:
-   - VLM options (`VLM_OPTION`): local offline HuggingFace models (`generate_batch()` runs one true batched `model.generate()` call) or any OpenAI-compatible API (`OPENAI_BASE_URL`/`OPENAI_VLM_MODEL_NAME` - OpenAI itself, an alternative provider such as QwenCloud, or a self-hosted vLLM server for batch inference via the root `host_vllm.sh`). `generate_batch()` issues concurrent requests (`VLM_BATCH_CONCURRENCY`) so a batch-serving backend gets real throughput benefit.
-   - Embedding options (`EMBEDDING_OPTION`): local `QwenVL8BEmbedder` or `DashScopeCloudEmbedder` (cloud, model configurable via `DASHSCOPE_EMBEDDING_MODEL_NAME`, no local weights - useful to cut memory pressure when running several large local models at once).
-   - Object Detection: YOLOE-26 (open-vocabulary, text-prompted, NMS-free) to locate objects zero-shot based on label lists, with a supplementary tiled detection pass for small objects (e.g. license plates) and optional example-crop visual prompting for categories that are awkward to phrase in text.
+1. **Shot Boundary Detection & Adaptive Keyframe Sampling**: Uses official V3C shot boundaries and representative keyframes when they are mounted. For raw videos it uses streaming TransNetV2 by default, with PySceneDetect as a runtime fallback. Local candidates use CLIP variance to size a per-shot budget and Tencent WeMM-Embedding-4B farthest-point sampling, with a small configurable Laplacian-sharpness bonus (`KEYFRAME_SHARPNESS_WEIGHT`) to prefer readable frames.
+2. **Flexible VLM, WeMM Embedding & Object Detection Engines**:
+   - VLM options (`VLM_OPTION`): local offline HuggingFace models or any OpenAI-compatible API.
+   - The visual/text embedding is fixed to Tencent WeMM-Embedding-4B; Qwen is never used for embeddings.
+   - Object Detection: YOLOE-26 (open-vocabulary, text-prompted, NMS-free) with optional tiled detection.
 3. **OCR via PP-OCRv6**: Detection + recognition run directly through PP-OCRv6; only low-confidence crops below `OCR_REC_SCORE_THRESHOLD` get escalated to the lightweight fallback VLM for a re-read. OCR text is preserved after generic Unicode NFC normalization without language-specific accent mapping. Optional overlapping-tile pass (`OCR_USE_TILING`, off by default) handles small/corner text.
 4. **Unified Per-Frame VLM Analysis**: One JSON call per keyframe (caption + objects/colors/count/scene_type/attributes) instead of two separate calls, batched across a scene's keyframes via `generate_batch()`.
 5. **Speech & Audio Feature Extractors**: Speech transcription via faster-whisper (Whisper large-v3-turbo, with VAD + confidence filtering), environment audio indexing via M2D-CLAP.
