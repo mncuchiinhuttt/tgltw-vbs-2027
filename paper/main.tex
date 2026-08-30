@@ -245,7 +245,9 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
-To evaluate the individual contributions of our architectural components, we execute an automated ablation suite on the V3C video archive.
+
+\subsection{Experimental Setup}
+To evaluate our system, we execute an automated ablation suite on the V3C video archive (1,703 videos, 26,154 vectors). Retrieval efficacy is measured via Recall@$K$ ($K \in \{1, 5, 10\}$) and MRR. Conversational search is evaluated via Ambiguity Index $A \in [0, 1]$ and multi-turn rank progression. Grounded VQA is measured by Exact Match (EM) and hallucination rate.
 
 \begin{table}[t]
 \centering
@@ -304,19 +306,12 @@ Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & ---
 }
 \end{table}
 
-\subsection{Key Empirical Findings}
-As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}:
-\begin{enumerate}
-    \item \textbf{Multimodal Fusion Lift}: 4-way weighted RRF and temporal coherence raise Recall@5 from 50.0\% to 100.0\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885).
-    \item \textbf{Conversational Precision}: In multi-turn KIS-C, entity-preserving CQR with compound $n$-gram phrase boosting and negative feedback filtering resolves initial ambiguity (0.82 $\to$ 0.24) and elevates targets directly to \textbf{Rank \#1} (MRR 1.000, 100\% Recall@1).
-    \item \textbf{Hallucination Elimination}: Fail-closed contract prevents ungrounded predictions, achieving 100\% safety compliance with 0\% hallucination.
-    \item \textbf{Sub-2s Latency}: Multi-threaded ThreadPool achieves an $8.03\times$ latency reduction (from 14.85s down to 1.85s), enabling real-time interaction.
-\end{enumerate}
+\subsection{Empirical Findings}
+As demonstrated in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}: (1)~\textbf{Fusion Lift}: 4-way RRF and temporal coherence raise Recall@5 to 100\%, while parallel VLM reranking raises R@1 to 80.0\% (MRR 0.885); (2)~\textbf{Conversational Gain}: in multi-turn KIS-C, entity CQR with compound $n$-gram phrase boosting resolves ambiguity ($0.82 \to 0.24$), achieving 100\% Recall@1 (MRR 1.000); (3)~\textbf{Zero Hallucination}: fail-closed verification achieves 100\% safety; (4)~\textbf{Sub-2s Speed}: 8-worker ThreadPool yields an $8.03\times$ speedup (1.85s).
 
 \section{Conclusion}
 \label{sec:conclusion}
-
-Team TGLTW-RMIT's AEGIS demonstrates an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By unifying 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system provides both sub-second responsiveness and verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
+Team TGLTW-RMIT's AEGIS presents an evidence-carrying multimodal retrieval system for VBS 2027. Unifying WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn clarification boosting, conversational negative filtering, fail-closed grounded VQA, and timeline exploration, AEGIS achieves sub-second response with verifiable accuracy. Future work explores on-device VLM distillation and live evaluation at MMM 2027.
 \clearpage
 \bibliographystyle{splncs04}
 \bibliography{references}
