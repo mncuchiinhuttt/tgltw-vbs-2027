@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AEGIS LaTeX Studio - VBS 2027</title>
+    <title>AEGIS Paper Review Studio - VBS 2027</title>
     
     <!-- Google Fonts: JetBrains Mono & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,12 +41,6 @@
 
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Ace Editor CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-latex.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-bibtex.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/theme-tomorrow_night_eighties.js"></script>
     
     <!-- PDF.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -62,87 +56,65 @@
             pointer-events: none;
         }
 
-        #aceEditor {
-            font-family: "JetBrains Mono", monospace !important;
-            font-size: 13px !important;
-            line-height: 1.65 !important;
-            letter-spacing: normal !important;
-        }
-
-        #aceEditor .ace_text-layer,
-        #aceEditor .ace_line,
-        #aceEditor .ace_cursor,
-        #aceEditor .ace_gutter {
-            font-family: "JetBrains Mono", monospace !important;
-            letter-spacing: normal !important;
-            font-variant-ligatures: none !important;
-        }
-
         .resizer-x {
             width: 4px;
             cursor: col-resize;
-            background: #1e293b;
-            transition: background 0.15s ease, width 0.15s ease;
+            background: rgba(30, 41, 59, 0.8);
+            transition: background 0.15s ease;
             position: relative;
-            z-index: 30;
+            z-index: 25;
             flex-shrink: 0;
         }
 
         .resizer-x:hover, .resizer-x.active {
-            background: #00F0FF;
-            width: 6px;
-        }
-
-        .pdf-scroll-view {
-            background: #0B0F19;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-            background-size: 16px 16px;
+            background: #E60028;
+            box-shadow: 0 0 10px rgba(230, 0, 40, 0.6);
         }
 
         .pdf-page-container {
+            box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            background: #FFFFFF;
             position: relative;
-            background: white;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.15s ease;
         }
 
-        .pdf-page-container canvas {
-            display: block;
-            border-radius: 4px;
+        .pdf-page-container:hover {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(230, 0, 40, 0.3);
         }
 
-        .textLayer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            overflow: hidden;
-            opacity: 0.25;
-            line-height: 1.0;
-        }
-
-        .textLayer ::selection {
-            background: rgba(0, 240, 255, 0.7);
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
+        /* Custom Scrollbars */
         ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: #090D16;
         }
         ::-webkit-scrollbar-thumb {
             background: #1E293B;
-            border-radius: 999px;
+            border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #334155;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Highlight animation for selected comments */
+        @keyframes commentPulse {
+            0%, 100% { border-color: rgba(230, 0, 40, 0.4); }
+            50% { border-color: rgba(0, 240, 255, 0.9); box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
+        }
+
+        .comment-target-highlight {
+            animation: commentPulse 2s ease infinite;
         }
 
         .glass-panel {
@@ -163,20 +135,15 @@
 </head>
 <body class="bg-[#070A11] text-slate-100 h-screen flex flex-col overflow-hidden font-sans select-none antialiased">
 
-    <!-- Top Navigation Bar (RMIT Cyber Style) -->
-    <header class="bg-[#090D16] border-b border-slate-800/80 px-3 h-12 flex items-center justify-between gap-3 z-30 shadow-lg flex-shrink-0">
+    <!-- Top Navigation Bar (Review Mode Only) -->
+    <header class="bg-[#090D16] border-b border-slate-800/80 px-4 h-12 flex items-center justify-between gap-3 z-30 shadow-lg flex-shrink-0">
         
         <!-- Left: Brand Logo & Title -->
-        <div class="flex items-center gap-2.5 min-w-0">
-            <!-- Sidebar Toggle -->
-            <button onclick="toggleLeftSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition" title="Toggle File Tree (Ctrl+B)">
-                <i data-lucide="panel-left" class="w-4 h-4"></i>
-            </button>
-
+        <div class="flex items-center gap-3 min-w-0">
             <!-- AEGIS Cyber Badge -->
             <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-rmit-red/15 border border-rmit-red/40 shadow-inner">
                 <span class="w-2 h-2 rounded-full bg-rmit-red animate-pulse"></span>
-                <span class="text-xs font-black tracking-wider text-white font-mono uppercase">AEGIS STUDIO</span>
+                <span class="text-xs font-black tracking-wider text-white font-mono uppercase">AEGIS REVIEW STUDIO</span>
             </div>
 
             <div class="h-4 w-px bg-slate-800"></div>
@@ -184,67 +151,34 @@
             <div class="flex items-center gap-1.5 text-xs text-slate-300 truncate font-mono">
                 <span class="text-slate-500 font-semibold">VBS-2027</span>
                 <span class="text-slate-600">/</span>
-                <i data-lucide="file-code" class="w-3.5 h-3.5 text-cyber-cyan"></i>
-                <span id="navCurrentFileName" class="text-slate-100 font-semibold truncate">main.tex</span>
-            </div>
-
-            <!-- Engine Selection -->
-            <div class="relative hidden sm:block">
-                <select id="engineSelect" class="bg-slate-900 text-slate-300 border border-slate-800 rounded-lg px-2 py-1 text-[11px] font-mono appearance-none pr-5 focus:outline-none focus:border-cyber-cyan cursor-pointer hover:border-slate-700">
-                    <option value="latexmk" selected>latexmk (auto)</option>
-                    <option value="pdflatex">pdflatex</option>
-                    <option value="xelatex">xelatex</option>
-                </select>
-                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-1.5 top-2 pointer-events-none"></i>
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rmit-red"></i>
+                <span class="text-slate-100 font-semibold truncate">main.pdf (8 Pages Springer LNCS)</span>
             </div>
         </div>
 
-        <!-- Center: View Mode Switcher & Primary Actions -->
+        <!-- Center: Paper Info & Review Title -->
         <div class="flex items-center gap-2">
-            <!-- View Mode Switcher (IDE vs Review Only) -->
-            <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 font-mono text-[11px]">
-                <button onclick="setViewMode('split')" id="btnViewSplit" class="px-2.5 py-1 rounded-md text-white bg-slate-800 font-semibold flex items-center gap-1 transition shadow-sm" title="Split View: Editor + PDF + Comments">
-                    <i data-lucide="columns" class="w-3 h-3 text-cyber-cyan"></i>
-                    <span class="hidden md:inline">Split IDE</span>
-                </button>
-                <button onclick="setViewMode('pdf-only')" id="btnViewPdfOnly" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1 transition" title="Advisor Focus View: Fullscreen PDF + Comments">
-                    <i data-lucide="book-open" class="w-3 h-3 text-rmit-red"></i>
-                    <span class="hidden md:inline">PDF Review</span>
-                </button>
-            </div>
-
-            <div class="h-4 w-px bg-slate-800 mx-0.5 hidden sm:block"></div>
-
-            <!-- Save Button -->
-            <button onclick="saveCurrentFile()" id="saveBtn" class="bg-slate-800 hover:bg-slate-750 active:scale-95 text-slate-200 text-xs font-semibold rounded-lg px-3 py-1.5 flex items-center gap-1.5 border border-slate-700 transition" title="Save File (Ctrl+S)">
-                <i data-lucide="save" class="w-3.5 h-3.5 text-slate-400"></i>
-                <span id="saveIndicator">Save</span>
-            </button>
-
-            <!-- Recompile Button (RMIT Red Primary Action) -->
-            <button onclick="triggerSaveAndCompile()" id="compileBtn" class="bg-rmit-red hover:bg-rmit-redDark active:scale-95 text-white text-xs font-bold rounded-lg px-3.5 py-1.5 flex items-center gap-1.5 shadow-md glow-red transition" title="Recompile PDF (Ctrl+Enter)">
-                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-                <span>Recompile</span>
-            </button>
-
-            <!-- Status Indicator -->
-            <div id="statusBadge" class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-[11px] font-mono text-slate-300">
+            <div class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg flex items-center gap-2 text-xs font-mono text-slate-300 shadow-sm">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 text-rmit-red"></i>
+                <span class="font-semibold text-slate-200">Paper Review & Advisor Feedback Mode</span>
+                <span class="text-slate-600">|</span>
                 <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span id="statusText" class="hidden lg:inline">Ready</span>
+                <span id="statusText" class="text-slate-400">Ready</span>
             </div>
         </div>
+
         <!-- Right: Utility Controls -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
             <!-- Review Comments Button -->
             <button onclick="toggleRightSidebar()" id="headerCommentsBtn" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 transition" title="Advisor Comments">
                 <i data-lucide="message-square" class="w-3.5 h-3.5 text-cyber-cyan"></i>
-                <span class="hidden sm:inline">Review</span>
+                <span class="hidden sm:inline">Review Panel</span>
                 <span id="commentsCountBadge" class="bg-rmit-red text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
             </button>
 
-            <!-- Toggle Logs -->
-            <button onclick="toggleLogs()" id="logToggleBtn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg transition" title="Compilation Logs (Ctrl+L)">
-                <i data-lucide="terminal" class="w-4 h-4"></i>
+            <!-- Reload PDF -->
+            <button onclick="reloadPdfDocument()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 p-1.5 rounded-lg transition" title="Reload PDF">
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
             </button>
 
             <div class="h-4 w-px bg-slate-800 mx-0.5"></div>
@@ -261,78 +195,16 @@
         </div>
     </header>
 
-    <!-- Main Workspace Container -->
+    <!-- Main Workspace Container (Review Focus: PDF Viewer + Review Comments Panel) -->
     <div class="flex-1 flex relative overflow-hidden w-screen" id="workspaceContainer">
 
-        <!-- 1. LEFT SIDEBAR: FILE EXPLORER & ASSET UPLOAD -->
-        <div class="left-sidebar w-[230px] h-full bg-[#080C14] border-r border-slate-800/80 flex flex-col relative z-20 min-w-[160px] max-w-[400px] flex-shrink-0" id="leftSidebar">
-            <!-- Sidebar Header -->
-            <div class="px-3 py-2.5 bg-[#0A0F1A] border-b border-slate-800 flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5 font-mono">
-                    <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-cyber-cyan"></i>
-                    FILES & FIGURES
-                </span>
-                
-                <div class="flex items-center gap-1">
-                    <button onclick="createNewItem('file')" class="text-slate-400 hover:text-cyber-cyan p-1 rounded hover:bg-slate-800 transition" title="New TeX / Bib File">
-                        <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
-                    </button>
-                    <button onclick="createNewItem('folder')" class="text-slate-400 hover:text-cyber-cyan p-1 rounded hover:bg-slate-800 transition" title="New Folder">
-                        <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
-                    </button>
-                    <button onclick="document.getElementById('fileUploadInput').click()" class="text-slate-400 hover:text-emerald-400 p-1 rounded hover:bg-slate-800 transition" title="Upload Files / Figures">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Hidden File Input for Upload -->
-            <input type="file" id="fileUploadInput" multiple class="hidden" onchange="handleDirectFileUpload(event)">
-
-            <!-- File Tree View Container -->
-            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5 text-xs select-none font-mono">
-                <div class="text-slate-500 text-center py-6 text-xs">Loading tree...</div>
-            </div>
-
-            <!-- Upload Figures Drop Zone Footer -->
-            <div class="p-2.5 bg-[#0A0F1A] border-t border-slate-800/80">
-                <div onclick="document.getElementById('fileUploadInput').click()" class="border border-dashed border-slate-700/80 hover:border-cyber-cyan/60 hover:bg-cyber-cyan/5 rounded-lg p-2.5 text-center cursor-pointer transition flex flex-col items-center gap-1 group">
-                    <i data-lucide="image-plus" class="w-4 h-4 text-slate-500 group-hover:text-cyber-cyan transition"></i>
-                    <span class="text-[10px] text-slate-400 font-medium font-mono">Drop figures or click to upload</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resizer 0: Between Left Sidebar and Editor -->
-        <div class="resizer-x" id="resizerTreeEditor" title="Drag to resize File Tree"></div>
-
-        <!-- 2. CENTER-LEFT: ACE LATEX CODE EDITOR -->
-        <div class="editor-pane flex-1 h-full flex flex-col bg-[#0A0F1A] relative min-w-[250px]" id="editorPane">
-            <!-- Editor Subheader -->
-            <div class="px-3.5 py-2 bg-[#090D16] border-b border-slate-800 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
-                <div class="flex items-center gap-2 min-w-0">
-                    <i data-lucide="code-2" class="w-3.5 h-3.5 text-cyber-cyan"></i>
-                    <span id="currentFileName" class="font-mono text-slate-200 font-semibold truncate">main.tex</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-[10px] text-slate-500 font-mono" id="editorModeBadge">LaTeX Syntax</span>
-                </div>
-            </div>
-
-            <!-- Ace Editor Target Container -->
-            <div id="aceEditor" class="flex-1 w-full h-full"></div>
-        </div>
-
-        <!-- Resizer 1: Between Editor and PDF Preview -->
-        <div class="resizer-x" id="resizerEditorPdf" title="Drag to resize Editor / Preview"></div>
-
-        <!-- 3. CENTER-RIGHT: PDF.JS REALTIME PREVIEW PANE -->
-        <div class="preview-pane flex-1 h-full flex flex-col bg-[#070A11] relative min-w-[250px]" id="previewPane">
+        <!-- 1. PDF.JS REALTIME PREVIEW PANE (FULLSCREEN MAIN VIEW) -->
+        <div class="preview-pane flex-1 h-full flex flex-col bg-[#070A11] relative min-w-[300px]" id="previewPane">
             <!-- Preview Controls Toolbar -->
             <div class="px-3 py-2 bg-[#090D16] border-b border-slate-800 flex items-center justify-between text-xs text-slate-400 z-10 flex-shrink-0">
                 <div class="flex items-center gap-1.5 font-mono">
                     <i data-lucide="file-text" class="w-3.5 h-3.5 text-rmit-red"></i>
-                    <span class="font-semibold text-slate-300">PDF Output</span>
+                    <span class="font-semibold text-slate-300">AEGIS Manuscript (main.pdf)</span>
                     <span id="pdfPageInfo" class="text-[11px] text-slate-500 ml-1.5">Loading...</span>
                 </div>
 
@@ -340,7 +212,7 @@
                     <button onclick="adjustZoom(-0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom Out">
                         <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <span id="zoomLevel" class="text-[11px] font-mono w-10 text-center font-medium text-slate-300">100%</span>
+                    <span id="zoomLevel" class="text-[11px] font-mono w-10 text-center font-medium text-slate-300">115%</span>
                     <button onclick="adjustZoom(0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom In">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     </button>
@@ -359,11 +231,11 @@
             </div>
         </div>
 
-        <!-- Resizer 2: Between PDF and Sidebar -->
-        <div class="resizer-x" id="resizerPdfComments" title="Drag to resize Right Panel"></div>
+        <!-- Resizer: Between PDF Preview and Review Comments -->
+        <div class="resizer-x" id="resizerPdfComments" title="Drag to resize Review Panel"></div>
 
-        <!-- 4. RIGHT SIDEBAR: REVIEW COMMENTS & ADVISOR FEEDBACK (UNIFIED PANEL) -->
-        <div class="right-panel w-[380px] h-full bg-[#080C14] border-l border-slate-800/80 flex flex-col relative z-20 min-w-[280px] max-w-[650px] flex-shrink-0" id="rightSidebar">
+        <!-- 2. RIGHT SIDEBAR: REVIEW COMMENTS & ADVISOR FEEDBACK (UNIFIED PANEL) -->
+        <div class="right-panel w-[420px] h-full bg-[#080C14] border-l border-slate-800/80 flex flex-col relative z-20 min-w-[280px] max-w-[700px] flex-shrink-0" id="rightSidebar">
             <!-- Sidebar Header -->
             <div class="px-3.5 py-2.5 bg-[#0A0F1A] border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-100 font-mono">
@@ -414,156 +286,55 @@
                         <i data-lucide="x" class="w-3 h-3"></i>
                     </button>
                 </div>
-                
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <input type="text" id="authorInput" placeholder="Your Name / Role (e.g. Advisor)" class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyber-cyan font-mono" />
+
+                <!-- Comment Input Area -->
+                <textarea id="commentTextInput" rows="2" placeholder="Write review feedback or note on this section..." class="w-full bg-[#080C14] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-rmit-red font-sans transition resize-none"></textarea>
+
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <!-- Author Input -->
+                        <input type="text" id="authorInput" placeholder="Your Name / Role" class="bg-[#080C14] border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyber-cyan font-mono w-32">
+                        
+                        <!-- Page Number Badge -->
+                        <div class="flex items-center gap-1 text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded-md border border-slate-800">
+                            <span>Page:</span>
+                            <input type="number" id="commentPageInput" min="1" max="8" value="1" class="w-7 bg-transparent text-white font-bold text-center focus:outline-none">
+                        </div>
                     </div>
-                    <div class="relative w-36">
-                        <select id="typeSelect" class="w-full bg-slate-900 text-slate-200 border border-slate-800 rounded-lg px-2 py-1.5 text-xs pr-6 appearance-none focus:outline-none focus:border-cyber-cyan cursor-pointer font-medium font-mono">
-                            <option value="suggestion">Suggestion</option>
-                            <option value="issue">Question / Issue</option>
-                            <option value="todo">Todo / Revision</option>
-                            <option value="praise">Praise</option>
-                        </select>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 absolute right-2 top-2 pointer-events-none"></i>
-                    </div>
-                </div>
 
-                <textarea id="commentTextInput" placeholder="Write feedback, instructions, or suggestions for the authors..." class="w-full bg-slate-900 text-slate-100 border border-slate-800 rounded-lg p-3 text-xs min-h-[90px] max-h-[220px] resize-y focus:outline-none focus:border-cyber-cyan leading-relaxed font-sans"></textarea>
-                <button onclick="submitComment()" class="w-full bg-rmit-red hover:bg-rmit-redDark active:scale-[0.99] text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 shadow-md glow-red transition font-mono uppercase tracking-wider">
-                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                    <span>Post Comment</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- 5. COMPILATION LOGS OVERLAY DRAWER -->
-        <div id="logsDrawer" class="absolute bottom-0 left-0 right-0 h-56 bg-[#060910]/95 backdrop-blur-xl border-t border-slate-800 z-40 flex flex-col transition-transform duration-200 translate-y-full shadow-2xl">
-            <div class="px-3.5 py-2 bg-[#090D16] border-b border-slate-800/80 flex items-center justify-between">
-                <div class="flex items-center gap-2 text-xs font-mono font-bold text-slate-300">
-                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyber-cyan"></i>
-                    <span>COMPILATION LOGS & ERRORS</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="clearLogs()" class="text-slate-400 hover:text-slate-200 text-xs px-2 py-0.5 rounded hover:bg-slate-800 font-mono transition">Clear</button>
-                    <button onclick="toggleLogs()" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
-            <pre id="logContent" class="flex-1 overflow-y-auto p-3.5 text-xs font-mono text-slate-300 leading-relaxed select-text whitespace-pre-wrap"></pre>
-        </div>
-
-    </div>
-
-    <!-- Image Preview Modal -->
-    <div id="imagePreviewModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#0A0F1A] border border-slate-700 rounded-xl max-w-2xl w-full p-4 flex flex-col gap-3 shadow-2xl animate-in zoom-in-95">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <div class="flex items-center gap-2 font-mono">
-                    <i data-lucide="image" class="w-4 h-4 text-cyber-cyan"></i>
-                    <span id="imageModalTitle" class="text-xs font-bold text-slate-200"></span>
-                </div>
-                <button onclick="closeImageModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded hover:bg-slate-800 transition">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <div class="flex-1 flex items-center justify-center bg-[#060910] p-4 rounded-lg border border-slate-800 max-h-[60vh] overflow-hidden">
-                <img id="imageModalImg" src="" alt="Preview" class="max-w-full max-h-[50vh] object-contain rounded">
-            </div>
-
-            <div class="flex items-center justify-between pt-1 font-mono">
-                <span id="imageModalInfo" class="text-[11px] text-slate-500"></span>
-
-                <div class="flex items-center gap-2">
-                    <button onclick="insertImageToLatex()" class="bg-rmit-red hover:bg-rmit-redDark text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
-                        <i data-lucide="file-input" class="w-3.5 h-3.5"></i>
-                        <span>Insert into LaTeX</span>
-                    </button>
-                    <button onclick="copyImagePath()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                        <span id="copyImgBtnText">Copy Path</span>
+                    <!-- Post Button -->
+                    <button onclick="postComment()" class="bg-rmit-red hover:bg-rmit-redDark active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-md transition font-mono">
+                        <i data-lucide="send" class="w-3 h-3"></i>
+                        <span>Post Review</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Application JavaScript Engine -->
+    <!-- Application JavaScript Engine (Review-Only Mode) -->
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-        let editor = null;
-        let isCompiling = false;
-        let isDirty = false;
-        let currentFile = "main.tex";
         let allComments = [];
         let currentCommentFilter = "all";
 
         let pdfScale = 1.15;
         let currentPdfDoc = null;
 
-        let isLogsOpen = false;
         let activeSelectedQuote = "";
         let activeSelectedPage = "1";
-        let currentModalImagePath = "";
 
         function refreshIcons() {
             lucide.createIcons();
         }
 
-        function initAceEditor() {
-            editor = ace.edit("aceEditor");
-            editor.setTheme("ace/theme/tomorrow_night_eighties");
-            editor.session.setMode("ace/mode/latex");
-            editor.setOptions({
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "13px",
-                wrap: true,
-                showPrintMargin: false,
-                highlightActiveLine: true,
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                tabSize: 2,
-                useSoftTabs: true
-            });
-
-            editor.session.on("change", () => {
-                if (!isDirty) {
-                    isDirty = true;
-                    document.getElementById("saveIndicator").textContent = "Save *";
-                }
-            });
-        }
-
         function setupResizers() {
             const workspace = document.getElementById("workspaceContainer");
-            const leftSidebar = document.getElementById("leftSidebar");
-            const editorPane = document.getElementById("editorPane");
-            const previewPane = document.getElementById("previewPane");
             const rightSidebar = document.getElementById("rightSidebar");
-
-            const resizer0 = document.getElementById("resizerTreeEditor");
-            const resizer1 = document.getElementById("resizerEditorPdf");
             const resizer2 = document.getElementById("resizerPdfComments");
 
-            let isDragging0 = false;
-            let isDragging1 = false;
             let isDragging2 = false;
-
-            resizer0.addEventListener("mousedown", (e) => {
-                isDragging0 = true;
-                document.body.classList.add("is-resizing");
-                resizer0.classList.add("active");
-            });
-
-            resizer1.addEventListener("mousedown", (e) => {
-                isDragging1 = true;
-                document.body.classList.add("is-resizing");
-                resizer1.classList.add("active");
-            });
 
             resizer2.addEventListener("mousedown", (e) => {
                 isDragging2 = true;
@@ -573,650 +344,172 @@
 
             document.addEventListener("mousemove", (e) => {
                 const workspaceRect = workspace.getBoundingClientRect();
-
-                if (isDragging0) {
-                    const newTreeWidth = e.clientX - workspaceRect.left;
-                    if (newTreeWidth >= 140 && newTreeWidth <= 450) {
-                        leftSidebar.style.width = `${newTreeWidth}px`;
-                    }
-                }
-
-                if (isDragging1) {
-                    const leftOffset = leftSidebar.classList.contains("hidden") ? 0 : leftSidebar.offsetWidth;
-                    const newEditorWidth = e.clientX - workspaceRect.left - leftOffset;
-                    if (newEditorWidth >= 180 && newEditorWidth <= (workspaceRect.width - leftOffset - 220)) {
-                        editorPane.style.flex = "none";
-                        editorPane.style.width = `${newEditorWidth}px`;
-                        if (editor) editor.resize();
-                    }
-                }
-
                 if (isDragging2) {
                     const newRightWidth = workspaceRect.right - e.clientX;
-                    if (newRightWidth >= 240 && newRightWidth <= 750) {
+                    if (newRightWidth >= 260 && newRightWidth <= 750) {
                         rightSidebar.style.width = `${newRightWidth}px`;
                     }
                 }
             });
 
             document.addEventListener("mouseup", () => {
-                if (isDragging0 || isDragging1 || isDragging2) {
-                    isDragging0 = false;
-                    isDragging1 = false;
+                if (isDragging2) {
                     isDragging2 = false;
                     document.body.classList.remove("is-resizing");
-                    resizer0.classList.remove("active");
-                    resizer1.classList.remove("active");
                     resizer2.classList.remove("active");
-                    if (editor) editor.resize();
                 }
             });
         }
 
-        function toggleLeftSidebar() {
-            const sidebar = document.getElementById("leftSidebar");
-            const resizer0 = document.getElementById("resizerTreeEditor");
-            sidebar.classList.toggle("hidden");
-            resizer0.style.display = sidebar.classList.contains("hidden") ? "none" : "flex";
-            if (editor) editor.resize();
-            refreshIcons();
-        }
-
-        function setViewMode(mode) {
-            const leftSidebar = document.getElementById("leftSidebar");
-            const resizer0 = document.getElementById("resizerTreeEditor");
-            const editorPane = document.getElementById("editorPane");
-            const resizer1 = document.getElementById("resizerEditorPdf");
+        function toggleRightSidebar() {
             const rightSidebar = document.getElementById("rightSidebar");
             const resizer2 = document.getElementById("resizerPdfComments");
-            const btnSplit = document.getElementById("btnViewSplit");
-            const btnPdfOnly = document.getElementById("btnViewPdfOnly");
-
-            if (mode === "pdf-only") {
-                leftSidebar.classList.add("hidden");
-                resizer0.style.display = "none";
-                editorPane.classList.add("hidden");
-                resizer1.style.display = "none";
-
-                rightSidebar.classList.remove("hidden");
-                resizer2.style.display = "flex";
-
-                btnSplit.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1 transition";
-                btnPdfOnly.className = "px-2.5 py-1 rounded-md text-white bg-rmit-red font-semibold flex items-center gap-1 transition shadow-sm";
-            } else {
-                leftSidebar.classList.remove("hidden");
-                resizer0.style.display = "flex";
-                editorPane.classList.remove("hidden");
-                resizer1.style.display = "flex";
-
-                rightSidebar.classList.remove("hidden");
-                resizer2.style.display = "flex";
-
-                btnSplit.className = "px-2.5 py-1 rounded-md text-white bg-slate-800 font-semibold flex items-center gap-1 transition shadow-sm";
-                btnPdfOnly.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1 transition";
-                if (editor) editor.resize();
-            }
+            rightSidebar.classList.toggle("hidden");
+            resizer2.style.display = rightSidebar.classList.contains("hidden") ? "none" : "flex";
             refreshIcons();
         }
 
-        async function loadFileTree() {
-            const container = document.getElementById("fileTreeContainer");
+        // PDF.JS Rendering Implementation
+        async function loadPdfDocument(pdfUrl) {
+            const container = document.getElementById("pdfScrollView");
+            const pageInfo = document.getElementById("pdfPageInfo");
+            const notice = document.getElementById("pdfLoadingNotice");
+
             try {
-                const res = await fetch("/api/tree");
-                const data = await res.json();
-                renderFileTree(data.tree, container);
-            } catch (err) {
-                container.innerHTML = `<div class="text-red-400 p-2 text-xs">Error loading files: ${err.message}</div>`;
-            }
-        }
-        function renderFileTree(items, container) {
-            container.innerHTML = "";
-            if (!items || items.length === 0) {
-                container.innerHTML = `<div class="text-slate-500 text-center py-4 text-xs">Folder is empty</div>`;
-                return;
-            }
+                if (notice) notice.style.display = "flex";
+                const loadingTask = pdfjsLib.getDocument(`${pdfUrl}?t=${Date.now()}`);
+                currentPdfDoc = await loadingTask.promise;
 
-            const ul = document.createElement("ul");
-            ul.className = "flex flex-col gap-0.5";
+                if (notice) notice.style.display = "none";
+                container.innerHTML = ""; // Clear existing rendered canvases
 
-            items.forEach((item) => {
-                const li = document.createElement("li");
-                li.className = "flex flex-col";
+                pageInfo.textContent = `${currentPdfDoc.numPages} Pages`;
 
-                if (item.type === "directory") {
-                    const header = document.createElement("div");
-                    header.className = "flex items-center justify-between px-2 py-1 rounded-md hover:bg-slate-800/80 cursor-pointer text-slate-300 group";
-                    header.innerHTML = `
-                        <div class="flex items-center gap-1.5 min-w-0">
-                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-transform folder-chevron"></i>
-                            <i data-lucide="folder" class="w-3.5 h-3.5 text-sky-400 flex-shrink-0"></i>
-                            <span class="truncate font-semibold text-slate-200">${escapeHtml(item.name)}</span>
-                        </div>
-                    `;
+                for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+                    const page = await currentPdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: pdfScale });
 
-                    const childrenDiv = document.createElement("div");
-                    childrenDiv.className = "ml-3.5 pl-2 border-l border-slate-800 hidden";
-                    renderFileTree(item.children, childrenDiv);
+                    const pageContainer = document.createElement("div");
+                    pageContainer.className = "pdf-page-container relative mb-6";
+                    pageContainer.id = `pdf-page-${i}`;
+                    pageContainer.dataset.pageNum = i;
 
-                    header.onclick = () => {
-                        const isHidden = childrenDiv.classList.contains("hidden");
-                        const chevron = header.querySelector(".folder-chevron");
-                        if (isHidden) {
-                            childrenDiv.classList.remove("hidden");
-                            chevron.style.transform = "rotate(90deg)";
-                        } else {
-                            childrenDiv.classList.add("hidden");
-                            chevron.style.transform = "none";
-                        }
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d");
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
                     };
 
-                    li.appendChild(header);
-                    li.appendChild(childrenDiv);
-                } else {
-                    const isCurrent = currentFile === item.path;
-                    const fileRow = document.createElement("div");
-                    fileRow.className = `flex items-center justify-between px-2 py-1 rounded-md cursor-pointer transition group ${
-                        isCurrent ? "bg-rmit-red/15 text-white font-semibold border-l-2 border-rmit-red" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                    }`;
+                    pageContainer.appendChild(canvas);
 
-                    let iconName = "file";
-                    let iconColor = "text-slate-500";
-                    if (item.name.endsWith(".tex")) { iconName = "file-code"; iconColor = "text-cyber-cyan"; }
-                    else if (item.name.endsWith(".bib")) { iconName = "book-open"; iconColor = "text-emerald-400"; }
-                    else if (item.name.endsWith(".cls") || item.name.endsWith(".bst") || item.name.endsWith(".sty")) { iconName = "settings"; iconColor = "text-purple-400"; }
-                    else if (item.name.endsWith(".pdf")) { iconName = "file-text"; iconColor = "text-rmit-red"; }
-                    else if (/\.(png|jpg|jpeg|svg|webp)$/i.test(item.name)) { iconName = "image"; iconColor = "text-yellow-400"; }
+                    // Text Layer for selection and quote grabbing
+                    const textContent = await page.getTextContent();
+                    const textLayerDiv = document.createElement("div");
+                    textLayerDiv.className = "textLayer absolute inset-0";
+                    pageContainer.appendChild(textLayerDiv);
 
-                    fileRow.innerHTML = `
-                        <div class="flex items-center gap-1.5 min-w-0" onclick="loadFile('${item.path}')">
-                            <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} flex-shrink-0"></i>
-                            <span class="truncate">${escapeHtml(item.name)}</span>
-                        </div>
-                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-                            <button onclick="renameItem('${item.path}')" class="p-0.5 hover:text-cyber-cyan text-slate-500 rounded" title="Rename">
-                                <i data-lucide="edit-2" class="w-3 h-3"></i>
-                            </button>
-                            ${item.path !== 'main.tex' ? `
-                            <button onclick="deleteFileOrDir('${item.path}', false)" class="p-0.5 hover:text-red-400 text-slate-500 rounded" title="Delete">
-                                <i data-lucide="trash" class="w-3 h-3"></i>
-                            </button>` : ""}
-                        </div>
-                    `;
+                    pdfjsLib.renderTextLayer({
+                        textContentSource: textContent,
+                        container: textLayerDiv,
+                        viewport: viewport,
+                        textDivs: []
+                    });
 
-                    li.appendChild(fileRow);
-                }
+                    // Page number badge
+                    const pageBadge = document.createElement("div");
+                    pageBadge.className = "absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-slate-300 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700/50 pointer-events-none shadow";
+                    pageBadge.textContent = `P. ${i}`;
+                    pageContainer.appendChild(pageBadge);
 
-                ul.appendChild(li);
-            });
-
-            container.appendChild(ul);
-            refreshIcons();
-        }
-
-        function createNewItem(type) {
-            const promptMsg = type === "folder" ? "Enter new folder name (e.g. figures, sections):" : "Enter new file name (e.g. section1.tex, references.bib):";
-            const input = prompt(promptMsg);
-            if (!input || !input.trim()) return;
-
-            fetch("/api/file/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: input.trim(), type: type })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    loadFileTree();
-                    if (type === "file") loadFile(input.trim());
-                } else {
-                    alert("Error: " + data.error);
-                }
-            })
-            .catch(err => alert("Failed to create item: " + err.message));
-        }
-
-        function renameItem(oldPath) {
-            const newName = prompt(`Rename "${oldPath}" to:`, oldPath);
-            if (!newName || newName.trim() === oldPath) return;
-
-            fetch("/api/file/rename", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ oldPath, newPath: newName.trim() })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    loadFileTree();
-                    if (currentFile === oldPath) loadFile(newName.trim());
-                } else {
-                    alert("Rename failed: " + data.error);
-                }
-            })
-            .catch(err => alert("Error: " + err.message));
-        }
-
-        function deleteFileOrDir(path, isDir) {
-            const confirmMsg = isDir ? `Delete folder "${path}" and ALL its contents?` : `Delete file "${path}"?`;
-            if (!confirm(confirmMsg)) return;
-
-            fetch(`/api/file?path=${encodeURIComponent(path)}`, { method: "DELETE" })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    loadFileTree();
-                    if (currentFile === path) loadFile("main.tex");
-                } else {
-                    alert("Delete failed: " + data.error);
-                }
-            })
-            .catch(err => alert("Delete error: " + err.message));
-        }
-
-        async function handleDirectFileUpload(e) {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-
-            const payloadFiles = [];
-            for (const file of files) {
-                const b64 = await readFileAsBase64(file);
-                payloadFiles.push({ name: file.name, data: b64 });
-            }
-
-            try {
-                const res = await fetch("/api/upload", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ folder: "figures", files: payloadFiles })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await loadFileTree();
-                    alert(`Uploaded ${data.uploaded.length} file(s) into figures/ folder.`);
-                } else {
-                    alert("Upload failed: " + data.error);
+                    container.appendChild(pageContainer);
+                    await page.render(renderContext).promise;
                 }
             } catch (err) {
-                alert("Upload error: " + err.message);
+                console.error("PDF Render error:", err);
+                if (notice) {
+                    notice.innerHTML = `<span class="text-rmit-red"><i data-lucide="alert-triangle" class="w-4 h-4 inline"></i> PDF render failed: ${err.message}</span>`;
+                    refreshIcons();
+                }
             }
         }
 
-        function readFileAsBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(",")[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function loadPdfDocument(targetPdfFile = "main.pdf") {
-            const pdfName = targetPdfFile.endsWith(".pdf") ? targetPdfFile : targetPdfFile.replace(/\.[^.]+$/, ".pdf");
-            const pdfUrl = `/pdf?file=${encodeURIComponent(pdfName)}&t=${Date.now()}`;
-            const container = document.getElementById("pdfScrollView");
-            document.getElementById("pdfPageInfo").textContent = "Loading...";
-
-            try {
-                const loadingTask = pdfjsLib.getDocument({ url: pdfUrl });
-                currentPdfDoc = await loadingTask.promise;
-                document.getElementById("pdfPageInfo").textContent = `${currentPdfDoc.numPages} Page${currentPdfDoc.numPages > 1 ? "s" : ""}`;
-                await renderAllPdfPages();
-            } catch (err) {
-                container.innerHTML = `<div class="text-red-400 p-8 text-center text-sm font-mono">Failed to render PDF (${err.message}).<br>Click 'Recompile' to build.</div>`;
-            }
-        }
-
-        async function renderAllPdfPages() {
-            if (!currentPdfDoc) return;
-            const container = document.getElementById("pdfScrollView");
-            container.innerHTML = "";
-
-            // DPR multiplier for razor-sharp rendering on Retina and 4K displays
-            const dpr = Math.max(2, window.devicePixelRatio || 2);
-
-            for (let pageNum = 1; pageNum <= currentPdfDoc.numPages; pageNum++) {
-                const page = await currentPdfDoc.getPage(pageNum);
-                
-                // 1. CSS display viewport (controls on-screen dimensions)
-                const viewport = page.getViewport({ scale: pdfScale });
-                
-                // 2. High-resolution canvas viewport (double or triple resolution pixels)
-                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
-
-                const pageWrapper = document.createElement("div");
-                pageWrapper.className = "pdf-page-container";
-                pageWrapper.id = `pdf-page-${pageNum}`;
-                pageWrapper.setAttribute("data-page", pageNum);
-                pageWrapper.style.width = `${viewport.width}px`;
-                pageWrapper.style.height = `${viewport.height}px`;
-
-                const canvas = document.createElement("canvas");
-                canvas.width = Math.floor(renderViewport.width);
-                canvas.height = Math.floor(renderViewport.height);
-                canvas.style.width = `${viewport.width}px`;
-                canvas.style.height = `${viewport.height}px`;
-                const ctx = canvas.getContext("2d", { alpha: false });
-
-                const textLayerDiv = document.createElement("div");
-                textLayerDiv.className = "textLayer";
-                textLayerDiv.style.width = `${viewport.width}px`;
-                textLayerDiv.style.height = `${viewport.height}px`;
-
-                pageWrapper.appendChild(canvas);
-                pageWrapper.appendChild(textLayerDiv);
-                container.appendChild(pageWrapper);
-
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: renderViewport
-                };
-                await page.render(renderContext).promise;
-
-                const textContent = await page.getTextContent();
-                await pdfjsLib.renderTextLayer({
-                    textContentSource: textContent,
-                    container: textLayerDiv,
-                    viewport: viewport,
-                    textDivs: []
-                }).promise;
-            }
+        function reloadPdfDocument() {
+            loadPdfDocument("main.pdf");
         }
 
         function adjustZoom(delta) {
             pdfScale = Math.max(0.6, Math.min(2.5, pdfScale + delta));
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
-            renderAllPdfPages();
+            if (currentPdfDoc) {
+                loadPdfDocument("main.pdf");
+            }
         }
 
         function resetZoom() {
             pdfScale = 1.15;
             document.getElementById("zoomLevel").textContent = "115%";
-            renderAllPdfPages();
+            if (currentPdfDoc) {
+                loadPdfDocument("main.pdf");
+            }
         }
 
-        let zoomDebounceTimer = null;
         function setupPdfMouseWheelZoom() {
             const pdfContainer = document.getElementById("pdfScrollView");
-            if (!pdfContainer) return;
-
             pdfContainer.addEventListener("wheel", (e) => {
-                // Ctrl + Mouse Wheel OR Trackpad Pinch-to-zoom (which natively sets e.ctrlKey = true)
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
-                    
-                    // Smooth calibrated delta for mouse wheel and pinch
-                    const delta = -e.deltaY * 0.0025;
-                    const newScale = Math.max(0.6, Math.min(3.0, pdfScale + delta));
-                    if (Math.abs(newScale - pdfScale) > 0.01) {
-                        pdfScale = newScale;
-                        document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
-                        
-                        // Debounce re-rendering canvas slightly for ultra smooth 60fps zooming
-                        clearTimeout(zoomDebounceTimer);
-                        zoomDebounceTimer = setTimeout(() => {
-                            renderAllPdfPages();
-                        }, 40);
-                    }
+                    adjustZoom(e.deltaY < 0 ? 0.1 : -0.1);
                 }
             }, { passive: false });
         }
+
         function setupTextSelectionListener() {
-            document.addEventListener("mouseup", () => {
-                setTimeout(() => {
-                    const selection = window.getSelection();
-                    const text = selection ? selection.toString().trim() : "";
-                    if (text && text.length > 3) {
-                        activeSelectedQuote = text;
-                        const pageContainer = selection.anchorNode ? (selection.anchorNode.nodeType === 3 ? selection.anchorNode.parentElement : selection.anchorNode).closest(".pdf-page-container") : null;
-                        if (pageContainer) {
-                            activeSelectedPage = pageContainer.getAttribute("data-page") || "1";
-                            document.getElementById("activeQuoteText").textContent = activeSelectedQuote;
-                            document.getElementById("activeQuotePreview").classList.remove("hidden");
-                            document.getElementById("activeQuotePreview").classList.add("flex");
-                        }
+            document.addEventListener("selectionchange", () => {
+                const selection = window.getSelection();
+                const text = selection.toString().trim();
+                if (text && text.length > 3) {
+                    activeSelectedQuote = text;
+                    const activeEl = document.activeElement;
+                    const pageEl = activeEl ? activeEl.closest(".pdf-page-container") : null;
+                    if (pageEl) {
+                        activeSelectedPage = pageEl.dataset.pageNum || "1";
                     }
-                }, 20);
+
+                    const quotePreview = document.getElementById("activeQuotePreview");
+                    const quoteText = document.getElementById("activeQuoteText");
+                    const pageInput = document.getElementById("commentPageInput");
+
+                    if (quotePreview && quoteText) {
+                        quoteText.textContent = text.length > 80 ? text.substring(0, 80) + "..." : text;
+                        quotePreview.classList.remove("hidden");
+                        quotePreview.classList.add("flex");
+                        if (pageInput) pageInput.value = activeSelectedPage;
+                    }
+                }
             });
         }
 
         function clearActiveQuote() {
             activeSelectedQuote = "";
-            document.getElementById("activeQuoteText").textContent = "";
-            document.getElementById("activeQuotePreview").classList.remove("flex");
-            document.getElementById("activeQuotePreview").classList.add("hidden");
-        }
-
-        async function loadFile(filename) {
-            if (isDirty) {
-                if (confirm(`Save unsaved changes in ${currentFile} before switching?`)) {
-                    await saveCurrentFile();
-                }
-            }
-
-            if (/\.(png|jpg|jpeg|svg|webp)$/i.test(filename)) {
-                openImageModal(filename);
-                return;
-            }
-
-            currentFile = filename;
-            document.getElementById("currentFileName").textContent = filename.split("/").pop();
-            document.getElementById("navCurrentFileName").textContent = filename.split("/").pop();
-
-            if (filename.endsWith(".bib")) editor.session.setMode("ace/mode/bibtex");
-            else editor.session.setMode("ace/mode/latex");
-
-            try {
-                const res = await fetch(`/api/file?name=${encodeURIComponent(filename)}`);
-                const data = await res.json();
-                editor.setValue(data.content, -1);
-                isDirty = false;
-                document.getElementById("saveIndicator").textContent = "Save";
-                await loadFileTree();
-            } catch (err) {
-                alert("Failed to load file: " + err.message);
+            const quotePreview = document.getElementById("activeQuotePreview");
+            if (quotePreview) {
+                quotePreview.classList.remove("flex");
+                quotePreview.classList.add("hidden");
             }
         }
 
-        async function saveCurrentFile() {
-            const saveBtn = document.getElementById("saveBtn");
-            saveBtn.textContent = "Saving...";
-            const content = editor.getValue();
-
-            try {
-                const res = await fetch("/api/file", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: currentFile, content: content })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    isDirty = false;
-                    document.getElementById("saveIndicator").textContent = "Save";
-                }
-            } catch (err) {
-                alert("Save failed: " + err.message);
-            } finally {
-                saveBtn.textContent = "Save";
-            }
-        }
-
-        async function triggerSaveAndCompile() {
-            if (isCompiling) return;
-            await saveCurrentFile();
-
-            isCompiling = true;
-            const targetFile = currentFile.endsWith(".tex") ? currentFile : "main.tex";
-            const engine = document.getElementById("engineSelect").value || "latexmk";
-            const compileBtn = document.getElementById("compileBtn");
-            const statusDot = document.getElementById("statusDot");
-            const statusText = document.getElementById("statusText");
-
-            compileBtn.classList.add("opacity-70", "pointer-events-none");
-            statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
-            statusText.textContent = "Compiling...";
-
-            const startTime = performance.now();
-
-            try {
-                const res = await fetch("/api/compile", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ file: targetFile, engine: engine })
-                });
-
-                const data = await res.json();
-                const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-
-                renderLogs(data.stdout + "\n" + (data.stderr || ""));
-
-                if (data.success) {
-                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
-                    statusText.textContent = `Success (${duration}s)`;
-                    await loadPdfDocument();
-                } else {
-                    statusDot.className = "w-1.5 h-1.5 rounded-full bg-rmit-red";
-                    statusText.textContent = `Failed (${duration}s)`;
-                    openLogs();
-                }
-            } catch (err) {
-                statusDot.className = "w-1.5 h-1.5 rounded-full bg-rmit-red";
-                statusText.textContent = "Error";
-                openLogs();
-            } finally {
-                isCompiling = false;
-                compileBtn.classList.remove("opacity-70", "pointer-events-none");
-                refreshIcons();
-            }
-        }
-
-        function renderLogs(rawText) {
-            const logContent = document.getElementById("logContent");
-            logContent.textContent = rawText.trim() || "Compilation finished with no output.";
-        }
-
-        function toggleLogs() {
-            const drawer = document.getElementById("logsDrawer");
-            isLogsOpen = !isLogsOpen;
-            drawer.style.transform = isLogsOpen ? "translateY(0)" : "translateY(100%)";
-            refreshIcons();
-        }
-
-        function openLogs() {
-            const drawer = document.getElementById("logsDrawer");
-            isLogsOpen = true;
-            drawer.style.transform = "translateY(0)";
-            refreshIcons();
-        }
-
-        function clearLogs() {
-            document.getElementById("logContent").textContent = "";
-        }
-
-        function openPdfNewTab() {
-            const pdfName = (currentFile.endsWith(".tex") ? currentFile : "main.tex").replace(/\.tex$/, ".pdf");
-            window.open(`/pdf?file=${encodeURIComponent(pdfName)}&t=${Date.now()}`, "_blank");
-        }
-
-        function downloadPdf() {
-            const pdfName = (currentFile.endsWith(".tex") ? currentFile : "main.tex").replace(/\.tex$/, ".pdf");
-            const a = document.createElement("a");
-            a.href = `/pdf?file=${encodeURIComponent(pdfName)}&download=1`;
-            a.download = pdfName;
-            a.click();
-        }
-
+        // Review Comments API Interactions
         async function fetchComments() {
             try {
                 const res = await fetch("/api/comments");
                 allComments = await res.json();
-                renderComments();
+                renderCommentsList();
             } catch (err) {
-                console.error("Failed to load comments:", err);
-            }
-        }
-
-        function renderComments() {
-            const list = document.getElementById("commentsList");
-            const countBadge = document.getElementById("commentsCountBadge");
-            const panelBadge = document.getElementById("panelCommentsCount");
-
-            const openCount = allComments.filter(c => !c.resolved).length;
-            const resolvedCount = allComments.filter(c => c.resolved).length;
-
-            document.getElementById("countAll").textContent = allComments.length;
-            document.getElementById("countOpen").textContent = openCount;
-            document.getElementById("countResolved").textContent = resolvedCount;
-            countBadge.textContent = openCount;
-            panelBadge.textContent = openCount;
-
-            const filtered = allComments.filter(c => {
-                if (currentCommentFilter === "open") return !c.resolved;
-                if (currentCommentFilter === "resolved") return c.resolved;
-                return true;
-            });
-
-            if (filtered.length === 0) {
-                list.innerHTML = `<div class="text-slate-500 text-center py-10 text-xs font-mono">No comments found</div>`;
-                return;
-            }
-
-            list.innerHTML = filtered.map(c => {
-                const tag = getTagConfig(c.type);
-                const timeAgo = formatTimeAgo(c.createdAt);
-                
-                const quoteHtml = c.quote ? `
-                    <div class="bg-cyber-cyan/10 border-l-2 border-cyber-cyan px-2.5 py-1.5 rounded-r text-xs text-cyan-200 italic flex items-start gap-1.5">
-                        <i data-lucide="quote" class="w-3 h-3 text-cyber-cyan flex-shrink-0 mt-0.5"></i>
-                        <span>${escapeHtml(c.quote)}</span>
-                    </div>
-                ` : "";
-
-                return `
-                    <div class="bg-[#0A0F1A] border ${c.resolved ? "border-slate-800 opacity-60" : "border-slate-800 hover:border-slate-700"} rounded-xl p-3 flex flex-col gap-2 transition cursor-pointer shadow-sm" onclick="if('${c.page}') scrollToPdfPage('${c.page}')">
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-1.5 text-xs font-bold text-cyber-cyan font-mono">
-                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                                <span>${escapeHtml(c.author || "Advisor")}</span>
-                            </div>
-                            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded border flex items-center gap-1 font-mono ${tag.class}">
-                                <i data-lucide="${tag.icon}" class="w-3 h-3"></i>
-                                <span>${tag.label}</span>
-                            </span>
-                        </div>
-
-                        ${quoteHtml}
-
-                        <p class="text-xs text-slate-200 leading-relaxed">${escapeHtml(c.text)}</p>
-
-                        <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono">
-                            <div class="flex items-center gap-2">
-                                ${c.section ? `<span>§ ${escapeHtml(c.section)}</span>` : ""}
-                                ${c.page ? `<span>Page ${c.page}</span>` : ""}
-                                <span>${timeAgo}</span>
-                            </div>
-
-                            <div class="flex items-center gap-1" onclick="event.stopPropagation()">
-                                <button onclick="toggleCommentResolved('${c.id}', ${!c.resolved})" class="px-2 py-0.5 rounded ${c.resolved ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'} transition">
-                                    ${c.resolved ? 'Reopen' : 'Resolve'}
-                                </button>
-                                <button onclick="deleteComment('${c.id}')" class="p-1 text-slate-500 hover:text-rmit-red rounded transition" title="Delete">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join("");
-
-            refreshIcons();
-        }
-
-        function getTagConfig(type) {
-            switch (type) {
-                case "issue": return { label: "Issue", icon: "alert-circle", class: "bg-rmit-red/15 text-rmit-red border-rmit-red/30" };
-                case "todo": return { label: "Revision", icon: "check-square", class: "bg-purple-500/15 text-purple-400 border-purple-500/30" };
-                case "praise": return { label: "Praise", icon: "thumbs-up", class: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
-                default: return { label: "Suggestion", icon: "lightbulb", class: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" };
+                console.error("Error fetching comments:", err);
             }
         }
 
@@ -1226,59 +519,140 @@
                 btn.className = "filter-chip px-2.5 py-1 rounded-lg text-xs bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition font-mono";
             });
             el.className = "filter-chip px-2.5 py-1 rounded-lg text-xs bg-rmit-red text-white font-semibold transition shadow-sm font-mono";
-            renderComments();
+            renderCommentsList();
         }
 
-        async function submitComment() {
-            const author = document.getElementById("authorInput").value.trim() || "Advisor";
-            const type = document.getElementById("typeSelect").value;
-            const text = document.getElementById("commentTextInput").value.trim();
+        function renderCommentsList() {
+            const listEl = document.getElementById("commentsList");
+            const countBadge = document.getElementById("commentsCountBadge");
+            const panelBadge = document.getElementById("panelCommentsCount");
+            const countAll = document.getElementById("countAll");
+            const countOpen = document.getElementById("countOpen");
+            const countResolved = document.getElementById("countResolved");
 
-            if (!text) {
-                alert("Please write a comment text");
+            const openComments = allComments.filter(c => !c.resolved);
+            const resolvedComments = allComments.filter(c => c.resolved);
+
+            if (countBadge) countBadge.textContent = openComments.length;
+            if (panelBadge) panelBadge.textContent = allComments.length;
+            if (countAll) countAll.textContent = allComments.length;
+            if (countOpen) countOpen.textContent = openComments.length;
+            if (countResolved) countResolved.textContent = resolvedComments.length;
+
+            let filtered = allComments;
+            if (currentCommentFilter === "open") filtered = openComments;
+            if (currentCommentFilter === "resolved") filtered = resolvedComments;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10 flex flex-col items-center gap-2 text-slate-500 font-mono text-xs">
+                        <i data-lucide="message-square-dashed" class="w-8 h-8 text-slate-600"></i>
+                        <span>No comments in this filter.</span>
+                    </div>
+                `;
+                refreshIcons();
                 return;
             }
 
-            localStorage.setItem("latex_author_name", author);
+            listEl.innerHTML = filtered.map(c => `
+                <div class="bg-[#0A0F1A] border ${c.resolved ? 'border-slate-800/60 opacity-60' : 'border-slate-800 hover:border-slate-700'} rounded-xl p-3 flex flex-col gap-2 transition shadow-sm" id="comment-card-${c.id}">
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2 font-mono">
+                            <span class="font-bold text-slate-200 flex items-center gap-1">
+                                <i data-lucide="user" class="w-3 h-3 text-rmit-red"></i>
+                                ${escapeHtml(c.author || 'Reviewer')}
+                            </span>
+                            <span class="text-[10px] text-slate-500">${formatTimeAgo(c.timestamp)}</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-1 font-mono">
+                            ${c.page ? `
+                                <button onclick="scrollToPdfPage(${c.page})" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-[10px] text-cyber-cyan border border-slate-800 flex items-center gap-1 transition" title="Go to page ${c.page}">
+                                    <i data-lucide="bookmark" class="w-2.5 h-2.5"></i>
+                                    P.${c.page}
+                                </button>
+                            ` : ''}
 
-            const payload = {
-                id: "c-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
-                author,
-                type,
-                page: activeSelectedQuote ? activeSelectedPage : "",
-                text,
-                createdAt: new Date().toISOString(),
+                            <button onclick="toggleCommentResolve('${c.id}')" class="p-1 rounded ${c.resolved ? 'text-emerald-400 hover:text-slate-400' : 'text-slate-400 hover:text-emerald-400'} hover:bg-slate-800 transition" title="${c.resolved ? 'Mark Open' : 'Mark Resolved'}">
+                                <i data-lucide="${c.resolved ? 'check-circle' : 'circle'}" class="w-3.5 h-3.5"></i>
+                            </button>
+
+                            <button onclick="deleteComment('${c.id}')" class="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-slate-800 transition" title="Delete comment">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    ${c.quote ? `
+                        <div class="bg-[#080C14] border-l-2 border-cyber-cyan/70 px-2.5 py-1.5 rounded text-[11px] text-cyan-200/90 italic">
+                            "${escapeHtml(c.quote)}"
+                        </div>
+                    ` : ''}
+
+                    <div class="text-xs text-slate-300 leading-relaxed font-sans select-text">
+                        ${escapeHtml(c.text)}
+                    </div>
+                </div>
+            `).join("");
+
+            refreshIcons();
+        }
+
+        async function postComment() {
+            const textInput = document.getElementById("commentTextInput");
+            const authorInput = document.getElementById("authorInput");
+            const pageInput = document.getElementById("commentPageInput");
+
+            const text = textInput.value.trim();
+            const author = authorInput.value.trim() || "Reviewer";
+            const page = parseInt(pageInput.value) || 1;
+
+            if (!text) {
+                textInput.focus();
+                return;
+            }
+
+            const commentObj = {
+                id: "c_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+                text: text,
+                author: author,
+                page: page,
+                quote: activeSelectedQuote || "",
+                timestamp: new Date().toISOString(),
                 resolved: false
             };
+
+            localStorage.setItem("latex_author_name", author);
 
             try {
                 const res = await fetch("/api/comments", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    body: json.stringify(commentObj)
                 });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById("commentTextInput").value = "";
+                if (res.ok) {
+                    textInput.value = "";
+                    clearActiveQuote();
                     await fetchComments();
-                } else {
-                    alert("Failed to post comment");
                 }
             } catch (err) {
-                alert("Error posting comment: " + err.message);
+                console.error("Failed to post comment:", err);
             }
         }
 
-        async function toggleCommentResolved(id, resolved) {
+        async function toggleCommentResolve(id) {
+            const comment = allComments.find(c => c.id === id);
+            if (!comment) return;
+
             try {
                 await fetch("/api/comments", {
-                    method: "PATCH",
+                    method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id, resolved })
+                    body: JSON.stringify({ id: id, resolved: !comment.resolved })
                 });
                 await fetchComments();
             } catch (err) {
-                console.error("Failed to update comment status", err);
+                console.error("Failed to update comment:", err);
             }
         }
 
@@ -1287,7 +661,7 @@
                 await fetch(`/api/comments?id=${encodeURIComponent(id)}`, { method: "DELETE" });
                 await fetchComments();
             } catch (err) {
-                alert("Failed to delete comment");
+                console.error("Failed to delete comment:", err);
             }
         }
 
@@ -1295,50 +669,18 @@
             const pageEl = document.getElementById(`pdf-page-${pageNum}`);
             if (pageEl) {
                 pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
-                pageEl.classList.add("ring-2", "ring-cyber-cyan");
-                setTimeout(() => pageEl.classList.remove("ring-2", "ring-cyber-cyan"), 2000);
             }
         }
 
-        function openImageModal(imgPath) {
-            currentModalImagePath = imgPath;
-            const modal = document.getElementById("imagePreviewModal");
-            const title = document.getElementById("imageModalTitle");
-            const img = document.getElementById("imageModalImg");
-            const info = document.getElementById("imageModalInfo");
-
-            title.textContent = imgPath;
-            img.src = `/raw?path=${encodeURIComponent(imgPath)}&t=${Date.now()}`;
-            info.textContent = `Asset: ${imgPath}`;
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-            refreshIcons();
+        function openPdfNewTab() {
+            window.open("/pdf", "_blank");
         }
 
-        function closeImageModal() {
-            const modal = document.getElementById("imagePreviewModal");
-            modal.classList.remove("flex");
-            modal.classList.add("hidden");
-        }
-
-        function copyImagePath() {
-            navigator.clipboard.writeText(currentModalImagePath);
-            const btn = document.getElementById("copyImgBtnText");
-            btn.textContent = "Copied!";
-            setTimeout(() => { btn.textContent = "Copy Path"; }, 1500);
-        }
-
-        function insertImageToLatex() {
-            const latexSnippet = `
-\\begin{figure}[t]
-\\centering
-\\includegraphics[width=0.85\\textwidth]{${currentModalImagePath}}
-\\caption{System architecture overview and feature map.}
-\\label{fig:${currentModalImagePath.split("/").pop().replace(/\\.[^.]+$/, "")}}
-\\end{figure}
-`;
-            editor.insert(latexSnippet);
-            closeImageModal();
+        function downloadPdf() {
+            const a = document.createElement("a");
+            a.href = "/pdf";
+            a.download = "AEGIS_VBS2027_Paper.pdf";
+            a.click();
         }
 
         function formatTimeAgo(isoString) {
@@ -1356,32 +698,10 @@
             }[m]));
         }
 
-        // Global Keyboard Shortcuts
-        document.addEventListener("keydown", (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-                e.preventDefault();
-                saveCurrentFile();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                e.preventDefault();
-                triggerSaveAndCompile();
-            }
-            if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
-                e.preventDefault();
-                toggleLeftSidebar();
-            }
-            if ((e.ctrlKey || e.metaKey) && (e.key === "l" || e.key === "L")) {
-                e.preventDefault();
-                toggleLogs();
-            }
-        });
-
         window.addEventListener("DOMContentLoaded", async () => {
-            initAceEditor();
             setupResizers();
             setupTextSelectionListener();
             setupPdfMouseWheelZoom();
-            await loadFileTree();
 
             const savedAuthor = localStorage.getItem("latex_author_name");
             if (savedAuthor) {
