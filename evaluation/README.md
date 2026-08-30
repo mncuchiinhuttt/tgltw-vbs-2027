@@ -169,3 +169,23 @@ Exported JSON structure (`eval_results.json`):
   - **Type 3**: `video_correct_rank`, `video_recall_1`, `video_recall_5`, `video_reciprocal_rank`, `sequence_recall`, `order_pass`, `ragas_context_recall` (any of which may be `null` if the corresponding ground-truth field or Ragas isn't available).
 
 Before publishing any numbers, include the dataset manifest/checksums, index revision, model/provider revisions, runtime hardware, query source/year, and whether the number came from offline replay or a DRES live session. The [Performance Evaluation in Multimedia Retrieval](https://doi.org/10.1145/3678881) paper and DRES documentation provide the evaluation/logging rationale.
+
+## Academic benchmark track (v2)
+
+The reproducible offline track is deliberately separate from official VBS/DRES scoring. Capture the code/query hashes before a run:
+
+```bash
+uv run python evaluation/capture_benchmark_manifest.py \
+  --output evaluation/benchmark_real_output/current_run/reproducibility_manifest.json
+```
+
+Run the measured retrieval ablation:
+
+```bash
+uv run python evaluation/run_comprehensive_ablation.py \
+  --queries evaluation/eval_queries_real_v3c.json \
+  --dataset_dir datasets \
+  --output_dir evaluation/benchmark_real_output/current_run
+```
+
+The output contains per-query ranks for every implemented configuration and explicit evaluable denominators. It does not fabricate KIS-C, VQA, concurrency, or HNSW measurements. Those experiments require their own paired instrumentation, repeated trials, and task-specific labels. Publish Wilson intervals for binary rates, paired bootstrap/randomization tests for ranking, Holm correction for multiple contrasts, and median/p95 latency over at least five warm trials.

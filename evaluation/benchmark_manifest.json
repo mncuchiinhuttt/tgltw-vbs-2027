@@ -1,6 +1,6 @@
 {
   "artifact_id": "aegis-vbs-offline-benchmark-2026-08-30",
-  "status": "ANALYZED",
+  "schema_version": "aegis-benchmark-v2",
   "track": "offline_replay_diagnostic",
   "official_vbs_score": false,
   "commands": [
@@ -37,5 +37,12 @@
     "No official DRES judge outcomes",
     "KIS-C turns are nested in sessions",
     "Current ablation rows require instrumentation before causal interpretation"
-  ]
+  ],
+  "statistical_rules": {
+    "ranking": "paired bootstrap or paired randomization test over query IDs",
+    "binary_rates": "Wilson 95% confidence intervals",
+    "multiple_comparisons": "Holm correction across component contrasts",
+    "latency": "at least five warm trials; report median and p95",
+    "missing_values": "N/A; never impute or replace with simulated values"
+  }
 }

@@ -46,3 +46,7 @@ Freeze dataset manifest/checksums, query labels, index collection/configuration,
 ## Publication status
 
 The current cached tables are **preliminary diagnostics**. The repository does not yet contain a sufficiently large, independently annotated, leakage-controlled offline query set to support strong scientific claims for all VBS task types. The next executable step is to run the real replay runner against the available manifest, audit its per-query outputs, and separate measured results from configuration literals before updating the paper.
+
+## Current implementation status
+
+The measured retrieval ablation runner now writes `schema_version: aegis-benchmark-v2`, per-query ranks, explicit evaluable denominators, and a `causal_claim_allowed: false` limitation until paired outputs are available for every branch. KIS-C, VQA, concurrency, and HNSW remain separate follow-up experiments rather than fabricated rows.

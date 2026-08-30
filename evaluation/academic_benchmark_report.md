@@ -56,7 +56,7 @@ The current extended ablation command completed on 18 queries. For retrieval, 11
 | M3 + SigLIP | 9.1% | 9.1% | 9.1% | 0.097 | 0.174 s |
 | M4 + RRF | 9.1% | 9.1% | 9.1% | 0.097 | 0.163 s |
 | M5 + temporal/diversification | 9.1% | 18.2% | 18.2% | 0.141 | 0.168 s |
-| M6 + VLM rerank | 9.1% | 18.2% | 18.2% | 0.141 | 0.166 s |
+The retrieval ablation runner has now been corrected to fail closed when M6 is configured without a VLM client. Its smoke run therefore reports M6 as an explicit unavailable configuration rather than silently claiming a zero-score rerank; this is an intentional integrity guard.
 
 The M5–M1 R@5 difference is one additional hit among 11 evaluable queries (absolute +9.1 percentage points). No paired per-query outputs are emitted for each configuration, so a paired significance test and confidence interval for the component effect cannot be calculated from this artifact. More importantly, the runner's flags do not activate distinct BM25, SigLIP, RRF, or VLM branches; M1–M4 and M5–M6 therefore cannot be interpreted as valid causal component ablations.
 
