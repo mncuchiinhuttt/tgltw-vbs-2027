@@ -241,8 +241,15 @@ def audit_discrepancy(
             if rank == 1:
                 rank1_video_match = True
             if pred_frame is not None and gt_frame_id is not None:
-                frame_diff = abs(pred_frame - gt_frame_id)
-                time_diff = frame_diff / fps
+                # row[1] is a native frame index - unless the indexed payload
+                # lacked frame_idx and frame_id_of() fell back to a raw
+                # timestamp in seconds. Judge the temporal error under both
+                # conventions and take the smaller one (mirrors run_eval's
+                # cross-coordinate matching); judging timestamps as frame ids
+                # systematically produced false-negative audits.
+                as_frame_index = abs(pred_frame - gt_frame_id) / fps
+                as_timestamp = abs(pred_frame - float(gt_timestamp))
+                time_diff = min(as_frame_index, as_timestamp)
                 if rank == 1:
                     rank1_temporal_error_sec = time_diff
                 if time_diff <= tolerance_sec:
