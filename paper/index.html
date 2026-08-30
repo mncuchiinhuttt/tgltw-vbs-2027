@@ -76,7 +76,6 @@
             border-radius: 4px;
             background: #FFFFFF;
             position: relative;
-            transition: transform 0.15s ease;
         }
 
         .pdf-page-container:hover {
@@ -105,16 +104,6 @@
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
-        }
-
-        /* Highlight animation for selected comments */
-        @keyframes commentPulse {
-            0%, 100% { border-color: rgba(230, 0, 40, 0.4); }
-            50% { border-color: rgba(0, 240, 255, 0.9); box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); }
-        }
-
-        .comment-target-highlight {
-            animation: commentPulse 2s ease infinite;
         }
 
         .glass-panel {
@@ -209,11 +198,11 @@
                 </div>
 
                 <div class="flex items-center gap-1">
-                    <button onclick="adjustZoom(-0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom Out">
+                    <button onclick="adjustZoom(-0.15)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom Out">
                         <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <span id="zoomLevel" class="text-[11px] font-mono w-10 text-center font-medium text-slate-300">115%</span>
-                    <button onclick="adjustZoom(0.1)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom In">
+                    <span id="zoomLevel" class="text-[11px] font-mono w-10 text-center font-medium text-slate-300">120%</span>
+                    <button onclick="adjustZoom(0.15)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition" title="Zoom In">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     </button>
                     <button onclick="resetZoom()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition ml-1" title="Reset Zoom">
@@ -226,7 +215,7 @@
             <div class="pdf-scroll-view flex-1 overflow-y-auto p-6 flex flex-col items-center gap-6 relative select-text" id="pdfScrollView">
                 <div id="pdfLoadingNotice" class="text-slate-400 mt-16 flex items-center gap-2 text-sm font-mono">
                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyber-cyan"></i>
-                    <span>Rendering PDF document...</span>
+                    <span>Loading PDF document...</span>
                 </div>
             </div>
         </div>
@@ -319,8 +308,10 @@
         let allComments = [];
         let currentCommentFilter = "all";
 
-        let pdfScale = 1.15;
+        let pdfScale = 1.2;
         let currentPdfDoc = null;
+        let isRendering = false;
+        let pendingRender = false;
 
         let activeSelectedQuote = "";
         let activeSelectedPage = "1";
@@ -369,83 +360,91 @@
             refreshIcons();
         }
 
-        // PDF.JS Rendering Implementation
-        // High-DPI / Retina Crisp PDF Rendering Implementation
+        // High-Quality Crisp Vector PDF Rendering
         async function renderCurrentPdfPages() {
             if (!currentPdfDoc) return;
+            if (isRendering) {
+                pendingRender = true;
+                return;
+            }
+            isRendering = true;
+
             const container = document.getElementById("pdfScrollView");
             const pageInfo = document.getElementById("pdfPageInfo");
             const notice = document.getElementById("pdfLoadingNotice");
 
-            // Retain scroll position ratio during zoom
             const prevScrollRatio = container.scrollTop / Math.max(container.scrollHeight - container.clientHeight, 1);
 
             if (notice) notice.style.display = "none";
             container.innerHTML = "";
 
-            pageInfo.textContent = `${currentPdfDoc.numPages} Pages`;
+            if (pageInfo) pageInfo.textContent = `${currentPdfDoc.numPages} Pages`;
 
-            // Device pixel ratio for ultra-sharp vector text (minimum 2.0x supersampling)
-            const dpr = Math.max(window.devicePixelRatio || 1, 2.0);
+            // Super-sampling multiplier (2x standard resolution for sharp vector text)
+            const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1.5), 2.5);
 
-            for (let i = 1; i <= currentPdfDoc.numPages; i++) {
-                const page = await currentPdfDoc.getPage(i);
-                const viewport = page.getViewport({ scale: pdfScale });
-                const renderViewport = page.getViewport({ scale: pdfScale * dpr });
+            try {
+                for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+                    const page = await currentPdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: pdfScale });
+                    const renderViewport = page.getViewport({ scale: pdfScale * dpr });
 
-                const pageContainer = document.createElement("div");
-                pageContainer.className = "pdf-page-container relative mb-6 shadow-2xl rounded";
-                pageContainer.id = `pdf-page-${i}`;
-                pageContainer.dataset.pageNum = i;
-                pageContainer.style.width = `${Math.floor(viewport.width)}px`;
-                pageContainer.style.height = `${Math.floor(viewport.height)}px`;
+                    const pageContainer = document.createElement("div");
+                    pageContainer.className = "pdf-page-container relative mb-6 shadow-2xl rounded bg-white";
+                    pageContainer.id = `pdf-page-${i}`;
+                    pageContainer.dataset.pageNum = i;
+                    pageContainer.style.width = `${Math.floor(viewport.width)}px`;
+                    pageContainer.style.height = `${Math.floor(viewport.height)}px`;
 
-                const canvas = document.createElement("canvas");
-                const context = canvas.getContext("2d", { alpha: false });
-                
-                // Set internal canvas bitmap size to high-res
-                canvas.width = Math.floor(renderViewport.width);
-                canvas.height = Math.floor(renderViewport.height);
-                
-                // Set CSS display size to match unscaled viewport
-                canvas.style.width = `${Math.floor(viewport.width)}px`;
-                canvas.style.height = `${Math.floor(viewport.height)}px`;
-                canvas.className = "block w-full h-full rounded";
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d");
+                    
+                    canvas.width = Math.floor(renderViewport.width);
+                    canvas.height = Math.floor(renderViewport.height);
+                    canvas.style.width = `${Math.floor(viewport.width)}px`;
+                    canvas.style.height = `${Math.floor(viewport.height)}px`;
+                    canvas.className = "block w-full h-full rounded";
 
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: renderViewport,
-                    transform: [dpr, 0, 0, dpr, 0, 0]
-                };
+                    pageContainer.appendChild(canvas);
 
-                pageContainer.appendChild(canvas);
+                    // Text Layer for selection and quote grabbing
+                    try {
+                        const textContent = await page.getTextContent();
+                        const textLayerDiv = document.createElement("div");
+                        textLayerDiv.className = "textLayer absolute inset-0 rounded";
+                        textLayerDiv.style.width = `${Math.floor(viewport.width)}px`;
+                        textLayerDiv.style.height = `${Math.floor(viewport.height)}px`;
+                        pageContainer.appendChild(textLayerDiv);
 
-                // Interactive Text Layer for selection and quote grabbing
-                const textContent = await page.getTextContent();
-                const textLayerDiv = document.createElement("div");
-                textLayerDiv.className = "textLayer absolute inset-0 rounded";
-                textLayerDiv.style.width = `${Math.floor(viewport.width)}px`;
-                textLayerDiv.style.height = `${Math.floor(viewport.height)}px`;
-                pageContainer.appendChild(textLayerDiv);
+                        pdfjsLib.renderTextLayer({
+                            textContentSource: textContent,
+                            container: textLayerDiv,
+                            viewport: viewport,
+                            textDivs: []
+                        });
+                    } catch (e) {
+                        // ignore text layer render quirks
+                    }
 
-                pdfjsLib.renderTextLayer({
-                    textContentSource: textContent,
-                    container: textLayerDiv,
-                    viewport: viewport,
-                    textDivs: []
-                });
+                    // Page number badge
+                    const pageBadge = document.createElement("div");
+                    pageBadge.className = "absolute top-2 right-2 bg-slate-900/85 backdrop-blur text-slate-200 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700/60 pointer-events-none shadow";
+                    pageBadge.textContent = `P. ${i} / ${currentPdfDoc.numPages}`;
+                    pageContainer.appendChild(pageBadge);
 
-                // Page number badge
-                const pageBadge = document.createElement("div");
-                pageBadge.className = "absolute top-2 right-2 bg-slate-900/85 backdrop-blur text-slate-200 font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700/60 pointer-events-none shadow";
-                pageBadge.textContent = `P. ${i} / ${currentPdfDoc.numPages}`;
-                pageContainer.appendChild(pageBadge);
-
-                container.appendChild(pageContainer);
-                await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+                    container.appendChild(pageContainer);
+                    await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+                }
+            } catch (err) {
+                console.error("Render error:", err);
+            } finally {
+                isRendering = false;
+                if (pendingRender) {
+                    pendingRender = false;
+                    renderCurrentPdfPages();
+                }
             }
 
-            // Restore proportional scroll position
             container.scrollTop = prevScrollRatio * (container.scrollHeight - container.clientHeight);
             refreshIcons();
         }
@@ -453,12 +452,12 @@
         async function loadPdfDocument(pdfUrl) {
             const notice = document.getElementById("pdfLoadingNotice");
             try {
-                if (notice) notice.style.display = "flex";
-                const loadingTask = pdfjsLib.getDocument({
-                    url: `${pdfUrl}?t=${Date.now()}`,
-                    cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
-                    cMapPacked: true
-                });
+                if (notice) {
+                    notice.style.display = "flex";
+                    notice.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyber-cyan"></i><span>Loading PDF document...</span>`;
+                    refreshIcons();
+                }
+                const loadingTask = pdfjsLib.getDocument(pdfUrl);
                 currentPdfDoc = await loadingTask.promise;
                 await renderCurrentPdfPages();
             } catch (err) {
@@ -471,24 +470,24 @@
         }
 
         function reloadPdfDocument() {
-            loadPdfDocument("main.pdf");
+            loadPdfDocument("/pdf");
         }
 
-        let zoomTimeout = null;
+        let zoomTimer = null;
         function adjustZoom(delta) {
-            pdfScale = Math.max(0.5, Math.min(3.0, Math.round((pdfScale + delta) * 10) / 10));
+            pdfScale = Math.max(0.6, Math.min(3.0, Math.round((pdfScale + delta) * 100) / 100));
             document.getElementById("zoomLevel").textContent = `${Math.round(pdfScale * 100)}%`;
             if (currentPdfDoc) {
-                clearTimeout(zoomTimeout);
-                zoomTimeout = setTimeout(() => {
+                clearTimeout(zoomTimer);
+                zoomTimer = setTimeout(() => {
                     renderCurrentPdfPages();
-                }, 100);
+                }, 50);
             }
         }
 
         function resetZoom() {
-            pdfScale = 1.25;
-            document.getElementById("zoomLevel").textContent = "125%";
+            pdfScale = 1.2;
+            document.getElementById("zoomLevel").textContent = "120%";
             if (currentPdfDoc) {
                 renderCurrentPdfPages();
             }
@@ -499,11 +498,13 @@
             pdfContainer.addEventListener("wheel", (e) => {
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
-                    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                    const delta = e.deltaY < 0 ? 0.15 : -0.15;
                     adjustZoom(delta);
                 }
             }, { passive: false });
         }
+
+        function setupTextSelectionListener() {
             document.addEventListener("selectionchange", () => {
                 const selection = window.getSelection();
                 const text = selection.toString().trim();
@@ -664,7 +665,7 @@
                 const res = await fetch("/api/comments", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: json.stringify(commentObj)
+                    body: JSON.stringify(commentObj)
                 });
                 if (res.ok) {
                     textInput.value = "";
@@ -745,7 +746,7 @@
             }
 
             fetchComments();
-            loadPdfDocument("main.pdf");
+            loadPdfDocument("/pdf");
             refreshIcons();
         });
     </script>
