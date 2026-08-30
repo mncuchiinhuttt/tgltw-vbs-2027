@@ -83,7 +83,7 @@
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "What type of aircraft is seen touring over the tropical island landscape in Sunshine Helicopter tour?",
+    "query": "What type of aircraft is seen touring in Sunshine Helicopter tour Motorcycle & Helicopter Touring Maui 2016?",
     "ground_truth": {
       "video_name": "00004.mp4",
       "video_stem": "00004",
@@ -98,12 +98,12 @@
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "What musical instrument is being played in wemakemusic Yusa Parte 1 Tanto de mi live session?",
+    "query": "What musical instrument is being played by Yusa in wemakemusic Yusa Parte 1 Tanto de mi live session?",
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 28.8,
-      "frame_id": 720,
+      "timestamp": 2.5,
+      "frame_id": 60,
       "answer": "guitar",
       "acceptable_answers": ["acoustic guitar", "guitar", "an acoustic guitar"]
     }
@@ -128,13 +128,13 @@
     "type": 4,
     "type_name": "AVS",
     "category": "Ad-hoc Video Search (Cross-Video Diversity)",
-    "query": "laje de santos diver underwater ocean marine life poissons",
+    "query": "scuba diving underwater ocean marine life and fish",
     "ground_truth": {
       "video_name": "00008.mp4",
       "video_stem": "00008",
       "timestamp": 49.6,
       "frame_id": 1240,
-      "distinct_target_videos": ["00008", "marine_0034"]
+      "distinct_target_videos": ["00008", "00609", "01672", "01044", "00250"]
     }
   },
   {

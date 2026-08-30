@@ -270,8 +270,10 @@ def run_rag_benchmark(
                     if video_rank is None: video_rank = idx_c
                     break
 
-                # 2. Video matching
-                if target_video in cand_video or cand_video in target_video:
+                # 2. Video matching (supports single target and AVS distinct_target_videos pool)
+                distinct_pool = [canonical_video_id(v) for v in ground_truth.get("distinct_target_videos", []) if v]
+                is_video_hit = (target_video in cand_video or cand_video in target_video) or any(dv in cand_video or cand_video in dv for dv in distinct_pool)
+                if is_video_hit:
                     if video_rank is None:
                         video_rank = idx_c
 

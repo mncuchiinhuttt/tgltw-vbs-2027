@@ -1,29 +1,29 @@
 {
-  "timestamp": "2026-08-30 16:01:16 UTC",
+  "timestamp": "2026-08-30 16:19:27 UTC",
   "total_queries": 10,
-  "overall_rag_score": 68.9,
+  "overall_rag_score": 69.3,
   "pillar1_retrieval": {
     "recall_1": 44.4,
-    "recall_5": 55.6,
+    "recall_5": 66.7,
     "recall_10": 77.8,
-    "mrr": 0.5336,
+    "mrr": 0.5503,
     "video_level": {
-      "recall_1": 55.6,
-      "recall_5": 55.6,
+      "recall_1": 66.7,
+      "recall_5": 77.8,
       "recall_10": 77.8,
-      "mrr": 0.5901
+      "mrr": 0.7271
     },
     "temporal_segment": {
       "recall_1": 44.4,
-      "recall_5": 55.6,
+      "recall_5": 66.7,
       "recall_10": 77.8,
-      "mrr": 0.5314
+      "mrr": 0.5481
     },
     "point_precision": {
-      "recall_1": 44.4,
-      "recall_5": 55.6,
+      "recall_1": 33.3,
+      "recall_5": 66.7,
       "recall_10": 66.7,
-      "mrr": 0.5246
+      "mrr": 0.4783
     },
     "evaluable_items": 9
   },
@@ -39,12 +39,12 @@
     "kisc_scenarios": 2
   },
   "pillar4_telemetry": {
-    "mean_latency_sec": 17.972,
-    "p50_latency_sec": 10.715,
-    "p95_latency_sec": 55.473,
-    "mean_hyde_sec": 2.03,
-    "mean_search_sec": 0.623,
-    "mean_rerank_sec": 15.319
+    "mean_latency_sec": 19.497,
+    "p50_latency_sec": 15.084,
+    "p95_latency_sec": 54.581,
+    "mean_hyde_sec": 2.291,
+    "mean_search_sec": 0.622,
+    "mean_rerank_sec": 16.583
   },
   "system_config": {
     "vlm_option": "openai",
@@ -69,29 +69,20 @@
       "rank": 1,
       "video_rank": 1,
       "temporal_rank": 1,
-      "point_rank": 1,
+      "point_rank": 2,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 10.153,
-        "hyde_sec": 3.042,
-        "search_sec": 1.477,
-        "rerank_sec": 5.634
+        "total_sec": 18.998,
+        "hyde_sec": 3.62,
+        "search_sec": 1.096,
+        "rerank_sec": 14.281
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "7c12ef47-7043-5f19-bf5b-eed510216664",
-          "score": 0.5463,
-          "video_name": "00001.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
-          "caption": "PARISIANA JAM"
-        },
-        {
-          "rank": 2,
           "id": "3b3a04a3-a984-596a-a8f0-e804482732db",
           "score": 0.5459,
           "video_name": "00001.mp4",
@@ -100,7 +91,25 @@
           "caption": "PARISIANA JAM"
         },
         {
+          "rank": 2,
+          "id": "f5023aed-74e2-5bad-aac9-5194168976a2",
+          "score": 0.5458,
+          "video_name": "00001.mp4",
+          "frame_idx": 1302,
+          "timestamp": 52.08,
+          "caption": "PARISIANA JAM"
+        },
+        {
           "rank": 3,
+          "id": "2e9fc602-338d-5292-b3a1-3b4c5aec92eb",
+          "score": 0.5455,
+          "video_name": "00001.mp4",
+          "frame_idx": 1364,
+          "timestamp": 54.56,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 4,
           "id": "c31269a6-80b1-5b4a-ba29-5e02aa51440b",
           "score": 0.4866,
           "video_name": "00001.mp4",
@@ -109,7 +118,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 4,
+          "rank": 5,
           "id": "f2303dc3-77ea-5fea-a492-b9370deb27e8",
           "score": 0.4865,
           "video_name": "00001.mp4",
@@ -118,7 +127,16 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 5,
+          "rank": 6,
+          "id": "7c12ef47-7043-5f19-bf5b-eed510216664",
+          "score": 0.4863,
+          "video_name": "00001.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 7,
           "id": "13c3d22b-ae79-54bc-805a-67aeea670e9b",
           "score": 0.4862,
           "video_name": "00001.mp4",
@@ -127,34 +145,7 @@
           "caption": "PARISIANA JAM"
         },
         {
-          "rank": 6,
-          "id": "5000cfae-58a0-507a-8458-385cf6584e1c",
-          "score": 0.486,
-          "video_name": "00001.mp4",
-          "frame_idx": 1116,
-          "timestamp": 44.64,
-          "caption": "PARISIANA JAM"
-        },
-        {
-          "rank": 7,
-          "id": "f5023aed-74e2-5bad-aac9-5194168976a2",
-          "score": 0.4858,
-          "video_name": "00001.mp4",
-          "frame_idx": 1302,
-          "timestamp": 52.08,
-          "caption": "PARISIANA JAM"
-        },
-        {
           "rank": 8,
-          "id": "02a8e9c2-e0b7-58f6-8b2f-b30292732f1a",
-          "score": 0.4857,
-          "video_name": "01040.mp4",
-          "frame_idx": 1184,
-          "timestamp": 39.51,
-          "caption": "April April BMX Jam 2014"
-        },
-        {
-          "rank": 9,
           "id": "00645c44-4b14-59fc-bdfc-d21c64eb8a4c",
           "score": 0.4856,
           "video_name": "01040.mp4",
@@ -163,13 +154,22 @@
           "caption": "April April BMX Jam 2014"
         },
         {
-          "rank": 10,
+          "rank": 9,
           "id": "ae87bc2c-b1db-53b3-89b1-f51ba6909280",
           "score": 0.4852,
           "video_name": "00001.mp4",
           "frame_idx": 682,
           "timestamp": 27.28,
           "caption": "PARISIANA JAM"
+        },
+        {
+          "rank": 10,
+          "id": "2d9d648f-9807-5d87-a738-4724cac62a26",
+          "score": 0.4851,
+          "video_name": "01294.mp4",
+          "frame_idx": 1426,
+          "timestamp": 57.04,
+          "caption": "\u201cNew Blood\u201d Contest"
         }
       ]
     },
@@ -194,16 +194,16 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 9.692,
-        "hyde_sec": 2.847,
-        "search_sec": 0.545,
-        "rerank_sec": 6.3
+        "total_sec": 15.084,
+        "hyde_sec": 3.044,
+        "search_sec": 0.532,
+        "rerank_sec": 11.507
       },
       "top_candidates": [
         {
           "rank": 1,
           "id": "d4aa0569-bf17-51e9-a41e-2e2539d3ba7e",
-          "score": 0.4862,
+          "score": 0.5162,
           "video_name": "00004.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
@@ -220,6 +220,15 @@
         },
         {
           "rank": 3,
+          "id": "29685b4f-d17c-5b64-83bf-38d6ab343625",
+          "score": 0.4858,
+          "video_name": "00326.mp4",
+          "frame_idx": 806,
+          "timestamp": 32.24,
+          "caption": "Seychelles Aerial 4K. ZERODRONE"
+        },
+        {
+          "rank": 4,
           "id": "4755edad-4dfb-5ccf-80d0-9ea1341a63d0",
           "score": 0.4855,
           "video_name": "00326.mp4",
@@ -228,7 +237,7 @@
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 4,
+          "rank": 5,
           "id": "67b6d4b5-b556-5b3d-b717-ceaf3f9be355",
           "score": 0.4852,
           "video_name": "00326.mp4",
@@ -237,25 +246,7 @@
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 5,
-          "id": "29685b4f-d17c-5b64-83bf-38d6ab343625",
-          "score": 0.4258,
-          "video_name": "00326.mp4",
-          "frame_idx": 806,
-          "timestamp": 32.24,
-          "caption": "Seychelles Aerial 4K. ZERODRONE"
-        },
-        {
           "rank": 6,
-          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
-          "score": 0.425,
-          "video_name": "00498.mp4",
-          "frame_idx": 296,
-          "timestamp": 9.88,
-          "caption": "Nanakuli Soaring"
-        },
-        {
-          "rank": 7,
           "id": "7ffe183a-e257-5b23-8a74-1996911c674d",
           "score": 0.3665,
           "video_name": "00326.mp4",
@@ -264,31 +255,40 @@
           "caption": "Seychelles Aerial 4K. ZERODRONE"
         },
         {
-          "rank": 8,
-          "id": "31665996-5edb-5496-90de-5f1347fb561f",
-          "score": 0.3051,
-          "video_name": "00060.mp4",
-          "frame_idx": 444,
-          "timestamp": 14.81,
-          "caption": "Rota, Nature\u2019s Treasure Island"
+          "rank": 7,
+          "id": "cc18ec6d-959a-5613-b709-68efef94d17d",
+          "score": 0.365,
+          "video_name": "00498.mp4",
+          "frame_idx": 296,
+          "timestamp": 9.88,
+          "caption": "Nanakuli Soaring"
         },
         {
-          "rank": 9,
+          "rank": 8,
           "id": "c5f865e4-84cf-5016-90bb-5a3440c49ca4",
-          "score": 0.2463,
+          "score": 0.3063,
           "video_name": "00060.mp4",
           "frame_idx": 370,
           "timestamp": 12.35,
           "caption": "Rota, Nature\u2019s Treasure Island"
         },
         {
-          "rank": 10,
+          "rank": 9,
           "id": "f4ff4eca-78c5-5d68-bdeb-c7f2e5bb3b9a",
-          "score": 0.2462,
+          "score": 0.3062,
           "video_name": "01523.mp4",
           "frame_idx": 118,
           "timestamp": 4.92,
           "caption": "Gone to Hawaii"
+        },
+        {
+          "rank": 10,
+          "id": "641b8472-2636-5eba-8f3c-45f563355795",
+          "score": 0.2457,
+          "video_name": "00060.mp4",
+          "frame_idx": 518,
+          "timestamp": 17.28,
+          "caption": "Rota, Nature\u2019s Treasure Island"
         }
       ]
     },
@@ -313,10 +313,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 6.042,
-        "hyde_sec": 2.136,
-        "search_sec": 0.523,
-        "rerank_sec": 3.383
+        "total_sec": 9.73,
+        "hyde_sec": 4.045,
+        "search_sec": 0.534,
+        "rerank_sec": 5.15
       },
       "top_candidates": [
         {
@@ -430,17 +430,17 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "a traditional Hindu wedding ceremony celebration of Sudarmani and Kasthuri with a peacock theme",
+        "cqr_query": "traditional Hindu wedding ceremony of Sudarmani and Kasthuri with a peacock theme",
         "ambiguity_turn1": 0.592,
         "ambiguity_turn2": 0.59,
         "delta_ambiguity": 0.002
       },
       "status": "PASS (Rank #1 | V-Rank #1)",
       "latency": {
-        "total_sec": 10.925,
-        "hyde_sec": 2.317,
-        "search_sec": 0.565,
-        "rerank_sec": 8.043
+        "total_sec": 12.057,
+        "hyde_sec": 2.307,
+        "search_sec": 0.557,
+        "rerank_sec": 9.193
       },
       "top_candidates": [
         {
@@ -554,17 +554,17 @@
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {
-        "cqr_query": "people diving in Laje de Santos with an ATM diver and poissons",
+        "cqr_query": "people diving at Laje de Santos with an ATM diver and poissons",
         "ambiguity_turn1": 0.742,
         "ambiguity_turn2": 0.728,
         "delta_ambiguity": 0.0138
       },
       "status": "PASS (Rank #62 | V-Rank #42)",
       "latency": {
-        "total_sec": 10.715,
-        "hyde_sec": 3.259,
-        "search_sec": 0.511,
-        "rerank_sec": 6.945
+        "total_sec": 11.349,
+        "hyde_sec": 2.726,
+        "search_sec": 0.531,
+        "rerank_sec": 8.092
       },
       "top_candidates": [
         {
@@ -579,7 +579,7 @@
         {
           "rank": 2,
           "id": "49d63221-46f2-592a-b97f-f071807762a4",
-          "score": 0.1851,
+          "score": 0.2451,
           "video_name": "01044.mp4",
           "frame_idx": 222,
           "timestamp": 7.41,
@@ -587,24 +587,6 @@
         },
         {
           "rank": 3,
-          "id": "63a7fbe8-070d-5c50-8b1a-647247386d28",
-          "score": 0.1255,
-          "video_name": "00840.mp4",
-          "frame_idx": 444,
-          "timestamp": 14.81,
-          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
-        },
-        {
-          "rank": 4,
-          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
-          "score": 0.0665,
-          "video_name": "00102.mp4",
-          "frame_idx": 1554,
-          "timestamp": 51.85,
-          "caption": "How to Catch a Lobster"
-        },
-        {
-          "rank": 5,
           "id": "d94edb83-ae52-5607-bf4c-af70eee755a1",
           "score": 0.0656,
           "video_name": "00840.mp4",
@@ -613,7 +595,16 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 6,
+          "rank": 4,
+          "id": "63a7fbe8-070d-5c50-8b1a-647247386d28",
+          "score": 0.0655,
+          "video_name": "00840.mp4",
+          "frame_idx": 444,
+          "timestamp": 14.81,
+          "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
+        },
+        {
+          "rank": 5,
           "id": "04cdb214-2970-5887-9752-13e4f953d12e",
           "score": 0.0654,
           "video_name": "00840.mp4",
@@ -622,7 +613,7 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 7,
+          "rank": 6,
           "id": "50f4cc56-d770-5b48-ad23-e5d9d990824b",
           "score": 0.0653,
           "video_name": "00840.mp4",
@@ -631,7 +622,7 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 8,
+          "rank": 7,
           "id": "e508295d-0050-553e-b129-be0f56e1a03d",
           "score": 0.0652,
           "video_name": "00840.mp4",
@@ -640,7 +631,7 @@
           "caption": "\uc720\ud0dc\ud654 \uac15\uc0ac\ub2d8 \uc7a5\ube44 \ud0c8\ucc29 \uc2dc\ubc94"
         },
         {
-          "rank": 9,
+          "rank": 8,
           "id": "9255f6b8-203c-51de-afe4-46b7f0898398",
           "score": 0.065,
           "video_name": "00102.mp4",
@@ -649,13 +640,22 @@
           "caption": "How to Catch a Lobster"
         },
         {
-          "rank": 10,
+          "rank": 9,
           "id": "782c7068-d755-59fb-9437-9e6aaadea14e",
           "score": 0.007,
           "video_name": "01641.mp4",
           "frame_idx": 930,
           "timestamp": 37.2,
           "caption": "Salto de Paraquedas Boituva"
+        },
+        {
+          "rank": 10,
+          "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
+          "score": 0.0067,
+          "video_name": "00250.mp4",
+          "frame_idx": 354,
+          "timestamp": 14.76,
+          "caption": "Deep South Maldives"
         }
       ]
     },
@@ -664,7 +664,7 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What type of aircraft is seen touring over the tropical island landscape in Sunshine Helicopter tour?",
+      "query": "What type of aircraft is seen touring in Sunshine Helicopter tour Motorcycle & Helicopter Touring Maui 2016?",
       "ground_truth": {
         "video_name": "00004.mp4",
         "video_stem": "00004",
@@ -677,61 +677,61 @@
           "a helicopter"
         ]
       },
-      "rank": 6,
-      "video_rank": 6,
-      "temporal_rank": 6,
-      "point_rank": 6,
+      "rank": 2,
+      "video_rank": 2,
+      "temporal_rank": 2,
+      "point_rank": 2,
       "vqa_answer": "helicopter",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #6 | V-Rank #6)",
+      "status": "PASS (Rank #2 | V-Rank #2)",
       "latency": {
-        "total_sec": 55.473,
-        "hyde_sec": 2.006,
-        "search_sec": 0.519,
-        "rerank_sec": 52.948
+        "total_sec": 54.581,
+        "hyde_sec": 2.511,
+        "search_sec": 0.532,
+        "rerank_sec": 51.537
       },
       "top_candidates": [
         {
           "rank": 1,
-          "id": "4a001df1-6190-593c-8ac4-b798baa98c30",
-          "score": 0.6066,
-          "video_name": "00985.mp4",
-          "frame_idx": 1357,
-          "timestamp": 56.6,
-          "caption": "Virgin Kitesurfing Armada"
-        },
-        {
-          "rank": 2,
-          "id": "55a19de4-12b1-50c1-8d13-ee11df72d450",
-          "score": 0.6065,
-          "video_name": "00985.mp4",
-          "frame_idx": 1416,
-          "timestamp": 59.06,
-          "caption": "Virgin Kitesurfing Armada"
-        },
-        {
-          "rank": 3,
           "id": "7814f0ed-fdfd-5c15-b1dd-9340e66cbc06",
-          "score": 0.6063,
+          "score": 0.6066,
           "video_name": "00206.mp4",
           "frame_idx": 518,
           "timestamp": 17.28,
           "caption": "Heli Jumps: 3rd Annual JL Aviation Hangar Dance"
         },
         {
+          "rank": 2,
+          "id": "5cf9c334-c82c-596f-b478-897eb51b5e64",
+          "score": 0.6065,
+          "video_name": "00004.mp4",
+          "frame_idx": 1776,
+          "timestamp": 59.26,
+          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+        },
+        {
+          "rank": 3,
+          "id": "55a19de4-12b1-50c1-8d13-ee11df72d450",
+          "score": 0.6063,
+          "video_name": "00985.mp4",
+          "frame_idx": 1416,
+          "timestamp": 59.06,
+          "caption": "Virgin Kitesurfing Armada"
+        },
+        {
           "rank": 4,
-          "id": "3576d3ca-7cce-5445-9a69-065b679357ef",
-          "score": 0.606,
-          "video_name": "00371.mp4",
-          "frame_idx": 370,
-          "timestamp": 12.35,
-          "caption": "Wade Stalvey\u2019s First Solo Video"
+          "id": "4a001df1-6190-593c-8ac4-b798baa98c30",
+          "score": 0.6062,
+          "video_name": "00985.mp4",
+          "frame_idx": 1357,
+          "timestamp": 56.6,
+          "caption": "Virgin Kitesurfing Armada"
         },
         {
           "rank": 5,
           "id": "171a9e9e-b430-5cbc-956e-6238a87006a1",
-          "score": 0.6059,
+          "score": 0.6061,
           "video_name": "01201.mp4",
           "frame_idx": 558,
           "timestamp": 22.32,
@@ -739,15 +739,24 @@
         },
         {
           "rank": 6,
-          "id": "5cf9c334-c82c-596f-b478-897eb51b5e64",
-          "score": 0.6053,
-          "video_name": "00004.mp4",
-          "frame_idx": 1776,
-          "timestamp": 59.26,
-          "caption": "Motorcycle & Helicopter Touring Maui  2016"
+          "id": "0f5e8089-1fbd-5e25-a9ad-871f28b9da86",
+          "score": 0.606,
+          "video_name": "01201.mp4",
+          "frame_idx": 1302,
+          "timestamp": 52.08,
+          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
         },
         {
           "rank": 7,
+          "id": "5e7c88bd-e205-5da8-9bb4-34fd07711315",
+          "score": 0.6054,
+          "video_name": "00371.mp4",
+          "frame_idx": 1036,
+          "timestamp": 34.57,
+          "caption": "Wade Stalvey\u2019s First Solo Video"
+        },
+        {
+          "rank": 8,
           "id": "15c1f2b5-d0ae-55dc-9f3d-c3cfa10c4d50",
           "score": 0.6053,
           "video_name": "00478.mp4",
@@ -756,31 +765,22 @@
           "caption": "~ Way of Life ~"
         },
         {
-          "rank": 8,
-          "id": "34600d39-dee1-5715-b09d-801ea3ee9fbc",
-          "score": 0.5754,
-          "video_name": "01254.mp4",
-          "frame_idx": 500,
-          "timestamp": 10.0,
-          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
-        },
-        {
           "rank": 9,
-          "id": "1ee2ea40-c6d9-5c33-b75b-47802d194c2b",
-          "score": 0.5463,
-          "video_name": "00230.mp4",
-          "frame_idx": 1426,
-          "timestamp": 57.04,
-          "caption": "Surface To Air"
+          "id": "5e523474-e729-54be-9ca4-347ba285a388",
+          "score": 0.5462,
+          "video_name": "01201.mp4",
+          "frame_idx": 868,
+          "timestamp": 34.72,
+          "caption": "Richtech Aerial Imaging - About Us    China Aerial Imaging Service,4K Aerial Footage,SHOTO"
         },
         {
           "rank": 10,
-          "id": "9eed05a7-a675-5836-a03a-50a21fd24063",
-          "score": 0.5462,
-          "video_name": "00370.mp4",
-          "frame_idx": 590,
-          "timestamp": 24.61,
-          "caption": "PANASONIC GH2- Exploring Africa"
+          "id": "9ba5a626-4940-5386-8121-c328583c3ad7",
+          "score": 0.5453,
+          "video_name": "01254.mp4",
+          "frame_idx": 1750,
+          "timestamp": 35.0,
+          "caption": "HOP! Tour des Jeunes Pilotes 2016 - Jour 12/13"
         }
       ]
     },
@@ -789,12 +789,12 @@
       "type": 2,
       "type_name": "VQA",
       "category": "Visual Question Answering (Grounded)",
-      "query": "What musical instrument is being played in wemakemusic Yusa Parte 1 Tanto de mi live session?",
+      "query": "What musical instrument is being played by Yusa in wemakemusic Yusa Parte 1 Tanto de mi live session?",
       "ground_truth": {
         "video_name": "00009.mp4",
         "video_stem": "00009",
-        "timestamp": 28.8,
-        "frame_id": 720,
+        "timestamp": 2.5,
+        "frame_id": 60,
         "answer": "guitar",
         "acceptable_answers": [
           "acoustic guitar",
@@ -802,25 +802,25 @@
           "an acoustic guitar"
         ]
       },
-      "rank": 2,
+      "rank": 6,
       "video_rank": 1,
-      "temporal_rank": 2,
-      "point_rank": 2,
+      "temporal_rank": 6,
+      "point_rank": 24,
       "vqa_answer": "guitar",
       "vqa_answer_valid": true,
       "kisc_info": {},
-      "status": "PASS (Rank #2 | V-Rank #1)",
+      "status": "PASS (Rank #6 | V-Rank #1)",
       "latency": {
-        "total_sec": 45.515,
-        "hyde_sec": 2.922,
-        "search_sec": 0.548,
-        "rerank_sec": 42.045
+        "total_sec": 41.961,
+        "hyde_sec": 2.684,
+        "search_sec": 0.575,
+        "rerank_sec": 38.703
       },
       "top_candidates": [
         {
           "rank": 1,
           "id": "0cb43fc8-217a-5c01-8c4b-5899e36882e2",
-          "score": 0.6062,
+          "score": 0.6063,
           "video_name": "00009.mp4",
           "frame_idx": 1320,
           "timestamp": 55.0,
@@ -828,84 +828,84 @@
         },
         {
           "rank": 2,
-          "id": "78d26e0b-c9e6-567a-834b-b863092a530a",
+          "id": "fd8f7f37-4138-5a0c-b2a5-e6cbfb96dd68",
           "score": 0.6062,
+          "video_name": "01010.mp4",
+          "frame_idx": 118,
+          "timestamp": 4.92,
+          "caption": "Making the music for the independent film \u201cSomebody\u2019s Darling\u201d"
+        },
+        {
+          "rank": 3,
+          "id": "78d26e0b-c9e6-567a-834b-b863092a530a",
+          "score": 0.606,
           "video_name": "00009.mp4",
           "frame_idx": 660,
           "timestamp": 27.5,
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
-          "rank": 3,
-          "id": "be21540e-6a5b-58ae-9f04-fdf3904fc186",
-          "score": 0.6055,
-          "video_name": "00009.mp4",
-          "frame_idx": 1260,
-          "timestamp": 52.5,
-          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
-        },
-        {
           "rank": 4,
-          "id": "d2c03bf2-6bc4-534d-905b-70663202d9c6",
-          "score": 0.6054,
-          "video_name": "01578.mp4",
-          "frame_idx": 682,
-          "timestamp": 27.28,
-          "caption": "Meursault - Crank Resolutions (In the Toad Van after too much wine.)"
-        },
-        {
-          "rank": 5,
-          "id": "0f33ff7e-267d-5b00-8c0e-5099d2225601",
-          "score": 0.6053,
-          "video_name": "00009.mp4",
-          "frame_idx": 240,
-          "timestamp": 10.0,
-          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
-        },
-        {
-          "rank": 6,
           "id": "d9f29430-e51f-5c5a-8fb5-652a8092468c",
-          "score": 0.6052,
+          "score": 0.6058,
           "video_name": "00009.mp4",
           "frame_idx": 1380,
           "timestamp": 57.5,
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
-          "rank": 7,
+          "rank": 5,
           "id": "fdbbe39a-f7ce-5607-aafe-f7b92e92a157",
-          "score": 0.6051,
+          "score": 0.6056,
           "video_name": "00009.mp4",
           "frame_idx": 600,
           "timestamp": 25.0,
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
-          "rank": 8,
-          "id": "df76577b-d708-5b54-a368-88f96084f28c",
-          "score": 0.605,
+          "rank": 6,
+          "id": "0f33ff7e-267d-5b00-8c0e-5099d2225601",
+          "score": 0.6056,
           "video_name": "00009.mp4",
-          "frame_idx": 180,
-          "timestamp": 7.5,
+          "frame_idx": 240,
+          "timestamp": 10.0,
+          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
+        },
+        {
+          "rank": 7,
+          "id": "9a2215c5-c223-5fc2-8074-de0370e7018d",
+          "score": 0.6054,
+          "video_name": "00009.mp4",
+          "frame_idx": 900,
+          "timestamp": 37.5,
+          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
+        },
+        {
+          "rank": 8,
+          "id": "be21540e-6a5b-58ae-9f04-fdf3904fc186",
+          "score": 0.6051,
+          "video_name": "00009.mp4",
+          "frame_idx": 1260,
+          "timestamp": 52.5,
           "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
           "rank": 9,
-          "id": "d653bddc-eab5-5a69-ba16-8c80f6ee4009",
-          "score": 0.5765,
-          "video_name": "00858.mp4",
-          "frame_idx": 480,
-          "timestamp": 20.0,
-          "caption": "Mambo Influenciado por el Conjunto Tahona"
+          "id": "8fc4a677-d46e-5fe4-8b18-c3c40ea38885",
+          "score": 0.605,
+          "video_name": "00009.mp4",
+          "frame_idx": 720,
+          "timestamp": 30.0,
+          "caption": "[wemakemusic.] Yusa - Parte 1 - Tanto de m\u00ed"
         },
         {
           "rank": 10,
-          "id": "54600c70-0dfd-5c22-b617-b37a1d33cd79",
-          "score": 0.5763,
-          "video_name": "01578.mp4",
-          "frame_idx": 1240,
-          "timestamp": 49.6,
-          "caption": "Meursault - Crank Resolutions (In the Toad Van after too much wine.)"
+          "id": "7f26370a-17b4-5c9d-b74a-20beda468395",
+          "score": 0.5765,
+          "video_name": "01142.mp4",
+          "frame_idx": 1440,
+          "timestamp": 60.0,
+          "caption": "Misasa Monthly Video 12 (March 2013) - Attakaza"
         }
       ]
     },
@@ -937,10 +937,10 @@
       "kisc_info": {},
       "status": "PASS (Fail-Closed Validated)",
       "latency": {
-        "total_sec": 26.751,
-        "hyde_sec": 1.772,
-        "search_sec": 0.527,
-        "rerank_sec": 24.452
+        "total_sec": 26.177,
+        "hyde_sec": 1.968,
+        "search_sec": 0.598,
+        "rerank_sec": 23.611
       },
       "top_candidates": [
         {
@@ -1040,7 +1040,7 @@
       "type": 4,
       "type_name": "AVS",
       "category": "Ad-hoc Video Search (Cross-Video Diversity)",
-      "query": "laje de santos diver underwater ocean marine life poissons",
+      "query": "scuba diving underwater ocean marine life and fish",
       "ground_truth": {
         "video_name": "00008.mp4",
         "video_stem": "00008",
@@ -1048,26 +1048,38 @@
         "frame_id": 1240,
         "distinct_target_videos": [
           "00008",
-          "marine_0034"
+          "00609",
+          "01672",
+          "01044",
+          "00250"
         ]
       },
-      "rank": 10,
-      "video_rank": 10,
-      "temporal_rank": 10,
-      "point_rank": 24,
+      "rank": 4,
+      "video_rank": 1,
+      "temporal_rank": 4,
+      "point_rank": 4,
       "vqa_answer": null,
       "vqa_answer_valid": false,
       "kisc_info": {},
-      "status": "PASS (Rank #10 | V-Rank #10)",
+      "status": "PASS (Rank #4 | V-Rank #1)",
       "latency": {
-        "total_sec": 0.512,
+        "total_sec": 0.628,
         "hyde_sec": 0.0,
-        "search_sec": 0.512,
+        "search_sec": 0.628,
         "rerank_sec": 0.0
       },
       "top_candidates": [
         {
           "rank": 1,
+          "id": "1267c140-f603-50b3-bfbe-85c74f01c92c",
+          "score": 0.0,
+          "video_name": "00250.mp4",
+          "frame_idx": 354,
+          "timestamp": 14.76,
+          "caption": "Deep South Maldives"
+        },
+        {
+          "rank": 2,
           "id": "e930f883-5dfa-5793-99ff-f6b3f27ee520",
           "score": 0.0,
           "video_name": "00609.mp4",
@@ -1076,43 +1088,7 @@
           "caption": "116 bonaire 1"
         },
         {
-          "rank": 2,
-          "id": "d8c5d882-1417-5334-9ff9-f56ae3d8e143",
-          "score": 0.0,
-          "video_name": "01672.mp4",
-          "frame_idx": 1116,
-          "timestamp": 44.64,
-          "caption": "South Komodo 2012"
-        },
-        {
           "rank": 3,
-          "id": "32aa4525-ce26-59f1-9315-c1c443b37c9b",
-          "score": 0.0,
-          "video_name": "01044.mp4",
-          "frame_idx": 370,
-          "timestamp": 12.35,
-          "caption": "Shark therapy"
-        },
-        {
-          "rank": 4,
-          "id": "fdbdc508-35ee-5875-b6ff-feea5a7d759f",
-          "score": 0.0,
-          "video_name": "00609.mp4",
-          "frame_idx": 620,
-          "timestamp": 24.8,
-          "caption": "116 bonaire 1"
-        },
-        {
-          "rank": 5,
-          "id": "8c775237-8b5f-570e-9124-d956dbd5bc2c",
-          "score": 0.0,
-          "video_name": "00609.mp4",
-          "frame_idx": 806,
-          "timestamp": 32.24,
-          "caption": "116 bonaire 1"
-        },
-        {
-          "rank": 6,
           "id": "16bafeca-6f0b-5fd7-8132-e4bb2a46acad",
           "score": 0.0,
           "video_name": "00609.mp4",
@@ -1121,40 +1097,67 @@
           "caption": "116 bonaire 1"
         },
         {
-          "rank": 7,
-          "id": "d2d417c3-57f7-5a44-965f-d9fa596dcfc0",
+          "rank": 4,
+          "id": "d8c5d882-1417-5334-9ff9-f56ae3d8e143",
           "score": 0.0,
-          "video_name": "00609.mp4",
-          "frame_idx": 744,
-          "timestamp": 29.76,
-          "caption": "116 bonaire 1"
+          "video_name": "01672.mp4",
+          "frame_idx": 1116,
+          "timestamp": 44.64,
+          "caption": "South Komodo 2012"
+        },
+        {
+          "rank": 5,
+          "id": "0cece679-b332-586e-99f4-9107661e8fea",
+          "score": 0.0,
+          "video_name": "00102.mp4",
+          "frame_idx": 1480,
+          "timestamp": 49.38,
+          "caption": "How to Catch a Lobster"
+        },
+        {
+          "rank": 6,
+          "id": "274f6250-a1c2-591b-8223-dc803cef2ebb",
+          "score": 0.0,
+          "video_name": "00250.mp4",
+          "frame_idx": 295,
+          "timestamp": 12.3,
+          "caption": "Deep South Maldives"
+        },
+        {
+          "rank": 7,
+          "id": "70cd659b-62d0-5018-b904-9de6d60079c0",
+          "score": 0.0,
+          "video_name": "00102.mp4",
+          "frame_idx": 1554,
+          "timestamp": 51.85,
+          "caption": "How to Catch a Lobster"
         },
         {
           "rank": 8,
-          "id": "85048158-58c0-571b-9b85-c33eb2d98344",
+          "id": "1a012c6e-5be9-5230-bc90-da245bcb2df0",
           "score": 0.0,
           "video_name": "00609.mp4",
-          "frame_idx": 372,
-          "timestamp": 14.88,
+          "frame_idx": 434,
+          "timestamp": 17.36,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 9,
-          "id": "fcefe8c9-78ff-580b-8396-5388ad8f746a",
+          "id": "fdbdc508-35ee-5875-b6ff-feea5a7d759f",
           "score": 0.0,
           "video_name": "00609.mp4",
-          "frame_idx": 868,
-          "timestamp": 34.72,
+          "frame_idx": 620,
+          "timestamp": 24.8,
           "caption": "116 bonaire 1"
         },
         {
           "rank": 10,
-          "id": "97163f4b-d15a-5c8e-9d9a-5a4e6733ddda",
+          "id": "a7a4c4b0-09ec-55e3-a818-eacf9690505a",
           "score": 0.0,
-          "video_name": "00008.mp4",
-          "frame_idx": 1488,
-          "timestamp": 59.52,
-          "caption": "laje de santos"
+          "video_name": "00250.mp4",
+          "frame_idx": 413,
+          "timestamp": 17.23,
+          "caption": "Deep South Maldives"
         }
       ]
     },
@@ -1179,10 +1182,10 @@
       "kisc_info": {},
       "status": "PASS (Rank #50 | V-Rank #50)",
       "latency": {
-        "total_sec": 3.941,
+        "total_sec": 4.4,
         "hyde_sec": 0.0,
-        "search_sec": 0.504,
-        "rerank_sec": 3.436
+        "search_sec": 0.641,
+        "rerank_sec": 3.759
       },
       "top_candidates": [
         {
@@ -1214,15 +1217,6 @@
         },
         {
           "rank": 4,
-          "id": "0cece679-b332-586e-99f4-9107661e8fea",
-          "score": 0.0657,
-          "video_name": "00102.mp4",
-          "frame_idx": 1480,
-          "timestamp": 49.38,
-          "caption": "How to Catch a Lobster"
-        },
-        {
-          "rank": 5,
           "id": "8ebb4aa7-59cd-5a9e-bbf9-9b7e02eb1310",
           "score": 0.0066,
           "video_name": "01641.mp4",
@@ -1231,7 +1225,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 6,
+          "rank": 5,
           "id": "e0698eb2-bf61-5702-a369-3575548a031d",
           "score": 0.0065,
           "video_name": "01641.mp4",
@@ -1240,7 +1234,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 7,
+          "rank": 6,
           "id": "782c7068-d755-59fb-9437-9e6aaadea14e",
           "score": 0.0063,
           "video_name": "01641.mp4",
@@ -1249,7 +1243,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 8,
+          "rank": 7,
           "id": "27b5ea47-13da-5d8b-a7b3-79933d97758e",
           "score": 0.0063,
           "video_name": "01641.mp4",
@@ -1258,7 +1252,7 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 9,
+          "rank": 8,
           "id": "e2945934-06c6-5218-a25d-588987186dae",
           "score": 0.0062,
           "video_name": "01641.mp4",
@@ -1267,12 +1261,21 @@
           "caption": "Salto de Paraquedas Boituva"
         },
         {
-          "rank": 10,
+          "rank": 9,
           "id": "9436268b-12ec-594d-b870-8097bc036b56",
           "score": 0.0061,
           "video_name": "00430.mp4",
           "frame_idx": 708,
           "timestamp": 29.53,
+          "caption": "Entrevista Eliseu Frechou"
+        },
+        {
+          "rank": 10,
+          "id": "1f838a2a-375b-5776-9145-f3c9b021aa53",
+          "score": 0.006,
+          "video_name": "00430.mp4",
+          "frame_idx": 649,
+          "timestamp": 27.07,
           "caption": "Entrevista Eliseu Frechou"
         }
       ]
