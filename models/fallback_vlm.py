@@ -1,7 +1,7 @@
 import os
 import torch
 from PIL import Image
-from typing import List, Union
+from typing import Any, Dict, List, Optional, Union
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from .base_vlm import BaseVLM
 from config import FALLBACK_VLM_MODEL_ID
@@ -56,6 +56,7 @@ class SmolVLM2FallbackVLM(BaseVLM):
                 "content": content,
             }
         ]
+        text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=img, padding=True, return_tensors="pt").to(self.device)
 
         with torch.no_grad():
