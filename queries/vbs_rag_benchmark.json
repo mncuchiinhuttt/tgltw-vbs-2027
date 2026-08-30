@@ -8,8 +8,8 @@
     "ground_truth": {
       "video_name": "00001.mp4",
       "video_stem": "00001",
-      "timestamp": 29.7,
-      "frame_id": 744
+      "timestamp": 57.0,
+      "frame_id": 1426
     }
   },
   {
@@ -34,8 +34,8 @@
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 7.5,
-      "frame_id": 180
+      "timestamp": 28.8,
+      "frame_id": 720
     }
   },
   {
@@ -54,8 +54,8 @@
     "ground_truth": {
       "video_name": "00003.mp4",
       "video_stem": "00003",
-      "timestamp": 22.2,
-      "frame_id": 666
+      "timestamp": 56.8,
+      "frame_id": 1702
     }
   },
   {
@@ -63,19 +63,19 @@
     "type": 3,
     "type_name": "KIS-C",
     "category": "Conversational Known-Item Search",
-    "query": "people in water exploring marine life and coral reefs",
+    "query": "laje de santos diving with ATM diver and poissons",
     "history": [
       { "role": "user", "text": "people swimming in water" },
       { "role": "system", "text": "Are they surfing on ocean waves or scuba diving underwater near coral reef?" },
-      { "role": "user", "text": "scuba diver swimming with tropical fish near coral reef" }
+      { "role": "user", "text": "laje de santos diving with ATM diver and poissons" }
     ],
-    "system_answer": "scuba diver swimming with tropical fish near coral reef",
+    "system_answer": "laje de santos diving with ATM diver and poissons",
     "rejected": ["surfer riding ocean waves on surfboard"],
     "ground_truth": {
       "video_name": "00008.mp4",
       "video_stem": "00008",
-      "timestamp": 20.0,
-      "frame_id": 500
+      "timestamp": 49.6,
+      "frame_id": 1240
     }
   },
   {
@@ -98,12 +98,12 @@
     "type": 2,
     "type_name": "VQA",
     "category": "Visual Question Answering (Grounded)",
-    "query": "What musical instrument is being played by musician Yusa in the live acoustic session?",
+    "query": "What musical instrument is being played in wemakemusic Yusa Parte 1 Tanto de mi live session?",
     "ground_truth": {
       "video_name": "00009.mp4",
       "video_stem": "00009",
-      "timestamp": 7.5,
-      "frame_id": 180,
+      "timestamp": 28.8,
+      "frame_id": 720,
       "answer": "guitar",
       "acceptable_answers": ["acoustic guitar", "guitar", "an acoustic guitar"]
     }
@@ -128,12 +128,12 @@
     "type": 4,
     "type_name": "AVS",
     "category": "Ad-hoc Video Search (Cross-Video Diversity)",
-    "query": "find all shots showing scuba divers swimming underwater with marine life and fish",
+    "query": "laje de santos diver underwater ocean marine life poissons",
     "ground_truth": {
       "video_name": "00008.mp4",
       "video_stem": "00008",
-      "timestamp": 20.0,
-      "frame_id": 500,
+      "timestamp": 49.6,
+      "frame_id": 1240,
       "distinct_target_videos": ["00008", "marine_0034"]
     }
   },
@@ -142,13 +142,13 @@
     "type": 5,
     "type_name": "KIS-V",
     "category": "Visual Query Search",
-    "query": "visual match for underwater coral reef and scuba diver exploring deep sea",
+    "query": "laje de santos diving with ATM diver de sao vicente",
     "reference_media": "00008.mp4",
     "ground_truth": {
       "video_name": "00008.mp4",
       "video_stem": "00008",
-      "timestamp": 20.0,
-      "frame_id": 500
+      "timestamp": 49.6,
+      "frame_id": 1240
     }
   }
 ]
