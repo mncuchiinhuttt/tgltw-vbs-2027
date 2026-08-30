@@ -41,6 +41,10 @@ export interface ResultHit {
     ocr_text?: string
     modality?: string
     detected_objects?: Array<{ label: string; conf: number }>
+    // TRAKE chain fields (temporal-search normalization)
+    video_name?: string
+    frames?: number[]
+    chain_timestamps?: Array<number | null>
   }
 }
 

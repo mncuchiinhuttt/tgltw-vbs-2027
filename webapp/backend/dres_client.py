@@ -21,7 +21,7 @@ state - callers (webapp/backend/main.py) hold the session token and pass it
 into each call, matching how a single-operator-per-instance webapp uses it.
 """
 import requests
-from typing import Optional
+from typing import List, Optional
 
 
 class DresError(Exception):
@@ -78,32 +78,61 @@ def submit_answer(
     session_id: str,
     evaluation_id: str,
     task_id: str,
-    payload: dict,
+    answers: List[dict],
     timeout: float = 10.0,
 ) -> dict:
     """
-    Submit an answer for the current task. `payload` shape depends on task
-    type (VBS_GUIDE.md section 4) and must be built by the caller:
-      - KIS (KIS-V/T/C): a video item + a temporal range or single frame
-        (e.g. {"mediaItemName": ..., "start": ms, "end": ms}).
-      - AVS: a list of media items (one submission per shot found).
-      - VQA: free-text answer (e.g. {"text": "..."}).
-    These shapes are inferred from the guide's description of DRES's
-    submission model, not yet verified against a live OpenAPI spec - build
-    a small helper per task type once the real schema is confirmed rather
-    than constructing payload dicts ad hoc at call sites.
+    Submit answers for the current task - DRES 2.x submission contract:
+
+        body = {"taskId": ..., "answers": [AnswerWrite, ...]}
+
+    Each AnswerWrite is either a media-item range in MILLISECONDS
+    ({"mediaItemName": ..., "start": ms, "end": ms}) for KIS/AVS/KIS-V, or
+    a plain text answer ({"text": ...}) for VQA/QA-style tasks, or a list
+    of media-item ranges (one per segment, in order) for TRAKE-style
+    multi-segment tasks. This replaces the earlier flat
+    {"mediaItemName", "timestamp"-in-seconds} guess that no DRES version
+    accepts. The shape still needs a rehearsal against the live instance -
+    call sites build AnswerWrite entries via the router's
+    _build_dres_answers, which owns the seconds->milliseconds conversion.
     """
     url = f"{base_url.rstrip('/')}/api/v2/submit/{evaluation_id}"
     try:
         resp = requests.post(
-            url, params={"session": session_id}, json={"taskId": task_id, **payload}, timeout=timeout
+            url, params={"session": session_id}, json={"taskId": task_id, "answers": answers}, timeout=timeout
         )
-        resp.raise_for_status()
+        if resp.status_code >= 400:
+            # DRES's validation detail (which field was wrong, why) lives in
+            # the response body - surfacing it is how an operator recovers
+            # inside a 5-minute task instead of blind-retrying.
+            raise DresError(
+                f"DRES submit rejected ({resp.status_code}): {resp.text[:500]}"
+            )
         return resp.json()
     except requests.RequestException as e:
         raise DresError(f"DRES submit_answer failed: {e}") from e
     except ValueError as e:
         raise DresError(f"DRES submit_answer returned a non-JSON response: {e}") from e
+
+
+def parse_submission_verdict(data: dict) -> str:
+    """
+    Best-effort extraction of a per-answer verdict from a DRES SubmitResponse
+    so the console can show CORRECT/WRONG instead of raw JSON. DRES reports
+    each answer's evaluation as a status/verdict field; the exact casing has
+    not been verified against a live instance, so this scans defensively and
+    falls back to a raw-JSON preview.
+    """
+    answers = data.get("answers") if isinstance(data, dict) else None
+    if isinstance(answers, list) and answers:
+        verdicts = []
+        for a in answers:
+            v = None
+            if isinstance(a, dict):
+                v = a.get("status") or a.get("verdict") or a.get("result")
+            verdicts.append(str(v) if v is not None else "UNKNOWN")
+        return ", ".join(verdicts)
+    return str(data)[:200]
 
 
 def submit_query_log(

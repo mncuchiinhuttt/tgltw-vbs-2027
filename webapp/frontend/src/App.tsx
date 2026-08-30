@@ -296,6 +296,11 @@ function SearchView() {
             score: m.score,
             payload: {
               ...(m.payloads?.[0] || {}),
+              // Chain identity + per-step timestamps so the whole TRAKE
+              // chain can be submitted as multi-segment answers.
+              video_name: m.video_name,
+              frames: m.frames || [],
+              chain_timestamps: (m.payloads || []).map((p: any) => p?.timestamp ?? null),
               caption: (m.payloads || [])
                 .map((p: any, i: number) => p?.caption || `(sự kiện ${i + 1})`)
                 .join(" → "),
@@ -375,23 +380,49 @@ function SearchView() {
       return
     }
     try {
-      // Payload shape is unverified against a live DRES schema (see
-      // dres_client.py's docstring) - this is a best-effort KIS-style
-      // {mediaItemName, timestamp} guess, adjust once the real schema
-      // for VBS 2027's DRES instance is confirmed.
+      // DRES 2.x submission contract: {"taskId", "answers": [AnswerWrite]}
+      // where each answer is a media-item range in MILLISECONDS, a text
+      // answer (VQA), or one range per segment in order (TRAKE). Still
+      // verify against the live DRES instance in rehearsal.
+      let body: Record<string, any> = {
+        task_id: currentTask.task_id,
+        force,
+      }
+      if (queryType === 2) {
+        // VQA: answers are free text - there is no video/frame to submit.
+        const answerText = window.prompt("Nhập đáp án VQA:")
+        if (!answerText || !answerText.trim()) return
+        body.answer_text = answerText.trim()
+      } else if (temporalMode) {
+        // TRAKE: submit the whole chain as ordered per-segment answers.
+        const frames: number[] = hit.payload?.frames || []
+        const chainTs: (number | null)[] = hit.payload?.chain_timestamps || []
+        const video = hit.payload?.source_file || hit.payload?.video_name
+        if (!frames.length) {
+          setActionMessage("Chuỗi TRAKE chưa có frame để nộp.")
+          return
+        }
+        const stepTs = frames.map((f: number, i: number) => chainTs[i] ?? f / 25)
+        body.segments = stepTs.map((ts: number, i: number) => ({
+          mediaItemName: video,
+          // end extends to the next segment's start so DRES never sees a
+          // zero-duration range
+          start: ts,
+          end: i + 1 < stepTs.length ? stepTs[i + 1] : ts,
+        }))
+        body.video_name = video
+      } else {
+        body.payload = { mediaItemName: hit.payload.source_file, timestamp: hit.payload.timestamp }
+        body.video_name = hit.payload.source_file
+      }
       const response = await fetch(`${BACKEND_URL}/api/dres/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task_id: currentTask.task_id,
-          payload: { mediaItemName: hit.payload.source_file, timestamp: hit.payload.timestamp },
-          video_name: hit.payload.source_file,
-          force,
-        }),
+        body: JSON.stringify(body),
       })
       const data = await response.json()
       if (response.ok) {
-        setActionMessage(`Đã nộp: ${JSON.stringify(data)}`)
+        setActionMessage(`Đã nộp — kết quả: ${data.verdict || "không rõ"}`)
         return
       }
       // AVS duplicate-video guard (Phase H): 409 is a soft warning, not a
@@ -403,7 +434,8 @@ function SearchView() {
         }
         return
       }
-      setActionMessage(data.detail?.warning || data.detail || "Nộp thất bại")
+      const failDetail = data.detail?.warning || (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))
+      setActionMessage(failDetail || "Nộp thất bại")
     } catch (err: any) {
       setActionMessage(err.message || "Nộp thất bại")
     }

@@ -339,7 +339,10 @@ class TemporalSearchRequest(BaseModel):
 
 class DresSubmitRequest(BaseModel):
     task_id: str
-    payload: dict
+    # Legacy flat KIS payload {mediaItemName, timestamp}; VQA submissions
+    # send answer_text instead and TRAKE sends segments, so this is
+    # optional now.
+    payload: Optional[dict] = None
     # AVS duplicate-video guard (VBS_GUIDE.md §5.2: resubmitting an
     # already-scored video earns no additional credit, and each wrong
     # submission before the first correct one penalizes the whole video) -
@@ -347,6 +350,12 @@ class DresSubmitRequest(BaseModel):
     # simply omit video_name.
     video_name: Optional[str] = None
     force: bool = False
+    # VQA-style text answer (submitted as {"text": ...} to DRES).
+    answer_text: Optional[str] = None
+    # TRAKE-style multi-segment submission: one entry per chronological
+    # segment, each {"mediaItemName"?, "timestamp"?, "start"?, "end"?} with
+    # times in SECONDS (converted to ms by _build_dres_answers).
+    segments: Optional[List[dict]] = None
 
 class InVideoSearchRequest(BaseModel):
     query: str
@@ -1220,18 +1229,66 @@ def dres_current_task():
     if not cfg["evaluation_id"]:
         raise HTTPException(status_code=400, detail="DRES_EVALUATION_ID not configured")
     try:
-        return dres_client.get_current_task(cfg["base_url"], _dres_session_id, cfg["evaluation_id"])
+        task = dres_client.get_current_task(cfg["base_url"], _dres_session_id, cfg["evaluation_id"])
+        # DRES's TaskInfoResponse identifies the task as "id"; the console
+        # gates submission on "task_id" - expose both so the gate matches.
+        if isinstance(task, dict) and "task_id" not in task:
+            task = {**task, "task_id": task.get("id") or task.get("taskId")}
+        return task
     except dres_client.DresError as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+def _build_dres_answers(request: DresSubmitRequest) -> List[dict]:
+    """
+    Convert the console's submission into DRES 2.x AnswerWrite entries:
+    {"answers": [...]} where each entry is a media-item range in
+    MILLISECONDS or a plain {"text": ...} answer for VQA-style tasks.
+    Times arrive from the console in SECONDS; DRES expects milliseconds.
+    """
+    text = (request.answer_text or "").strip()
+    if text:
+        return [{"text": text}]
+
+    if request.segments:
+        # Normalize each segment to a start time (seconds), then give every
+        # range an explicit end so DRES never sees a zero-duration segment:
+        # an explicit "end" wins, otherwise the range extends to the NEXT
+        # segment's start and the last one closes after a nominal 1s.
+        starts = []
+        for seg in request.segments:
+            name0 = seg.get("mediaItemName") or seg.get("video_name") or request.video_name
+            start = float(seg.get("start", seg.get("timestamp", 0.0)) or 0.0)
+            starts.append((name0, start))
+        answers = []
+        for i, (name, start) in enumerate(starts):
+            explicit_end = request.segments[i].get("end")
+            if explicit_end is not None:
+                end = float(explicit_end)
+            elif i + 1 < len(starts):
+                end = starts[i + 1][1]
+            else:
+                end = start + 1.0
+            answers.append({
+                "mediaItemName": name,
+                "start": int(round(start * 1000)),
+                "end": int(round(end * 1000)),
+            })
+        return answers
+
+    payload = request.payload or {}
+    name = payload.get("mediaItemName") or payload.get("source_file") or request.video_name
+    ts = payload.get("timestamp")
+    start_ms = int(round(float(ts) * 1000)) if ts is not None else 0
+    return [{"mediaItemName": name, "start": start_ms, "end": start_ms}]
+
 
 @app.post("/api/dres/submit")
 def dres_submit(request: DresSubmitRequest):
     """
-    Submit an answer for `request.task_id`. `request.payload`'s exact shape
-    depends on the task type (KIS/AVS/VQA - see dres_client.submit_answer's
-    docstring) and is built by the frontend/caller, not this endpoint -
-    kept intentionally generic since the real DRES submission schema isn't
-    verified against a live instance yet.
+    Submit an answer for `request.task_id` to DRES 2.x as
+    {"taskId": ..., "answers": [...]} - see _build_dres_answers for the
+    per-task-type answer shapes (KIS/AVS/KIS-V media ranges in ms, VQA text,
+    TRAKE multi-segment).
 
     AVS duplicate-video guard (VBS_GUIDE.md §5.2): if `video_name` is
     provided and already recorded as submitted for this task_id, this is a
@@ -1252,9 +1309,10 @@ def dres_submit(request: DresSubmitRequest):
     if duplicate_warning is not None:
         raise HTTPException(status_code=409, detail=duplicate_warning)
 
+    answers = _build_dres_answers(request)
     try:
         result = dres_client.submit_answer(
-            cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, request.payload
+            cfg["base_url"], _dres_session_id, cfg["evaluation_id"], request.task_id, answers
         )
         if request.video_name:
             _avs_submitted_by_task.setdefault(request.task_id, set()).add(request.video_name)
@@ -1262,13 +1320,15 @@ def dres_submit(request: DresSubmitRequest):
             "dres_submit",
             {
                 "task_id": request.task_id,
-                "payload": request.payload,
+                "answers": answers,
                 "video_name": request.video_name,
                 "result": result,
             },
             dres_config=cfg, session_id=_dres_session_id,
         )
-        return result
+        # Surface the per-answer verdict so the operator sees CORRECT/WRONG
+        # instead of raw JSON.
+        return {"dres": result, "verdict": dres_client.parse_submission_verdict(result)}
     except dres_client.DresError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
