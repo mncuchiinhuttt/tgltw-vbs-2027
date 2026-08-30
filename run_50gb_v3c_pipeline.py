@@ -12,6 +12,7 @@ import sys
 import time
 import json
 import uuid
+import shutil
 import cv2
 import subprocess
 from pathlib import Path
@@ -45,8 +46,22 @@ SFTP_USER = "v3c"
 SFTP_PASS = "Wnic1snoecSC"
 
 
+def _remove_partial(local_path: Path) -> None:
+    """Best-effort removal of a partial download - a locked file (e.g. AV
+    scanning a just-killed curl output on Windows) must not crash the worker."""
+    try:
+        local_path.unlink(missing_ok=True)
+    except OSError as err:
+        print(f"[WARN] Could not remove partial {local_path.name}: {err}")
+
+
 def run_curl_download(video_id: str) -> tuple[str, bool, int]:
-    """Download single video file via curl with SFTP auth."""
+    """Download single video file via curl with SFTP auth.
+
+    On any failure the partial file is removed: a killed curl leaves a
+    truncated .mp4 that the >1MB skip check would otherwise permanently
+    accept as complete, index, and count toward the storage target.
+    """
     local_path = VIDEO_DIR / f"{video_id}.mp4"
     if local_path.exists() and local_path.stat().st_size > 1024 * 1024:
         return video_id, True, local_path.stat().st_size
@@ -60,11 +75,20 @@ def run_curl_download(video_id: str) -> tuple[str, bool, int]:
         remote_url
     ]
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
         ok = (res.returncode == 0 and local_path.exists() and local_path.stat().st_size > 1024 * 1024)
-        sz = local_path.stat().st_size if ok else 0
-        return video_id, ok, sz
-    except Exception:
+        if ok:
+            return video_id, True, local_path.stat().st_size
+        _remove_partial(local_path)
+        print(f"[DOWNLOAD-FAIL] {video_id}: rc={res.returncode} {res.stderr.strip()[:200]}")
+        return video_id, False, 0
+    except subprocess.TimeoutExpired:
+        _remove_partial(local_path)
+        print(f"[DOWNLOAD-FAIL] {video_id}: timed out after 900s, partial removed")
+        return video_id, False, 0
+    except Exception as err:
+        _remove_partial(local_path)
+        print(f"[DOWNLOAD-FAIL] {video_id}: {err}")
         return video_id, False, 0
 
 
@@ -140,16 +164,37 @@ def main():
 
     # 1. Initialize Qdrant Client & Model
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, api_key=QDRANT_API_KEY or None)
-    visual_dim = EMBEDDING_MRL_DIM or 2048
 
-    if not client.collection_exists(VISUAL_COLLECTION_NAME):
+    print("Loading Tencent WeMM-Embedding-4B embedder...")
+    embedder = WeMMEmbedding4BEmbedder(mrl_dim=EMBEDDING_MRL_DIM or None)
+
+    # Probe the embedder's real output dimension instead of assuming 2048:
+    # upserts against a collection with a different size fail silently,
+    # per-video, forever. Also verify an existing collection matches.
+    probe = embedder.embed_images_batch([np.full((32, 32, 3), 200, dtype=np.uint8)])[0]
+    visual_dim = int(np.asarray(probe).shape[0])
+    print(f"Embedder output dimension: {visual_dim}d")
+
+    if client.collection_exists(VISUAL_COLLECTION_NAME):
+        existing = client.get_collection(VISUAL_COLLECTION_NAME)
+        existing_dim = None
+        vectors_cfg = existing.config.params.vectors
+        if hasattr(vectors_cfg, "size"):
+            existing_dim = vectors_cfg.size
+        elif isinstance(vectors_cfg, dict):
+            first = next(iter(vectors_cfg.values()), None)
+            existing_dim = getattr(first, "size", None)
+        if existing_dim is not None and existing_dim != visual_dim:
+            raise SystemExit(
+                f"[ABORT] Collection '{VISUAL_COLLECTION_NAME}' is {existing_dim}d but the "
+                f"embedder outputs {visual_dim}d. Point it at a fresh collection "
+                f"(VISUAL_COLLECTION_NAME) or reindex - mixed-dimension upserts would all fail."
+            )
+    else:
         client.create_collection(
             collection_name=VISUAL_COLLECTION_NAME,
             vectors_config=VectorParams(size=visual_dim, distance=Distance.COSINE)
         )
-
-    print("Loading Tencent WeMM-Embedding-4B embedder...")
-    embedder = WeMMEmbedding4BEmbedder(mrl_dim=visual_dim)
 
     # 2. Candidate video discovery
     info_files = sorted((METADATA_DIR / "info").glob("*.json"))
@@ -170,6 +215,18 @@ def main():
     total_downloaded = sum(f.stat().st_size for f in VIDEO_DIR.glob("*.mp4"))
     print(f"Current Video Storage: {total_downloaded / (1024*1024*1024):.2f} / {target_gb:.1f} GB")
 
+    # Disk-space preflight: fill the disk mid-download and curl writes fail,
+    # partials linger, and nothing aborts cleanly.
+    needed_bytes = max(target_bytes - total_downloaded, 0)
+    free_bytes = shutil.disk_usage(str(VIDEO_DIR)).free
+    safety_margin = 5 * 1024 * 1024 * 1024
+    if needed_bytes + safety_margin > free_bytes:
+        raise SystemExit(
+            f"[ABORT] Not enough disk space: {free_bytes / 1024**3:.1f} GB free, "
+            f"{needed_bytes / 1024**3:.1f} GB to target + {safety_margin / 1024**3:.0f} GB margin. "
+            f"Free space or lower the 50 GB target before running."
+        )
+
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {executor.submit(run_curl_download, v_id): v_id for v_id in candidate_ids}
         
@@ -178,7 +235,14 @@ def main():
             if ok and sz > 0:
                 total_downloaded = sum(f.stat().st_size for f in VIDEO_DIR.glob("*.mp4"))
                 gb = total_downloaded / (1024 * 1024 * 1024)
-                
+
+                free_bytes = shutil.disk_usage(str(VIDEO_DIR)).free
+                if free_bytes < safety_margin:
+                    print(f"\n[ABORT] Disk nearly full ({free_bytes / 1024**3:.1f} GB free); stopping downloads.")
+                    for f in futures:
+                        f.cancel()
+                    break
+
                 # Index this video immediately if not already indexed
                 vid_path = VIDEO_DIR / f"{v_id}.mp4"
                 if v_id not in indexed_videos and vid_path.exists():
