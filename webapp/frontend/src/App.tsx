@@ -3,15 +3,10 @@ import { HashRouter as Router, Routes, Route, Link, useLocation } from "react-ro
 import {
   Search as SearchIcon,
   Database,
-  Cpu,
   RefreshCw,
   Sliders,
-  Sparkles,
   AlertCircle,
-  Terminal,
-  FolderOpen,
   Layers,
-  PlayCircle,
   Image as ImageIcon,
   Video,
   Target,
@@ -23,7 +18,7 @@ import {
   X,
   BarChart3,
 } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
@@ -98,8 +93,6 @@ function Navbar() {
 type TaskMode = "kis-t" | "kis-c" | "kis-v" | "avs" | "vqa"
 
 function SearchView() {
-  const [activeTab, setActiveTab] = useState<"single" | "batch">("single")
-  
   // Single Query states
   const [query, setQuery] = useState("")
   const [taskMode, setTaskMode] = useState<TaskMode>("kis-t")
@@ -108,19 +101,11 @@ function SearchView() {
   const [error, setError] = useState<string | null>(null)
   const [, setExpandedIndex] = useState<number | null>(null)
   const [inspectingHit, setInspectingHit] = useState<{ hit: ResultHit; rank: number } | null>(null)
+  // KIS-C clarification question (Phase L) - set when /api/search's Type 1
   // flow detects an ambiguous result set and asks a narrowing question.
   const [clarification, setClarification] = useState<string | null>(null)
   const [clarificationAnswer, setClarificationAnswer] = useState("")
   const [kisCMessages, setKisCMessages] = useState<Array<{ role: "operator" | "system"; text: string }>>([])
-  
-  // Batch Query states
-  const [batchFiles, setBatchFiles] = useState<any[]>([])
-  const [batchRunning, setBatchRunning] = useState(false)
-  const [batchLogs, setBatchLogs] = useState<string[]>([])
-  const [batchResults, setBatchResults] = useState<any[]>([])
-  const [batchError, setBatchError] = useState<string | null>(null)
-  const batchLogContainerRef = useRef<HTMLDivElement>(null)
-  
   // Video player modal state
   const [selectedVideo, setSelectedVideo] = useState<{name: string, time: number, frameIdx?: number | null} | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -134,22 +119,6 @@ function SearchView() {
   // batch-to-interactive plan): temporal query mode, video-browse dialog,
   // and DRES login/current-task so "Nộp câu trả lời" has a task_id to
   // submit against.
-  const [temporalMode, setTemporalMode] = useState(false)
-  // Steps after the first ("query" itself is step 1) - generalizes the old
-  // fixed 2-query temporal search into an N-step chain (Exquisitor-inspired
-  // sequence-chain matching, see HybridSearcher.temporal_chain_match).
-  const [extraQueries, setExtraQueries] = useState<string[]>([""])
-  const addTemporalStep = () => setExtraQueries((prev) => (prev.length < 4 ? [...prev, ""] : prev))
-  const removeTemporalStep = (idx: number) =>
-    setExtraQueries((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev))
-  const updateTemporalStep = (idx: number, value: string) =>
-    setExtraQueries((prev) => prev.map((v, i) => (i === idx ? value : v)))
-
-  // Escalate-precision-on-demand (Phase I, U-Cker/PraK-inspired): both
-  // default off so the server's config defaults (fast/no-verify) apply -
-  // an operator ticks these on mid-task when stuck on a hard query.
-  const [exactSearch, setExactSearch] = useState(false)
-  const [verifyResults, setVerifyResults] = useState(false)
   const [browsingVideo, setBrowsingVideo] = useState<string | null>(null)
   const [dresLoggedIn, setDresLoggedIn] = useState(false)
   const [currentTask, setCurrentTask] = useState<any>(null)
@@ -168,7 +137,6 @@ function SearchView() {
 
   const handleTaskModeChange = (mode: TaskMode) => {
     setTaskMode(mode)
-    setTemporalMode(false)
     setResults([])
     setError(null)
     setClarification(null)
@@ -176,7 +144,6 @@ function SearchView() {
     setKisCMessages([])
     if (mode !== "kis-v") setKisVideoFile(null)
   }
-
   const acceptKisVideo = (file: File | undefined) => {
     if (!file) return
     const looksLikeVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)
@@ -225,12 +192,15 @@ function SearchView() {
       return
     }
     if (!query.trim()) return
-    if (temporalMode && extraQueries.some((q) => !q.trim())) return
     if (isConversationalTask && clarification && !clarificationAnswer.trim()) return
 
     const requestQuery = isConversationalTask && clarificationAnswer.trim()
       ? `${query}\nAdditional detail from operator: ${clarificationAnswer.trim()}`
       : query
+
+    // Auto-detect sequential temporal chain if query has " then " or " -> "
+    const temporalSteps = query.split(/\s+then\s+|->/i).map((s) => s.trim()).filter(Boolean)
+    const isTemporal = temporalSteps.length > 1
 
     setLoading(true)
     setError(null)
@@ -239,17 +209,14 @@ function SearchView() {
     setClarification(null)
 
     try {
-      const endpoint = temporalMode ? "/api/temporal-search" : "/api/search"
-      const body = temporalMode
-        ? { queries: [query, ...extraQueries] }
+      const endpoint = isTemporal ? "/api/temporal-search" : "/api/search"
+      const body = isTemporal
+        ? { queries: temporalSteps, exact: true, verify: true }
         : {
             type: queryType,
             query: requestQuery,
-            ...(exactSearch ? { exact: true } : {}),
-            ...(verifyResults ? { verify: true } : {}),
-            // KIS-C: sent separately from `query` (which still carries it
-            // appended, for retrieval) so the backend can boost the exact
-            // candidates the clarifying question was about.
+            exact: true,
+            verify: true,
             ...(isConversationalTask && clarificationAnswer.trim()
               ? { clarification_answer: clarificationAnswer.trim() }
               : {}),
@@ -274,29 +241,38 @@ function SearchView() {
         ])
         setClarificationAnswer("")
       }
-      // /api/temporal-search returns {video_name, frames, payloads} per
-      // match (one entry per chain step) instead of the usual
-      // {id, score, payload} shape - normalize into the same ResultHit
-      // shape ResultCard expects (using the first step's payload as the
-      // displayed frame, joining every step's caption to show the whole
-      // chain) rather than building a second rendering path just for this
-      // one mode.
-      const normalized = temporalMode
-        ? (data.results || []).map((m: any) => ({
+
+      interface TemporalMatch {
+        video_name: string
+        frames: number[]
+        score: number
+        payloads?: Array<{ caption?: string; scene_narrative?: string; timestamp?: number }>
+      }
+
+      const normalized = isTemporal
+        ? ((data.results || []) as TemporalMatch[]).map((m) => ({
             id: `${m.video_name}:${(m.frames || []).join("-")}`,
             score: m.score,
             payload: {
-              ...(m.payloads?.[0] || {}),
+              source_file: m.video_name,
+              timestamp: m.payloads?.[0]?.timestamp ?? 0,
+              frame_idx: m.frames?.[0] ?? null,
               caption: (m.payloads || [])
-                .map((p: any, i: number) => p?.caption || `(sự kiện ${i + 1})`)
-                .join(" → "),
+                .map((p, i) => p?.caption || `(step ${i + 1})`)
+                .join(" -> "),
+              scene_narrative: (m.payloads || [])
+                .map((p) => p?.scene_narrative)
+                .filter(Boolean)
+                .join(" -> "),
+              modality: "temporal_sequence",
             },
           }))
         : (data.results || [])
       setResults(normalized)
-      if (!temporalMode && data.clarification) setClarification(data.clarification)
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.")
+      if (!isTemporal && data.clarification) setClarification(data.clarification)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred."
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -400,107 +376,11 @@ function SearchView() {
     }
   }
 
-  // -----------------------------------------------------------
-  // BATCH QUERIES INFERENCE
-  // -----------------------------------------------------------
-  const fetchBatchStatus = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/batch/status`)
-      const data = await response.json()
-      setBatchFiles(data.files || [])
-      setBatchRunning(data.running)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const fetchBatchLogs = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/batch/logs`)
-      const data = await response.json()
-      setBatchLogs(data.logs || [])
-      setBatchRunning(data.running)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const fetchBatchResults = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/batch/results`)
-      if (response.ok) {
-        const data = await response.json()
-        setBatchResults(data || [])
-      }
-    } catch (err) {
-      console.error("Batch results file not generated yet.")
-    }
-  }
-
-  const triggerBatchQuery = async () => {
-    setBatchRunning(true)
-    setBatchError(null)
-    setBatchResults([])
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/batch/run`, { method: "POST" })
-      const data = await response.json()
-      console.log(data)
-      fetchBatchLogs()
-    } catch (err: any) {
-      setBatchError(err.message || "Failed to trigger batch processing.")
-      setBatchRunning(false)
-    }
-  }
-
-  useEffect(() => {
-    if (activeTab === "batch") {
-      fetchBatchStatus()
-      fetchBatchResults()
-    }
-  }, [activeTab])
-
-  useEffect(() => {
-    let interval: any
-    if (batchRunning) {
-      interval = setInterval(() => {
-        fetchBatchLogs()
-        fetchBatchStatus()
-      }, 2000)
-    } else {
-      fetchBatchLogs()
-      fetchBatchResults()
-    }
-    return () => clearInterval(interval)
-  }, [batchRunning])
-
-  useEffect(() => {
-    if (batchLogContainerRef.current) {
-      batchLogContainerRef.current.scrollTop = batchLogContainerRef.current.scrollHeight
-    }
-  }, [batchLogs])
-
   useEffect(() => {
     if (selectedVideo && videoRef.current) {
       videoRef.current.currentTime = selectedVideo.time
     }
   }, [selectedVideo])
-
-  // Helper to parse batch result string to play in video modal
-  const parseBatchResult = (resStr: string) => {
-    if (!resStr || resStr === "N/A" || resStr.startsWith("Error")) return null
-    
-    // Check if result has video and timestamp format: "video1.mp4, 12.50"
-    const parts = resStr.split(",").map(p => p.trim())
-    if (parts.length >= 2) {
-      const video = parts[0]
-      const time = parseFloat(parts[1])
-      if (video && !isNaN(time)) {
-        return { video, time, answer: parts.slice(2).join(", ") }
-      }
-    }
-    return null
-  }
-
   return (
     <main className="w-full px-3 sm:px-5 lg:px-6 py-4 relative text-left">
       {/* Unified Command Cockpit Deck */}
@@ -545,36 +425,13 @@ function SearchView() {
               )
             })}
           </div>
-
-          {/* Right Controls: Sub-Tabs & DRES Status */}
+          {/* Right Controls: DRES Status & Action Notification */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Live Search vs Batch Evaluation toggle */}
-            <div className="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setActiveTab("single")}
-                className={`px-2.5 py-0.5 rounded-md transition ${
-                  activeTab === "single"
-                    ? "bg-white text-indigo-700 shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                Live Search
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("batch")}
-                className={`px-2.5 py-0.5 rounded-md transition ${
-                  activeTab === "batch"
-                    ? "bg-white text-indigo-700 shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                Batch Evaluation
-              </button>
-            </div>
-
-            {/* DRES Status Indicator */}
+            {actionMessage && (
+              <span className="text-slate-500 text-xs italic truncate max-w-xs" title={actionMessage}>
+                {actionMessage}
+              </span>
+            )}
             <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs">
               <span
                 className={`w-2 h-2 rounded-full ${
@@ -597,77 +454,33 @@ function SearchView() {
           </div>
         </div>
 
-        {/* Tab A: Single Query Search Bar */}
-        {activeTab === "single" && (
-          <div className="p-3 sm:p-4">
-            {/* Quick Option Checkboxes */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2.5 text-xs font-semibold text-slate-600">
-              <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
-                <input
-                  type="checkbox"
-                  checked={temporalMode}
-                  onChange={(e) => setTemporalMode(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Temporal chain (N-step events)</span>
-              </label>
-
-              {!temporalMode && (
-                <>
-                  <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
-                    <input
-                      type="checkbox"
-                      checked={exactSearch}
-                      onChange={(e) => setExactSearch(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>Exact Search (ef=512)</span>
-                  </label>
-                  <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
-                    <input
-                      type="checkbox"
-                      checked={verifyResults}
-                      onChange={(e) => setVerifyResults(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>VLM Candidate Verification</span>
-                  </label>
-                </>
-              )}
-
-              {actionMessage && (
-                <span className="text-slate-400 text-xs italic ml-auto truncate max-w-sm">
-                  {actionMessage}
-                </span>
-              )}
-            </div>
-
-            {/* Main Search Input Form */}
-            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
-              {!isVisualTask && (
-                <div className="flex-1 text-left">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder={
-                        queryType === 1
-                          ? isConversationalTask
-                            ? "Start with a rough memory; the system can ask for more detail..."
-                            : isAvsTask
-                            ? "Describe a visual concept (e.g. cars in front of trees...)"
-                            : "Describe the target shot (e.g. a motorbike riding through rain...)"
-                          : queryType === 2
-                          ? "Ask about the video (e.g. what is the license plate of the red car?)"
-                          : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
-                      }
-                      className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
-                    />
-                    <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  </div>
+        {/* Command Search Bar */}
+        <div className="p-3 sm:p-4">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
+            {!isVisualTask && (
+              <div className="flex-1 text-left">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={
+                      queryType === 1
+                        ? isConversationalTask
+                          ? "Start with a rough memory; the system can ask for more detail..."
+                          : isAvsTask
+                          ? "Describe a visual concept (e.g. cars in front of trees...)"
+                          : "Describe the target shot (e.g. a motorbike riding through rain...)"
+                        : queryType === 2
+                        ? "Ask about the video (e.g. what is the license plate of the red car?)"
+                        : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
+                    }
+                    className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
+                  />
+                  <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 </div>
-              )}
+              </div>
+            )}
 
               {isVisualTask && (
                 <div className="w-full md:flex-1 min-w-0 text-left">
@@ -726,41 +539,6 @@ function SearchView() {
                 </div>
               )}
 
-              {temporalMode && extraQueries.map((q, idx) => (
-                <div key={idx} className="flex-1 text-left">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={q}
-                      onChange={(e) => updateTemporalStep(idx, e.target.value)}
-                      placeholder={`Event #${idx + 2} (e.g. red car enters)...`}
-                      className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-8 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium"
-                    />
-                    <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    {extraQueries.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeTemporalStep(idx)}
-                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-red-500"
-                        title="Remove step"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {temporalMode && extraQueries.length < 4 && (
-                <button
-                  type="button"
-                  onClick={addTemporalStep}
-                  className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-lg transition-colors shrink-0"
-                >
-                  + Add Step
-                </button>
-              )}
-
               <button
                 type="submit"
                 disabled={loading || (isVisualTask && !kisVideoFile)}
@@ -780,18 +558,15 @@ function SearchView() {
               </button>
             </form>
           </div>
-        )}
       </div>
 
-      {activeTab === "single" && (
-        <>
-          {/* Error Alert */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3.5 py-2 rounded-lg mb-4 flex items-center gap-2.5 text-xs font-semibold text-left">
-              <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
-              <div>{error}</div>
-            </div>
-          )}
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-3.5 py-2 rounded-lg mb-4 flex items-center gap-2.5 text-xs font-semibold text-left">
+          <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+          <div>{error}</div>
+        </div>
+      )}
 
           {/* KIS-C Conversation / Clarification Box */}
           {isConversationalTask && (kisCMessages.length > 0 || clarification) && (
@@ -903,23 +678,6 @@ function SearchView() {
               </CardContent>
             </Card>
           )}
-
-          {!loading && results.length === 0 && !query && (
-            <div className="text-center py-16 max-w-lg mx-auto space-y-4">
-              <div className="inline-flex bg-indigo-50 p-3 rounded-full border border-indigo-100">
-                <Sparkles className="h-7 w-7 text-indigo-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-                Ready for the next VBS task
-              </h2>
-              <p className="text-slate-500 text-xs leading-relaxed">
-                Select a task mode above, enter visual description or question, and click Search. Click any candidate card to inspect high-resolution frames, bounding box crops, and multimodal evidence.
-              </p>
-            </div>
-          )}
-        </>
-      )}
-
       {/* High-Resolution Candidate Inspection Dialog */}
       <CandidateInspectionDialog
         hit={inspectingHit?.hit ?? null}
@@ -933,203 +691,6 @@ function SearchView() {
         onBrowseVideo={handleBrowseVideo}
         onSubmitToDres={handleSubmitToDres}
       />
-
-      {/* ------------------------------------------------------- */}
-      {/* TAB B: BATCH QUERIES DASHBOARD */}
-      {/* ------------------------------------------------------- */}
-      {activeTab === "batch" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
-          
-          {/* Query Files Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="tech-card h-full flex flex-col justify-between bg-white">
-              <div>
-                <CardHeader>
-                  <CardTitle className="text-slate-800 flex items-center gap-2 text-base">
-                    <FolderOpen className="h-5 w-5 text-indigo-500" />
-                    Query Registry · batch evaluation
-                  </CardTitle>
-                  <CardDescription className="text-xs font-semibold">
-                    Directory storing batch query files inside the <code className="text-indigo-600 font-mono font-bold">queries/</code> folder.
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {batchFiles.length === 0 ? (
-                    <div className="text-slate-400 italic text-center py-10 border border-dashed border-slate-200 rounded-lg">
-                      No files found. Please ensure queries/queries.json template is present.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {batchFiles.map((file, fIdx) => (
-                        <div key={fIdx} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-lg">
-                          <div>
-                            <span className="text-sm font-bold text-slate-800 block truncate">{file.name}</span>
-                            <span className="text-xs text-slate-500 font-semibold">{file.size_kb} KB</span>
-                          </div>
-                          <Badge variant="secondary" className="bg-slate-200 text-slate-700 text-[10px] uppercase font-bold">
-                            {file.name.split('.').pop()}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl space-y-2 mt-4">
-                    <h5 className="text-xs font-bold text-indigo-950 uppercase flex items-center gap-1.5">
-                      <Sliders className="h-3.5 w-3.5 text-indigo-650" />
-                      Usage Instruction
-                    </h5>
-                    <p className="text-xs text-indigo-900 leading-relaxed font-semibold">
-                      To run a custom batch evaluation: place your list of queries in <code className="text-indigo-600 bg-indigo-100/50 px-1 rounded">queries/queries.json</code>, then start the evaluation run.
-                    </p>
-                  </div>
-                </CardContent>
-              </div>
-
-              <CardFooter className="pt-4 border-t border-slate-100 bg-slate-50/50">
-                <button
-                  onClick={triggerBatchQuery}
-                  disabled={batchRunning || batchFiles.length === 0}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 tech-glow-button"
-                >
-                  {batchRunning ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Running Inference
-                    </>
-                  ) : (
-                    <>
-                      <Cpu className="h-4 w-4" />
-                      Run batch evaluation
-                    </>
-                  )}
-                </button>
-              </CardFooter>
-            </Card>
-          </div>
-
-          {/* Running Console & Results */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Terminal Live Output logs */}
-            <Card className="tech-card bg-white overflow-hidden relative">
-              {batchRunning && <div className="scan-line" />}
-              <CardHeader className="border-b border-slate-100 pb-4">
-                <CardTitle className="text-slate-800 text-base flex items-center gap-2">
-                  <Terminal className="h-5 w-5 text-indigo-500" />
-                  Batch Inference Log console
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold">
-                  Streams live console logs of subprocess batch queries execution.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {batchError && (
-                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-                    {batchError}
-                  </div>
-                )}
-                <div 
-                  ref={batchLogContainerRef}
-                  className="bg-slate-900 border border-slate-950 rounded-lg p-4 font-mono text-xs text-slate-200 h-64 overflow-y-auto space-y-1 select-text shadow-inner"
-                >
-                  {batchLogs.length === 0 ? (
-                    <div className="text-slate-500 italic py-20 text-center font-mono">
-                      Log console idle. Start batch query to run queries list.
-                    </div>
-                  ) : (
-                    batchLogs.map((log, lIdx) => (
-                      <div 
-                        key={lIdx} 
-                        className={`py-0.5 leading-relaxed break-all ${
-                          log.startsWith("ERROR") || log.includes("Error") 
-                            ? "text-red-400 font-semibold" 
-                            : log.startsWith("---") 
-                            ? "text-indigo-400 font-bold" 
-                            : "text-emerald-400"
-                        }`}
-                      >
-                        {log}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Results Grid Table */}
-            <Card className="tech-card bg-white">
-              <CardHeader className="border-b border-slate-100 pb-4">
-                <CardTitle className="text-slate-800 text-base flex items-center justify-between">
-                  <span>Batch Output Results</span>
-                  {batchResults.length > 0 && (
-                    <Badge className="bg-emerald-500 text-white border-none text-[10px] font-bold py-0.5 px-2">
-                      Generated
-                    </Badge>
-                  )}
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold">
-                  List of resolved retrieval outputs matching queries list. Saved to <code className="text-indigo-650">queries/batch_results.json</code>.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {batchResults.length === 0 ? (
-                  <div className="text-slate-400 italic text-center py-20 border border-dashed border-slate-100 rounded-lg text-sm">
-                    No results compiled yet. Run batch processing above to generate.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table className="w-full text-sm text-left text-slate-500">
-                      <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
-                        <tr>
-                          <th className="px-4 py-3 font-extrabold w-12">Idx</th>
-                          <th className="px-4 py-3 font-extrabold w-24">Type</th>
-                          <th className="px-4 py-3 font-extrabold">Query String</th>
-                          <th className="px-4 py-3 font-extrabold w-56">Result Output</th>
-                          <th className="px-4 py-3 font-extrabold w-16 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {batchResults.map((res, rIdx) => {
-                          const parsed = parseBatchResult(res.result)
-                          return (
-                            <tr key={rIdx} className="bg-white border-b border-slate-150 hover:bg-slate-50/50">
-                              <td className="px-4 py-3.5 font-bold font-mono text-slate-800">{rIdx + 1}</td>
-                              <td className="px-4 py-3.5 font-bold text-slate-650">
-                                <Badge variant="outline" className="border-indigo-100 text-indigo-600 bg-indigo-50 font-bold text-[10px] py-0">
-                                  Type {res.type}
-                                </Badge>
-                              </td>
-                              <td className="px-4 py-3.5 font-semibold text-slate-700 leading-snug">{res.query}</td>
-                              <td className="px-4 py-3.5 font-mono text-xs text-slate-900 font-semibold break-all leading-normal bg-slate-50/40">
-                                {res.result}
-                              </td>
-                              <td className="px-4 py-3.5 text-center">
-                                {parsed ? (
-                                  <button
-                                    onClick={() => setSelectedVideo({ name: parsed.video, time: parsed.time })}
-                                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-650 p-1.5 rounded-lg border border-indigo-100 flex items-center justify-center transition-colors shadow-sm"
-                                    title="Play Clip"
-                                  >
-                                    <PlayCircle className="h-4.5 w-4.5" />
-                                  </button>
-                                ) : (
-                                  <span className="text-slate-350 text-xs font-semibold font-mono">N/A</span>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
 
       {/* Video Modal Player */}
       {selectedVideo && (
