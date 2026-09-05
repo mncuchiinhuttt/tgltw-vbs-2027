@@ -27,6 +27,7 @@ import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
 import { AuditHistoryView } from "@/components/AuditHistoryView"
 import { RAGBenchmarkWorkspace } from "@/components/RAGBenchmarkWorkspace"
+import { VQAWorkspace } from "@/components/VQAWorkspace"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 // -------------------------------------------------------------
 // NAVIGATION COMPONENT
@@ -648,24 +649,38 @@ function SearchView() {
             </div>
           )}
 
-          {/* Results Gallery: High-density full-width responsive grid */}
+          {/* Results Gallery / VQA Dedicated Workspace */}
           {!loading && results.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
-              {results.map((hit, idx) => (
-                <ResultCard
-                  key={hit.id || idx}
-                  hit={hit}
-                  idx={idx}
-                  onInspect={(h, i) => setInspectingHit({ hit: h, rank: i + 1 })}
-                  onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
-                  onFeedback={handleFeedback}
-                  onUseAsQuery={handleUseAsQuery}
-                  onInVideoSearch={handleInVideoSearch}
-                  onBrowseVideo={handleBrowseVideo}
-                  onSubmitToDres={handleSubmitToDres}
-                />
-              ))}
-            </div>
+            taskMode === "vqa" ? (
+              <VQAWorkspace
+                query={query}
+                results={results}
+                onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
+                onInspect={(h, i) => setInspectingHit({ hit: h, rank: i })}
+                onSubmitToDres={handleSubmitToDres}
+                onFeedback={handleFeedback}
+                onUseAsQuery={handleUseAsQuery}
+                onInVideoSearch={handleInVideoSearch}
+                onBrowseVideo={handleBrowseVideo}
+              />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
+                {results.map((hit, idx) => (
+                  <ResultCard
+                    key={hit.id || idx}
+                    hit={hit}
+                    idx={idx}
+                    onInspect={(h, i) => setInspectingHit({ hit: h, rank: i + 1 })}
+                    onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
+                    onFeedback={handleFeedback}
+                    onUseAsQuery={handleUseAsQuery}
+                    onInVideoSearch={handleInVideoSearch}
+                    onBrowseVideo={handleBrowseVideo}
+                    onSubmitToDres={handleSubmitToDres}
+                  />
+                ))}
+              </div>
+            )
           )}
 
           {/* Empty States */}

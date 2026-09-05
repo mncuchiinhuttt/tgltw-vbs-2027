@@ -14,6 +14,8 @@ export interface ResultHit {
   score?: number
   rrf_score?: number
   answer?: string | null
+  vqa_answer?: string | null
+  vqa_score?: number
   vqa_answer_valid?: boolean
   vqa_evidence_available?: boolean
   vqa_evidence_reason?: string
