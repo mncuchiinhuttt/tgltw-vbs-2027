@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
-    allowedHosts: ["tgltw.mncuchiinhuttt.dev"],
+    allowedHosts: ["tgltw.mncuchiinhuttt.dev", "localhost", "127.0.0.1"],
     fs: {
       strict: true,
       allow: [path.resolve(__dirname, ".")],
