@@ -163,13 +163,14 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
 \begin{tikzpicture}[
+  font=\scriptsize,
   lane/.style={font=\scriptsize\bfseries, rounded corners=2pt, draw=blue!60!black, fill=blue!8, inner sep=3pt, minimum width=1.3cm, align=center},
-  node distance=2.5mm and 3mm,
-  pbox/.style={rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=6.5mm, text width=2.1cm},
-  pstage/.style={rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=6.5mm, text width=2.1cm},
-  popt/.style={rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=6.5mm, text width=2.1cm},
-  pfail/.style={rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=6.5mm, text width=4.5cm},
-  arrow/.style={-{Latex[length=1.6mm]}, thick}
+  node distance=2mm and 2.5mm,
+  pbox/.style={font=\scriptsize, rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=6mm, text width=2.05cm},
+  pstage/.style={font=\scriptsize, rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=6mm, text width=2.05cm},
+  popt/.style={font=\scriptsize, rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=6mm, text width=2.05cm},
+  pfail/.style={font=\scriptsize, rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=6mm, text width=4.3cm},
+  arrow/.style={-{Latex[length=1.5mm]}, thick}
 ]
 
 % Lane 1: KIS-V
@@ -192,36 +193,33 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 % Lane 3: KIS-C
 \node[lane, below=7mm of l2] (l3) {KIS-C};
-\node[pbox, right=3mm of l3] (c1) {turn + history};
-\node[pstage, right=3mm of c1] (c2) {entity CQR};
-\node[pstage, right=3mm of c2] (c3) {ambiguity test};
-\node[pstage, right=3mm of c3] (c4) {n-gram boost};
-\node[pbox, right=3mm of c4] (c5) {negative filter};
+\node[pbox, right=2.5mm of l3] (c1) {turn + history};
+\node[pstage, right=2.5mm of c1] (c2) {entity CQR};
+\node[pstage, right=2.5mm of c2] (c3) {ambiguity test};
+\node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
+\node[pbox, right=2.5mm of c4] (c5) {negative filter};
 \foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5} {\draw[arrow] (\a) -- (\b);}
-\draw[arrow,dashed] (c5.south) -- ++(0,-2.5mm) -| (c1.south);
-
+\draw[arrow,dashed] (c5.north) -- ++(0, 2.2mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
 % Lane 4: AVS
-\node[lane, below=8mm of l3] (l4) {AVS};
-\node[pbox, right=3mm of l4] (a1) {ad-hoc concept};
-\node[pstage, right=3mm of a1] (a2) {broad WeMM};
-\node[pstage, right=3mm of a2] (a3) {video diversity};
-\node[pstage, right=3mm of a3] (a4) {timeline browse};
-\node[pbox, right=3mm of a4] (a5) {duplicate guard $\to$ DRES};
+\node[lane, below=7.5mm of l3] (l4) {AVS};
+\node[pbox, right=2.5mm of l4] (a1) {ad-hoc concept};
+\node[pstage, right=2.5mm of a1] (a2) {broad WeMM};
+\node[pstage, right=2.5mm of a2] (a3) {video diversity};
+\node[pstage, right=2.5mm of a3] (a4) {timeline browse};
+\node[pbox, right=2.5mm of a4] (a5) {duplicate guard $\to$ DRES};
 \foreach \a/\b in {a1/a2,a2/a3,a3/a4,a4/a5} {\draw[arrow] (\a) -- (\b);}
-
 % Lane 5: VQA
 \node[lane, below=7mm of l4] (l5) {VQA};
-\node[pbox, right=3mm of l5] (q1) {question text};
-\node[pstage, right=3mm of q1] (q2) {retrieve pool};
-\node[pstage, right=3mm of q2] (q3) {real media resolve};
-\node[pstage, right=3mm of q3] (q4) {crop + parallel VLM};
-\node[pbox, right=3mm of q4] (q5) {answer + evidence};
+\node[pbox, right=2.5mm of l5] (q1) {question text};
+\node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
+\node[pstage, right=2.5mm of q2] (q3) {real media resolve};
+\node[pstage, right=2.5mm of q3] (q4) {crop + parallel VLM};
+\node[pbox, right=2.5mm of q4] (q5) {answer + evidence};
 \foreach \a/\b in {q1/q2,q2/q3,q3/q4,q4/q5} {\draw[arrow] (\a) -- (\b);}
 
-\node[pfail, below=2.5mm of q4, xshift=1.2cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
+\node[pfail, below=2.2mm of q4, xshift=1.1cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
 \draw[arrow,dashed] (q3.south) |- (qfail.west);
 \draw[arrow,dashed] (q4.south) -- (qfail.north);
-
 \end{tikzpicture}%
 }
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
