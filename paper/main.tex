@@ -172,44 +172,46 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
   pfail/.style={font=\scriptsize, rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=6mm, text width=4.3cm},
   arrow/.style={-{Latex[length=1.5mm]}, thick}
 ]
+  % Lane 1: KIS-V
+  \node[lane] (l1) at (0, 0) {KIS-V};
+  \node[pbox, right=3mm of l1] (v1) {visual clip / img};
+  \node[pstage, right=3mm of v1] (v2) {sample $\le$8 frames};
+  \node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
+  \node[pstage, right=3mm of v3] (v4) {parallel HNSW};
+  \node[pbox, right=3mm of v4] (v5) {merge \& submit};
+  \draw[arrow] (v1) -- (v2); \draw[arrow] (v2) -- (v3); \draw[arrow] (v3) -- (v4); \draw[arrow] (v4) -- (v5);
 
-% Lane 1: KIS-V
-\node[lane] (l1) at (0, 0) {KIS-V};
-\node[pbox, right=3mm of l1] (v1) {visual clip / img};
-\node[pstage, right=3mm of v1] (v2) {sample $\leq$8 frames};
-\node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
-\node[pstage, right=3mm of v3] (v4) {parallel HNSW};
-\node[pbox, right=3mm of v4] (v5) {merge \& submit};
-\foreach \a/\b in {v1/v2,v2/v3,v3/v4,v4/v5} {\draw[arrow] (\a) -- (\b);}
+  \node[lane, below=4.8mm of l1] (l2) {KIS-T};
+  \node[pbox, right=3mm of l2] (t1) {text query};
+  \node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
+  \node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
+  \node[pstage, right=3mm of t3] (t4) {RRF + diversify};
+  \node[pstage, right=3mm of t4] (t5) {parallel VLM};
+  \node[pbox, right=3mm of t5] (t6) {$\rightarrow$ submit};
+  \draw[arrow] (t1) -- (t2); \draw[arrow] (t2) -- (t3); \draw[arrow] (t3) -- (t4); \draw[arrow] (t4) -- (t5); \draw[arrow] (t5) -- (t6);
 
-% Lane 2: KIS-T
-\node[lane, below=7mm of l1] (l2) {KIS-T};
-\node[pbox, right=3mm of l2] (t1) {text query};
-\node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
-\node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
-\node[pstage, right=3mm of t3] (t4) {RRF + diversify};
-\node[pbox, right=3mm of t4] (t5) {parallel VLM $\to$ submit};
-\foreach \a/\b in {t1/t2,t2/t3,t3/t4,t4/t5} {\draw[arrow] (\a) -- (\b);}
+  % Lane 3: KIS-C
+  \node[lane, below=4.8mm of l2] (l3) {KIS-C};
+  \node[pbox, right=3mm of l3] (c1) {turn + history};
+  \node[pstage, right=2.5mm of c1] (c2) {entity CQR};
+  \node[popt, right=2.5mm of c2] (c3) {ambiguity test};
+  \node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
+  \node[pstage, right=2.5mm of c4] (c5) {negative filter};
+  \draw[arrow] (c1) -- (c2); \draw[arrow] (c2) -- (c3); \draw[arrow] (c3) -- node[pos=0.5,above,font=\tiny]{$A < 0.7$} (c4); \draw[arrow] (c4) -- (c5);
+  \draw[arrow,dashed] (c5.north) -- ++(0, 2.2mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
 
-% Lane 3: KIS-C
-\node[lane, below=7mm of l2] (l3) {KIS-C};
-\node[pbox, right=2.5mm of l3] (c1) {turn + history};
-\node[pstage, right=2.5mm of c1] (c2) {entity CQR};
-\node[pstage, right=2.5mm of c2] (c3) {ambiguity test};
-\node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
-\node[pbox, right=2.5mm of c4] (c5) {negative filter};
-\foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5} {\draw[arrow] (\a) -- (\b);}
-\draw[arrow,dashed] (c5.north) -- ++(0, 2.2mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
-% Lane 4: AVS
-\node[lane, below=7.5mm of l3] (l4) {AVS};
-\node[pbox, right=2.5mm of l4] (a1) {ad-hoc concept};
-\node[pstage, right=2.5mm of a1] (a2) {broad WeMM};
-\node[pstage, right=2.5mm of a2] (a3) {video diversity};
-\node[pstage, right=2.5mm of a3] (a4) {timeline browse};
-\node[pbox, right=2.5mm of a4] (a5) {duplicate guard $\to$ DRES};
-\foreach \a/\b in {a1/a2,a2/a3,a3/a4,a4/a5} {\draw[arrow] (\a) -- (\b);}
-% Lane 5: VQA
-\node[lane, below=7mm of l4] (l5) {VQA};
+  % Lane 4: AVS
+  \node[lane, below=4.8mm of l3] (l4) {AVS};
+  \node[pbox, right=3mm of l4] (a1) {ad-hoc concept};
+  \node[pstage, right=3mm of a1] (a2) {broad WeMM};
+  \node[pstage, right=3mm of a2] (a3) {video diversity};
+  \node[pstage, right=3mm of a3] (a4) {timeline browse};
+  \node[pstage, right=3mm of a4] (a5) {duplicate guard};
+  \node[pbox, right=3mm of a5] (a6) {$\rightarrow$ DRES};
+  \draw[arrow] (a1) -- (a2); \draw[arrow] (a2) -- (a3); \draw[arrow] (a3) -- (a4); \draw[arrow] (a4) -- (a5); \draw[arrow] (a5) -- (a6);
+
+  % Lane 5: VQA
+  \node[lane, below=4.8mm of l4] (l5) {VQA};
 \node[pbox, right=2.5mm of l5] (q1) {question text};
 \node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
 \node[pstage, right=2.5mm of q2] (q3) {real media resolve};
@@ -228,10 +230,7 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \end{figure}
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
-\paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy:
-(1)~\emph{Ambiguity Detection}: we combine Distinct Video Ratio ($DVR$) with Score Margin Ambiguity ($SMA$): $A = (1 - \lambda) \cdot DVR + \lambda \cdot (1.0 - (s_1 - s_2)/s_1)$, where $s_1, s_2$ are top-1 and top-2 candidate scores ($\lambda=0.5$). When $A \ge 0.7$, the VLM generates a facet-discriminating question;
-(2)~\emph{Compound N-gram Boost}: when the operator answers, candidate scores receive additive phrase overlap: $s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}$; and
-(3)~\emph{Negative Feedback Filtering}: visual attributes rejected by the operator are logged, applying a calibrated dampening penalty to candidates matching rejected terms.
+\paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy: (1)~\emph{Ambiguity Detection}: we combine Distinct Video Ratio ($DVR$) with Score Margin Ambiguity ($SMA$): $A = (1 - \lambda) \cdot DVR + \lambda \cdot (1.0 - (s_1 - s_2)/s_1)$ ($\lambda=0.5$). When $A \ge 0.7$, the VLM triggers a facet-discriminating question; (2)~\emph{Compound N-gram Boost}: operator responses grant additive phrase overlap: $s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}$; and (3)~\emph{Negative Feedback Filtering}: rejected visual attributes incur a calibrated dampening penalty.
 \paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical keyframe media inside the dataset root. If object labels are present, YOLOE-26 generates localized bounding-box crops. The cropped frame is evaluated by the VLM with a strict JSON contract requiring \code{found=true}, concise answer ($<15$ words), and confidence $\in [0, 1]$. Missing media or ungrounded predictions immediately return \code{UNKNOWN/N/A} with score 0, ensuring zero hallucination.
 
 \paragraph{AVS (Ad-hoc Video Search).} AVS maximizes cross-video coverage. Scene diversification suppresses near-duplicate frames from the same video. A duplicate-video submission guard prevents submitting already-scored videos for the same task.
@@ -240,7 +239,14 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \paragraph{Intra-Video Timeline Exploration.} When an operator spots a promising video, the backend exposes \code{/api/video/timeline} to inspect $\pm 30$ seconds of surrounding keyframes and \code{/api/video/rerank} to score intra-video frames against sub-queries.
 
-\begin{figure}[t]
+\paragraph{Interactive Verification and Qualitative Demonstrations.}
+AEGIS provides a full-width interactive operator console engineered for high-throughput competition sessions (Fig.~\ref{fig:ui-demo}). The interface unifies modal query execution, conversational clarification, and candidate inspection:
+(1)~\emph{Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES status;
+(2)~\emph{Dense Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns), enabling operators to visually scan 20+ candidates without scrolling; and
+(3)~\emph{Inspection Drawer}: clicking any hit surfaces an enlarged keyframe, object detection boxes, OCR/ASR evidence, and instant DRES submission triggers.
+As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate verified Rank~\#1 retrieval across KIS-T (\code{00001.mp4} @ 57.0s), KIS-C (\code{00003.mp4} @ 56.8s), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), AVS diversity, and KIS-V alignment.
+
+\begin{figure}[htbp]
 \centering
 \vspace{-2mm}
 \includegraphics[width=0.96\textwidth]{figures/system_ui_demo.pdf}
@@ -248,12 +254,6 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \label{fig:ui-demo}
 \vspace{-3mm}
 \end{figure}
-\paragraph{Interactive Verification and Qualitative Demonstrations.}
-AEGIS provides a full-width interactive operator console engineered for high-throughput competition sessions (Fig.~\ref{fig:ui-demo}). The interface unifies modal query execution, conversational clarification, and candidate inspection:
-(1)~\emph{Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES status;
-(2)~\emph{Dense Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns), enabling operators to visually scan 20+ candidates without scrolling; and
-(3)~\emph{Inspection Drawer}: clicking any hit surfaces an enlarged keyframe, object detection boxes, OCR/ASR evidence, and instant DRES submission triggers.
-As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate verified Rank~\#1 retrieval across KIS-T (\code{00001.mp4} @ 57.0s), KIS-C (\code{00003.mp4} @ 56.8s), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), AVS diversity, and KIS-V alignment.
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
 
