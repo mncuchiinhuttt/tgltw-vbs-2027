@@ -15,7 +15,6 @@ import {
   Film,
   MessageCircle,
   History,
-  X,
   BarChart3,
   Bot,
   RotateCcw,
@@ -31,6 +30,7 @@ import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
 import { AuditHistoryView } from "@/components/AuditHistoryView"
 import { RAGBenchmarkWorkspace } from "@/components/RAGBenchmarkWorkspace"
 import { VQAWorkspace } from "@/components/VQAWorkspace"
+import { KISVWorkspace } from "@/components/KISVWorkspace"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 // -------------------------------------------------------------
 // NAVIGATION COMPONENT
@@ -160,6 +160,25 @@ function SearchView() {
     setKisVideoFile(file)
     setResults([])
   }
+  // Support clipboard paste (Ctrl+V / Cmd+V) for KIS-V visual frames
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (!isVisualTask) return
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile()
+          if (file) {
+            acceptKisVideo(file)
+            break
+          }
+        }
+      }
+    }
+    window.addEventListener("paste", handlePaste)
+    return () => window.removeEventListener("paste", handlePaste)
+  }, [isVisualTask])
 
   // -----------------------------------------------------------
   // SINGLE QUERY INFERENCE
@@ -195,7 +214,7 @@ function SearchView() {
 
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (isVisualTask) {
+    if (isVisualTask && kisVideoFile) {
       await handleSearchByVideo()
       return
     }
@@ -473,92 +492,32 @@ function SearchView() {
 
         {/* Command Search Bar */}
         <div className="p-3 sm:p-4">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
-            {!isVisualTask && (
-              <div className="flex-1 text-left">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={
-                      queryType === 1
-                        ? isConversationalTask
-                          ? "Start with a rough memory; the system can ask for more detail..."
-                          : isAvsTask
-                          ? "Describe a visual concept (e.g. cars in front of trees...)"
-                          : "Describe the target shot (e.g. a motorbike riding through rain...)"
-                        : queryType === 2
-                        ? "Ask about the video (e.g. what is the license plate of the red car?)"
-                        : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
-                    }
-                    className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
-                  />
-                  <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                </div>
+          {!isVisualTask ? (
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
+              <div className="flex-1 text-left relative">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={
+                    queryType === 1
+                      ? isConversationalTask
+                        ? "Start with a rough memory; the system can ask for more detail..."
+                        : isAvsTask
+                        ? "Describe a visual concept (e.g. cars in front of trees...)"
+                        : "Describe the target shot (e.g. a motorbike riding through rain...)"
+                      : queryType === 2
+                      ? "Ask about the video (e.g. what is the license plate of the red car?)"
+                      : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
+                  }
+                  className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
+                />
+                <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               </div>
-            )}
-
-              {isVisualTask && (
-                <div className="w-full md:flex-1 min-w-0 text-left">
-                  <input
-                    ref={videoUploadRef}
-                    type="file"
-                    accept="video/*,image/*"
-                    className="hidden"
-                    onChange={(event) => acceptKisVideo(event.target.files?.[0])}
-                  />
-                  <div
-                    className={`vbs-video-dropzone ${videoDropActive ? "vbs-video-dropzone-active" : ""} ${kisVideoFile ? "vbs-video-dropzone-ready" : ""}`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => videoUploadRef.current?.click()}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") videoUploadRef.current?.click()
-                    }}
-                    onDragEnter={(event) => {
-                      event.preventDefault()
-                      setVideoDropActive(true)
-                    }}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDragLeave={() => setVideoDropActive(false)}
-                    onDrop={(event) => {
-                      event.preventDefault()
-                      setVideoDropActive(false)
-                      acceptKisVideo(event.dataTransfer.files?.[0])
-                    }}
-                  >
-                    <div className="vbs-video-drop-icon">
-                      {kisVideoFile ? <Film className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
-                    </div>
-                    <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
-                      <p className="text-xs font-extrabold text-slate-800 truncate m-0">
-                        {kisVideoFile ? kisVideoFile.name : "Drop KIS-V video clip or keyframe image here"}
-                      </p>
-                      <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                        {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB` : "or browse (MP4, JPG, PNG)"}
-                      </span>
-                    </div>
-                    {kisVideoFile && (
-                      <button
-                        type="button"
-                        className="vbs-clear-file"
-                        aria-label="Remove selected clip"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          setKisVideoFile(null)
-                        }}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <button
                 type="submit"
-                disabled={loading || (isVisualTask && !kisVideoFile)}
+                disabled={loading || !query.trim()}
                 className="inline-flex items-center justify-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition-all shadow-sm shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 {loading ? (
@@ -574,7 +533,130 @@ function SearchView() {
                 )}
               </button>
             </form>
-          </div>
+          ) : (
+            /* PURE VISUAL TARGET FRAME INPUT (NO TEXT BAR) */
+            <div className="space-y-3">
+              <input
+                ref={videoUploadRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={(event) => acceptKisVideo(event.target.files?.[0])}
+              />
+
+              {!kisVideoFile ? (
+                /* Empty Dropzone State */
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => videoUploadRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") videoUploadRef.current?.click()
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setVideoDropActive(true)
+                  }}
+                  onDragLeave={() => setVideoDropActive(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setVideoDropActive(false)
+                    acceptKisVideo(e.dataTransfer.files?.[0])
+                  }}
+                  className={`group border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
+                    videoDropActive
+                      ? "border-indigo-500 bg-indigo-50/50"
+                      : "border-slate-300 hover:border-indigo-500 bg-slate-50 hover:bg-indigo-50/20"
+                  }`}
+                >
+                  <div className="w-12 h-12 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-800 tracking-tight">
+                    Input Target Frame for Visual Known-Item Search
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                    Drop target frame image here, browse from disk, or press <kbd className="bg-slate-200 text-slate-700 font-mono px-1.5 py-0.5 rounded text-[10px] font-bold">Ctrl+V</kbd> to paste directly from your clipboard.
+                  </p>
+                  <div className="mt-3.5">
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs group-hover:border-indigo-400 group-hover:text-indigo-600">
+                      <UploadCloud className="w-4 h-4" />
+                      Browse Frame Image (JPG, PNG, WebP)
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* Loaded Frame State */
+                <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                    <div className="w-24 aspect-video bg-slate-900 rounded-lg overflow-hidden shrink-0 border-2 border-indigo-500/40 relative shadow-2xs">
+                      <img
+                        src={URL.createObjectURL(kisVideoFile)}
+                        alt="Query frame"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-800 truncate max-w-[200px]">
+                          {kisVideoFile.name}
+                        </span>
+                        <Badge variant="success" className="text-[9px] font-bold px-1.5 py-0.2 uppercase">
+                          Frame Loaded
+                        </Badge>
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                        {(kisVideoFile.size / 1024).toFixed(1)} KB · Ready to scan archive for matching video
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setKisVideoFile(null)
+                        setResults([])
+                      }}
+                      className="px-3.5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors"
+                    >
+                      Remove Frame
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleSearchByVideo()}
+                      className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 flex items-center gap-2 transition-all active:scale-95"
+                    >
+                      {loading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Locating Video...</span>
+                        </>
+                      ) : (
+                        <>
+                          <SearchIcon className="w-4 h-4" />
+                          <span>Find Containing Video</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Protocol guidance */}
+              <div className="flex items-center justify-between gap-2 text-xs text-slate-500 bg-slate-50/80 border border-slate-200/80 px-3.5 py-2 rounded-lg text-left">
+                <span className="font-extrabold text-indigo-700 text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                  <Film className="h-3.5 w-3.5" />
+                  KIS-V (Visual Known-Item Search):
+                </span>
+                <span className="text-[11px]">
+                  Input target frame image. The system computes its visual embedding vector to identify which video in the archive contains this exact scene.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -730,7 +812,7 @@ function SearchView() {
             </div>
           )}
 
-          {/* Results Gallery / VQA Dedicated Workspace */}
+          {/* Results Gallery / VQA / KIS-V Dedicated Workspaces */}
           {!loading && results.length > 0 && (
             taskMode === "vqa" ? (
               <VQAWorkspace
@@ -743,6 +825,22 @@ function SearchView() {
                 onUseAsQuery={handleUseAsQuery}
                 onInVideoSearch={handleInVideoSearch}
                 onBrowseVideo={handleBrowseVideo}
+              />
+            ) : taskMode === "kis-v" ? (
+              <KISVWorkspace
+                queryImageFile={kisVideoFile}
+                results={results}
+                onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
+                onInspect={(h, i) => setInspectingHit({ hit: h, rank: i })}
+                onSubmitToDres={handleSubmitToDres}
+                onFeedback={handleFeedback}
+                onUseAsQuery={handleUseAsQuery}
+                onInVideoSearch={handleInVideoSearch}
+                onBrowseVideo={handleBrowseVideo}
+                onReset={() => {
+                  setKisVideoFile(null)
+                  setResults([])
+                }}
               />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
