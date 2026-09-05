@@ -290,55 +290,72 @@ We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual co
 \subsection{Empirical Findings}
 \begin{table}[t]
 \centering
-\caption{Comprehensive ablation suite across core AEGIS dimensions (Ablations 1--5).}
-\label{tab:ablation-studies}
+\caption{Ablation Study 1 \& 2: Retrieval fusion and multi-turn KIS-C dynamics.}
+\label{tab:ablation-retrieval-kisc}
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
-\renewcommand{\arraystretch}{0.84}%
+\renewcommand{\arraystretch}{0.80}%
 \begin{tabular}{lcccc}
+\toprule
+\textbf{Pipeline Configuration / Stage} & \textbf{Recall@1} & \textbf{Recall@5} & \textbf{MRR} & \textbf{Latency} \\
 \midrule
 \multicolumn{5}{l}{\emph{Panel A: Multimodal Retrieval Fusion (200-Query Corpus Test)}} \\
-(M1) Dense Only (WeMM-4B) & R@1: 26.3\% & R@5: 48.4\% & 0.354 & 0.038s \\
-(M2) Dense + Sparse BM25 Payload & R@1: 32.6\% & R@5: 53.7\% & 0.412 & 0.052s \\
-(M3) Dense + BM25 + SigLIP Secondary & R@1: 38.9\% & R@5: 58.9\% & 0.468 & 0.076s \\
-(M4) + 4-Way Weighted RRF Fusion & R@1: 44.2\% & R@5: 64.7\% & 0.526 & 0.084s \\
-(M5) + Temporal Coherence \& Diversify & R@1: 51.6\% & R@5: 70.5\% & 0.598 & 0.091s \\
-(M6) + Parallel VLM Rerank (Full Engine) & \textbf{R@1: 57.9\%} & \textbf{R@5: 74.7\%} & \textbf{0.665} & 1.480s \\
+(M1) Dense Only (WeMM-4B) & 26.3\% & 48.4\% & 0.354 & 0.038s \\
+(M2) Dense + Sparse BM25 Payload & 32.6\% & 53.7\% & 0.412 & 0.052s \\
+(M3) Dense + BM25 + SigLIP Secondary & 38.9\% & 58.9\% & 0.468 & 0.076s \\
+(M4) + 4-Way Weighted RRF Fusion & 44.2\% & 64.7\% & 0.526 & 0.084s \\
+(M5) + Temporal Coherence \& Diversify & 51.6\% & 70.5\% & 0.598 & 0.091s \\
+(M6) + Parallel VLM Rerank (Full Engine) & \textbf{57.9\%} & \textbf{74.7\%} & \textbf{0.665} & 1.480s \\
 \midrule
-\multicolumn{5}{l}{\emph{Panel B: Conversational KIS-C Multi-Turn Dynamics}} \\
-(C1) Turn 1: Initial Vague Query & R@1: 0.0\% & R@3: 35.0\% & 0.245 & 0.088s (Amb 0.84) \\
-(C2) Turn 2: Naive History Concat & R@1: 25.0\% & R@3: 50.0\% & 0.395 & 0.092s (Amb 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & R@1: 50.0\% & R@3: 70.0\% & 0.612 & 0.110s (Amb 0.59) \\
-(C4) Turn 2: + Compound N-gram Boost & R@1: 75.0\% & R@3: 90.0\% & 0.825 & 0.115s (Amb 0.42) \\
-(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{R@1: 85.0\%} & \textbf{R@3: 95.0\%} & \textbf{0.910} & \textbf{0.120s (Amb 0.24)} \\
-\midrule
-\multicolumn{5}{l}{\emph{Panel C: VQA Grounding \& Fail-Closed Safety}} \\
-Ungrounded Whole-Frame VLM & Exact Match: 52.0\% & Faithfulness: 58.0\% & 42.0\% Halluc. & 1.42s (Hazardous) \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 83.3\% & Faithfulness: 88.0\% & 12.0\% Halluc. & 1.55s \\
-AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 96.7\%} & \textbf{Faithfulness: 96.7\%} & \textbf{0.0\% Halluc.} & 1.62s (100\% Safe) \\
-\midrule
-\multicolumn{5}{l}{\emph{Panel D: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
-Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & 14.85s (1.0$\times$) & Instant Screen & --- \\
-Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & 3.98s (3.73$\times$) & Balanced Live & --- \\
-Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & \textbf{1.85s (8.03$\times$)} & High Ambiguity & --- \\
-\midrule
-\multicolumn{5}{l}{\emph{Panel E: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
-Fast Mode (HNSW $ef=64$) & Recall: 97.8\% & 12.4ms & --- & Instant Screen \\
-Standard Mode (HNSW $ef=256$) & Recall: 99.4\% & 24.5ms & --- & Balanced Live \\
-Deep Mode (HNSW $ef=512$) & Recall: 99.9\% & 48.6ms & --- & High Ambiguity \\
-Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & 118.5ms & --- & Deterministic \\
+\multicolumn{5}{l}{\emph{Panel B: Conversational KIS-C Multi-Turn Progression}} \\
+(C1) Turn 1: Initial Vague Query & 0.0\% & 35.0\% (R@3) & 0.245 & 0.088s (Amb 0.84) \\
+(C2) Turn 2: Naive History Concat & 25.0\% & 50.0\% (R@3) & 0.395 & 0.092s (Amb 0.74) \\
+(C3) Turn 2: + Entity-Preserving CQR & 50.0\% & 70.0\% (R@3) & 0.612 & 0.110s (Amb 0.59) \\
+(C4) Turn 2: + Compound N-gram Boost & 75.0\% & 90.0\% (R@3) & 0.825 & 0.115s (Amb 0.42) \\
+(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{85.0\%} & \textbf{95.0\% (R@3)} & \textbf{0.910} & \textbf{0.120s (Amb 0.24)} \\
 \bottomrule
 \end{tabular}%
 }
 \vspace{-3mm}
 \end{table}
-As documented in Table~\ref{tab:ablation-studies}, controlled ablations validate our system:
+
+\begin{table}[t]
+\centering
+\caption{Ablation Study 3, 4 \& 5: Grounded VQA, concurrency scaling, and precision ladder.}
+\label{tab:ablation-vqa-scaling}
+\vspace{-2mm}
+\resizebox{0.96\textwidth}{!}{%
+\renewcommand{\arraystretch}{0.80}%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Ablation Dimension \& Setting} & \textbf{Accuracy / Recall} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
+\midrule
+\multicolumn{5}{l}{\emph{Panel C: VQA Grounding \& Fail-Closed Safety}} \\
+Ungrounded Whole-Frame VLM & Exact Match: 52.0\% & 58.0\% & 42.0\% (Hazardous) & 1.42s \\
+Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 83.3\% & 88.0\% & 12.0\% & 1.55s \\
+AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 96.7\%} & \textbf{96.7\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
+\midrule
+\multicolumn{5}{l}{\emph{Panel D: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
+Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
+Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & --- & --- & 3.98s ($3.73\times$) \\
+Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$ speedup)} \\
+\midrule
+\multicolumn{5}{l}{\emph{Panel E: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
+Fast Mode (HNSW $ef=64$) & Recall: 97.8\% & Instant Screen & --- & \textbf{12.4ms} \\
+Standard Mode (HNSW $ef=256$) & Recall: 99.4\% & Balanced Live & --- & 24.5ms \\
+Deep Mode (HNSW $ef=512$) & Recall: 99.9\% & High Ambiguity & --- & 48.6ms \\
+Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & Deterministic & --- & 118.5ms \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{-3mm}
+\end{table}
+As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, controlled ablations validate our system:
 (1)~\textbf{Fusion Lift}: M1 $\to$ M6 raises Recall@1 from 26.3\% to 57.9\% (+31.6\%) and MRR from 0.354 to 0.665;
 (2)~\textbf{Conversational Precision}: CQR with compound $n$-gram boosting reduces ambiguity ($0.84 \to 0.24$) and lifts targets to 85.0\% Recall@1 (MRR 0.910);
 (3)~\textbf{Zero Hallucination}: fail-closed verification attains 96.7\% exact match with 0.0\% hallucination;
 (4)~\textbf{Sub-2s Latency}: multi-threading yields an $8.03\times$ speedup (1.85s); and
 (5)~\textbf{Precision Escalation}: the ladder scales from 12.4ms (97.8\% recall) to 118.5ms (100.0\% recall).
-
 \section{Conclusion}
 \label{sec:conclusion}
 AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work targets on-device lightweight VLM distillation and live rehearsal at MMM 2027.
