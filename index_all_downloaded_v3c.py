@@ -36,7 +36,7 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, TextIndexP
 from models.embedding import WeMMEmbedding4BEmbedder
 
 
-def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, max_frames: int = 15) -> List[Dict[str, Any]]:
+def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, max_frames: int = 0) -> List[Dict[str, Any]]:
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         return []
@@ -77,7 +77,7 @@ def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 3.0, 
             "image": img_rgb,
         })
         frame_count += 1
-        if frame_count >= max_frames:
+        if max_frames > 0 and frame_count >= max_frames:
             break
 
     cap.release()
@@ -97,6 +97,9 @@ def load_video_metadata(video_id: str) -> Dict[str, Any]:
 
 def main():
     print("=== STARTING FULL CORPUS 1,703 VIDEOS INDEXING ===")
+    # 0 = no cap: sample the ENTIRE video duration (3s stride); a positive
+    # V3C_MAX_FRAMES_PER_VIDEO caps frames per video for quick test runs.
+    max_frames_env = max(0, int(os.getenv("V3C_MAX_FRAMES_PER_VIDEO", "0") or 0))
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, api_key=QDRANT_API_KEY or None)
     visual_dim = EMBEDDING_MRL_DIM or 2048
 
@@ -152,7 +155,7 @@ def main():
         tags = " ".join(meta.get("tags", [])) if isinstance(meta.get("tags"), list) else ""
         text_blob = f"{title} {desc} {tags}".strip()
 
-        kfs = extract_video_keyframes(vid_path, sample_interval_sec=3.0, max_frames=15)
+        kfs = extract_video_keyframes(vid_path, sample_interval_sec=3.0, max_frames=max_frames_env)
         if not kfs:
             continue
 

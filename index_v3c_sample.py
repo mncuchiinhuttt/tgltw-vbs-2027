@@ -39,7 +39,7 @@ from qdrant_client.models import (
 from models.embedding import WeMMEmbedding4BEmbedder
 
 
-def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 2.0, max_frames: int = 40) -> List[Dict[str, Any]]:
+def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 2.0, max_frames: int = 0) -> List[Dict[str, Any]]:
     """Extract keyframes from an MP4 video at fixed intervals."""
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -80,7 +80,7 @@ def extract_video_keyframes(video_path: Path, sample_interval_sec: float = 2.0, 
             "image": img_rgb,
         })
         frame_count += 1
-        if frame_count >= max_frames:
+        if max_frames > 0 and frame_count >= max_frames:
             break
 
     cap.release()
@@ -127,6 +127,7 @@ def main():
     print(f"Discovered {len(video_files)} V3C video files to process.")
 
     total_points = 0
+    max_frames_env = max(0, int(os.getenv("V3C_MAX_FRAMES_PER_VIDEO", "0") or 0))
     t0_start = time.monotonic()
 
     for idx, vid_path in enumerate(video_files, start=1):
@@ -138,7 +139,7 @@ def main():
         text_blob = f"{title} {desc} {tags}".strip()
 
         print(f"\n[{idx}/{len(video_files)}] Processing {vid_path.name} ('{title[:40]}')...", flush=True)
-        kfs = extract_video_keyframes(vid_path, sample_interval_sec=2.5, max_frames=25)
+        kfs = extract_video_keyframes(vid_path, sample_interval_sec=2.5, max_frames=max_frames_env)
         print(f"  Extracted {len(kfs)} keyframes.", flush=True)
 
         if not kfs:
@@ -175,7 +176,7 @@ def main():
             client.upsert(collection_name=VISUAL_COLLECTION_NAME, points=points)
             total_points += len(points)
             print(f"  Upserted {len(points)} vectors to '{VISUAL_COLLECTION_NAME}'. (Total indexed: {total_points})", flush=True)
-    print(f"\n=== Indexing Completed in {elapsed:.1f}s ===")
+    print(f"\n=== Indexing Completed in {time.monotonic() - t0_start:.1f}s ===")
     print(f"Total Keyframe Points in Qdrant: {total_points}")
 
 
