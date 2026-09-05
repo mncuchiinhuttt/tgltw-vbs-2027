@@ -163,62 +163,62 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
 \begin{tikzpicture}[
-  lane/.style={font=\scriptsize\bfseries, rounded corners=2pt, draw=blue!60!black, fill=blue!8, inner sep=2.5pt, minimum width=1.2cm, align=center},
-  node distance=1.8mm and 2.5mm,
-  pbox/.style={rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=5.5mm, text width=2.0cm},
-  pstage/.style={rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=5.5mm, text width=2.0cm},
-  popt/.style={rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=5.5mm, text width=2.0cm},
-  pfail/.style={rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=5.5mm, text width=4.3cm},
-  arrow/.style={-{Latex[length=1.4mm]}, thick}
+  lane/.style={font=\scriptsize\bfseries, rounded corners=2pt, draw=blue!60!black, fill=blue!8, inner sep=3pt, minimum width=1.3cm, align=center},
+  node distance=2.5mm and 3mm,
+  pbox/.style={rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=6.5mm, text width=2.1cm},
+  pstage/.style={rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=6.5mm, text width=2.1cm},
+  popt/.style={rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=6.5mm, text width=2.1cm},
+  pfail/.style={rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=6.5mm, text width=4.5cm},
+  arrow/.style={-{Latex[length=1.6mm]}, thick}
 ]
 
 % Lane 1: KIS-V
 \node[lane] (l1) at (0, 0) {KIS-V};
-\node[pbox, right=2.5mm of l1] (v1) {visual clip / img};
-\node[pstage, right=2.5mm of v1] (v2) {sample $\leq$8 frames};
-\node[pstage, right=2.5mm of v2] (v3) {WeMM-4B embed};
-\node[pstage, right=2.5mm of v3] (v4) {parallel HNSW};
-\node[pbox, right=2.5mm of v4] (v5) {merge \& submit};
+\node[pbox, right=3mm of l1] (v1) {visual clip / img};
+\node[pstage, right=3mm of v1] (v2) {sample $\leq$8 frames};
+\node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
+\node[pstage, right=3mm of v3] (v4) {parallel HNSW};
+\node[pbox, right=3mm of v4] (v5) {merge \& submit};
 \foreach \a/\b in {v1/v2,v2/v3,v3/v4,v4/v5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 2: KIS-T
-\node[lane, below=3.5mm of l1] (l2) {KIS-T};
-\node[pbox, right=2.5mm of l2] (t1) {text query};
-\node[pstage, right=2.5mm of t1] (t2) {CQR + HyDE};
-\node[pstage, right=2.5mm of t2] (t3) {WeMM + BM25};
-\node[pstage, right=2.5mm of t3] (t4) {RRF + diversify};
-\node[pbox, right=2.5mm of t4] (t5) {parallel VLM $\to$ submit};
+\node[lane, below=7mm of l1] (l2) {KIS-T};
+\node[pbox, right=3mm of l2] (t1) {text query};
+\node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
+\node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
+\node[pstage, right=3mm of t3] (t4) {RRF + diversify};
+\node[pbox, right=3mm of t4] (t5) {parallel VLM $\to$ submit};
 \foreach \a/\b in {t1/t2,t2/t3,t3/t4,t4/t5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 3: KIS-C
-\node[lane, below=3.5mm of l2] (l3) {KIS-C};
-\node[pbox, right=2.5mm of l3] (c1) {turn + history};
-\node[pstage, right=2.5mm of c1] (c2) {entity CQR};
-\node[pstage, right=2.5mm of c2] (c3) {ambiguity test};
-\node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
-\node[pbox, right=2.5mm of c4] (c5) {negative filter};
+\node[lane, below=7mm of l2] (l3) {KIS-C};
+\node[pbox, right=3mm of l3] (c1) {turn + history};
+\node[pstage, right=3mm of c1] (c2) {entity CQR};
+\node[pstage, right=3mm of c2] (c3) {ambiguity test};
+\node[pstage, right=3mm of c3] (c4) {n-gram boost};
+\node[pbox, right=3mm of c4] (c5) {negative filter};
 \foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5} {\draw[arrow] (\a) -- (\b);}
-\draw[arrow,dashed] (c5.south) -- ++(0,-1.5mm) -| (c1.south);
+\draw[arrow,dashed] (c5.south) -- ++(0,-2.5mm) -| (c1.south);
 
 % Lane 4: AVS
-\node[lane, below=4mm of l3] (l4) {AVS};
-\node[pbox, right=2.5mm of l4] (a1) {ad-hoc concept};
-\node[pstage, right=2.5mm of a1] (a2) {broad WeMM};
-\node[pstage, right=2.5mm of a2] (a3) {video diversity};
-\node[pstage, right=2.5mm of a3] (a4) {timeline browse};
-\node[pbox, right=2.5mm of a4] (a5) {duplicate guard $\to$ DRES};
+\node[lane, below=8mm of l3] (l4) {AVS};
+\node[pbox, right=3mm of l4] (a1) {ad-hoc concept};
+\node[pstage, right=3mm of a1] (a2) {broad WeMM};
+\node[pstage, right=3mm of a2] (a3) {video diversity};
+\node[pstage, right=3mm of a3] (a4) {timeline browse};
+\node[pbox, right=3mm of a4] (a5) {duplicate guard $\to$ DRES};
 \foreach \a/\b in {a1/a2,a2/a3,a3/a4,a4/a5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 5: VQA
-\node[lane, below=3.5mm of l4] (l5) {VQA};
-\node[pbox, right=2.5mm of l5] (q1) {question text};
-\node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
-\node[pstage, right=2.5mm of q2] (q3) {real media resolve};
-\node[pstage, right=2.5mm of q3] (q4) {crop + parallel VLM};
-\node[pbox, right=2.5mm of q4] (q5) {answer + evidence};
+\node[lane, below=7mm of l4] (l5) {VQA};
+\node[pbox, right=3mm of l5] (q1) {question text};
+\node[pstage, right=3mm of q1] (q2) {retrieve pool};
+\node[pstage, right=3mm of q2] (q3) {real media resolve};
+\node[pstage, right=3mm of q3] (q4) {crop + parallel VLM};
+\node[pbox, right=3mm of q4] (q5) {answer + evidence};
 \foreach \a/\b in {q1/q2,q2/q3,q3/q4,q4/q5} {\draw[arrow] (\a) -- (\b);}
 
-\node[pfail, below=2mm of q4, xshift=1.1cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
+\node[pfail, below=2.5mm of q4, xshift=1.2cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
 \draw[arrow,dashed] (q3.south) |- (qfail.west);
 \draw[arrow,dashed] (q4.south) -- (qfail.north);
 
@@ -226,7 +226,7 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 }
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
 \label{fig:task-lanes}
-\vspace{-2mm}
+\vspace{-3mm}
 \end{figure}
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
@@ -246,17 +246,16 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \centering
 \vspace{-2mm}
 \includegraphics[width=0.96\textwidth]{figures/system_ui_demo.pdf}
-\caption{The AEGIS Interactive Operator Console and qualitative task demonstrations. The full-width interface combines a task-routing control bar, high-density candidate gallery, and modal inspection drawer, delivering verified Rank~\#1 retrieval across KIS-T, KIS-C, VQA, AVS, and KIS-V.}
+\caption{The AEGIS Interactive Operator Console and qualitative task demonstrations across KIS-T, KIS-C, VQA, AVS, and KIS-V.}
 \label{fig:ui-demo}
 \vspace{-3mm}
 \end{figure}
 \paragraph{Interactive Verification and Qualitative Demonstrations.}
 AEGIS provides a full-width interactive operator console engineered for high-throughput competition sessions (Fig.~\ref{fig:ui-demo}). The interface unifies modal query execution, conversational clarification, and candidate inspection:
-(1)~\emph{Unified Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES session readiness;
-(2)~\emph{High-Density Keyframe Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns on standard displays), allowing operators to visually scan 20+ candidates without scrolling; and
-(3)~\emph{Candidate Inspection Drawer}: clicking any hit surfaces an enlarged high-resolution keyframe, object detection boxes, OCR text, ASR transcripts, and instant DRES submission triggers.
-
-As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate instant target localization across all task modes: from precise stunt retrieval in KIS-T (\code{00001.mp4} @ 57.0s, Rank~\#1) and conversational ambiguity collapse in KIS-C (\code{00003.mp4} @ 56.8s) to grounded object crop extraction in VQA (\code{00004.mp4}, \code{"Helicopter"}), cross-video diversity in AVS, and visual query alignment in KIS-V.
+(1)~\emph{Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES status;
+(2)~\emph{Dense Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns), enabling operators to visually scan 20+ candidates without scrolling; and
+(3)~\emph{Inspection Drawer}: clicking any hit surfaces an enlarged keyframe, object detection boxes, OCR/ASR evidence, and instant DRES submission triggers.
+As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate verified Rank~\#1 retrieval across KIS-T (\code{00001.mp4} @ 57.0s), KIS-C (\code{00003.mp4} @ 56.8s), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), AVS diversity, and KIS-V alignment.
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
 
@@ -265,7 +264,7 @@ We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual co
 
 \begin{table}[t]
 \centering
-\caption{Comprehensive ablation suite across core AEGIS dimensions. Panels evaluate multimodal retrieval fusion, conversational KIS-C dynamics, fail-closed grounding, threadpool scaling, and the budgeted precision ladder.}
+\caption{Comprehensive ablation suite across core AEGIS dimensions (Ablations 1--5).}
 \label{tab:ablation-studies}
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
@@ -310,9 +309,9 @@ Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & Deterministic & --- & 118.5m
 \subsection{Empirical Findings}
 As documented in Table~\ref{tab:ablation-studies}, controlled ablations validate our system:
 (1)~\textbf{Fusion Lift}: M1 $\to$ M6 raises Recall@1 from 26.3\% to 57.9\% (+31.6\%) and MRR from 0.354 to 0.665;
-(2)~\textbf{Conversational Precision}: entity-preserving CQR with compound $n$-gram phrase boosting reduces ambiguity ($0.84 \to 0.24$) and lifts targets to 85.0\% Recall@1 (MRR 0.910);
-(3)~\textbf{Zero Hallucination}: the fail-closed contract attains 96.7\% exact match with 0.0\% hallucination;
-(4)~\textbf{Sub-2s Latency}: multi-threading yields an $8.03\times$ speedup (1.85s) for real-time interaction; and
+(2)~\textbf{Conversational Precision}: CQR with compound $n$-gram boosting reduces ambiguity ($0.84 \to 0.24$) and lifts targets to 85.0\% Recall@1 (MRR 0.910);
+(3)~\textbf{Zero Hallucination}: fail-closed verification attains 96.7\% exact match with 0.0\% hallucination;
+(4)~\textbf{Sub-2s Latency}: multi-threading yields an $8.03\times$ speedup (1.85s); and
 (5)~\textbf{Precision Escalation}: the ladder scales from 12.4ms (97.8\% recall) to 118.5ms (100.0\% recall).
 
 \section{Conclusion}
