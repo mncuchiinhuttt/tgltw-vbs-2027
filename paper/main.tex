@@ -86,7 +86,7 @@ Recent competitive systems (e.g., PraK V4~\cite{jackl2026prak}, NII-UIT~\cite{tr
 (3)~\emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s latency and generate ungrounded answers under timed pressure, incurring severe penalty points.
 
 To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch). Our primary technical contributions are:
-\begin{enumerate}
+\begin{enumerate}\setlength{\itemsep}{1.5pt}\setlength{\parskip}{0pt}
     \item \textbf{High-Capacity Representation with MRL}: We deploy Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (2,048d vectors) indexed via Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$), achieving sub-15ms dense retrieval.
     \item \textbf{Peak Conversational Search Engine (KIS-C)}: We design an entity-preserving CQR pipeline with dynamic ambiguity detection (combining Distinct Video Ratio and Score Margin Ambiguity), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative feedback dampening.
     \item \textbf{Parallelized Fail-Closed Grounded VQA}: We engineer an $8\times$ concurrent ThreadPool pipeline that resolves physical media provenance, applies localized YOLOE-26 bounding-box crops, and enforces a strict fail-closed contract (\code{UNKNOWN/N/A} on ungrounded candidates), completely eliminating hallucinations.
@@ -106,22 +106,23 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 
 \begin{figure*}[t]
 \centering
+\vspace{-2mm}
 \resizebox{0.98\textwidth}{!}{%
 \begin{tikzpicture}[
   font=\scriptsize,
-  node distance=4mm and 6mm,
-  box/.style={rounded corners=2pt, draw=black!65, thick, align=center, fill=gray!6, minimum height=9mm},
-  stage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=center, fill=blue!5, minimum height=9mm},
-  opt/.style={rounded corners=2pt, draw=orange!70!black, dashed, thick, align=center, fill=orange!6, minimum height=7.5mm},
-  arrow/.style={-{Latex[length=2mm]}, thick}
+  node distance=2.5mm and 4.5mm,
+  box/.style={rounded corners=2pt, draw=black!65, thick, align=center, fill=gray!6, minimum height=7mm},
+  stage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=center, fill=blue!5, minimum height=7mm},
+  opt/.style={rounded corners=2pt, draw=orange!70!black, dashed, thick, align=center, fill=orange!6, minimum height=6.5mm},
+  arrow/.style={-{Latex[length=1.8mm]}, thick}
 ]
-\node[box, minimum width=2.6cm] (assets) {\textbf{Video assets}\\V3C1--3, MVK, LHE,\\metadata, ASR, shots};
-\node[stage, right=6mm of assets, minimum width=2.8cm] (offline) {\textbf{Offline processing}\\WeMM-4B + SigLIP,\\PP-OCRv6, Whisper, ASR};
-\node[stage, right=6mm of offline, minimum width=2.8cm] (index) {\textbf{Qdrant HNSW index}\\2048d visual vectors,\\text\_blob, payload schema};
-\node[stage, right=6mm of index, minimum width=2.9cm] (retrieve) {\textbf{Hybrid fast search}\\HNSW + BM25 payload,\\4-way RRF, coherence};
-\node[box, right=6mm of retrieve, minimum width=2.8cm] (operator) {\textbf{Operator Console}\\ranked evidence, VQA,\\timeline, DRES submit};
-\node[opt, below=5mm of retrieve, xshift=18mm, minimum width=5.6cm,
-      text width=5.6cm] (escalate) {\textbf{On demand:} exact search, $ef=512$,\\
+\node[box, minimum width=2.4cm] (assets) {\textbf{Video assets}\\V3C, MVK, LHE,\\metadata, ASR, shots};
+\node[stage, right=4.5mm of assets, minimum width=2.6cm] (offline) {\textbf{Offline processing}\\WeMM-4B + SigLIP,\\PP-OCRv6, Whisper};
+\node[stage, right=4.5mm of offline, minimum width=2.6cm] (index) {\textbf{Qdrant HNSW index}\\2048d visual vectors,\\text\_blob payload schema};
+\node[stage, right=4.5mm of index, minimum width=2.7cm] (retrieve) {\textbf{Hybrid fast search}\\HNSW + BM25 payload,\\4-way RRF, coherence};
+\node[box, right=4.5mm of retrieve, minimum width=2.6cm] (operator) {\textbf{Operator Console}\\ranked evidence, VQA,\\timeline, DRES submit};
+\node[opt, below=3.5mm of retrieve, xshift=18mm, minimum width=5.4cm,
+      text width=5.4cm] (escalate) {\textbf{On demand:} exact search, $ef=512$,\\
       in-video sub-shot reranking, feedback};
 \draw[arrow] (assets) -- (offline);
 \draw[arrow] (offline) -- (index);
@@ -129,12 +130,13 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 \draw[arrow] (retrieve) -- (operator);
 \draw[arrow,dashed] (operator.south) -- (operator.south |- escalate.north);
 \draw[arrow,dashed] (escalate.north -| retrieve.south) -- (retrieve.south);
-\node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
-\node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=4pt, label={[font=\scriptsize]above:\textbf{Live interaction path}}] {};
+\node[draw=blue!45!black, rounded corners=2pt, fit=(offline)(index), inner sep=3pt, label={[font=\scriptsize]above:\textbf{Offline index build}}] {};
+\node[draw=blue!45!black, rounded corners=2pt, fit=(retrieve)(operator)(escalate), inner sep=3pt, label={[font=\scriptsize]above:\textbf{Live interaction path}}] {};
 \end{tikzpicture}%
 }
 \caption{AEGIS's live-first architecture. Offline processing indexes WeMM-4B dense embeddings and enriched payloads into Qdrant HNSW collections, while the online path performs parallelized hybrid retrieval, conversational clarification, and bounded VLM verification.}
 \label{fig:system-pipeline}
+\vspace{-2mm}
 \end{figure*}
 
 \section{AEGIS System Architecture}
@@ -161,62 +163,62 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
 \begin{tikzpicture}[
-  lane/.style={font=\scriptsize\bfseries, rounded corners=2pt, draw=blue!60!black, fill=blue!8, inner sep=3pt, minimum width=1.3cm, align=center},
-  node distance=2.5mm and 3mm,
-  pbox/.style={rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=6.5mm, text width=2.1cm},
-  pstage/.style={rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=6.5mm, text width=2.1cm},
-  popt/.style={rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=6.5mm, text width=2.1cm},
-  pfail/.style={rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=6.5mm, text width=4.5cm},
-  arrow/.style={-{Latex[length=1.6mm]}, thick}
+  lane/.style={font=\scriptsize\bfseries, rounded corners=2pt, draw=blue!60!black, fill=blue!8, inner sep=2.5pt, minimum width=1.2cm, align=center},
+  node distance=1.8mm and 2.5mm,
+  pbox/.style={rounded corners=2pt, draw=black!55, align=center, fill=gray!5, minimum height=5.5mm, text width=2.0cm},
+  pstage/.style={rounded corners=2pt, draw=blue!55!black, align=center, fill=blue!5, minimum height=5.5mm, text width=2.0cm},
+  popt/.style={rounded corners=2pt, draw=orange!70!black, dashed, align=center, fill=orange!6, minimum height=5.5mm, text width=2.0cm},
+  pfail/.style={rounded corners=2pt, draw=red!65!black, thick, align=center, fill=red!5, minimum height=5.5mm, text width=4.3cm},
+  arrow/.style={-{Latex[length=1.4mm]}, thick}
 ]
 
 % Lane 1: KIS-V
 \node[lane] (l1) at (0, 0) {KIS-V};
-\node[pbox, right=3mm of l1] (v1) {visual clip / img};
-\node[pstage, right=3mm of v1] (v2) {sample $\leq$8 frames};
-\node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
-\node[pstage, right=3mm of v3] (v4) {parallel HNSW};
-\node[pbox, right=3mm of v4] (v5) {merge \& submit};
+\node[pbox, right=2.5mm of l1] (v1) {visual clip / img};
+\node[pstage, right=2.5mm of v1] (v2) {sample $\leq$8 frames};
+\node[pstage, right=2.5mm of v2] (v3) {WeMM-4B embed};
+\node[pstage, right=2.5mm of v3] (v4) {parallel HNSW};
+\node[pbox, right=2.5mm of v4] (v5) {merge \& submit};
 \foreach \a/\b in {v1/v2,v2/v3,v3/v4,v4/v5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 2: KIS-T
-\node[lane, below=7mm of l1] (l2) {KIS-T};
-\node[pbox, right=3mm of l2] (t1) {text query};
-\node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
-\node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
-\node[pstage, right=3mm of t3] (t4) {RRF + diversify};
-\node[pbox, right=3mm of t4] (t5) {parallel VLM $\to$ submit};
+\node[lane, below=3.5mm of l1] (l2) {KIS-T};
+\node[pbox, right=2.5mm of l2] (t1) {text query};
+\node[pstage, right=2.5mm of t1] (t2) {CQR + HyDE};
+\node[pstage, right=2.5mm of t2] (t3) {WeMM + BM25};
+\node[pstage, right=2.5mm of t3] (t4) {RRF + diversify};
+\node[pbox, right=2.5mm of t4] (t5) {parallel VLM $\to$ submit};
 \foreach \a/\b in {t1/t2,t2/t3,t3/t4,t4/t5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 3: KIS-C
-\node[lane, below=7mm of l2] (l3) {KIS-C};
-\node[pbox, right=3mm of l3] (c1) {turn + history};
-\node[pstage, right=3mm of c1] (c2) {entity CQR};
-\node[pstage, right=3mm of c2] (c3) {ambiguity test};
-\node[pstage, right=3mm of c3] (c4) {n-gram boost};
-\node[pbox, right=3mm of c4] (c5) {negative filter};
+\node[lane, below=3.5mm of l2] (l3) {KIS-C};
+\node[pbox, right=2.5mm of l3] (c1) {turn + history};
+\node[pstage, right=2.5mm of c1] (c2) {entity CQR};
+\node[pstage, right=2.5mm of c2] (c3) {ambiguity test};
+\node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
+\node[pbox, right=2.5mm of c4] (c5) {negative filter};
 \foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5} {\draw[arrow] (\a) -- (\b);}
-\draw[arrow,dashed] (c5.south) -- ++(0,-2.5mm) -| (c1.south);
+\draw[arrow,dashed] (c5.south) -- ++(0,-1.5mm) -| (c1.south);
 
 % Lane 4: AVS
-\node[lane, below=8mm of l3] (l4) {AVS};
-\node[pbox, right=3mm of l4] (a1) {ad-hoc concept};
-\node[pstage, right=3mm of a1] (a2) {broad WeMM};
-\node[pstage, right=3mm of a2] (a3) {video diversity};
-\node[pstage, right=3mm of a3] (a4) {timeline browse};
-\node[pbox, right=3mm of a4] (a5) {duplicate guard $\to$ DRES};
+\node[lane, below=4mm of l3] (l4) {AVS};
+\node[pbox, right=2.5mm of l4] (a1) {ad-hoc concept};
+\node[pstage, right=2.5mm of a1] (a2) {broad WeMM};
+\node[pstage, right=2.5mm of a2] (a3) {video diversity};
+\node[pstage, right=2.5mm of a3] (a4) {timeline browse};
+\node[pbox, right=2.5mm of a4] (a5) {duplicate guard $\to$ DRES};
 \foreach \a/\b in {a1/a2,a2/a3,a3/a4,a4/a5} {\draw[arrow] (\a) -- (\b);}
 
 % Lane 5: VQA
-\node[lane, below=7mm of l4] (l5) {VQA};
-\node[pbox, right=3mm of l5] (q1) {question text};
-\node[pstage, right=3mm of q1] (q2) {retrieve pool};
-\node[pstage, right=3mm of q2] (q3) {real media resolve};
-\node[pstage, right=3mm of q3] (q4) {crop + parallel VLM};
-\node[pbox, right=3mm of q4] (q5) {answer + evidence};
+\node[lane, below=3.5mm of l4] (l5) {VQA};
+\node[pbox, right=2.5mm of l5] (q1) {question text};
+\node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
+\node[pstage, right=2.5mm of q2] (q3) {real media resolve};
+\node[pstage, right=2.5mm of q3] (q4) {crop + parallel VLM};
+\node[pbox, right=2.5mm of q4] (q5) {answer + evidence};
 \foreach \a/\b in {q1/q2,q2/q3,q3/q4,q4/q5} {\draw[arrow] (\a) -- (\b);}
 
-\node[pfail, below=2.5mm of q4, xshift=1.2cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
+\node[pfail, below=2mm of q4, xshift=1.1cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
 \draw[arrow,dashed] (q3.south) |- (qfail.west);
 \draw[arrow,dashed] (q4.south) -- (qfail.north);
 
@@ -224,24 +226,14 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 }
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
 \label{fig:task-lanes}
-\vspace{-3mm}
+\vspace{-2mm}
 \end{figure}
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
 \paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy:
-\begin{enumerate}
-    \item \emph{Ambiguity Detection}: We combine Distinct Video Ratio ($DVR$) with Score Margin Ambiguity ($SMA$):
-    \begin{equation}
-    A = (1 - \lambda) \cdot DVR + \lambda \cdot \left(1.0 - \frac{s_1 - s_2}{s_1}\right)
-    \end{equation}
-    where $s_1, s_2$ are top-1 and top-2 candidate scores ($\lambda=0.5$). When $A \ge 0.7$, the VLM generates a facet-discriminating question.
-    \item \emph{Compound N-gram \& Phrase Clarification Boost}: When the operator answers, candidate scores are boosted by semantic overlap across unigrams and 2-gram/3-gram phrases:
-    \begin{equation}
-    s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}
-    \end{equation}
-    \item \emph{Conversational Negative Feedback Filtering}: Visual descriptions rejected by the operator are tracked. Candidates containing overlapping rejected terms receive a calibrated dampening penalty, preventing redundant false positives.
-\end{enumerate}
-
+(1)~\emph{Ambiguity Detection}: we combine Distinct Video Ratio ($DVR$) with Score Margin Ambiguity ($SMA$): $A = (1 - \lambda) \cdot DVR + \lambda \cdot (1.0 - (s_1 - s_2)/s_1)$, where $s_1, s_2$ are top-1 and top-2 candidate scores ($\lambda=0.5$). When $A \ge 0.7$, the VLM generates a facet-discriminating question;
+(2)~\emph{Compound N-gram Boost}: when the operator answers, candidate scores receive additive phrase overlap: $s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}$; and
+(3)~\emph{Negative Feedback Filtering}: visual attributes rejected by the operator are logged, applying a calibrated dampening penalty to candidates matching rejected terms.
 \paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical keyframe media inside the dataset root. If object labels are present, YOLOE-26 generates localized bounding-box crops. The cropped frame is evaluated by the VLM with a strict JSON contract requiring \code{found=true}, concise answer ($<15$ words), and confidence $\in [0, 1]$. Missing media or ungrounded predictions immediately return \code{UNKNOWN/N/A} with score 0, ensuring zero hallucination.
 
 \paragraph{AVS (Ad-hoc Video Search).} AVS maximizes cross-video coverage. Scene diversification suppresses near-duplicate frames from the same video. A duplicate-video submission guard prevents submitting already-scored videos for the same task.
@@ -250,79 +242,82 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \paragraph{Intra-Video Timeline Exploration.} When an operator spots a promising video, the backend exposes \code{/api/video/timeline} to inspect $\pm 30$ seconds of surrounding keyframes and \code{/api/video/rerank} to score intra-video frames against sub-queries.
 
+\begin{figure}[t]
+\centering
+\vspace{-2mm}
+\includegraphics[width=0.96\textwidth]{figures/system_ui_demo.pdf}
+\caption{The AEGIS Interactive Operator Console and qualitative task demonstrations. The full-width interface combines a task-routing control bar, high-density candidate gallery, and modal inspection drawer, delivering verified Rank~\#1 retrieval across KIS-T, KIS-C, VQA, AVS, and KIS-V.}
+\label{fig:ui-demo}
+\vspace{-3mm}
+\end{figure}
+\paragraph{Interactive Verification and Qualitative Demonstrations.}
+AEGIS provides a full-width interactive operator console engineered for high-throughput competition sessions (Fig.~\ref{fig:ui-demo}). The interface unifies modal query execution, conversational clarification, and candidate inspection:
+(1)~\emph{Unified Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES session readiness;
+(2)~\emph{High-Density Keyframe Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns on standard displays), allowing operators to visually scan 20+ candidates without scrolling; and
+(3)~\emph{Candidate Inspection Drawer}: clicking any hit surfaces an enlarged high-resolution keyframe, object detection boxes, OCR text, ASR transcripts, and instant DRES submission triggers.
+
+As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate instant target localization across all task modes: from precise stunt retrieval in KIS-T (\code{00001.mp4} @ 57.0s, Rank~\#1) and conversational ambiguity collapse in KIS-C (\code{00003.mp4} @ 56.8s) to grounded object crop extraction in VQA (\code{00004.mp4}, \code{"Helicopter"}), cross-video diversity in AVS, and visual query alignment in KIS-V.
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
 
 \subsection{Experimental Setup and LLM-as-a-Judge Protocol}
-We evaluate AEGIS on the V3C dataset. Grounded VQA accuracy, conversational ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.7 Flash (High) ($T=0$, strict JSON schema validation), eliminating human variance and yielding deterministic, reproducible scoring. In core task evaluation, our full engine achieves an Overall RAG Score of \textbf{94.7/100.0} with \textbf{88.9\%} Recall@1 (100.0\% Recall@5, MRR 0.944). Under an extensive 200-query corpus-scale evaluation, our full method achieves an Overall RAG Score of \textbf{76.2/100.0}, with \textbf{57.9\%} Recall@1 (74.7\% Recall@5, MRR 0.665), \textbf{96.7\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety.
+We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.7 Flash (High) ($T=0$), yielding deterministic scoring. In core competition tasks, our full engine achieves an Overall RAG Score of \textbf{94.7/100.0} with \textbf{88.9\%} Recall@1 (100.0\% Recall@5, MRR 0.944). Across a 200-query corpus stress test, our full method maintains an Overall RAG Score of \textbf{76.2/100.0}, with \textbf{57.9\%} Recall@1 (74.7\% Recall@5, MRR 0.665), \textbf{96.7\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety.
 
 \begin{table}[t]
 \centering
-\caption{Ablation Study 1 \& 2: Retrieval fusion and multi-turn KIS-C progression.}
-\label{tab:ablation-retrieval-kisc}
+\caption{Comprehensive ablation suite across core AEGIS dimensions. Panels evaluate multimodal retrieval fusion, conversational KIS-C dynamics, fail-closed grounding, threadpool scaling, and the budgeted precision ladder.}
+\label{tab:ablation-studies}
 \vspace{-2mm}
-\resizebox{0.92\textwidth}{!}{%
-\begin{tabular}{lccccc}
-\textbf{Pipeline Configuration / Stage} & \textbf{R@1 (\%)} & \textbf{R@5 (\%)} & \textbf{R@10 (\%)} & \textbf{MRR} & \textbf{p50 Lat (s)} \\
-\midrule
-\multicolumn{6}{l}{\emph{Ablation 1: Multimodal Retrieval \& Fusion Components (200-Query Corpus Test)}} \\
-(M1) Dense Only (WeMM-4B) & 26.3 & 48.4 & 55.8 & 0.354 & 0.038 \\
-(M2) Dense + Sparse BM25 Payload & 32.6 & 53.7 & 60.5 & 0.412 & 0.052 \\
-(M3) Dense + BM25 + SigLIP Secondary & 38.9 & 58.9 & 64.7 & 0.468 & 0.076 \\
-(M4) + 4-Way Weighted RRF Fusion & 44.2 & 64.7 & 71.6 & 0.526 & 0.084 \\
-(M5) + Temporal Coherence \& Diversify & 51.6 & 70.5 & 77.9 & 0.598 & 0.091 \\
-(M6) + Parallel VLM Rerank (Full Engine) & \textbf{57.9} & \textbf{74.7} & \textbf{82.1} & \textbf{0.665} & 1.480 \\
-\midrule
-\multicolumn{6}{l}{\emph{Ablation 2: Conversational KIS-C Multi-Turn Dynamics}} \\
-(C1) Turn 1: Initial Vague Query & 0.0 & 35.0 (R@3) & 50.0 & 0.245 & 0.088 (Amb 0.84) \\
-(C2) Turn 2: Naive History Concat & 25.0 & 50.0 (R@3) & 65.0 & 0.395 & 0.092 (Amb 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & 50.0 & 70.0 (R@3) & 85.0 & 0.612 & 0.110 (Amb 0.59) \\
-(C4) Turn 2: + Compound N-gram Boost & 75.0 & 90.0 (R@3) & 95.0 & 0.825 & 0.115 (Amb 0.42) \\
-(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{85.0} & \textbf{95.0 (R@3)} & \textbf{100.0} & \textbf{0.910} & \textbf{0.120 (Amb 0.24)} \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Ablation Study 3, 4 \& 5: VQA Grounding, Concurrency, and Precision Ladder.}
-\label{tab:ablation-vqa-scaling}
-\vspace{-2mm}
-\resizebox{0.92\textwidth}{!}{%
+\resizebox{0.96\textwidth}{!}{%
+\renewcommand{\arraystretch}{0.84}%
 \begin{tabular}{lcccc}
-\textbf{Ablation Dimension \& Setting} & \textbf{Primary Metric} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
 \midrule
-\multicolumn{5}{l}{\emph{Ablation 3: VQA Grounding \& Fail-Closed Safety}} \\
-Ungrounded Whole-Frame VLM & Exact Match: 52.0\% & 58.0\% & 42.0\% (Hazardous) & 1.42s \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 83.3\% & 88.0\% & 12.0\% & 1.55s \\
-AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 96.7\%} & \textbf{96.7\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
+\multicolumn{5}{l}{\emph{Panel A: Multimodal Retrieval Fusion (200-Query Corpus Test)}} \\
+(M1) Dense Only (WeMM-4B) & R@1: 26.3\% & R@5: 48.4\% & 0.354 & 0.038s \\
+(M2) Dense + Sparse BM25 Payload & R@1: 32.6\% & R@5: 53.7\% & 0.412 & 0.052s \\
+(M3) Dense + BM25 + SigLIP Secondary & R@1: 38.9\% & R@5: 58.9\% & 0.468 & 0.076s \\
+(M4) + 4-Way Weighted RRF Fusion & R@1: 44.2\% & R@5: 64.7\% & 0.526 & 0.084s \\
+(M5) + Temporal Coherence \& Diversify & R@1: 51.6\% & R@5: 70.5\% & 0.598 & 0.091s \\
+(M6) + Parallel VLM Rerank (Full Engine) & \textbf{R@1: 57.9\%} & \textbf{R@5: 74.7\%} & \textbf{0.665} & 1.480s \\
 \midrule
-\multicolumn{5}{l}{\emph{Ablation 4: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
+\multicolumn{5}{l}{\emph{Panel B: Conversational KIS-C Multi-Turn Dynamics}} \\
+(C1) Turn 1: Initial Vague Query & R@1: 0.0\% & R@3: 35.0\% & 0.245 & 0.088s (Amb 0.84) \\
+(C2) Turn 2: Naive History Concat & R@1: 25.0\% & R@3: 50.0\% & 0.395 & 0.092s (Amb 0.74) \\
+(C3) Turn 2: + Entity-Preserving CQR & R@1: 50.0\% & R@3: 70.0\% & 0.612 & 0.110s (Amb 0.59) \\
+(C4) Turn 2: + Compound N-gram Boost & R@1: 75.0\% & R@3: 90.0\% & 0.825 & 0.115s (Amb 0.42) \\
+(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{R@1: 85.0\%} & \textbf{R@3: 95.0\%} & \textbf{0.910} & \textbf{0.120s (Amb 0.24)} \\
+\midrule
+\multicolumn{5}{l}{\emph{Panel C: VQA Grounding \& Fail-Closed Safety}} \\
+Ungrounded Whole-Frame VLM & Exact Match: 52.0\% & Faithfulness: 58.0\% & 42.0\% Halluc. & 1.42s (Hazardous) \\
+Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 83.3\% & Faithfulness: 88.0\% & 12.0\% Halluc. & 1.55s \\
+AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 96.7\%} & \textbf{Faithfulness: 96.7\%} & \textbf{0.0\% Halluc.} & \textbf{1.62s (100\% Safe)} \\
+\midrule
+\multicolumn{5}{l}{\emph{Panel D: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
 Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
 Parallel Execution ($N=4$ workers) & Throughput: 2.51 QPS & --- & --- & 3.98s ($3.73\times$) \\
-Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$ speedup)} \\
+Parallel Execution ($N=8$ workers) & \textbf{Throughput: 5.41 QPS} & --- & --- & \textbf{1.85s ($8.03\times$)} \\
 \midrule
-\multicolumn{5}{l}{\emph{Ablation 5: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
-Fast Mode (HNSW $ef=64$) & Recall vs Exact: 97.8\% & Instant Screen & --- & \textbf{12.4ms} \\
-Standard Mode (HNSW $ef=256$) & Recall vs Exact: 99.4\% & Balanced Live & --- & 24.5ms \\
-Deep Mode (HNSW $ef=512$) & Recall vs Exact: 99.9\% & High Ambiguity & --- & 48.6ms \\
-Exact Brute-Force Scan & \textbf{Recall vs Exact: 100.0\%} & Deterministic & --- & 118.5ms \\
+\multicolumn{5}{l}{\emph{Panel E: Budgeted Precision Ladder (HNSW Effort Scaling)}} \\
+Fast Mode (HNSW $ef=64$) & Recall: 97.8\% & Instant Screen & --- & \textbf{12.4ms} \\
+Standard Mode (HNSW $ef=256$) & Recall: 99.4\% & Balanced Live & --- & 24.5ms \\
+Deep Mode (HNSW $ef=512$) & Recall: 99.9\% & High Ambiguity & --- & 48.6ms \\
+Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & Deterministic & --- & 118.5ms \\
 \bottomrule
 \end{tabular}%
 }
+\vspace{-2mm}
 \end{table}
 \subsection{Empirical Findings}
-As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, controlled ablations validate our architectural decisions:
-(1)~\textbf{Multimodal Fusion Lift}: Progressing from dense-only (M1) to full hybrid fusion with parallel VLM reranking (M6) increases Recall@1 from 26.3\% to 57.9\% (+31.6\%) and MRR from 0.354 to 0.665;
-(2)~\textbf{Conversational Precision}: Entity-preserving CQR paired with compound $n$-gram phrase boosting reduces ambiguity from 0.84 to 0.24 and elevates targets to 85.0\% Recall@1 (MRR 0.910);
-(3)~\textbf{Zero Hallucination}: The fail-closed contract achieves 96.7\% exact match while eliminating ungrounded hallucinations (42.0\% $\to$ 0.0\%);
-(4)~\textbf{Sub-2s Latency}: Multi-threaded execution provides an $8.03\times$ speedup (1.85s) for real-time interaction; and
-(5)~\textbf{Effort Escalation}: The precision ladder maintains 97.8\% recall at 12.4ms up to 100.0\% at 118.5ms.
+As documented in Table~\ref{tab:ablation-studies}, controlled ablations validate our system:
+(1)~\textbf{Fusion Lift}: M1 $\to$ M6 raises Recall@1 from 26.3\% to 57.9\% (+31.6\%) and MRR from 0.354 to 0.665;
+(2)~\textbf{Conversational Precision}: entity-preserving CQR with compound $n$-gram phrase boosting reduces ambiguity ($0.84 \to 0.24$) and lifts targets to 85.0\% Recall@1 (MRR 0.910);
+(3)~\textbf{Zero Hallucination}: the fail-closed contract attains 96.7\% exact match with 0.0\% hallucination;
+(4)~\textbf{Sub-2s Latency}: multi-threading yields an $8.03\times$ speedup (1.85s) for real-time interaction; and
+(5)~\textbf{Precision Escalation}: the ladder scales from 12.4ms (97.8\% recall) to 118.5ms (100.0\% recall).
 
 \section{Conclusion}
 \label{sec:conclusion}
-Team TGLTW-RMIT's AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4-billion-parameter WeMM-4B dense representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, conversational negative feedback filtering, fail-closed grounded VQA, and intra-video timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work includes on-device lightweight VLM distillation and live rehearsal at MMM 2027 in Siem Reap.
+AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work targets on-device lightweight VLM distillation and live rehearsal at MMM 2027.
 \clearpage
 \bibliographystyle{splncs04}
 \bibliography{references}
