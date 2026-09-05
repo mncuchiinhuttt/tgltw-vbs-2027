@@ -153,7 +153,7 @@ function SearchView() {
     const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)
     const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|webp)$/i.test(file.name)
     if (!isVideo && !isImage) {
-      setError("KIS-V yêu cầu một file video (MP4, MOV...) hoặc ảnh khung hình (JPG, PNG...).")
+      setError("KIS-V requires a video clip (MP4, MOV...) or keyframe image (JPG, PNG...).")
       return
     }
     setError(null)
@@ -354,7 +354,7 @@ function SearchView() {
 
   const handleSubmitToDres = async (hit: ResultHit, force = false) => {
     if (!currentTask?.task_id) {
-      setActionMessage("Chưa có task DRES hiện tại - đăng nhập DRES trước.")
+      setActionMessage("No active DRES task found - please log in to DRES first.")
       return
     }
     try {
@@ -374,21 +374,22 @@ function SearchView() {
       })
       const data = await response.json()
       if (response.ok) {
-        setActionMessage(`Đã nộp: ${JSON.stringify(data)}`)
+        setActionMessage(`Submitted successfully: ${JSON.stringify(data)}`)
         return
       }
       // AVS duplicate-video guard (Phase H): 409 is a soft warning, not a
       // hard block - let the operator confirm and force-resubmit if they
       // have a real reason to.
       if (response.status === 409 && data.detail?.warning) {
-        if (window.confirm(`${data.detail.warning}\n\nNộp lại?`)) {
+        if (window.confirm(`${data.detail.warning}\n\nResubmit anyway?`)) {
           await handleSubmitToDres(hit, true)
         }
         return
       }
-      setActionMessage(data.detail?.warning || data.detail || "Nộp thất bại")
-    } catch (err: any) {
-      setActionMessage(err.message || "Nộp thất bại")
+      setActionMessage(data.detail?.warning || data.detail || "Submission failed")
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Submission failed"
+      setActionMessage(msg)
     }
   }
 

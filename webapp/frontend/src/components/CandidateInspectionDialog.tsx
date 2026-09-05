@@ -125,7 +125,7 @@ export function CandidateInspectionDialog({
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all"
               >
                 <Send className="h-3.5 w-3.5" />
-                Nộp DRES
+                Submit DRES
               </button>
               <button
                 type="button"
@@ -147,7 +147,7 @@ export function CandidateInspectionDialog({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all"
               >
                 <Play className="h-3.5 w-3.5 fill-slate-700" />
-                Phát video
+                Play Video
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ export function CandidateInspectionDialog({
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 hover:text-indigo-600 hover:bg-white px-2 py-1 rounded transition"
                 >
                   <Search className="h-3 w-3" />
-                  Tìm tương tự
+                  Similar Frames
                 </button>
                 <button
                   type="button"
@@ -224,7 +224,7 @@ export function CandidateInspectionDialog({
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 hover:text-indigo-600 hover:bg-white px-2 py-1 rounded transition"
                 >
                   <Sparkles className="h-3 w-3 text-indigo-600" />
-                  Tìm trong video
+                  Search in Video
                 </button>
               </div>
             </div>

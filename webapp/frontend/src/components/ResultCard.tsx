@@ -142,7 +142,7 @@ export function ResultCard({
               onInspect?.(hit, idx)
             }}
             className="p-2 rounded-full bg-white/95 hover:bg-white text-indigo-600 shadow-md transition-transform hover:scale-110"
-            title="Inspect Details (Mở chi tiết)"
+            title="Inspect Details"
           >
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
@@ -198,7 +198,7 @@ export function ResultCard({
           {payload.caption || videoName}
         </span>
         <span className="text-[10px] text-indigo-600 font-bold hover:underline shrink-0 flex items-center gap-0.5">
-          Chi tiết
+          Details
         </span>
       </div>
     </div>
