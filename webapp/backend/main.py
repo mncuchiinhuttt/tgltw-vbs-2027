@@ -225,21 +225,34 @@ def _resolve_dataset_dir(requested: Optional[str]) -> str:
 
 def _resolve_media_path(video_name: str) -> Path:
     """Resolve a frontend media name under DATASETS_DIR and require a file."""
-    dataset_root = os.path.realpath(str(DATASETS_DIR))
     if not isinstance(video_name, str) or not video_name.strip():
         raise HTTPException(status_code=400, detail="video_name is required")
-    resolved = os.path.realpath(os.path.join(dataset_root, video_name))
-    try:
-        inside_root = os.path.commonpath((dataset_root, resolved)) == dataset_root
-    except ValueError:
-        inside_root = False
-    if not inside_root:
-        raise HTTPException(status_code=400, detail="media path is outside the dataset directory")
-    media_path = Path(resolved)
-    if not media_path.is_file():
-        raise HTTPException(status_code=404, detail="Media file not found")
-    return media_path
 
+    clean_name = video_name.strip()
+    dataset_root = Path(os.path.realpath(str(DATASETS_DIR)))
+    stem = Path(clean_name).stem
+
+    candidates = [
+        dataset_root / clean_name,
+        dataset_root / "v3c" / "videos" / clean_name,
+        dataset_root / "v3c" / "videos" / f"{stem}.mp4",
+        dataset_root / "videos" / clean_name,
+        dataset_root / "videos" / f"{stem}.mp4",
+        dataset_root / "v3c" / "keyframes" / clean_name,
+        dataset_root / "keyframes" / clean_name,
+        dataset_root / "v3c-sample" / clean_name,
+    ]
+
+    for cand in candidates:
+        try:
+            resolved = cand.resolve()
+            if resolved.is_file():
+                if os.path.commonpath((str(dataset_root), str(resolved))) == str(dataset_root):
+                    return resolved
+        except Exception:
+            continue
+
+    raise HTTPException(status_code=404, detail=f"Media file '{video_name}' not found")
 
 def _vqa_public_evidence(candidate: dict) -> dict:
     """Expose one validated, dataset-relative media reference to the UI."""
@@ -1144,42 +1157,69 @@ async def run_in_video_search(request: InVideoSearchRequest):
 @app.get("/api/media/frame")
 def get_frame(video_name: str, timestamp: Optional[float] = None, frame_idx: Optional[int] = None):
     """
-    Dynamically extract a frame from a video at a specific timestamp and return as JPEG.
+    Extract or directly serve a keyframe image from disk or video.
     """
+    if not isinstance(video_name, str) or not video_name.strip():
+        raise HTTPException(status_code=400, detail="video_name is required")
+
+    clean_name = video_name.strip()
+    stem = Path(clean_name).stem
+    dataset_root = Path(os.path.realpath(str(DATASETS_DIR)))
+
+    # 1. Fast path: check if pre-extracted keyframe image already exists on disk
+    if frame_idx is not None:
+        keyframe_candidates = [
+            dataset_root / "v3c" / "keyframes" / stem / f"{frame_idx}.jpg",
+            dataset_root / "keyframes" / stem / f"{frame_idx}.jpg",
+            dataset_root / "v3c" / "keyframes" / stem / f"{frame_idx}.png",
+            dataset_root / "v3c-sample" / "official" / "keyframes" / stem / f"shot{stem}_1_RKF.png",
+        ]
+        for kp in keyframe_candidates:
+            if kp.is_file():
+                return FileResponse(str(kp), media_type="image/jpeg" if kp.suffix == ".jpg" else "image/png")
+
+    # If only timestamp is provided, check if close keyframe exists in keyframes dir
+    if timestamp is not None and frame_idx is None:
+        keyframe_dir = dataset_root / "v3c" / "keyframes" / stem
+        if keyframe_dir.is_dir():
+            est_idx = int(timestamp * 25.0)
+            direct_file = keyframe_dir / f"{est_idx}.jpg"
+            if direct_file.is_file():
+                return FileResponse(str(direct_file), media_type="image/jpeg")
+            frame_files = list(keyframe_dir.glob("*.jpg"))
+            if frame_files:
+                closest = min(frame_files, key=lambda f: abs(int(f.stem) - est_idx) if f.stem.isdigit() else 999999)
+                if closest.is_file() and abs(int(closest.stem) - est_idx) <= 75:
+                    return FileResponse(str(closest), media_type="image/jpeg")
+
+    # 2. Slow path / fallback: resolve video file and decode frame with cv2
     video_path = _resolve_media_path(video_name)
 
-    # If it is a static image, return directly
-    if video_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+    if str(video_path).lower().endswith(('.jpg', '.jpeg', '.png')):
         return FileResponse(str(video_path))
 
-    # Read video
     cap = cv2.VideoCapture(str(video_path))
     fps = cap.get(cv2.CAP_PROP_FPS)
     if fps <= 0:
-        cap.release()
-        raise HTTPException(status_code=400, detail="Unable to retrieve FPS from video")
+        fps = 25.0
 
     if frame_idx is not None:
-        if frame_idx < 0:
-            cap.release()
-            raise HTTPException(status_code=400, detail="frame_idx must be non-negative")
-        canonical_frame_idx = frame_idx
+        canonical_frame_idx = max(0, frame_idx)
+    elif timestamp is not None and math.isfinite(timestamp):
+        canonical_frame_idx = max(0, int(timestamp * fps))
     else:
-        if timestamp is None or not math.isfinite(timestamp) or timestamp < 0:
-            cap.release()
-            raise HTTPException(status_code=400, detail="timestamp must be finite and non-negative")
-        canonical_frame_idx = int(timestamp * fps)
+        canonical_frame_idx = 0
+
     cap.set(cv2.CAP_PROP_POS_FRAMES, canonical_frame_idx)
     ret, frame = cap.read()
     cap.release()
 
     if not ret:
-        raise HTTPException(status_code=404, detail="Unable to decode requested frame")
+        raise HTTPException(status_code=404, detail="Unable to decode requested frame from video")
 
-    # Encode to JPEG
     is_success, buffer = cv2.imencode(".jpg", frame)
     if not is_success:
-        raise HTTPException(status_code=500, detail="Failed to encode frame")
+        raise HTTPException(status_code=500, detail="Failed to encode frame to JPEG")
 
     return Response(content=buffer.tobytes(), media_type="image/jpeg")
 
