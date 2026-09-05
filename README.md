@@ -208,20 +208,6 @@ Summary of results across the 5 ablation axes evaluated on the V3C video archive
 
 ---
 
-## 6. License & Academic Attribution
+## 6. License
 
 This software is released under the **MIT License**.
-
-If you use **AEGIS** or findings from this system in your research, please cite our paper:
-
-```bibtex
-@inproceedings{vo2027aegis,
-  author    = {Vo, Long Minh and Vu, Hung Gia and Tran, Danh Kim and Nguyen, Khoa Huynh Minh and Tran, Kien Vi and Chau, Thi-Tuyet-Trang},
-  title     = {{AEGIS}: Adaptive Evidence-Grounded Interactive Search for Timed Video Retrieval},
-  booktitle = {MultiMedia Modeling (MMM 2027)},
-  series    = {Lecture Notes in Computer Science},
-  publisher = {Springer Nature},
-  year      = {2027},
-  note      = {Video Browser Showdown (VBS 2027) Extended Demo}
-}
-```
