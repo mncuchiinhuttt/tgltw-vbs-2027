@@ -17,6 +17,9 @@ import {
   History,
   X,
   BarChart3,
+  Bot,
+  RotateCcw,
+  Send,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -199,10 +202,17 @@ function SearchView() {
     if (!query.trim()) return
     if (isConversationalTask && clarification && !clarificationAnswer.trim()) return
 
-    const requestQuery = isConversationalTask && clarificationAnswer.trim()
-      ? `${query}\nAdditional detail from operator: ${clarificationAnswer.trim()}`
-      : query
+    const userTurnText = isConversationalTask && clarification && clarificationAnswer.trim()
+      ? clarificationAnswer.trim()
+      : query.trim()
 
+    let requestQuery = query.trim()
+    if (isConversationalTask && clarificationAnswer.trim()) {
+      const previousOperatorTurns = kisCMessages
+        .filter((m) => m.role === "operator")
+        .map((m) => m.text)
+      requestQuery = [...previousOperatorTurns, clarificationAnswer.trim()].join("\nAdditional detail from operator: ")
+    }
     // Auto-detect sequential temporal chain if query has " then " or " -> "
     const temporalSteps = query.split(/\s+then\s+|->/i).map((s) => s.trim()).filter(Boolean)
     const isTemporal = temporalSteps.length > 1
@@ -241,9 +251,10 @@ function SearchView() {
       if (isConversationalTask) {
         setKisCMessages((messages) => [
           ...messages,
-          { role: "operator", text: requestQuery },
+          { role: "operator", text: userTurnText },
           ...(data.clarification ? [{ role: "system" as const, text: data.clarification }] : []),
         ])
+        setClarification(data.clarification || null)
         setClarificationAnswer("")
       }
 
@@ -573,47 +584,116 @@ function SearchView() {
         </div>
       )}
 
-          {/* KIS-C Conversation / Clarification Box */}
+          {/* KIS-C Conversational Dialogue Stream */}
           {isConversationalTask && (kisCMessages.length > 0 || clarification) && (
-            <div className="vbs-conversation-card mb-4 text-left p-3.5 rounded-xl border border-indigo-100 bg-white shadow-2xs">
-              <div className="flex items-center gap-2 mb-2.5">
-                <div className="vbs-conversation-icon"><MessageCircle className="h-3.5 w-3.5" /></div>
-                <div>
-                  <p className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider m-0">KIS-C Clarification Dialogue</p>
-                  <p className="text-[11px] text-slate-500 m-0">Clarify vague memory attributes to resolve ambiguous candidate pools.</p>
+            <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 mb-5 shadow-xs text-left space-y-4">
+              {/* Chat Session Header */}
+              <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <MessageCircle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2 m-0">
+                      KIS-C Conversational Session
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                        Multi-Turn
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 m-0">
+                      Interactive disambiguation dialogue with AEGIS Dialogue Manager
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKisCMessages([])
+                    setClarification(null)
+                    setClarificationAnswer("")
+                    setResults([])
+                  }}
+                  className="text-xs text-slate-500 hover:text-red-600 font-semibold px-2.5 py-1 rounded-md hover:bg-slate-100 transition-colors flex items-center gap-1"
+                  title="Start fresh conversation"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reset Chat
+                </button>
               </div>
-              <div className="space-y-1.5 mb-3 max-h-36 overflow-y-auto">
-                {kisCMessages.map((message, index) => (
-                  <div key={`${message.role}-${index}`} className={`vbs-chat-bubble ${message.role === "operator" ? "vbs-chat-bubble-operator" : "vbs-chat-bubble-system"}`}>
-                    <span className="vbs-chat-label">{message.role === "operator" ? "You" : "System"}</span>
-                    <span className="text-xs">{message.text}</span>
+
+              {/* Natural Flowing Message Stream */}
+              <div className="space-y-3 py-1">
+                {kisCMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex gap-2.5 items-start ${msg.role === "operator" ? "justify-end" : "justify-start"}`}
+                  >
+                    {msg.role === "system" && (
+                      <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-200">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                    )}
+
+                    <div
+                      className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed ${
+                        msg.role === "operator"
+                          ? "bg-indigo-600 text-white rounded-tr-xs shadow-xs"
+                          : "bg-white border border-slate-200 text-slate-800 rounded-tl-xs shadow-xs"
+                      }`}
+                    >
+                      <div
+                        className={`text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
+                          msg.role === "operator" ? "text-indigo-200" : "text-indigo-600"
+                        }`}
+                      >
+                        {msg.role === "operator" ? "You (Operator)" : "AEGIS Clarification Question"}
+                      </div>
+                      <div className="whitespace-pre-wrap">{msg.text}</div>
+                    </div>
+
+                    {msg.role === "operator" && (
+                      <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs text-xs font-bold">
+                        You
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {/* Clarification Input Box */}
               {clarification && (
-                <div className="vbs-clarification-form pt-2 border-t border-slate-100">
-                  <div className="flex gap-2">
+                <div className="pt-2 border-t border-slate-200/80">
+                  <div className="flex gap-2 items-center bg-white p-2 rounded-xl border-2 border-indigo-500/50 shadow-xs focus-within:border-indigo-600 focus-within:ring-2 focus-within:ring-indigo-100">
                     <input
-                      id="clarification-answer"
                       type="text"
                       value={clarificationAnswer}
-                      onChange={(event) => setClarificationAnswer(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" && clarificationAnswer.trim()) handleSearch()
+                      onChange={(e) => setClarificationAnswer(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && clarificationAnswer.trim() && !loading) {
+                          handleSearch()
+                        }
                       }}
-                      placeholder="Answer system question to refine candidate ranking..."
-                      className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus:bg-white focus:outline-none focus:border-indigo-500"
+                      placeholder="Type your reply (e.g. Sudarmani and Kasthuri)..."
+                      className="flex-1 text-xs sm:text-sm bg-transparent border-0 px-2 py-1 focus:outline-none text-slate-800 placeholder:text-slate-400"
+                      autoFocus
                     />
                     <button
                       type="button"
                       disabled={loading || !clarificationAnswer.trim()}
                       onClick={() => handleSearch()}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-2xs"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
                     >
-                      Refine
+                      {loading ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      Send Reply
                     </button>
                   </div>
+                  <p className="text-[11px] text-slate-400 mt-1 pl-1">
+                    Press <kbd className="font-mono bg-slate-200/70 px-1 py-0.5 rounded text-[10px]">Enter</kbd> to submit your clarification.
+                  </p>
                 </div>
               )}
             </div>
