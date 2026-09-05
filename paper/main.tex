@@ -239,13 +239,8 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \paragraph{Intra-Video Timeline Exploration.} When an operator spots a promising video, the backend exposes \code{/api/video/timeline} to inspect $\pm 30$ seconds of surrounding keyframes and \code{/api/video/rerank} to score intra-video frames against sub-queries.
 
-\paragraph{Interactive Verification and Qualitative Demonstrations.}
-AEGIS provides a full-width interactive operator console engineered for high-throughput competition sessions (Fig.~\ref{fig:ui-demo}). The interface unifies modal query execution, conversational clarification, and candidate inspection:
-(1)~\emph{Control Bar}: operators route queries across task modes (KIS-T, KIS-C, VQA, AVS, KIS-V) via dedicated pills while monitoring live DRES status;
-(2)~\emph{Dense Gallery}: candidate shots are presented in a responsive full-width grid (6--8 columns), enabling operators to visually scan 20+ candidates without scrolling; and
-(3)~\emph{Inspection Drawer}: clicking any hit surfaces an enlarged keyframe, object detection boxes, OCR/ASR evidence, and instant DRES submission triggers.
-As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate verified Rank~\#1 retrieval across KIS-T (\code{00001.mp4} @ 57.0s), KIS-C (\code{00003.mp4} @ 56.8s), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), AVS diversity, and KIS-V alignment.
-
+\paragraph{Interactive Console and Qualitative Demonstrations.}
+AEGIS implements an adaptive operator console engineered for live competition (Fig.~\ref{fig:ui-demo}). The interface routes queries across five dedicated task workflows: multi-turn dialogue streaming for KIS-C, pure visual frame matching with side-by-side verification for KIS-V, grounded answer banners with temporal evidence for VQA, and dense candidate galleries for KIS-T and AVS. Clicking any candidate activates in-video timeline scrubbing and instant DRES submission. As illustrated in Fig.~\ref{fig:ui-demo}, live benchmark runs confirm verified Rank~\#1 retrieval across all five official task modes: KIS-T (\code{00001.mp4}), KIS-C (\code{00003.mp4}), KIS-V (\code{00008.mp4} @ 98.4\%), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), and AVS cross-video diversity.
 \begin{figure}[htbp]
 \centering
 \vspace{-2mm}
