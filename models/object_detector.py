@@ -1,4 +1,5 @@
 import os
+import threading
 import torch
 import numpy as np
 from PIL import Image
@@ -26,16 +27,17 @@ class ObjectDetector:
         print(f"Loading YOLOE model: {model_path} on {self.device}...")
         self.model = YOLOE(model_path)
         self.model.to(self.device)
+        self._lock = threading.Lock()
         self._classes_cache_key = None
         print("YOLOE model loaded successfully.")
 
     def _ensure_classes(self, labels: List[str], embed_prompts: List[str]) -> None:
-        cache_key = (tuple(labels), tuple(embed_prompts))
-        if cache_key != self._classes_cache_key:
-            text_embeds = self.model.get_text_pe(embed_prompts)
-            self.model.set_classes(labels, text_embeds)
-            self._classes_cache_key = cache_key
-
+        with self._lock:
+            cache_key = (tuple(labels), tuple(embed_prompts))
+            if cache_key != self._classes_cache_key:
+                text_embeds = self.model.get_text_pe(embed_prompts)
+                self.model.set_classes(labels, text_embeds)
+                self._classes_cache_key = cache_key
     def detect(
         self,
         image: Union[Image.Image, str],

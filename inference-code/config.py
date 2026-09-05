@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 
 _ROOT_DIR = Path(__file__).resolve().parent.parent
 _INFERENCE_DIR = Path(__file__).resolve().parent
-load_dotenv(_INFERENCE_DIR / ".env")
-load_dotenv(_ROOT_DIR / ".env")
-load_dotenv()
+load_dotenv(_INFERENCE_DIR / ".env", override=True)
+load_dotenv(_ROOT_DIR / ".env", override=True)
+load_dotenv(override=True)
 # API Keys & Endpoints
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # Leave blank for OpenAI's default endpoint, or point at any OpenAI-compatible

@@ -29,8 +29,9 @@ webapp/backend/logs/
 
 # Exclude model weight/checkpoint files
 *.pt
+*.ts
 /preprocessing/mobileclip2_b.ts
-
+/mobileclip2_b.ts
 # Exclude database storage directory (Qdrant)
 /preprocessing/qdrant_storage/
 /preprocessing/qdrant_bin/

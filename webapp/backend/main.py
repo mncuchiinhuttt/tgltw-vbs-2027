@@ -176,10 +176,13 @@ def init_services(query_type: int = 1):
         from search.hybrid_search import HybridSearcher
         from search.reranker import Reranker
 
-        if _vlm is None:
-            print("Initializing VLM...")
+        current_model = getattr(_vlm, "model_name", None)
+        target_model = os.getenv("OPENAI_VLM_MODEL_NAME")
+        if _vlm is None or (current_model and target_model and current_model != target_model):
+            print(f"Initializing VLM (switching from {current_model} to {target_model})...")
             _vlm = load_vlm()
-
+            _query_proc = None
+            _reranker = None
         if _embedder is None:
             print("Initializing Embedder...")
             _embedder = load_embedder()
