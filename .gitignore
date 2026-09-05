@@ -1,37 +1,70 @@
-# Git ignore for HCMC AI Challenge 2026 Workspace
+# Git ignore for Video Browser Showdown (VBS 2027) Workspace
 
 # Exclude global weights and dataset directories at root level
 /weights/
 /datasets/
 .download_assets_deps/
 
-# Exclude python environments
+# Exclude python environments and caches
 venv/
 .venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Frontend build artifacts
+node_modules/
+dist/
+.eslintcache
 
 # Exclude credentials and environment files
 .env
+*.env
+*.env.local
 
-# Exclude runtime temporary files
+# Exclude runtime temporary files & logs
 temp/
 *.log
 *.wav
 *.mp4
+*.tmp
+*.bak
+*.swp
+*~
 
-# Interaction logs (webapp/backend/interaction_log.py) - local JSONL
-# fallback so nothing is lost if DRES's log endpoint is down, but not
-# meant to be committed to the repo.
+# Interaction logs and audit runs
 webapp/backend/logs/
+webapp/backend/*.log
+preprocessing/*.log
+evaluation/indexing_logs/
+evaluation/benchmark_real_output/
+evaluation/eval_results.json
+evaluation/eval_audit_results.json
+evaluation/v3c_eval_results.json
+queries/v3c_audit_output/
+queries/weMM_audit_output/
+queries/*_output/
+queries/*_results/
+queries/submission/
+queries/submission.zip
+queries/*.jsonl
+queries/test-audit-run/
+audit_*.json
 
 # Exclude model weight/checkpoint files
 *.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
 *.ts
 /preprocessing/mobileclip2_b.ts
 /mobileclip2_b.ts
+
 # Exclude database storage directory (Qdrant)
 /preprocessing/qdrant_storage/
 /preprocessing/qdrant_bin/
@@ -44,25 +77,13 @@ Thumbs.db
 # ffmpeg
 ffmpeg
 
-# Evaluation benchmark output reports
-eval_results.json
-evaluation/eval_results.json
-evaluation/eval_audit_results.json
-evaluation/v3c_eval_results.json
-evaluation/benchmark_real_output/
-evaluation/indexing_logs/
-queries/v3c_audit_output/
-queries/weMM_audit_output/
-queries/ablation_*/
-queries/submission/
-queries/submission.zip
-queries/*.jsonl
-# LaTeX build artifacts
+# LaTeX build artifacts and local preview helpers
 *.aux
 *.bbl
 *.blg
 *.fls
 *.fdb_latexmk
+*.log
 *.out
 *.synctex.gz
 *.nav
@@ -73,16 +94,19 @@ paper/start_server.sh
 paper/compile.sh
 paper/index.html
 paper/comments.json
+paper/*_test.*
+paper/*_rendered*
+paper/*_crop*
+paper/figures/*_norm.*
+paper/figures/*_zoom.*
 
-
-# Local runner scripts
+# Local runner scripts and private datasets
 run_wemm_full_indexing.py
 monitor_and_eval_on_finish.sh
-# Private files
 VBS-2026-978-981-95-6963-2.pdf
 
 # AI assistant, agent skills, and planning directories
 .claude/
-.agents/skills/
+.agents/
 /plans/
 plans/
