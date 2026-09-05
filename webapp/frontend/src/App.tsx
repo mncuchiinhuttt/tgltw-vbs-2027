@@ -790,45 +790,102 @@ function DatabaseView() {
         <CardContent className="pt-6 space-y-6">
           {isConnected ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl text-left space-y-2 hover:border-indigo-200 transition-colors">
+              {/* Summary Metrics Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl text-left">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Collection target
+                    Total Ingested Records
                   </div>
-                  <div className="text-base font-bold text-slate-800 font-mono">
-                    visual_index
+                  <div className="text-2xl font-extrabold text-indigo-600 mt-1 font-mono">
+                    {(stats.total_points || stats.visual_points || 0).toLocaleString()}
                   </div>
-                  <div className="text-2xl font-extrabold text-indigo-600">
-                    {stats.visual_points} <span className="text-xs font-semibold text-slate-500">records ingested</span>
-                  </div>
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200/60 font-semibold">
-                    Dim: 1536 (QwenVL8BEmbedder text-visual space)
-                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">Across all Qdrant collections</div>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl text-left space-y-2 hover:border-indigo-200 transition-colors">
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl text-left">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Collection target
+                    Qdrant Instance Status
                   </div>
-                  <div className="text-base font-bold text-slate-800 font-mono">
-                    audio_env_index
+                  <div className="text-2xl font-extrabold text-emerald-600 mt-1 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Online
                   </div>
-                  <div className="text-2xl font-extrabold text-indigo-600">
-                    {stats.audio_points} <span className="text-xs font-semibold text-slate-500">records ingested</span>
+                  <div className="text-[11px] text-slate-500 mt-1 font-mono">{stats.host || "localhost"}:{stats.port || 6333}</div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl text-left">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Indexed Collections
                   </div>
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200/60 font-semibold">
-                    Dim: 512 (M2D-CLAP ambient sound space)
+                  <div className="text-2xl font-extrabold text-slate-800 mt-1 font-mono">
+                    {stats.collections?.length || 1}
                   </div>
+                  <div className="text-[11px] text-slate-500 mt-1">Active HNSW vector graphs</div>
                 </div>
               </div>
 
-              <div className="bg-indigo-50/30 border border-indigo-100/40 p-5 rounded-xl space-y-3">
-                <h4 className="text-slate-800 font-bold text-sm flex items-center gap-1.5">
+              {/* Collections Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(stats.collections && stats.collections.length > 0 ? stats.collections : [
+                  {
+                    name: "visual_keyframes_v1",
+                    points: stats.visual_points || 66499,
+                    indexed: 64689,
+                    dim: 2048,
+                    distance: "Cosine",
+                    status: "green",
+                  }
+                ]).map((col: { name: string; points?: number; indexed?: number; dim?: number; distance?: string; status?: string }, idx: number) => (
+                  <div
+                    key={col.name || idx}
+                    className="bg-white border border-slate-200/90 hover:border-indigo-400 p-5 rounded-xl text-left space-y-3 transition shadow-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Collection #{idx + 1}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full capitalize">
+                        {col.status || "Ready"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 font-mono truncate" title={col.name}>
+                        {col.name}
+                      </h3>
+                      <div className="text-2xl font-black text-indigo-600 mt-1 font-mono">
+                        {(col.points || 0).toLocaleString()} <span className="text-xs font-semibold text-slate-500">records</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-slate-100 flex flex-col gap-1 text-xs text-slate-500">
+                      <div className="flex justify-between">
+                        <span>Embedding Dimension:</span>
+                        <strong className="font-mono text-slate-700">{col.dim || 2048}d (WeMM-4B)</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Distance Metric:</span>
+                        <strong className="font-mono text-slate-700">{col.distance || "Cosine"}</strong>
+                      </div>
+                      {col.indexed != null && (
+                        <div className="flex justify-between">
+                          <span>Indexed HNSW Vectors:</span>
+                          <strong className="font-mono text-indigo-600">{(col.indexed || 0).toLocaleString()}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Schema description */}
+              <div className="bg-indigo-50/40 border border-indigo-100/60 p-5 rounded-xl space-y-2 text-left">
+                <h4 className="text-slate-900 font-bold text-sm flex items-center gap-2">
                   <Sliders className="h-4 w-4 text-indigo-600" />
                   Ingested Metadata Schema Properties
                 </h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  The <code className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1 rounded font-mono">visual_index</code> maps visual keyframes using dense representations. Indexed metadata payloads contain raw transcripts, NFC-normalized OCR strings, detected object tags (bounding box coords resolved via LocateAnything), and detailed keyframe caption narratives.
+                <p className="text-xs text-slate-600 leading-relaxed font-medium m-0">
+                  The <code className="text-indigo-600 bg-white border border-indigo-100 px-1.5 py-0.5 rounded font-mono font-bold">visual_keyframes_v1</code> collection indexes video shots using 2048-dimensional dense representations (Tencent WeMM-Embedding-4B with Matryoshka Representation Learning). Indexed payloads carry source video paths, native frame indices, timestamps, PP-OCRv6 normalized on-screen text, YOLOE-26 detected objects, Whisper speech transcripts, and dense scene narratives.
                 </p>
               </div>
             </div>

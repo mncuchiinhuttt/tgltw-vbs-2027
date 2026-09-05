@@ -366,29 +366,49 @@ def get_qdrant_stats():
             port=config.QDRANT_PORT,
             api_key=config.QDRANT_API_KEY if config.QDRANT_API_KEY else None
         )
-        visual_count = 0
-        audio_count = 0
+        collections_list = []
+        total_points = 0
         
-        # Check visual_index
-        try:
-            visual_info = client.get_collection(collection_name="visual_index")
-            visual_count = visual_info.points_count
-        except Exception:
-            pass
-            
-        # Check audio_env_index
-        try:
-            audio_info = client.get_collection(collection_name="audio_env_index")
-            audio_count = audio_info.points_count
-        except Exception:
-            pass
-            
+        cols_res = client.get_collections()
+        for c in cols_res.collections:
+            try:
+                info = client.get_collection(collection_name=c.name)
+                vectors_cfg = getattr(info.config.params, "vectors", None)
+                dim = getattr(vectors_cfg, "size", 2048) if vectors_cfg else 2048
+                dist = str(getattr(vectors_cfg, "distance", "Cosine")) if vectors_cfg else "Cosine"
+                points = getattr(info, "points_count", 0) or 0
+                indexed = getattr(info, "indexed_vectors_count", 0) or 0
+                total_points += points
+                collections_list.append({
+                    "name": c.name,
+                    "points": points,
+                    "indexed": indexed,
+                    "dim": dim,
+                    "distance": dist,
+                    "status": str(getattr(info, "status", "green")),
+                })
+            except Exception as sub_err:
+                collections_list.append({
+                    "name": c.name,
+                    "points": 0,
+                    "indexed": 0,
+                    "dim": 2048,
+                    "distance": "Cosine",
+                    "status": "error",
+                    "error": str(sub_err)
+                })
+
+        visual_col = next((c for c in collections_list if "visual" in c["name"]), None)
+        audio_col = next((c for c in collections_list if "audio" in c["name"]), None)
+        
         return {
             "status": "connected",
             "host": config.QDRANT_HOST,
             "port": config.QDRANT_PORT,
-            "visual_points": visual_count,
-            "audio_points": audio_count
+            "collections": collections_list,
+            "total_points": total_points,
+            "visual_points": visual_col["points"] if visual_col else 0,
+            "audio_points": audio_col["points"] if audio_col else 0,
         }
     except Exception as e:
         return {
