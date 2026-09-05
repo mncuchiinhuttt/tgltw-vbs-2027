@@ -15,11 +15,11 @@ from typing import List
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).resolve().parent / ".env")
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 except ImportError:
     pass
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 DATASET_DIR = REPO_ROOT / "datasets" / "v3c"
 VIDEO_DIR = DATASET_DIR / "videos"
 METADATA_DIR = DATASET_DIR / "metadata"

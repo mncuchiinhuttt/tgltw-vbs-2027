@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 from PIL import Image
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 INFERENCE_DIR = REPO_ROOT / "inference-code"
 DATASET_DIR = REPO_ROOT / "datasets" / "v3c"
 VIDEO_DIR = DATASET_DIR / "videos"

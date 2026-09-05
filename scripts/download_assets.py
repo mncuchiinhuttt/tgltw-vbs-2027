@@ -6,7 +6,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 WEIGHTS_DIR = ROOT_DIR / "weights"
 DATASETS_DIR = ROOT_DIR / "datasets"
 DEPS_DIR = ROOT_DIR / ".download_assets_deps"

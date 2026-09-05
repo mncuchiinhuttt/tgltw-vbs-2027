@@ -34,7 +34,7 @@ from typing import Dict, List, Optional, Tuple
 
 from PIL import Image
 
-ROOT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR))  # so `models.*` / `config` import the same way the rest of the repo does
 
 from models.image_resize import smart_resize, estimate_token_count, resize_image_for_vlm, PATCH_MERGE_FACTOR

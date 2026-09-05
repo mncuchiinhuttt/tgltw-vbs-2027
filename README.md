@@ -68,13 +68,20 @@ In competitive video browsing over thousands of video hours (such as **V3C1–3*
 ```
 tgltw-vbs-2027/
 ├── README.md                      # Global system documentation & architecture
-├── VBS_GUIDE.md                   # VBS 2027 competition reference (tasks, DRES, rules)
 ├── pyproject.toml                 # uv package & dependency configuration
 ├── uv.lock                        # Locked deterministic dependencies
-├── download_v3c_samples.py        # SFTP downloader for official V3C videos & metadata
-├── index_v3c_sample.py            # Keyframe extractor & Qdrant vector indexer
 ├── run_webapp.py                  # Single-command launcher for Backend + Frontend + Qdrant
+├── run_webapp.sh                  # Shell script wrapper for web application
 │
+├── scripts/                       # Data ingestion, indexing & utility scripts
+│   ├── download_v3c_samples.py    # SFTP downloader for official V3C videos & metadata
+│   ├── index_v3c_sample.py        # Keyframe extractor & Qdrant vector indexer
+│   ├── index_all_downloaded_v3c.py# Full-duration V3C batch indexer
+│   ├── run_50gb_v3c_pipeline.py   # Large-scale 50GB V3C pipeline runner
+│   ├── download_assets.py         # Model weights downloader (TransNetV2, etc.)
+│   ├── benchmark_visual_token.py  # Visual token budget estimator
+│   ├── host_vllm.sh               # Local vLLM GPU inference server launcher
+│   └── run_200_benchmark_tmux.sh  # 200-query corpus stress test script
 ├── paper/                         # Springer LNCS 6+2 Extended Demo Paper
 │   ├── main.tex                   # AEGIS paper LaTeX source
 │   ├── main.pdf                   # Compiled publication-ready PDF

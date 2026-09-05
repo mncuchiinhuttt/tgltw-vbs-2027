@@ -77,7 +77,12 @@ Thumbs.db
 # ffmpeg
 ffmpeg
 
-# LaTeX build artifacts and local preview helpers
+# Local runner scripts and private/reference documents (kept local)
+run_wemm_full_indexing.py
+monitor_and_eval_on_finish.sh
+VBS-2026-978-981-95-6963-2.pdf
+VBS_GUIDE.md
+vbs-2026-paper-methods-and-team-analysis.md
 *.aux
 *.bbl
 *.blg
