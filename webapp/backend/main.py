@@ -107,6 +107,7 @@ _session_state = {
     # so /api/feedback can describe the operator's accepted/rejected picks in
     # words for the next CQR rewrite without a Qdrant payload fetch.
     "last_candidate_info": {},
+    "last_candidates": [],
 }
 # DRES session - single global value, matching the "one operator per
 # backend instance" model (see plan) rather than a per-user session store.
@@ -482,49 +483,38 @@ async def run_search(request: SearchRequest):
         # Initialize services dynamically
         query_proc, searcher, reranker = init_services(query_type=request.type)
         
-        # 0. CQR: resolve pronouns/implicit references against this
-        # session's prior turns (QueryProcessor.rewrite_query_cqr existed
-        # since the AIC-era code but was never called anywhere - VBS's
-        # multi-turn interactive session is exactly what it was written
-        # for). No-op (returns the query unchanged) on the first search of
-        # a session, when history is empty.
-        resolved_query = query_proc.rewrite_query_cqr(request.query, _session_state["history"])
+        # 0. Check if this turn is answering a pending clarification or providing an explicit clarification answer
+        pending_clarification = _session_state.get("pending_clarification")
+        _session_state["pending_clarification"] = None
+        has_clarification_answer = bool((request.clarification_answer or "").strip())
+        is_clarification_turn = bool(pending_clarification or has_clarification_answer)
 
-        # 1. Query Processing
-        hyde_query = query_proc.generate_hyde(resolved_query)
+        if is_clarification_turn and _session_state.get("last_candidates"):
+            # FAST PATH (KIS-C Refinement): Reuse and re-rank the existing candidate pool directly!
+            # Bypasses slow LLM HyDE and 3 Qdrant vector searches (saves 15-20s latency).
+            resolved_query = request.query
+            candidates = [dict(c) for c in _session_state["last_candidates"]]
+        else:
+            # STANDARD PATH: Hybrid Retrieval across Qdrant and Dense Ensembles
+            # 0. CQR: resolve pronouns/implicit references against this session's prior turns
+            resolved_query = query_proc.rewrite_query_cqr(request.query, _session_state["history"])
 
-        # 2. Candidate Retrieval
-        query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
-        hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
-        secondary_hits = searcher.dense_search_secondary(
-            resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef
-        )
-        # labels=[...] (VIREO/SnapMind/NII-UIT-inspired explainability,
-        # VBS2026): tags each fused hit with which source(s) it came from
-        # ("query" = original text, "hyde" = HyDE hypothetical description,
-        # "secondary" = the secondary embedder ensemble) so the operator can
-        # see WHY a result matched instead of one opaque combined score.
-        candidates = searcher.merge_rrf(
-            query_hits, hyde_hits, secondary_hits, labels=["query", "hyde", "secondary"]
-        )
-        # TAG-inspired (arXiv:2508.07925) temporal coherence re-scoring:
-        # boost candidates that have other same-video candidates nearby in
-        # frame_idx, so a real event isn't left fragmented across several
-        # marginal individual scores. Run right after merge_rrf, before the
-        # type-specific reranking below.
-        candidates = searcher.temporal_coherence_boost(candidates)
+            # 1. Query Processing
+            hyde_query = query_proc.generate_hyde(resolved_query)
 
-        # Result Diversification (Khoa: Adaptive Sampling & Retrieval
-        # Accuracy) - collapses to the single highest-scoring hit per
-        # (video, scene) so the pool isn't flooded by several near-duplicate
-        # keyframes of the same event. CLI/batch_query.py/evaluation already
-        # call this after their own merge_rrf; the webapp flow now does too,
-        # directly serving AVS's diversity-across-videos scoring
-        # (VBS_GUIDE.md §4.2/§5.2) as well as giving KIS-T/KIS-C/VQA
-        # operators a more varied result set to scan.
-        import config
-        candidates = searcher.diversify_by_scene(candidates, top_k=config.SUBMISSION_TOP_K)
-
+            # 2. Candidate Retrieval
+            query_hits = searcher.search(resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+            hyde_hits = searcher.search(hyde_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef)
+            secondary_hits = searcher.dense_search_secondary(
+                resolved_query, top_k=15, exact=request.exact, hnsw_ef=request.hnsw_ef
+            )
+            candidates = searcher.merge_rrf(
+                query_hits, hyde_hits, secondary_hits, labels=["query", "hyde", "secondary"]
+            )
+            candidates = searcher.temporal_coherence_boost(candidates)
+            import config
+            candidates = searcher.diversify_by_scene(candidates, top_k=config.SUBMISSION_TOP_K)
+            _session_state["last_candidates"] = list(candidates)
         # Remember this turn's resolved query + dense vector for later
         # session actions: /api/feedback Rocchio-adjusts from
         # last_query_vector, and history lets the NEXT search's CQR
@@ -548,8 +538,6 @@ async def run_search(request: SearchRequest):
         # query type, so a stale flag can never boost a much later unrelated
         # turn (see kis_c_scoring.boost_by_clarification_answer, applied only
         # in the Type 1 branch below).
-        pending_clarification = _session_state["pending_clarification"]
-        _session_state["pending_clarification"] = None
         clarification_boost_applied = False
 
         if not candidates:
@@ -569,13 +557,14 @@ async def run_search(request: SearchRequest):
             from search.kis_c_scoring import boost_by_clarification_answer, apply_conversational_negative_filter
 
             # KIS-C clarification-answer boost (Sekulic et al. arXiv:2008.03717):
-            if pending_clarification and (request.clarification_answer or "").strip():
+            if has_clarification_answer:
                 candidates = boost_by_clarification_answer(
                     candidates,
-                    pending_clarification.get("candidate_ids") or [],
+                    (pending_clarification or {}).get("candidate_ids") or [],
                     request.clarification_answer,
                 )
                 clarification_boost_applied = True
+                _session_state["last_candidates"] = list(candidates)
 
             # Conversational negative feedback filtering (Rocchio/Exquisitor loop):
             if _session_state.get("history"):
@@ -590,34 +579,46 @@ async def run_search(request: SearchRequest):
             # instead of silently returning an under-specified result set.
             # Gated behind AMBIGUITY_THRESHOLD so the common (unambiguous)
             # case pays zero extra VLM-call cost.
-            ambiguity_score = searcher.compute_ambiguity_score(candidates)
-            if ambiguity_score >= AMBIGUITY_THRESHOLD:
-                seen_videos = set()
-                summaries = []
-                summary_ids = []
-                for c in candidates:
-                    video = c["payload"].get("source_file")
-                    if video in seen_videos:
-                        continue
-                    seen_videos.add(video)
-                    summaries.append(c["payload"].get("caption") or video or "")
-                    summary_ids.append(c["id"])
-                    if len(summaries) >= 5:
-                        break
-                clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
-                if clarification_question:
-                    _session_state["pending_clarification"] = {
-                        "question": clarification_question,
-                        "candidate_ids": summary_ids,
-                    }
-
-            rerank_k = getattr(config, "RERANK_TOP_K", 20)
+            # KIS-C clarification (CAR/ambiguity-detection-inspired):
+            # Only trigger a clarification question if this is NOT already a clarification turn!
+            if not is_clarification_turn:
+                ambiguity_score = searcher.compute_ambiguity_score(candidates)
+                if ambiguity_score >= AMBIGUITY_THRESHOLD:
+                    seen_videos = set()
+                    summaries = []
+                    summary_ids = []
+                    for c in candidates:
+                        video = c["payload"].get("source_file")
+                        if video in seen_videos:
+                            continue
+                        seen_videos.add(video)
+                        summaries.append(c["payload"].get("caption") or video or "")
+                        summary_ids.append(c["id"])
+                        if len(summaries) >= 5:
+                            break
+                    clarification_question = query_proc.generate_clarification_question(resolved_query, summaries)
+                    if clarification_question:
+                        _session_state["pending_clarification"] = {
+                            "question": clarification_question,
+                            "candidate_ids": summary_ids,
+                        }
+            else:
+                # Operator already answered the clarification question - do not repeat or ask another question!
+                clarification_question = None
+            rerank_k = 6 if is_clarification_turn else getattr(config, "RERANK_TOP_K", 20)
             submission_k = getattr(config, "SUBMISSION_TOP_K", 100)
+
+            # Pass the clarified query to VLM reranker so it scores based on the operator's clarification
+            rerank_query = (
+                f"{resolved_query} (Specifically: {request.clarification_answer})"
+                if (request.clarification_answer or "").strip()
+                else resolved_query
+            )
+
             top_candidates = rerank_with_tail(
-                lambda c: reranker.rerank_type1(resolved_query, c, verify=request.verify),
+                lambda c: reranker.rerank_type1(rerank_query, c, verify=request.verify),
                 candidates, rerank_k, submission_k,
             )
-            # Threshold only candidates that actually went through the VLM
             # rerank. rerank_with_tail's un-reranked tail carries rrf_score
             # (~0.02-0.1, RRF k=60 scale), which can never clear a rerank-score
             # threshold - the old fallback treated it as 0.0 and silently

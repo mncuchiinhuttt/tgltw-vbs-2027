@@ -176,24 +176,20 @@ def boost_by_clarification_answer(
     if not answer_text or not answer_text.strip():
         return candidates
     prior = set(prior_candidate_ids or ())
-    if not prior:
-        return candidates
-
     scores = [float(c.get(score_key, 0.0)) for c in candidates]
     top_score = max(scores) if scores and max(scores) > 0 else 1.0
 
     for c in candidates:
-        if c.get("id") not in prior:
-            continue
         cand_text = candidate_match_text(c.get("payload"))
         if not cand_text:
             continue
         overlap = compute_semantic_overlap(answer_text, cand_text)
         if overlap <= 0:
             continue
-        c[score_key] = c.get(score_key, 0.0) + boost_weight * overlap * top_score
+        in_prior = not prior or c.get("id") in prior
+        weight = boost_weight if in_prior else (boost_weight * 0.85)
+        c[score_key] = c.get(score_key, 0.0) + weight * overlap * top_score
         c["clarification_overlap"] = round(overlap, 3)
-
     return sorted(candidates, key=lambda c: c.get(score_key, 0.0), reverse=True)
 
 
