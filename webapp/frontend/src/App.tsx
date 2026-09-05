@@ -146,9 +146,10 @@ function SearchView() {
   }
   const acceptKisVideo = (file: File | undefined) => {
     if (!file) return
-    const looksLikeVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)
-    if (!looksLikeVideo) {
-      setError("KIS-V cần một file video (MP4, MOV, WebM hoặc định dạng video tương tự).")
+    const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)
+    const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|webp)$/i.test(file.name)
+    if (!isVideo && !isImage) {
+      setError("KIS-V yêu cầu một file video (MP4, MOV...) hoặc ảnh khung hình (JPG, PNG...).")
       return
     }
     setError(null)
@@ -166,20 +167,23 @@ function SearchView() {
     setResults([])
     setExpandedIndex(null)
     try {
+      const isImage = kisVideoFile.type.startsWith("image/") || /\.(jpg|jpeg|png|webp)$/i.test(kisVideoFile.name)
+      const endpoint = isImage ? "/api/search-by-image" : "/api/search-by-video"
       const formData = new FormData()
       formData.append("file", kisVideoFile)
-      const response = await fetch(`${BACKEND_URL}/api/search-by-video`, {
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: "POST",
         body: formData,
       })
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || "Visual clip search failed")
+        throw new Error(errorData.detail || "Visual search failed")
       }
       const data = await response.json()
       setResults(data.results || [])
-    } catch (err: any) {
-      setError(err.message || "Visual clip search failed")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Visual search failed"
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -487,7 +491,7 @@ function SearchView() {
                   <input
                     ref={videoUploadRef}
                     type="file"
-                    accept="video/*"
+                    accept="video/*,image/*"
                     className="hidden"
                     onChange={(event) => acceptKisVideo(event.target.files?.[0])}
                   />
@@ -516,10 +520,10 @@ function SearchView() {
                     </div>
                     <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
                       <p className="text-xs font-extrabold text-slate-800 truncate m-0">
-                        {kisVideoFile ? kisVideoFile.name : "Drop the KIS-V clip here"}
+                        {kisVideoFile ? kisVideoFile.name : "Drop KIS-V video clip or keyframe image here"}
                       </p>
                       <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                        {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB` : "or browse"}
+                        {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB` : "or browse (MP4, JPG, PNG)"}
                       </span>
                     </div>
                     {kisVideoFile && (
