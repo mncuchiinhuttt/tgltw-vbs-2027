@@ -2,6 +2,7 @@
 
 import os
 import sys
+import threading
 
 import numpy as np
 from PIL import Image
@@ -22,12 +23,16 @@ class FakeVLM:
     def __init__(self, responses):
         self.responses = list(responses)
         self.calls = []
+        # rerank_type2_vqa fans out over a ThreadPool(8): response popping
+        # must be atomic or two workers can take each other's answers.
+        self._lock = threading.Lock()
 
     def generate(self, image, prompt):
-        self.calls.append((image, prompt))
-        if not self.responses:
-            raise AssertionError("unexpected VLM call")
-        return self.responses.pop(0)
+        with self._lock:
+            self.calls.append((image, prompt))
+            if not self.responses:
+                raise AssertionError("unexpected VLM call")
+            return self.responses.pop(0)
 
 
 def _candidate(candidate_id, source_file, **payload):
@@ -145,10 +150,23 @@ def test_answers_stay_bound_to_their_candidate_frame(tmp_path):
     second_path = tmp_path / "second.png"
     Image.new("RGB", (32, 24), color="red").save(first_path)
     Image.new("RGB", (32, 24), color="blue").save(second_path)
-    vlm = FakeVLM([
-        '{"found": true, "answer": "red object", "confidence": 0.9}',
-        '{"found": true, "answer": "blue object", "confidence": 0.8}',
-    ])
+    # Derive the answer from the frame's dominant colour instead of a FIFO
+    # response queue: under ThreadPool fan-out a queue assigns responses by
+    # scheduling order, not by candidate - which is exactly the bug this
+    # test guards against.
+    class ColorAnsweringVLM:
+        def __init__(self):
+            self.calls = []
+            self._lock = threading.Lock()
+
+        def generate(self, image, prompt):
+            with self._lock:
+                self.calls.append((image, prompt))
+            px = image.getpixel((5, 5))
+            color = "red" if px[0] > px[2] else "blue"
+            return f'{{"found": true, "answer": "{color} object", "confidence": 0.85}}'
+
+    vlm = ColorAnsweringVLM()
     reranker = Reranker(vlm)
     candidates = [
         _candidate("first", "first.mp4", keyframe_path=str(first_path), frame_idx=11),

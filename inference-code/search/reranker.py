@@ -2,6 +2,7 @@ import json
 import math
 import os
 import re
+import threading
 import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
@@ -175,6 +176,11 @@ def _candidate_paths(dataset_dir: str, payload: Dict[str, Any]) -> List[str]:
         if not isinstance(raw_path, str) or not raw_path.strip():
             continue
         path = os.path.realpath(raw_path if os.path.isabs(raw_path) else os.path.join(dataset_root, raw_path))
+        try:
+            if os.path.commonpath((dataset_root, path)) != dataset_root:
+                continue
+        except ValueError:
+            continue
         if path not in paths:
             paths.append(path)
 
@@ -284,6 +290,10 @@ class Reranker:
     def __init__(self, vlm_client, detector_client=None):
         self.vlm = vlm_client
         self.detector = detector_client
+        # Ultralytics YOLOE inference is not thread-safe; serialize detector
+        # calls so the Type-2 crop-rerank can run its (dominant) VLM calls
+        # concurrently while crops are produced serially.
+        self._detector_lock = threading.Lock()
 
     def generate_verification_questions(self, query: str, n: int = VERIFICATION_NUM_QUESTIONS) -> List[str]:
         """
@@ -485,7 +495,8 @@ Score:"""
             crop_img = frame_img
             if frame_img is not None and self.detector is not None and sub_queries:
                 try:
-                    detections = self.detector.detect(frame_img, sub_queries)
+                    with self._detector_lock:
+                        detections = self.detector.detect(frame_img, sub_queries)
                 except Exception as exc:
                     print(f"Object detection failed for frame: {exc}")
                     detections = []
@@ -535,6 +546,10 @@ Return ONLY valid JSON matching this schema:
         if not candidate_frames:
             return []
 
+        # Parallel crop+VQA scoring: the VLM call dominates the latency
+        # budget (75-220s sequential for 20 candidates vs the 300s task
+        # clock). Detector inference is serialized behind _detector_lock;
+        # the OpenAI-compatible client handles concurrent requests.
         max_workers = min(len(candidate_frames), 8)
         if max_workers > 1:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
