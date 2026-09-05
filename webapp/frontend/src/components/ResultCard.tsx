@@ -1,19 +1,11 @@
 import {
   Play,
-  Tag,
-  Clock,
-  CheckCircle2,
-  Volume2,
-  ChevronDown,
-  ChevronUp,
-  ThumbsUp,
-  ThumbsDown,
-  ImageIcon,
-  Video,
+  Film,
   Send,
+  Maximize2,
+  Volume2,
+  CheckCircle2,
 } from "lucide-react"
-import { Card, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 
@@ -47,256 +39,166 @@ export interface ResultHit {
 interface ResultCardProps {
   hit: ResultHit
   idx: number
-  isExpanded: boolean
-  onToggleExpand: () => void
+  isExpanded?: boolean
+  onToggleExpand?: () => void
+  onInspect?: (hit: ResultHit, idx: number) => void
   onPlay: (videoName: string, time: number, frameIdx?: number | null) => void
-  onFeedback: (id: string, positive: boolean) => void
-  onUseAsQuery: (id: string) => void
-  onInVideoSearch: (videoName: string) => void
+  onFeedback?: (id: string, positive: boolean) => void
+  onUseAsQuery?: (id: string) => void
+  onInVideoSearch?: (videoName: string) => void
   onBrowseVideo: (videoName: string) => void
   onSubmitToDres: (hit: ResultHit) => void
 }
 
-/**
- * Single search-result card, extracted out of SearchView (was inline JSX
- * spanning ~120 lines) both to keep files under the project's 200-line
- * guideline and to give the VBS interactive-session actions (feedback,
- * query-by-example, in-video search, DRES submit) a natural home per-card
- * without growing App.tsx further.
- */
 export function ResultCard({
   hit,
   idx,
-  isExpanded,
-  onToggleExpand,
+  onInspect,
   onPlay,
-  onFeedback,
-  onUseAsQuery,
-  onInVideoSearch,
   onBrowseVideo,
   onSubmitToDres,
 }: ResultCardProps) {
   const payload = hit.payload || {}
-  const videoName = payload.source_file || "Unknown File"
+  const videoName = payload.source_file || "Unknown Video"
   const evidenceFrameIdx = Number.isInteger(hit.evidence_frame_idx)
     ? hit.evidence_frame_idx
-    : Number.isInteger(payload.frame_idx) ? payload.frame_idx : null
-  const evidenceTimestamp = typeof hit.evidence_timestamp === "number" && Number.isFinite(hit.evidence_timestamp)
-    ? hit.evidence_timestamp
-    : typeof payload.timestamp === "number" && Number.isFinite(payload.timestamp) ? payload.timestamp : null
+    : Number.isInteger(payload.frame_idx)
+    ? payload.frame_idx
+    : null
+  const evidenceTimestamp =
+    typeof hit.evidence_timestamp === "number" && Number.isFinite(hit.evidence_timestamp)
+      ? hit.evidence_timestamp
+      : typeof payload.timestamp === "number" && Number.isFinite(payload.timestamp)
+      ? payload.timestamp
+      : null
   const displayMediaName = hit.evidence_media_name || videoName
   const playbackTimestamp = evidenceTimestamp ?? 0.0
+
   const frameParams = new URLSearchParams({ video_name: displayMediaName })
   if (evidenceFrameIdx != null) frameParams.set("frame_idx", String(evidenceFrameIdx))
   else if (evidenceTimestamp != null) frameParams.set("timestamp", String(evidenceTimestamp))
   const frameUrl = `${BACKEND_URL}/api/media/frame?${frameParams.toString()}`
 
+  const scoreDisplay =
+    hit.score != null
+      ? hit.score.toFixed(3)
+      : hit.rrf_score != null
+      ? hit.rrf_score.toFixed(4)
+      : "N/A"
+
+  const hasVqa = Boolean(hit.answer)
+
   return (
-    <Card className="tech-card overflow-hidden flex flex-col justify-between">
-      <div>
-        <div className="relative group aspect-video bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100">
-          <img
-            src={frameUrl}
-            alt={`Frame ${displayMediaName}`}
-            className="object-cover w-full h-full group-hover:scale-102 transition-transform duration-500"
-            loading="lazy"
-          />
-          <div className="absolute top-3 left-3 flex gap-1.5">
-            <Badge variant="default" className="bg-slate-900/90 text-white font-bold text-xs py-0.5 border border-slate-800">
-              #{idx + 1}
-            </Badge>
-            <Badge variant="outline" className="bg-white/95 text-slate-700 font-bold text-xs border-slate-200/80 shadow-sm">
-              Score: {hit.score != null ? hit.score.toFixed(3) : (hit.rrf_score != null ? hit.rrf_score.toFixed(4) : "N/A")}
-            </Badge>
-          </div>
-          <div className="absolute top-3 right-3">
-            <Badge variant="outline" className="bg-white/95 text-xs font-semibold border-slate-200 text-indigo-600 shadow-sm flex gap-1 items-center capitalize">
-              {payload.modality === "ambient_audio" ? <Volume2 className="h-3 w-3" /> : <Tag className="h-3 w-3" />}
-              {payload.modality || "visual"}
-            </Badge>
-          </div>
-          <div className="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <button onClick={() => onPlay(videoName, playbackTimestamp, evidenceFrameIdx)} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full p-4">
-              <Play className="h-6 w-6 fill-white" />
-            </button>
-          </div>
+    <div
+      onClick={() => onInspect?.(hit, idx)}
+      className="group relative bg-white rounded-lg border border-slate-200/90 hover:border-indigo-500 hover:shadow-lg transition-all duration-150 flex flex-col overflow-hidden cursor-pointer select-none text-left"
+    >
+      {/* 16:9 Thumbnail Image */}
+      <div className="relative aspect-video bg-slate-900 overflow-hidden">
+        <img
+          src={frameUrl}
+          alt={`Frame ${displayMediaName}`}
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+          loading="lazy"
+        />
+
+        {/* Top-left: Rank Badge */}
+        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10">
+          <span className="px-1.5 py-0.5 bg-slate-900/90 backdrop-blur-xs text-white text-[10px] font-black rounded shadow-xs font-mono">
+            #{idx + 1}
+          </span>
         </div>
 
-        <div className="p-5 text-left">
-          <h4 className="font-bold text-slate-800 truncate text-base mb-1" title={videoName}>
-            {videoName}
-          </h4>
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs font-semibold mb-3">
-            <Clock className="h-4 w-4 text-indigo-500" />
-            <span>Timestamp:</span>
-            <span className="text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono">
-              {evidenceTimestamp != null ? `${evidenceTimestamp.toFixed(2)}s` : "N/A"}
+        {/* Top-right: Score Badge */}
+        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+          <span className="px-1.5 py-0.5 bg-white/95 backdrop-blur-xs text-slate-800 text-[10px] font-bold rounded shadow-xs border border-slate-200/80 font-mono">
+            {scoreDisplay}
+          </span>
+          {payload.modality === "ambient_audio" && (
+            <span className="p-0.5 bg-white/95 text-indigo-600 rounded shadow-xs" title="Audio modality">
+              <Volume2 className="h-3 w-3" />
             </span>
-          </div>
-
-          {/* Explainability (VIREO/SnapMind/NII-UIT-inspired, VBS2026):
-              which fusion source(s) surfaced this result, always visible
-              instead of hidden behind "Inspect Metadata" - helps the
-              operator judge trust/feedback quickly. */}
-          {hit.matched_via && hit.matched_via.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {hit.matched_via.map((src) => (
-                <Badge
-                  key={src}
-                  variant="outline"
-                  className="bg-violet-50 border-violet-100 text-violet-700 text-[10px] font-bold px-1.5 py-0 capitalize"
-                >
-                  matched via {src}
-                </Badge>
-              ))}
-            </div>
           )}
+        </div>
 
-          {hit.answer && hit.vqa_answer_valid && (
-            <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg mb-3">
-              <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                VQA Generated Answer
-              </p>
-              <p className="text-sm text-slate-700 font-semibold">{hit.answer}</p>
-              {/* Evidence the answer was based on - shown unconditionally
-                  for the answer card instead of requiring "Inspect
-                  Metadata", so the operator can verify before submitting
-                  (NII-UIT's Locate->Suggest->Verify pattern, VBS2026). */}
-              {(payload.ocr_text || payload.scene_narrative) && (
-                <div className="mt-2 pt-2 border-t border-emerald-100 space-y-1">
-                  {payload.scene_narrative && (
-                    <p className="text-xs text-slate-600">{payload.scene_narrative}</p>
-                  )}
-                  {payload.ocr_text && (
-                    <p className="text-xs text-slate-500 font-mono">OCR: {payload.ocr_text}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+        {/* Bottom Scrim: Video Name & Timestamp */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-4 pb-1 px-2 flex items-center justify-between text-white text-[10px] font-mono">
+          <span className="truncate max-w-[65%] font-medium" title={videoName}>
+            {videoName.replace(/\.[^/.]+$/, "")}
+          </span>
+          <span className="font-semibold shrink-0 text-slate-200">
+            {playbackTimestamp.toFixed(1)}s
+          </span>
+        </div>
 
-          {hit.answer === "N/A" && !hit.vqa_answer_valid && (
-            <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg mb-3">
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">
-                No grounded VQA answer
-              </p>
-              <p className="text-xs text-amber-800">
-                {hit.vqa_evidence_available
-                  ? "The frame was available, but the VLM response did not satisfy the grounded JSON contract."
-                  : "The indexed frame could not be loaded, so the system did not guess."
-                }
-              </p>
-            </div>
-          )}
-
-          <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
-            {payload.caption || "No visual caption metadata indexed."}
-          </p>
-
-          {isExpanded && (
-            <div className="space-y-4 pt-4 border-t border-slate-100 mt-3 animate-in fade-in duration-200">
-              {payload.scene_narrative && (
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Scene Narrative</span>
-                  <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                    {payload.scene_narrative}
-                  </p>
-                </div>
-              )}
-              {payload.ocr_text && (
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">OCR Normalized Text</span>
-                  <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 font-mono text-xs py-1 px-2.5">
-                    {payload.ocr_text}
-                  </Badge>
-                </div>
-              )}
-              {payload.detected_objects && payload.detected_objects.length > 0 && (
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Detected Objects</span>
-                  <div className="flex flex-wrap gap-1">
-                    {payload.detected_objects.map((obj, oIdx) => (
-                      <Badge key={oIdx} variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs py-0.5 px-2">
-                        {obj.label} ({obj.conf.toFixed(2)})
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Hover Action Overlay */}
+        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-1.5 backdrop-blur-2xs z-20">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onInspect?.(hit, idx)
+            }}
+            className="p-2 rounded-full bg-white/95 hover:bg-white text-indigo-600 shadow-md transition-transform hover:scale-110"
+            title="Inspect Details (Mở chi tiết)"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onPlay(videoName, playbackTimestamp, evidenceFrameIdx)
+            }}
+            className="p-2 rounded-full bg-white/95 hover:bg-white text-indigo-600 shadow-md transition-transform hover:scale-110"
+            title="Play video"
+          >
+            <Play className="h-3.5 w-3.5 fill-indigo-600" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onBrowseVideo(videoName)
+            }}
+            className="p-2 rounded-full bg-white/95 hover:bg-white text-indigo-600 shadow-md transition-transform hover:scale-110"
+            title="Inspect Timeline (±30s)"
+          >
+            <Film className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSubmitToDres(hit)
+            }}
+            className="p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-transform hover:scale-110"
+            title="Submit to DRES"
+          >
+            <Send className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
 
-      <CardFooter className="px-5 pb-5 pt-0 flex flex-col gap-2 border-t border-slate-100 mt-4 pt-3">
-        <div className="flex justify-between w-full">
-          <button
-            onClick={onToggleExpand}
-            className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors"
-          >
-            {isExpanded ? <>Hide Metadata<ChevronUp className="h-4 w-4" /></> : <>Inspect Metadata<ChevronDown className="h-4 w-4" /></>}
-          </button>
-          <button
-            onClick={() => onPlay(videoName, playbackTimestamp, evidenceFrameIdx)}
-            className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-indigo-750 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
-          >
-            <Play className="h-3.5 w-3.5 fill-indigo-600 text-indigo-600" />
-            Play Clip
-          </button>
+      {/* VQA Answer Banner (if present) */}
+      {hasVqa && (
+        <div className="px-2 py-1 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between text-[11px] font-bold text-emerald-800 truncate">
+          <span className="truncate flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+            <span className="truncate">{hit.answer}</span>
+          </span>
         </div>
+      )}
 
-        {/* VBS interactive-session actions (relevance feedback,
-            query-by-example, in-video search, DRES submit) - see Phase C
-            (backend) / Phase D (this UI) of the batch-to-interactive plan. */}
-        <div className="flex flex-wrap gap-1.5 w-full pt-1">
-          <button
-            onClick={() => onFeedback(hit.id, true)}
-            title="Mark relevant (Rocchio feedback)"
-            className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-          >
-            <ThumbsUp className="h-3 w-3" />
-          </button>
-          <button
-            onClick={() => onFeedback(hit.id, false)}
-            title="Mark not relevant (Rocchio feedback)"
-            className="bg-red-50 hover:bg-red-100 border border-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-          >
-            <ThumbsDown className="h-3 w-3" />
-          </button>
-          <button
-            onClick={() => onUseAsQuery(hit.id)}
-            title="Search for more like this frame"
-            className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-          >
-            <ImageIcon className="h-3 w-3" />
-            Dùng làm query
-          </button>
-          <button
-            onClick={() => onInVideoSearch(videoName)}
-            title="Search this video's full timeline"
-            className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-          >
-            <Video className="h-3 w-3" />
-            Tìm sâu trong video
-          </button>
-          <button
-            onClick={() => onBrowseVideo(videoName)}
-            title="Browse all indexed keyframes for this video"
-            className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-          >
-            Browse video
-          </button>
-          <button
-            onClick={() => onSubmitToDres(hit)}
-            title="Submit this answer to DRES"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-colors ml-auto"
-          >
-            <Send className="h-3 w-3" />
-            Nộp câu trả lời
-          </button>
-        </div>
-      </CardFooter>
-    </Card>
+      {/* Sub-bar: Compact metadata & quick action trigger */}
+      <div className="px-2 py-1.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px]">
+        <span className="text-slate-500 truncate text-[10px] font-medium max-w-[70%]" title={payload.caption || ""}>
+          {payload.caption || videoName}
+        </span>
+        <span className="text-[10px] text-indigo-600 font-bold hover:underline shrink-0 flex items-center gap-0.5">
+          Chi tiết
+        </span>
+      </div>
+    </div>
   )
 }

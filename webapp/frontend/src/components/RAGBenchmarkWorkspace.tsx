@@ -165,9 +165,8 @@ export function RAGBenchmarkWorkspace() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20 pt-6">
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 space-y-8">
-        
+    <div className="min-h-screen bg-slate-50/60 pb-20 pt-4">
+      <div className="w-full px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div>

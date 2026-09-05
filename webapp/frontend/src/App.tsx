@@ -12,11 +12,8 @@ import {
   FolderOpen,
   Layers,
   PlayCircle,
-  HelpCircle,
   Image as ImageIcon,
   Video,
-  Radio,
-  Timer,
   Target,
   BookOpen,
   UploadCloud,
@@ -29,14 +26,8 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { ResultCard, type ResultHit } from "@/components/ResultCard"
+import { CandidateInspectionDialog } from "@/components/CandidateInspectionDialog"
 import { BrowseVideoDialog } from "@/components/BrowseVideoDialog"
 import { VBSAuditWorkspace } from "@/components/VBSAuditWorkspace"
 import { AuditHistoryView } from "@/components/AuditHistoryView"
@@ -57,7 +48,7 @@ function Navbar() {
   ]
   return (
     <nav className="vbs-nav sticky top-0 z-40">
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between gap-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-3 min-w-0 group">
           <div className="vbs-mark">
             <Video className="h-5 w-5" />
@@ -115,8 +106,8 @@ function SearchView() {
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
-  // KIS-C clarification question (Phase L) - set when /api/search's Type 1
+  const [, setExpandedIndex] = useState<number | null>(null)
+  const [inspectingHit, setInspectingHit] = useState<{ hit: ResultHit; rank: number } | null>(null)
   // flow detects an ambiguous result set and asks a narrowing question.
   const [clarification, setClarification] = useState<string | null>(null)
   const [clarificationAnswer, setClarificationAnswer] = useState("")
@@ -511,162 +502,150 @@ function SearchView() {
   }
 
   return (
-    <main className="max-w-[1440px] mx-auto px-5 sm:px-8 py-8 relative">
-      <section className="vbs-hero mb-7">
-        <div className="relative z-10 max-w-3xl text-left">
-          <div className="vbs-eyebrow"><Radio className="h-3.5 w-3.5" /> VBS 2027 · live retrieval session</div>
-          <h2 className="vbs-hero-title">Find the right shot<br className="hidden sm:block" /> before the clock runs out.</h2>
-          <p className="vbs-hero-copy">
-            Search, inspect, refine, and submit video moments with a human-in-the-loop workflow built for the Video Browser Showdown.
-          </p>
-        </div>
-        <div className="vbs-hero-meta relative z-10">
-          <div className="vbs-hero-meta-label"><Timer className="h-4 w-4" /> Competition mindset</div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <span className="vbs-task-chip"><Target className="h-3.5 w-3.5" /> KIS-T</span>
-            <span className="vbs-task-chip"><Target className="h-3.5 w-3.5" /> KIS-C</span>
-            <span className="vbs-task-chip"><ImageIcon className="h-3.5 w-3.5" /> KIS-V</span>
-            <span className="vbs-task-chip"><BookOpen className="h-3.5 w-3.5" /> VQA</span>
-            <span className="vbs-task-chip"><Layers className="h-3.5 w-3.5" /> AVS</span>
-          </div>
-          <p className="text-xs text-slate-500 font-medium mt-3 max-w-xs leading-relaxed">
-            Every result is a candidate shot. Verify it visually before sending a DRES submission.
-          </p>
-        </div>
-      </section>
-      
-      {/* Subnavigation Tabs */}
-      <div className="vbs-tabs mb-6" role="tablist" aria-label="Search workspace">
-        <button
-          onClick={() => setActiveTab("single")}
-          className={`vbs-tab ${activeTab === "single" ? "vbs-tab-active" : ""}`}
-          role="tab"
-          aria-selected={activeTab === "single"}
-        >
-          <SearchIcon className="h-4 w-4" />
-          Live Search
-        </button>
-        <button
-          onClick={() => setActiveTab("batch")}
-          className={`vbs-tab ${activeTab === "batch" ? "vbs-tab-active" : ""}`}
-          role="tab"
-          aria-selected={activeTab === "batch"}
-        >
-          <Layers className="h-4 w-4" />
-          Batch Evaluation
-        </button>
-      </div>
+    <main className="w-full px-3 sm:px-5 lg:px-6 py-4 relative text-left">
+      {/* Unified Command Cockpit Deck */}
+      <div className="bg-white rounded-xl border border-slate-200/90 shadow-xs mb-4 overflow-hidden relative">
+        {loading && <div className="scan-line" />}
 
-      {/* ------------------------------------------------------- */}
-      {/* TAB A: SINGLE QUERY CONSOLE */}
-      {/* ------------------------------------------------------- */}
-      {activeTab === "single" && (
-        <>
-          {/* DRES panel: login + current task display so "Nộp câu trả lời"
-              on each result card has a task_id to submit against. */}
-          <Card className="vbs-session-card tech-card mb-4">
-            <CardContent className="pt-4 pb-4 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3 text-left">
-                <div className={`vbs-session-icon ${dresLoggedIn ? "vbs-session-icon-live" : ""}`}>
-                  <Radio className="h-4 w-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.16em] block mb-0.5">DRES session</span>
-                {currentTask ? (
-                  <span className="text-sm font-bold text-slate-800">
-                    Task loaded · {currentTask.task_id || currentTask.type || JSON.stringify(currentTask)}
-                  </span>
-                ) : (
-                  <span className="text-sm text-slate-500 font-semibold">{dresLoggedIn ? "Connected · no current task" : "Not connected"}</span>
-                )}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {actionMessage && <span className="text-xs text-slate-500 max-w-xs truncate" title={actionMessage}>{actionMessage}</span>}
+        {/* Top Control Strip: Task Mode Selector & DRES Status */}
+        <div className="px-3.5 py-2 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
+          {/* Left: Task Mode Selection Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">
+              Task Mode:
+            </span>
+            {(
+              [
+                { id: "kis-t", label: "KIS-T", desc: "Text", icon: Target },
+                { id: "kis-c", label: "KIS-C", desc: "Chat", icon: MessageCircle },
+                { id: "vqa", label: "VQA", desc: "Question", icon: BookOpen },
+                { id: "avs", label: "AVS", desc: "Ad-hoc", icon: Layers },
+                { id: "kis-v", label: "KIS-V", desc: "Visual Clip", icon: ImageIcon },
+              ] as const
+            ).map((m) => {
+              const active = taskMode === m.id
+              const Icon = m.icon
+              return (
                 <button
-                  onClick={handleDresLogin}
-                  className="vbs-dark-button"
+                  key={m.id}
+                  type="button"
+                  onClick={() => handleTaskModeChange(m.id as TaskMode)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
+                    active
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "bg-white border border-slate-200/90 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
                 >
-                  {dresLoggedIn ? "Refresh task" : "Connect DRES"}
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{m.label}</span>
+                  <span className={`text-[10px] font-normal ${active ? "text-indigo-200" : "text-slate-400"}`}>
+                    {m.desc}
+                  </span>
                 </button>
-              </div>
-            </CardContent>
-          </Card>
+              )
+            })}
+          </div>
 
-          <Card className="tech-card border-indigo-100/60 mb-8 overflow-hidden relative bg-white">
-            {loading && <div className="scan-line" />}
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-4 text-left">
+          {/* Right Controls: Sub-Tabs & DRES Status */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Live Search vs Batch Evaluation toggle */}
+            <div className="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setActiveTab("single")}
+                className={`px-2.5 py-0.5 rounded-md transition ${
+                  activeTab === "single"
+                    ? "bg-white text-indigo-700 shadow-2xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Live Search
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("batch")}
+                className={`px-2.5 py-0.5 rounded-md transition ${
+                  activeTab === "batch"
+                    ? "bg-white text-indigo-700 shadow-2xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Batch Evaluation
+              </button>
+            </div>
+
+            {/* DRES Status Indicator */}
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  dresLoggedIn ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+                }`}
+              />
+              <span className="font-semibold text-slate-700">
+                {dresLoggedIn
+                  ? currentTask?.task_id || "DRES Connected"
+                  : "DRES Offline"}
+              </span>
+              <button
+                type="button"
+                onClick={handleDresLogin}
+                className="text-[10px] font-bold text-indigo-600 hover:underline ml-1"
+              >
+                {dresLoggedIn ? "Refresh" : "Connect"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab A: Single Query Search Bar */}
+        {activeTab === "single" && (
+          <div className="p-3 sm:p-4">
+            {/* Quick Option Checkboxes */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2.5 text-xs font-semibold text-slate-600">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
                 <input
-                  id="temporal-mode"
                   type="checkbox"
                   checked={temporalMode}
                   onChange={(e) => setTemporalMode(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                  <label htmlFor="temporal-mode" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Temporal chain · nhiều sự kiện nối tiếp
-                </label>
-              </div>
+                <span>Temporal chain (N-step events)</span>
+              </label>
 
               {!temporalMode && (
-                <div className="flex items-center gap-4 mb-4 text-left">
-                  <div className="flex items-center gap-2">
+                <>
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
                     <input
-                      id="exact-search"
                       type="checkbox"
                       checked={exactSearch}
                       onChange={(e) => setExactSearch(e.target.checked)}
-                      className="h-4 w-4"
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <label htmlFor="exact-search" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      High precision · chậm hơn
-                    </label>
-                  </div>
-                  <div className="flex items-center gap-2">
+                    <span>Exact Search (ef=512)</span>
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer hover:text-slate-900">
                     <input
-                      id="verify-results"
                       type="checkbox"
                       checked={verifyResults}
                       onChange={(e) => setVerifyResults(e.target.checked)}
-                      className="h-4 w-4"
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <label htmlFor="verify-results" className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Verify candidates · chậm hơn
-                    </label>
-                  </div>
-                </div>
+                    <span>VLM Candidate Verification</span>
+                  </label>
+                </>
               )}
-              <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
 
-                {/* Shadcn Select Component */}
-                {!temporalMode && (
-                <div className="w-full md:w-72 text-left">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Task mode
-                  </label>
-                  <Select
-                    value={taskMode}
-                    onValueChange={(val) => handleTaskModeChange(val as TaskMode)}
-                  >
-                    <SelectTrigger className="w-full bg-white border border-slate-200 rounded-lg text-slate-800">
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kis-t">KIS-T · Textual known-item</SelectItem>
-                      <SelectItem value="kis-c">KIS-C · Conversational known-item</SelectItem>
-                      <SelectItem value="kis-v">KIS-V · Visual known-item</SelectItem>
-                      <SelectItem value="avs">AVS · Ad-hoc video search</SelectItem>
-                      <SelectItem value="vqa">VQA · Visual question</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                )}
+              {actionMessage && (
+                <span className="text-slate-400 text-xs italic ml-auto truncate max-w-sm">
+                  {actionMessage}
+                </span>
+              )}
+            </div>
 
-                {!isVisualTask && <div className="flex-1 text-left">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    {temporalMode ? "Sự kiện thứ 1" : queryType === 2 ? "Question / answer prompt" : isConversationalTask ? "What do you remember?" : isAvsTask ? "AVS search description" : "Task description"}
-                  </label>
+            {/* Main Search Input Form */}
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
+              {!isVisualTask && (
+                <div className="flex-1 text-left">
                   <div className="relative">
                     <input
                       type="text"
@@ -680,169 +659,161 @@ function SearchView() {
                             ? "Describe a visual concept (e.g. cars in front of trees...)"
                             : "Describe the target shot (e.g. a motorbike riding through rain...)"
                           : queryType === 2
-                          ? "Ask about the video (e.g. how many people cross the road?)"
+                          ? "Ask about the video (e.g. what is the license plate of the red car?)"
                           : "Describe the sequence (e.g. a motorbike passes, then a red car...)"
                       }
-                      className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
                     />
-                    <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   </div>
-                </div>}
-
-                {isVisualTask && (
-                  <div className="w-full md:flex-1 min-w-0 text-left">
-                    <input
-                      ref={videoUploadRef}
-                      type="file"
-                      accept="video/*"
-                      className="hidden"
-                      onChange={(event) => acceptKisVideo(event.target.files?.[0])}
-                    />
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                      KIS-V clip
-                    </label>
-                    <div
-                      className={`vbs-video-dropzone ${videoDropActive ? "vbs-video-dropzone-active" : ""} ${kisVideoFile ? "vbs-video-dropzone-ready" : ""}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => videoUploadRef.current?.click()}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") videoUploadRef.current?.click()
-                      }}
-                      onDragEnter={(event) => {
-                        event.preventDefault()
-                        setVideoDropActive(true)
-                      }}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDragLeave={() => setVideoDropActive(false)}
-                      onDrop={(event) => {
-                        event.preventDefault()
-                        setVideoDropActive(false)
-                        acceptKisVideo(event.dataTransfer.files?.[0])
-                      }}
-                    >
-                      <div className="vbs-video-drop-icon">
-                        {kisVideoFile ? <Film className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
-                      </div>
-                      <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
-                        <p className="text-sm font-extrabold text-slate-800 truncate m-0">
-                          {kisVideoFile ? kisVideoFile.name : "Drop the KIS-V clip here"}
-                        </p>
-                        <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                          {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB · ready to search` : "or click to browse · MP4, MOV, WebM"}
-                        </span>
-                      </div>
-                      {kisVideoFile && (
-                        <button
-                          type="button"
-                          className="vbs-clear-file"
-                          aria-label="Remove selected KIS-V clip"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            setKisVideoFile(null)
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {temporalMode && extraQueries.map((q, idx) => (
-                  <div key={idx} className="flex-1 text-left">
-                    <label className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                      <span>Sự kiện thứ {idx + 2} (xảy ra sau)</span>
-                      {extraQueries.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeTemporalStep(idx)}
-                          className="text-slate-400 hover:text-red-500 normal-case font-semibold"
-                        >
-                          Bớt bước
-                        </button>
-                      )}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={q}
-                        onChange={(e) => updateTemporalStep(idx, e.target.value)}
-                        placeholder="e.g. ô tô màu đỏ đi qua"
-                        className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      />
-                      <SearchIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-                ))}
-
-                {temporalMode && extraQueries.length < 4 && (
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={addTemporalStep}
-                      className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-3 py-2.5 rounded-lg transition-colors h-[40px]"
-                    >
-                      + Thêm bước
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-end">
-                  <button
-                    type="submit"
-                    disabled={loading || (isVisualTask && !kisVideoFile)}
-                    className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-300 shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-[40px] tech-glow-button"
-                  >
-                    {loading ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <SearchIcon className="h-4 w-4" />
-                        {isVisualTask ? "Search visual clip" : isAvsTask ? "Find diverse shots" : "Search candidates"}
-                      </>
-                    )}
-                  </button>
                 </div>
+              )}
 
-              </form>
-            </CardContent>
-          </Card>
+              {isVisualTask && (
+                <div className="w-full md:flex-1 min-w-0 text-left">
+                  <input
+                    ref={videoUploadRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(event) => acceptKisVideo(event.target.files?.[0])}
+                  />
+                  <div
+                    className={`vbs-video-dropzone ${videoDropActive ? "vbs-video-dropzone-active" : ""} ${kisVideoFile ? "vbs-video-dropzone-ready" : ""}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => videoUploadRef.current?.click()}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") videoUploadRef.current?.click()
+                    }}
+                    onDragEnter={(event) => {
+                      event.preventDefault()
+                      setVideoDropActive(true)
+                    }}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDragLeave={() => setVideoDropActive(false)}
+                    onDrop={(event) => {
+                      event.preventDefault()
+                      setVideoDropActive(false)
+                      acceptKisVideo(event.dataTransfer.files?.[0])
+                    }}
+                  >
+                    <div className="vbs-video-drop-icon">
+                      {kisVideoFile ? <Film className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                      <p className="text-xs font-extrabold text-slate-800 truncate m-0">
+                        {kisVideoFile ? kisVideoFile.name : "Drop the KIS-V clip here"}
+                      </p>
+                      <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                        {kisVideoFile ? `${(kisVideoFile.size / (1024 * 1024)).toFixed(1)} MB` : "or browse"}
+                      </span>
+                    </div>
+                    {kisVideoFile && (
+                      <button
+                        type="button"
+                        className="vbs-clear-file"
+                        aria-label="Remove selected clip"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setKisVideoFile(null)
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
+              {temporalMode && extraQueries.map((q, idx) => (
+                <div key={idx} className="flex-1 text-left">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={q}
+                      onChange={(e) => updateTemporalStep(idx, e.target.value)}
+                      placeholder={`Event #${idx + 2} (e.g. red car enters)...`}
+                      className="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg pl-9 pr-8 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium"
+                    />
+                    <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    {extraQueries.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTemporalStep(idx)}
+                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-red-500"
+                        title="Remove step"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {temporalMode && extraQueries.length < 4 && (
+                <button
+                  type="button"
+                  onClick={addTemporalStep}
+                  className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-lg transition-colors shrink-0"
+                >
+                  + Add Step
+                </button>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || (isVisualTask && !kisVideoFile)}
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition-all shadow-sm shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <SearchIcon className="h-3.5 w-3.5" />
+                    <span>Search</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {activeTab === "single" && (
+        <>
           {/* Error Alert */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-8 flex items-center gap-3 text-left">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-              <div className="text-sm font-semibold">{error}</div>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3.5 py-2 rounded-lg mb-4 flex items-center gap-2.5 text-xs font-semibold text-left">
+              <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+              <div>{error}</div>
             </div>
           )}
 
+          {/* KIS-C Conversation / Clarification Box */}
           {isConversationalTask && (kisCMessages.length > 0 || clarification) && (
-            <div className="vbs-conversation-card mb-8 text-left">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="vbs-conversation-icon"><MessageCircle className="h-4 w-4" /></div>
+            <div className="vbs-conversation-card mb-4 text-left p-3.5 rounded-xl border border-indigo-100 bg-white shadow-2xs">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="vbs-conversation-icon"><MessageCircle className="h-3.5 w-3.5" /></div>
                 <div>
-                  <p className="text-xs font-extrabold text-slate-800 uppercase tracking-[0.14em] m-0">KIS-C conversation</p>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5 m-0">Add one detail at a time when the candidate set is ambiguous.</p>
+                  <p className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider m-0">KIS-C Clarification Dialogue</p>
+                  <p className="text-[11px] text-slate-500 m-0">Clarify vague memory attributes to resolve ambiguous candidate pools.</p>
                 </div>
               </div>
-              <div className="space-y-2 mb-4">
+              <div className="space-y-1.5 mb-3 max-h-36 overflow-y-auto">
                 {kisCMessages.map((message, index) => (
                   <div key={`${message.role}-${index}`} className={`vbs-chat-bubble ${message.role === "operator" ? "vbs-chat-bubble-operator" : "vbs-chat-bubble-system"}`}>
                     <span className="vbs-chat-label">{message.role === "operator" ? "You" : "System"}</span>
-                    <span>{message.text}</span>
+                    <span className="text-xs">{message.text}</span>
                   </div>
                 ))}
               </div>
               {clarification && (
-                <div className="vbs-clarification-form">
-                  <label htmlFor="clarification-answer" className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-                    Narrow the search
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                <div className="vbs-clarification-form pt-2 border-t border-slate-100">
+                  <div className="flex gap-2">
                     <input
                       id="clarification-answer"
                       type="text"
@@ -851,16 +822,16 @@ function SearchView() {
                       onKeyDown={(event) => {
                         if (event.key === "Enter" && clarificationAnswer.trim()) handleSearch()
                       }}
-                      placeholder="Add the missing detail..."
-                      className="vbs-clarification-input"
+                      placeholder="Answer system question to refine candidate ranking..."
+                      className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus:bg-white focus:outline-none focus:border-indigo-500"
                     />
                     <button
                       type="button"
                       disabled={loading || !clarificationAnswer.trim()}
                       onClick={() => handleSearch()}
-                      className="vbs-clarification-button"
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-2xs"
                     >
-                      Refine search
+                      Refine
                     </button>
                   </div>
                 </div>
@@ -868,51 +839,45 @@ function SearchView() {
             </div>
           )}
 
-          {/* KIS-C clarification fallback for non-conversational task modes. */}
-          {clarification && !isConversationalTask && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-8 flex items-center gap-3 text-left">
-              <HelpCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
-              <div className="text-sm font-semibold">{clarification}</div>
+          {/* Results Summary Bar */}
+          {!loading && results.length > 0 && (
+            <div className="mb-3 text-left flex justify-between items-center bg-white border border-slate-200/80 px-3.5 py-1.5 rounded-lg shadow-2xs">
+              <p className="text-xs text-slate-600 font-semibold m-0 flex items-center gap-1.5">
+                <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 font-bold rounded font-mono text-[11px]">
+                  {results.length}
+                </span>
+                <span>candidate shots for: <strong className="text-slate-800 font-medium">"{query}"</strong></span>
+              </p>
+              <span className="text-[10px] text-slate-400 font-mono">
+                Click any thumbnail to inspect high-res frame & evidence
+              </span>
             </div>
           )}
 
-          {/* Loading Grid */}
+          {/* Loading Skeletons */}
           {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <Card key={n} className="border-indigo-50/50 bg-white/40 animate-pulse h-96">
-                  <div className="bg-slate-200 h-48 rounded-t-xl" />
-                  <div className="p-6 space-y-3">
-                    <div className="h-4 bg-slate-200 rounded w-2/3" />
-                    <div className="h-4 bg-slate-200 rounded w-1/2" />
-                    <div className="h-10 bg-slate-200 rounded pt-3" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
+              {Array.from({ length: 16 }).map((_, n) => (
+                <div key={n} className="bg-white rounded-lg border border-slate-200/80 overflow-hidden animate-pulse">
+                  <div className="aspect-video bg-slate-200" />
+                  <div className="p-2 space-y-1.5">
+                    <div className="h-3 bg-slate-200 rounded w-3/4" />
+                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
 
-          {/* Results List */}
+          {/* Results Gallery: High-density full-width responsive grid */}
           {!loading && results.length > 0 && (
-            <div className="mb-6 text-left flex justify-between items-center bg-white/60 border border-slate-200/60 px-4 py-2 rounded-lg">
-              <p className="text-sm text-slate-500 font-semibold m-0">
-                <span className="text-indigo-600 font-bold">{results.length}</span> candidate shots for: "{query}"
-              </p>
-              <Badge variant="outline" className="border-indigo-100 text-indigo-600 bg-indigo-50/50">
-                FusedDenseSparse
-              </Badge>
-            </div>
-          )}
-
-          {!loading && results.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
               {results.map((hit, idx) => (
                 <ResultCard
                   key={hit.id || idx}
                   hit={hit}
                   idx={idx}
-                  isExpanded={expandedIndex === idx}
-                  onToggleExpand={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
+                  onInspect={(h, i) => setInspectingHit({ hit: h, rank: i + 1 })}
                   onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
                   onFeedback={handleFeedback}
                   onUseAsQuery={handleUseAsQuery}
@@ -926,13 +891,13 @@ function SearchView() {
 
           {/* Empty States */}
           {!loading && results.length === 0 && query && (
-            <Card className="tech-card py-16 text-center max-w-lg mx-auto border-indigo-100/60 bg-white/75">
-              <CardContent className="space-y-4">
-                <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto border border-slate-200">
-                  <SearchIcon className="h-6 w-6 text-slate-400" />
+            <Card className="tech-card py-12 text-center max-w-md mx-auto border-slate-200 bg-white">
+              <CardContent className="space-y-3">
+                <div className="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto border border-slate-200">
+                  <SearchIcon className="h-5 w-5 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">No candidate shots found</h3>
-                <p className="text-slate-500 text-sm">
+                <h3 className="text-base font-bold text-slate-800">No candidate shots found</h3>
+                <p className="text-slate-500 text-xs">
                   Try a more concrete description, a different task mode, or use visual search for KIS-V.
                 </p>
               </CardContent>
@@ -940,20 +905,34 @@ function SearchView() {
           )}
 
           {!loading && results.length === 0 && !query && (
-            <div className="text-center py-20 max-w-xl mx-auto space-y-6">
-              <div className="inline-flex bg-indigo-600/10 p-4 rounded-full border border-indigo-500/20">
-                <Sparkles className="h-10 w-10 text-indigo-600 animate-pulse" />
+            <div className="text-center py-16 max-w-lg mx-auto space-y-4">
+              <div className="inline-flex bg-indigo-50 p-3 rounded-full border border-indigo-100">
+                <Sparkles className="h-7 w-7 text-indigo-600" />
               </div>
-              <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+              <h2 className="text-xl font-bold text-slate-800 tracking-tight">
                 Ready for the next VBS task
               </h2>
-              <p className="text-slate-500 text-sm leading-relaxed font-semibold">
-                Search visual frames, spoken speech, and sound environments. Refine the query, inspect the evidence, then submit only when the shot is convincing.
+              <p className="text-slate-500 text-xs leading-relaxed">
+                Select a task mode above, enter visual description or question, and click Search. Click any candidate card to inspect high-resolution frames, bounding box crops, and multimodal evidence.
               </p>
             </div>
           )}
         </>
       )}
+
+      {/* High-Resolution Candidate Inspection Dialog */}
+      <CandidateInspectionDialog
+        hit={inspectingHit?.hit ?? null}
+        rank={inspectingHit?.rank ?? null}
+        open={Boolean(inspectingHit)}
+        onClose={() => setInspectingHit(null)}
+        onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
+        onFeedback={handleFeedback}
+        onUseAsQuery={handleUseAsQuery}
+        onInVideoSearch={handleInVideoSearch}
+        onBrowseVideo={handleBrowseVideo}
+        onSubmitToDres={handleSubmitToDres}
+      />
 
       {/* ------------------------------------------------------- */}
       {/* TAB B: BATCH QUERIES DASHBOARD */}
@@ -1234,7 +1213,7 @@ function DatabaseView() {
   const isConnected = stats?.status === "connected"
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
       <Card className="tech-card text-left bg-white/90">
         <CardHeader className="border-b border-slate-100 pb-6 flex flex-row items-center justify-between">
           <div>

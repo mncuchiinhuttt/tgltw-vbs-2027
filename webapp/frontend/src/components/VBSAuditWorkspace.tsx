@@ -228,7 +228,7 @@ export const VBSAuditWorkspace: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24">
       {/* Top Breadcrumb & Actions Bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-10 h-16 flex items-center justify-between gap-6">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-xs">
               <Activity className="h-5 w-5" />
@@ -264,8 +264,7 @@ export const VBSAuditWorkspace: React.FC = () => {
       </div>
 
       {/* Main Workspace Layout */}
-      <div className="max-w-[1600px] mx-auto px-6 md:px-10 pt-8 space-y-8">
-        {/* SECTION 1: Query Execution Deck */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-5 space-y-6">
         <section className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 md:p-8 space-y-6">
           {/* Section Header */}
           <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-5 flex-wrap">
