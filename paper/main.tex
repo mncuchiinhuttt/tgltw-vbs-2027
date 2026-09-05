@@ -249,7 +249,7 @@ As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate ve
 \begin{figure}[htbp]
 \centering
 \vspace{-2mm}
-\includegraphics[width=0.96\textwidth]{figures/system_ui_demo.pdf}
+\includegraphics[width=\textwidth]{figures/system_ui_demo.pdf}
 \caption{The AEGIS Interactive Operator Console and qualitative task demonstrations across KIS-T, KIS-C, VQA, AVS, and KIS-V.}
 \label{fig:ui-demo}
 \vspace{-3mm}
@@ -258,7 +258,6 @@ As shown in Fig.~\ref{fig:ui-demo}, representative benchmark runs demonstrate ve
 \label{sec:evaluation}
 
 \subsection{Experimental Setup and LLM-as-a-Judge Protocol}
-We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.7 Flash (High) ($T=0$), yielding deterministic scoring. In core competition tasks, our full engine achieves an Overall RAG Score of \textbf{94.7/100.0} with \textbf{88.9\%} Recall@1 (100.0\% Recall@5, MRR 0.944). Across a 200-query corpus stress test, our full method maintains an Overall RAG Score of \textbf{76.2/100.0}, with \textbf{57.9\%} Recall@1 (74.7\% Recall@5, MRR 0.665), \textbf{96.7\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety.
 
 \begin{table}[t]
 \centering
