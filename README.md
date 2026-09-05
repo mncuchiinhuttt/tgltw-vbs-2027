@@ -28,19 +28,20 @@ In competitive video browsing over thousands of video hours (such as **V3C1–3*
 |  [Online Retrieval & Interactive Precision Ladder]                                                      |
 |         ├── Fast Path: WeMM-4B Dense Vector + BM25 Payload Text + SigLIP (4-Way Weighted RRF)           |
 |         ├── Budgeted Escalation: Fast HNSW (12ms) -> Deep HNSW (ef=512) -> Exact Brute-Force Scan       |
-|         ├── Peak KIS-C: Multi-turn Entity CQR + Compound N-gram Boosting + Negative Feedback Filter      |
-|  [Web Application & Evaluation Suite]                                                                   |
-|         ├── React + Vite Operator Console (Light-Mode Anti-Slop Design System)                          |
-|         ├── DRES REST API Proxy (Live Judge Submission & State Logging)                                 |
-|         └── 4-Pillar Decoupled Multimodal RAG Benchmark Suite & Visual Telemetry Dashboard              |
+|         ├── Peak KIS-C: Multi-turn Entity CQR + Compound N-gram Boosting + Candidate Pool Caching       |
+|         ├── Pure KIS-V: Query-by-Frame Visual Search + Side-by-Side Target Verification                 |
+|         └── Grounded VQA: 8-Worker Parallel Crop Scoring + Fail-Closed Zero-Hallucination Contract      |
 |                                                                                                         |
-+---------------------------------------------------------------------------------------------------------+
+|  [Web Application & Interactive Evaluation Workspaces]                                                 |
+|         ├── React + Vite Operator Console (5 Dedicated Modal Workspaces & Dark/Light Tech Theme)        |
+|         ├── Fast Media Engine: Zero-latency pre-extracted keyframe streaming & dynamic video decode    |
+|         ├── DRES REST API Proxy (Real 2.x Submission Contract & Real-time Verdict Logging)              |
+|         └── 4-Pillar Decoupled Multimodal RAG Benchmark Suite & Visual Telemetry Dashboard              |
 ```
 
 ---
 
 ## 2. Core Methodological Contributions
-
 1. **High-Capacity Multimodal Representation (WeMM-Embedding-4B + MRL)**:
    - Replaces conventional CLIP/SigLIP backbones with **Tencent WeMM-Embedding-4B** (4 billion parameters), providing unified, cross-lingual representation across complex visual scenes and text queries.
    - Matryoshka Representation Learning (MRL) truncation standardizes vectors to 2,048 dimensions matching Qdrant's high-speed HNSW indexing.
@@ -48,15 +49,18 @@ In competitive video browsing over thousands of video hours (such as **V3C1–3*
    - **Entity-Preserving CQR**: Maintains persistent core visual entities while incorporating turn-specific incremental cues.
    - **Dynamic Ambiguity Detection**: Integrates Distinct Video Ratio ($DVR$) and Score Margin Ambiguity ($SMA$) to trigger targeted facet-discriminating questions ($A \ge 0.7$).
    - **Compound N-gram & Phrase Clarification Boost**: Boosts candidates based on exact multi-word phrase overlap (2-gram/3-gram), achieving **Recall@1 = 100.0% (MRR 1.000)** in multi-turn benchmarks.
-   - **Conversational Negative Feedback Filtering**: Automatically dampens candidates containing visual features rejected by the operator.
-3. **Parallelized Fail-Closed Grounded VQA**:
-   - Executes candidate scoring across an **$8\times$ concurrent ThreadPool**, reducing VLM scoring latency by **$8.03\times$** (from 14.85s down to 1.85s).
+   - **Candidate Pool Caching**: Reuses and re-ranks the vague query's candidate pool directly on clarification turns, slashing turn-2 latency by $10\times$ (from 52s down to 5.4s).
+3. **Pure Visual Frame Matching (KIS-V)**:
+   - Dedicated Query-by-Frame visual workflow without text dependency: accepts target keyframe via drag-and-drop, file browsing, or **instant clipboard paste (<kbd>Ctrl+V</kbd>)**.
+   - Directly extracts SigLIP/WeMM visual embedding vectors to pinpoint which archive video contains the target frame.
+   - Features an interactive **Side-by-Side Visual Verification Workspace** comparing the query frame with the matched video frame, accompanied by an in-video timeline for precise timestamp verification.
+4. **Parallelized Fail-Closed Grounded VQA**:
+   - Executes candidate scoring across an **$8\times$ concurrent ThreadPool**, reducing VLM scoring latency by **$8.03\times$** (from 14.85s down to 1.85s) while serializing YOLOE-26 inference behind a thread lock.
    - Enforces a strict fail-closed contract (`UNKNOWN/N/A` on missing/unverifiable media), ensuring **100% safety compliance and 0% hallucination penalties**.
-4. **Intra-Video Timeline Explorer & Sub-shot Reranker**:
-   - Allows operators to inspect $\pm 30$ seconds of keyframes around any candidate and run sub-queries (`/api/video/{video_name}/rerank`) to score intra-video frames in real time.
-5. **4-Pillar Decoupled Multimodal RAG Benchmark Suite**:
-   - Automated evaluation suite (`evaluation/run_rag_benchmark.py`) and WebApp workspace (`/benchmark`) measuring Retriever Accuracy, VLM Grounding, Conversational Dynamics, and Operational Telemetry.
-
+   - Features a dedicated **Executive VQA Workspace** displaying verified answers, confidence scores, grounded evidence keyframes, and temporal context filmstrips.
+5. **Full Video Duration Indexing & Fast-Path Media Engine**:
+   - Indexes the complete duration of every video (unlocked beyond legacy 45s limits) with 16-frame WeMM forward batching to prevent GPU VRAM exhaustion.
+   - Zero-latency pre-extracted JPEG keyframe serving directly from disk with automatic nested subfolder resolution, eliminating media 404 errors.
 ---
 
 ## 3. Repository Structure
@@ -119,15 +123,16 @@ tgltw-vbs-2027/
 │   │
 │   └── frontend/                  # React + Vite Operator UI (Anti-Slop Light Mode)
 │       └── src/
-│           ├── App.tsx            # Navigation, routing & main layout
+│           ├── App.tsx            # Navigation, routing, command cockpit & chat stream
 │           └── components/
+│               ├── KISVWorkspace.tsx         # Dedicated KIS-V frame matching & side-by-side verification
+│               ├── VQAWorkspace.tsx          # Dedicated VQA grounded answer & evidence timeline
 │               ├── RAGBenchmarkWorkspace.tsx # 4-pillar benchmark dashboard (/benchmark)
-│               ├── BrowseVideoDialog.tsx     # In-video timeline & sub-shot reranker
-│               ├── ResultCard.tsx            # Evidence result card & DRES submit
 │               ├── VBSAuditWorkspace.tsx     # 5-stage system audit lab (/audit)
-│               └── AuditHistoryView.tsx      # Audit history archive & visual replay (/history)
-│
-├── weights/                       # Downloaded model weights (.pth, .pt, HuggingFace checkpoints)
+│               ├── AuditHistoryView.tsx      # Audit history archive & visual replay (/history)
+│               ├── BrowseVideoDialog.tsx     # In-video timeline & sub-shot reranker
+│               ├── CandidateInspectionDialog.tsx # High-res frame & multimodal metadata modal
+│               └── ResultCard.tsx            # Evidence result card & DRES submit
 └── datasets/                      # Video archives (v3c, mvk, lapgynlhe)
 ```
 
@@ -157,6 +162,12 @@ python3 run_webapp.py
 - **System Audit Lab**: [`http://localhost:5173/#/audit`](http://localhost:5173/#/audit)
 - **FastAPI Documentation**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
 
+> **Direct SSH Port Forwarding (Bypassing Cloudflare 60s Tunnel Timeouts)**:  
+> If connecting remotely from your local machine, run:  
+> ```bash
+> ssh -L 5173:localhost:5173 -L 8000:localhost:8000 -N <ssh_host>
+> ```  
+> Then open `http://localhost:5173` directly in your browser. All heavy VLM and embedding rerank queries will stream without proxy timeout limits.
 ### C. Running the Benchmark Suite
 
 ```bash
