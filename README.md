@@ -2,7 +2,7 @@
 
 > **Team TGLTW-RMIT — Video Browser Showdown (VBS 2027)**  
 > *ACM / Springer LNCS MultiMedia Modeling (MMM 2027) Extended Demo System*  
-> Public Project Page & Live Deployment: [tgltw-rmit-vbs26.project.mncuchiinhuttt.dev](https://tgltw-rmit-vbs26.project.mncuchiinhuttt.dev/)
+> Public Project Page & Live Deployment: [aegis.mncuchiinhuttt.dev](https://aegis.mncuchiinhuttt.dev/)
 
 ---
 
