@@ -26,7 +26,7 @@
 }
 
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\projectpage}{\href{https://tgltw-rmit-vbs26.project.mncuchiinhuttt.dev/}{project page}}
+\newcommand{\projectpage}{\href{https://aegis.mncuchiinhuttt.dev/}{project page}}
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
 \definecolor{placeholderred}{RGB}{180,0,0}
 \tikzset{
@@ -78,18 +78,18 @@ Timed interactive video retrieval requires sub-second candidate exploration unde
 \section{Introduction}
 \label{sec:intro}
 
-The Video Browser Showdown (VBS) evaluates interactive video retrieval in a live, timed competitive arena~\cite{lokoc2023vbs,rossetto2025vbs}. Operators inspect candidate keyframes across multi-thousand-hour archives (including V3C~\cite{rossetto2019v3c}, Marine Video Kit~\cite{truong2023mvk}, and LapGynLHE~\cite{nasirihaghighi2025gynsurg}) and submit timestamps or answers to the DRES evaluation server before task countdowns expire. The VBS 2027 protocol spans five official modes: Textual Known-Item Search (KIS-T), Conversational Known-Item Search (KIS-C), Visual Question Answering (VQA), Ad-hoc Video Search (AVS), and Visual Query (KIS-V)~\cite{vbs2027call}.
+The Video Browser Showdown (VBS) evaluates interactive video retrieval in a live, timed competitive arena~\cite{lokoc2023vbs,rossetto2025vbs}. Operators inspect candidate keyframes across multi-thousand-hour archives, including V3C, Marine Video Kit, and laparoscopic hysterectomy (LHE/GynSurg) collections, and submit timestamps or answers to the DRES evaluation server before task countdowns expire. The VBS 2027 protocol spans five official modes: Textual Known-Item Search (KIS-T), Conversational Known-Item Search (KIS-C), Visual Question Answering (VQA), Ad-hoc Video Search (AVS), and Visual Query (KIS-V)~\cite{vbs2027call}.
 
-Recent competitive systems (e.g., PraK V4~\cite{jackl2026prak}, NII-UIT~\cite{tran2026niiuit}, and Exquisitor~\cite{khan2026exquisitor}) demonstrate that winning requires sub-second candidate exploration and high-precision discrimination across visually confusing scenes. However, existing architectures face three operational bottlenecks:
+Recent competitive systems~\cite{jackl2026prak,tran2026niiuit,khan2026exquisitor} show that live retrieval requires sub-second candidate exploration and high-precision discrimination between visually similar scenes. Examples include repetitive shots from the same video, visually similar wedding or marine scenes, and surgical frames with small instrument changes. Existing architectures face three operational bottlenecks:
 (1)~\emph{Index Dilution and Semantic Drift}: flat keyframe indexing over millions of frames causes repetitive frames from dominant videos to crowd out relevant candidates;
 (2)~\emph{Conversational Degradation}: multi-turn KIS-C queries lose persistent entity constraints and fail to penalize operator-rejected attributes; and
 (3)~\emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s latency and generate ungrounded answers under timed pressure, incurring severe penalty points.
 
-To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch). Our primary technical contributions are:
+To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS}. Our primary technical contributions are:
 \begin{enumerate}\setlength{\itemsep}{1.5pt}\setlength{\parskip}{0pt}
-    \item \textbf{High-Capacity Representation with MRL}: We deploy Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (2,048d vectors) indexed via Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$), achieving sub-15ms dense retrieval.
-    \item \textbf{Peak Conversational Search Engine (KIS-C)}: We design an entity-preserving CQR pipeline with dynamic ambiguity detection (combining Distinct Video Ratio and Score Margin Ambiguity), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative feedback dampening.
-    \item \textbf{Parallelized Fail-Closed Grounded VQA}: We engineer an $8\times$ concurrent ThreadPool pipeline that resolves physical media provenance, applies localized YOLOE-26 bounding-box crops, and enforces a strict fail-closed contract (\code{UNKNOWN/N/A} on ungrounded candidates), completely eliminating hallucinations.
+    \item \textbf{High-Capacity Representation with MRL}: We deploy Tencent WeMM-Embedding-4B~\cite{wemm2025} with Matryoshka Representation Learning (2,048d vectors) indexed via Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$). We choose this model for its unified image-text representation and fine-grained scene coverage; SigLIP adds complementary visual similarity.
+    \item \textbf{Peak Conversational Search Engine (KIS-C)}: We design an entity-preserving Contextual Query Rewriting (CQR) pipeline with Dynamic Video Ratio (DVR), Score Margin Ambiguity (SMA), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative-feedback dampening.
+    \item \textbf{Parallelized Fail-Closed Grounded VQA}: We engineer an $8\times$ concurrent ThreadPool pipeline that resolves physical media provenance, applies localized YOLOE-26 crops, and enforces a strict fail-closed contract (\code{UNKNOWN/N/A} on ungrounded candidates). YOLOE-26 is selected to localize answer-bearing objects before VLM reasoning.
     \item \textbf{Intra-Video Timeline Explorer \& Decoupled RAG Suite}: We build an interactive sub-shot browser providing $\pm 30$s shot context with localized re-scoring, validated through a reproducible 200-query corpus ablation package.
 \end{enumerate}
 
@@ -116,9 +116,9 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
   opt/.style={rounded corners=2pt, draw=orange!70!black, dashed, thick, align=center, fill=orange!6, minimum height=6.5mm},
   arrow/.style={-{Latex[length=1.8mm]}, thick}
 ]
-\node[box, minimum width=2.4cm] (assets) {\textbf{Video assets}\\V3C, MVK, LHE,\\metadata, ASR, shots};
+\node[box, minimum width=2.4cm] (assets) {\textbf{Video assets}\\V3C, MVK, LHE/GynSurg,\\metadata, ASR, shots};
 \node[stage, right=4.5mm of assets, minimum width=2.6cm] (offline) {\textbf{Offline processing}\\WeMM-4B + SigLIP,\\PP-OCRv6, Whisper};
-\node[stage, right=4.5mm of offline, minimum width=2.6cm] (index) {\textbf{Qdrant HNSW index}\\2048d visual vectors,\\text\_blob payload schema};
+\node[stage, right=4.5mm of offline, minimum width=2.6cm] (index) {\textbf{Qdrant HNSW index}\\2048d visual vectors,\\enriched text payload};
 \node[stage, right=4.5mm of index, minimum width=2.7cm] (retrieve) {\textbf{Hybrid fast search}\\HNSW + BM25 payload,\\4-way RRF, coherence};
 \node[box, right=4.5mm of retrieve, minimum width=2.6cm] (operator) {\textbf{Operator Console}\\ranked evidence, VQA,\\timeline, DRES submit};
 \node[opt, below=3.5mm of retrieve, xshift=18mm, minimum width=5.4cm,
@@ -145,14 +145,14 @@ VBS retrieval combines semantic vector representations with fast human-in-the-lo
 \subsection{Offline Indexing and Multimodal Representation}
 The offline ingestion pipeline consumes official V3C Master Shot Boundaries and Video Metadata supplemented by TransNetV2~\cite{soucek2020transnetv2}. For each shot, representative keyframes are extracted via farthest-point visual variance and Laplacian sharpness scoring.
 
-Each keyframe is encoded with Tencent WeMM-Embedding-4B~\cite{wemm2025}, producing unified 2,048-dimensional multimodal vectors with MRL truncation. Audio speech transcripts from faster-whisper~\cite{radford2022whisper}, object detections from YOLOE-26, and on-screen text from PP-OCRv6 are concatenated into an enriched \code{text\_blob} payload. Embeddings and payloads are indexed into dedicated Qdrant collections (\code{visual\_keyframes\_v1}, \code{speech\_segments\_v1}, and \code{audio\_segments\_v1}).
+Each keyframe is encoded with Tencent WeMM-Embedding-4B~\cite{wemm2025}, producing unified 2,048-dimensional multimodal vectors with MRL truncation. Audio speech transcripts from faster-whisper~\cite{radford2022whisper}, object detections from YOLOE-26, and on-screen text from PP-OCRv6 are concatenated into an enriched \code{text\_blob} payload, meaning the searchable text record attached to each visual keyframe. WeMM-4B is chosen for its unified image-text representation; SigLIP supplies complementary visual similarity, YOLOE-26 grounds object-specific evidence, and PP-OCRv6/Whisper add searchable text and speech cues. Embeddings and payloads are indexed into dedicated Qdrant collections (\code{visual\_keyframes\_v1}, \code{speech\_segments\_v1}, and \code{audio\_segments\_v1}).
 
 \subsection{Hybrid Retrieval and Multimodal Fusion}
-Online text queries undergo contextual query rewriting (CQR) and optional hypothetical document expansion (HyDE). Dense vector search on WeMM-4B, secondary SigLIP dense search~\cite{zhai2023sigmoid}, and lexical payload full-text search are fused via weighted Reciprocal Rank Fusion (RRF):
+Online text queries undergo Contextual Query Rewriting (CQR) and optional hypothetical document expansion (HyDE). Dense vector search on WeMM-4B, secondary SigLIP dense search~\cite{zhai2023sigmoid}, and lexical payload full-text search are fused via weighted Reciprocal Rank Fusion (RRF), where MRR denotes Mean Reciprocal Rank:
 \begin{equation}
 \operatorname{RRF}(d) = \sum_{m \in \mathcal{M}} \frac{w_m}{k + \operatorname{rank}_m(d)}
 \end{equation}
-where $k=60$, followed by temporal coherence boosting across adjacent keyframes ($\pm 15$s) and scene diversification to suppress repetitive frames from the same video.
+where $k=60$, followed by temporal coherence boosting across adjacent keyframes ($\pm 15$s) and scene diversification to suppress repetitive frames from the same video. The fast HNSW path returns an initial candidate set in approximately 12.4ms; deeper and exact modes trade additional latency for recall.
 \section{Task-Specific Execution Lanes}
 \label{sec:tasks}
 
@@ -266,9 +266,11 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 \end{figure}
 \paragraph{KIS-T (Textual Known-Item Search).} Queries enter WeMM-4B dense retrieval and BM25 payload search. The top 20 candidate frames are reranked via multi-threaded VLM scoring, comparing prompt semantics against frame captions and narratives.
 
-\paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy: (1)~\emph{Ambiguity Detection}: we combine Distinct Video Ratio ($DVR$) with Score Margin Ambiguity ($SMA$): $A = (1 - \lambda) \cdot DVR + \lambda \cdot (1.0 - (s_1 - s_2)/s_1)$ ($\lambda=0.5$). When $A \ge 0.7$, the VLM triggers a facet-discriminating question; (2)~\emph{Compound N-gram Boost}: operator responses grant additive phrase overlap: $s_{\text{boosted}}(c) = s(c) + w_{\text{boost}} \cdot \text{Overlap}(c, \text{Answer}) \cdot s_{\max}$; and (3)~\emph{Negative Feedback Filtering}: rejected visual attributes incur a calibrated dampening penalty.
-\paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical keyframes inside the dataset root. If object labels exist, YOLOE-26 produces localized crops. The cropped frame is evaluated by the VLM with a strict JSON contract requiring \code{found=true}, concise answer ($<15$ words), and confidence $\in [0, 1]$. Missing media or ungrounded predictions return \code{UNKNOWN/N/A} (score 0), ensuring zero hallucination.
-\paragraph{KIS-V (Visual Prompt Search).} Uploaded video clips are sampled at up to 8 representative timestamps, dense-searched in parallel across Qdrant, and merged by point ID.
+\paragraph{KIS-C (Conversational Search with Peak Optimization).} KIS-C operates as an adaptive multi-turn policy: (1)~\emph{Ambiguity Detection}: we combine Distinct Video Ratio (DVR) with Score Margin Ambiguity (SMA): $A = (1 - \lambda) \cdot DVR + \lambda \cdot (1.0 - (s_1 - s_2)/s_1)$ ($\lambda=0.5$). When $A \ge 0.7$, the VLM triggers a facet-discriminating question; (2)~\emph{Compound N-gram Boost}: operator responses grant additive phrase overlap; and (3)~\emph{Negative Feedback Filtering}: rejected visual attributes incur a calibrated dampening penalty.
+
+\paragraph{VQA (Grounded Visual Question Answering).} VQA resolves physical keyframes inside the dataset root. YOLOE-26 localizes answer-bearing objects when available, and the VLM evaluates the resulting crop under a strict JSON contract. Missing media or ungrounded predictions return \code{UNKNOWN/N/A} (score 0), ensuring zero hallucination.
+
+\paragraph{KIS-V (Visual Known-Item Search).} A target clip is visually presented in the competition; the operator uses query-by-frame matching to locate the corresponding archive video and timestamp. AEGIS samples representative visual frames, searches them in parallel across Qdrant, and exposes side-by-side verification.
 
 \paragraph{Intra-Video Timeline Exploration.} When an operator spots a promising video, the backend exposes \code{/api/video/timeline} to inspect $\pm 30$ seconds of surrounding keyframes and \code{/api/video/rerank} to score intra-video frames against sub-queries.
 
@@ -358,7 +360,7 @@ As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-
 (5)~\textbf{Precision Escalation}: the ladder scales from 12.4ms (97.8\% recall) to 118.5ms (100.0\% recall).
 \section{Conclusion}
 \label{sec:conclusion}
-AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work targets on-device lightweight VLM distillation and live rehearsal at MMM 2027.
+AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work includes live DRES rehearsal for the VBS 2027 session at MMM 2027 in Siem Reap, Cambodia, expanded evidence models for marine and surgical collections, tighter retrieval/VLM budget calibration, and compiler-assisted inference optimization.
 \clearpage
 \bibliographystyle{splncs04}
 \bibliography{references}
