@@ -71,7 +71,7 @@ CBT's Science, Engineering and Technology Club (CSET), Ben Tre High School for G
 \maketitle
 
 \begin{abstract}
-Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B representations with Qdrant HNSW indexing and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On a 200-query V3C stress test, AEGIS achieves 57.9\% Recall@1, 74.7\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.665, with 96.7\% grounded VQA exact match and 0.0\% ungrounded hallucination.
+Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On a 200-query V3C stress test, AEGIS achieves 57.9\% Recall@1, 74.7\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.665, with 96.7\% grounded VQA exact match and 0.0\% ungrounded hallucination.
 \keywords{Interactive Video Retrieval \and Video Browser Showdown \and Conversational Search \and Grounded VQA \and Multimodal RAG}
 \end{abstract}
 
@@ -212,52 +212,16 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
   % Lane 5: VQA
   \node[lane, below=3.8mm of l4] (l5) {VQA};
-  \node[pstage, right=3mm of v2] (v3) {WeMM-4B embed};
-  \node[pstage, right=3mm of v3] (v4) {parallel HNSW};
-  \node[pbox, right=3mm of v4] (v5) {merge \& submit};
-  \draw[arrow] (v1) -- (v2); \draw[arrow] (v2) -- (v3); \draw[arrow] (v3) -- (v4); \draw[arrow] (v4) -- (v5);
+  \node[pbox, right=3mm of l5] (q1) {question text};
+  \node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
+  \node[pstage, right=2.5mm of q2] (q3) {real media resolve};
+  \node[pstage, right=2.5mm of q3] (q4) {crop + parallel VLM};
+  \node[pbox, right=2.5mm of q4] (q5) {answer + evidence};
+  \foreach \a/\b in {q1/q2,q2/q3,q3/q4,q4/q5} {\draw[arrow] (\a) -- (\b);}
 
-  \node[lane, below=4.8mm of l1] (l2) {KIS-T};
-  \node[pbox, right=3mm of l2] (t1) {text query};
-  \node[pstage, right=3mm of t1] (t2) {CQR + HyDE};
-  \node[pstage, right=3mm of t2] (t3) {WeMM + BM25};
-  \node[pstage, right=3mm of t3] (t4) {RRF + diversify};
-  \node[pstage, right=3mm of t4] (t5) {parallel VLM};
-  \node[pbox, right=3mm of t5] (t6) {$\rightarrow$ submit};
-  \draw[arrow] (t1) -- (t2); \draw[arrow] (t2) -- (t3); \draw[arrow] (t3) -- (t4); \draw[arrow] (t4) -- (t5); \draw[arrow] (t5) -- (t6);
-
-  % Lane 3: KIS-C
-  \node[lane, below=4.8mm of l2] (l3) {KIS-C};
-  \node[pbox, right=3mm of l3] (c1) {turn + history};
-  \node[pstage, right=2.5mm of c1] (c2) {entity CQR};
-  \node[popt, right=2.5mm of c2] (c3) {ambiguity test};
-  \node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
-  \node[pstage, right=2.5mm of c4] (c5) {negative filter};
-  \draw[arrow] (c1) -- (c2); \draw[arrow] (c2) -- (c3); \draw[arrow] (c3) -- node[pos=0.5,above,font=\tiny]{$A < 0.7$} (c4); \draw[arrow] (c4) -- (c5);
-  \draw[arrow,dashed] (c5.north) -- ++(0, 2.2mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
-
-  % Lane 4: AVS
-  \node[lane, below=4.8mm of l3] (l4) {AVS};
-  \node[pbox, right=3mm of l4] (a1) {ad-hoc concept};
-  \node[pstage, right=3mm of a1] (a2) {broad WeMM};
-  \node[pstage, right=3mm of a2] (a3) {video diversity};
-  \node[pstage, right=3mm of a3] (a4) {timeline browse};
-  \node[pstage, right=3mm of a4] (a5) {duplicate guard};
-  \node[pbox, right=3mm of a5] (a6) {$\rightarrow$ DRES};
-  \draw[arrow] (a1) -- (a2); \draw[arrow] (a2) -- (a3); \draw[arrow] (a3) -- (a4); \draw[arrow] (a4) -- (a5); \draw[arrow] (a5) -- (a6);
-
-  % Lane 5: VQA
-  \node[lane, below=4.8mm of l4] (l5) {VQA};
-\node[pbox, right=2.5mm of l5] (q1) {question text};
-\node[pstage, right=2.5mm of q1] (q2) {retrieve pool};
-\node[pstage, right=2.5mm of q2] (q3) {real media resolve};
-\node[pstage, right=2.5mm of q3] (q4) {crop + parallel VLM};
-\node[pbox, right=2.5mm of q4] (q5) {answer + evidence};
-\foreach \a/\b in {q1/q2,q2/q3,q3/q4,q4/q5} {\draw[arrow] (\a) -- (\b);}
-
-\node[pfail, below=2.2mm of q4, xshift=1.1cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
-\draw[arrow,dashed] (q3.south) |- (qfail.west);
-\draw[arrow,dashed] (q4.south) -- (qfail.north);
+  \node[pfail, below=2.2mm of q4, xshift=1.1cm] (qfail) {\textbf{Fail-Closed Safe Refusal}: missing / invalid media $\Rightarrow$ \code{UNKNOWN/N/A} (score 0)};
+  \draw[arrow,dashed] (q3.south) |- (qfail.west);
+  \draw[arrow,dashed] (q4.south) -- (qfail.north);
 \end{tikzpicture}%
 }
 \caption{Task-specific execution lanes for the 5 VBS modes. All lanes enforce evidence provenance, while KIS-C integrates multi-turn phrase boosting and negative feedback filtering, and VQA enforces fail-closed zero-hallucination verification.}
