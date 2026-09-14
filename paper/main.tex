@@ -153,7 +153,7 @@ Online text queries undergo Contextual Query Rewriting (CQR) and optional hypoth
 \operatorname{RRF}(d) = \sum_{m \in \mathcal{M}} \frac{w_m}{k + \operatorname{rank}_m(d)}
 \end{equation}
 where $k=60$, followed by temporal coherence boosting across adjacent keyframes ($\pm 15$s) and scene diversification to suppress repetitive frames from the same video. The fast HNSW path returns an initial candidate set in approximately 12.4ms; deeper and exact modes trade additional latency for recall.
-\section{Task-Specific Execution Lanes}
+\subsection{Task-Specific Execution Lanes}
 \label{sec:tasks}
 
 The five official VBS 2027 task routes share candidate identity, media evidence, feedback, and submission primitives, but implement distinct entry and operator policies. As illustrated in Figure~\ref{fig:task-lanes}, KIS-V bypasses text expansion, KIS-T uses hybrid search with parallelized reranking, KIS-C adds multi-turn phrase boosting and negative feedback filtering, AVS enforces cross-video diversity, and VQA enforces fail-closed grounded verification.
@@ -254,9 +254,10 @@ AEGIS implements an adaptive operator console engineered for live competition (F
 \subsection{Experimental Setup and LLM-as-a-Judge Protocol}
 We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.8 Flash (High) ($T=0$), yielding deterministic scoring. In core competition tasks, our full engine achieves an Overall RAG Score of \textbf{94.7/100.0} with \textbf{88.9\%} Recall@1 (100.0\% Recall@5, MRR 0.944). Across a 200-query corpus stress test, our full method maintains an Overall RAG Score of \textbf{76.2/100.0}, with \textbf{57.9\%} Recall@1 (74.7\% Recall@5, MRR 0.665), \textbf{96.7\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety.
 \subsection{Empirical Findings}
+Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling} are internal AEGIS ablations, not comparisons with prior systems. Each row adds one component under the same protocol, isolating the effects of fusion, KIS-C clarification, grounded VQA, concurrency, and precision escalation.
 \begin{table}[t]
 \centering
-\caption{Ablation Study 1 \& 2: Retrieval fusion and multi-turn KIS-C dynamics.}
+\caption{Internal AEGIS ablation studies: retrieval fusion and multi-turn KIS-C dynamics.}
 \label{tab:ablation-retrieval-kisc}
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
@@ -287,7 +288,7 @@ We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual co
 
 \begin{table}[t]
 \centering
-\caption{Ablation Study 3, 4 \& 5: Grounded VQA, concurrency scaling, and precision ladder.}
+\caption{Internal AEGIS ablation studies: grounded VQA, concurrency scaling, and precision ladder.}
 \label{tab:ablation-vqa-scaling}
 \vspace{-2mm}
 \resizebox{0.96\textwidth}{!}{%
@@ -316,12 +317,7 @@ Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & Deterministic & --- & 118.5m
 }
 \vspace{-3mm}
 \end{table}
-As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, controlled ablations validate our system:
-(1)~\textbf{Fusion Lift}: M1 $\to$ M6 raises Recall@1 from 26.3\% to 57.9\% (+31.6\%) and MRR from 0.354 to 0.665;
-(2)~\textbf{Conversational Precision}: CQR with compound $n$-gram boosting reduces ambiguity ($0.84 \to 0.24$) and lifts targets to 85.0\% Recall@1 (MRR 0.910);
-(3)~\textbf{Zero Hallucination}: fail-closed verification attains 96.7\% exact match with 0.0\% hallucination;
-(4)~\textbf{Sub-2s Latency}: multi-threading yields an $8.03\times$ speedup (1.85s); and
-(5)~\textbf{Precision Escalation}: the ladder scales from 12.4ms (97.8\% recall) to 118.5ms (100.0\% recall).
+As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, fusion improves Recall@1 and MRR; KIS-C reduces ambiguity; fail-closed VQA eliminates unsupported answers; parallelism reduces latency; and the precision ladder trades latency for recall.
 \section{Conclusion}
 \label{sec:conclusion}
 AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work includes live DRES rehearsal for the VBS 2027 session at MMM 2027 in Siem Reap, Cambodia, expanded evidence models for marine and surgical collections, tighter retrieval/VLM budget calibration, and compiler-assisted inference optimization.
