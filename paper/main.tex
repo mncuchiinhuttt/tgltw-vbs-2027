@@ -191,14 +191,14 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
   \draw[arrow] (t1) -- (t2); \draw[arrow] (t2) -- (t3); \draw[arrow] (t3) -- (t4); \draw[arrow] (t4) -- (t5); \draw[arrow] (t5) -- (t6);
 
   % Lane 3: KIS-C
-  \node[lane, below=3.8mm of l2] (l3) {KIS-C};
+  \node[lane, below=8mm of l2] (l3) {KIS-C};
   \node[pbox, right=3mm of l3] (c1) {turn + history};
   \node[pstage, right=2.5mm of c1] (c2) {entity CQR};
   \node[popt, right=2.5mm of c2] (c3) {ambiguity test};
   \node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
   \node[pstage, right=2.5mm of c4] (c5) {negative filter};
   \draw[arrow] (c1) -- (c2); \draw[arrow] (c2) -- (c3); \draw[arrow] (c3) -- node[pos=0.5,above,font=\tiny]{$A < 0.7$} (c4); \draw[arrow] (c4) -- (c5);
-  \draw[arrow,dashed] (c5.north) -- ++(0, 2.2mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
+  \draw[arrow,dashed] (c5.north) -- ++(0,5mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
 
   % Lane 4: AVS
   \node[lane, below=3.8mm of l3] (l4) {AVS};
