@@ -1,0 +1,44 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,booktabs,tabularx}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\title{AEGIS Supplementary Material: Evaluation Metrics}
+\author{TGLTW-RMIT}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Purpose}
+This supplementary note defines every metric used in the AEGIS evaluation and ablation tables. Metrics are reported at the query, candidate, answer, or system level as indicated below.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Evaluation metrics used by AEGIS.}
+\label{tab:metrics}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}p{2.6cm} X}
+\toprule
+\textbf{Metric} & \textbf{Level} & \textbf{Definition and interpretation} \\
+\midrule
+Recall@k & Query / retrieval & Fraction of queries whose ground-truth item appears within the first $k$ ranked candidates. We report Recall@1, Recall@5, and Recall@10 where available. \\
+Mean Reciprocal Rank (MRR) & Query / retrieval & Mean of the reciprocal rank of the first relevant result: $\mathrm{MRR}=N^{-1}\sum_i 1/r_i$. Higher is better; it rewards earlier correct candidates. \\
+RRF score & Candidate / fusion & Weighted Reciprocal Rank Fusion score used to combine dense, lexical, and secondary-encoder rankings: $\mathrm{RRF}(d)=\sum_m w_m/(k+\mathrm{rank}_m(d))$. \\
+VQA Exact Match & Answer / VQA & Percentage of questions for which the normalized generated answer exactly matches the reference answer. \\
+VQA faithfulness & Answer / VQA & Percentage of answers supported by the resolved media evidence and the requested visual content. \\
+Hallucination rate & Answer / VQA & Fraction of answers unsupported by valid media evidence or contradicted by the evidence. A fail-closed refusal is not counted as a hallucination. \\
+Ambiguity score & Query / KIS-C & Combined ambiguity signal from Distinct Video Ratio (DVR) and Score Margin Ambiguity (SMA). Lower values indicate stronger convergence after clarification. \\
+Ambiguity reduction & Query / KIS-C & Difference between the initial and final ambiguity scores: $A_{\mathrm{initial}}-A_{\mathrm{final}}$. Higher reduction indicates more effective conversational disambiguation. \\
+Latency (p50/p95) & System / operation & Median or 95th-percentile wall-clock time for the complete measured operation. We report seconds for VLM workflows and milliseconds for retrieval paths. \\
+Throughput (QPS) & System / concurrency & Completed query or candidate-scoring operations per second under the stated worker count. \\
+Recall versus exact & Retrieval / precision ladder & Recall of an approximate HNSW mode relative to the exact brute-force ranking over the same collection. \\
+Overall RAG score & Benchmark / corpus & Aggregate benchmark score combining retrieval quality, grounded answer quality, conversational behavior, and operational measurements under the declared evaluation protocol. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{Reporting conventions}
+All percentages are reported on the evaluated query corpus and collection snapshot. Latency values include only the stages named in the corresponding experiment. Approximate HNSW results and exact brute-force results are compared using the same query vectors and candidate collection. For VQA, missing or invalid provenance produces the explicit fail-closed response \texttt{UNKNOWN/N/A} with zero confidence rather than an unsupported answer.
+
+\end{document}

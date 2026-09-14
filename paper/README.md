@@ -13,8 +13,9 @@ paper/
 ├── figures/           # Thư mục chứa hình ảnh minh họa
 ├── live_server.py     # Live Server preview PDF và recompile theo yêu cầu
 ├── compile.sh         # Script compile nhanh qua terminal
-├── start_server.sh    # Script khởi động Live Server
-└── STRUCTURE_PLAN.md  # Cấu trúc paper và evaluation checklist
+├── start_server.sh              # Local preview launcher
+├── supplementary_metrics.tex   # Supplementary metric definitions for reviewers
+└── STRUCTURE_PLAN.md            # Paper structure and evaluation checklist
 ```
 
 ## Cấu trúc bản draft
