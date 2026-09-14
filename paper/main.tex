@@ -80,7 +80,7 @@ Timed interactive video retrieval requires fast candidate exploration under stri
 
 The Video Browser Showdown (VBS) evaluates interactive video retrieval in a live, timed competitive arena~\cite{lokoc2023vbs,rossetto2025vbs}. Operators inspect candidate keyframes across multi-thousand-hour archives, including V3C, Marine Video Kit, and laparoscopic hysterectomy (LHE/GynSurg) collections, and submit timestamps or answers to the Distributed Retrieval Evaluation Server (DRES) before task countdowns expire. The VBS 2027 protocol spans five official modes: Textual Known-Item Search (KIS-T), Conversational Known-Item Search (KIS-C), Visual Question Answering (VQA), Ad-hoc Video Search (AVS), and Visual Query (KIS-V)~\cite{vbs2027call}.
 
-Recent competitive systems~\cite{jackl2026prak,tran2026niiuit,khan2026exquisitor} show that live retrieval requires sub-second candidate exploration and high-precision discrimination between visually similar scenes. Examples include repetitive shots from the same video, visually similar wedding or marine scenes, and surgical frames with small instrument changes. Existing architectures face three operational bottlenecks:
+Recent competitive systems~\cite{jackl2026prak,tran2026niiuit,khan2026exquisitor} show that live retrieval requires sub-second candidate exploration, such as scanning a short ranked list of timestamped keyframes, comparing near-duplicate shots from the same video, or checking visually similar wedding, marine, or surgical scenes, followed by high-precision discrimination across confusing cases such as adjacent shots with the same people and setting, boats or coastlines with similar layouts, and surgical frames differing only in a small instrument or tissue state. Existing architectures face three operational bottlenecks:
 (1)~\emph{Index Dilution and Semantic Drift}: flat keyframe indexing over millions of frames causes repetitive frames from dominant videos to crowd out relevant candidates;
 (2)~\emph{Conversational Degradation}: multi-turn KIS-C queries lose persistent entity constraints and fail to penalize operator-rejected attributes; and
 (3)~\emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s latency and generate ungrounded answers under timed pressure, incurring severe penalty points.
@@ -191,14 +191,19 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
   \draw[arrow] (t1) -- (t2); \draw[arrow] (t2) -- (t3); \draw[arrow] (t3) -- (t4); \draw[arrow] (t4) -- (t5); \draw[arrow] (t5) -- (t6);
 
   % Lane 3: KIS-C
-  \node[lane, below=8mm of l2] (l3) {KIS-C};
+  \node[lane, below=11mm of l2] (l3) {KIS-C};
   \node[pbox, right=3mm of l3] (c1) {turn + history};
-  \node[pstage, right=2.5mm of c1] (c2) {entity CQR};
-  \node[popt, right=2.5mm of c2] (c3) {ambiguity test};
-  \node[pstage, right=2.5mm of c3] (c4) {n-gram boost};
-  \node[pstage, right=2.5mm of c4] (c5) {negative filter};
-  \draw[arrow] (c1) -- (c2); \draw[arrow] (c2) -- (c3); \draw[arrow] (c3) -- node[pos=0.5,above,font=\tiny]{$A < 0.7$} (c4); \draw[arrow] (c4) -- (c5);
-  \draw[arrow,dashed] (c5.north) -- ++(0,5mm) -| node[pos=0.3,above,font=\tiny]{operator feedback} (c1.north);
+  \node[pstage, right=3mm of c1] (c2) {entity CQR};
+  \node[popt, right=3mm of c2] (c3) {ambiguity test\\[-1pt]\tiny $A < 0.7$};
+  \node[pstage, right=9mm of c3] (c4) {n-gram boost};
+  \node[pstage, right=3mm of c4] (c5) {negative filter};
+  \draw[arrow] (c1) -- (c2); \draw[arrow] (c2) -- (c3);
+  \draw[arrow] (c3) -- (c4);
+  \draw[arrow] (c4) -- (c5);
+  \draw[arrow, dashed] (c5.north) -- ++(0, 4.6mm) coordinate (c5top)
+    -- (c5top -| c1.north) coordinate (c1top)
+    -- (c1.north);
+  \node[font=\tiny, align=right, anchor=east] at ([xshift=-1mm]c1top) {operator\\feedback};
 
   % Lane 4: AVS
   \node[lane, below=3.8mm of l3] (l4) {AVS};
