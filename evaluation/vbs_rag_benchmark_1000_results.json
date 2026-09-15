@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-09-14 17:27:06 UTC",
+  "total_queries": 1000,
+  "overall_rag_score": 77.5,
+  "wall_time_sec": 476.81,
+  "pillar1_retrieval": {
+    "recall_1": 70.4,
+    "recall_5": 76.0,
+    "recall_10": 77.6,
+    "recall_20": 80.1,
+    "mrr": 0.7289,
+    "video_level": {
+      "recall_1": 70.4,
+      "recall_5": 76.3,
+      "mrr": 0.7299
+    }
+  },
+  "pillar2_generation": {
+    "vqa_exact_match": 83.33,
+    "fail_closed_safety_rate": 100.0,
+    "hallucination_rate": 0.0,
+    "vqa_evaluated": 200
+  },
+  "pillar3_conversational": {
+    "kisc_turn_ambiguity_reduction": 0.042,
+    "kisc_final_recall_1": 94.5,
+    "kisc_final_recall_5": 94.5,
+    "kisc_scenarios": 200
+  },
+  "pillar4_telemetry": {
+    "avg_latency_ms": 476.6,
+    "p50_latency_ms": 474.6,
+    "p95_latency_ms": 516.1,
+    "qps": 2.1
+  },
+  "task_breakdown": {
+    "KIS-T": {
+      "count": 400,
+      "recall_1": 68.0,
+      "recall_5": 76.25,
+      "recall_20": 82.25,
+      "mrr": 0.7177,
+      "latency_ms": 477.4
+    },
+    "KIS-C": {
+      "count": 200,
+      "recall_1": 94.5,
+      "recall_5": 94.5,
+      "recall_20": 94.5,
+      "mrr": 0.945,
+      "latency_ms": 479.7
+    },
+    "VQA": {
+      "count": 200,
+      "recall_1": 39.5,
+      "recall_5": 46.5,
+      "recall_20": 52.0,
+      "mrr": 0.4242,
+      "latency_ms": 468.3
+    },
+    "AVS": {
+      "count": 125,
+      "recall_1": 78.4,
+      "recall_5": 80.8,
+      "recall_20": 84.8,
+      "mrr": 0.7914,
+      "latency_ms": 483.8
+    },
+    "KIS-V": {
+      "count": 75,
+      "recall_1": 88.0,
+      "recall_5": 96.0,
+      "recall_20": 97.33,
+      "mrr": 0.9207,
+      "latency_ms": 473.9
+    }
+  }
+}

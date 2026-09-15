@@ -3,7 +3,7 @@
 \usepackage{amsmath,booktabs,tabularx}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\title{AEGIS Supplementary Material: Evaluation Metrics}
+\title{AEGIS Supplementary Material: Terminology, Techniques, and Evaluation Metrics}
 \author{TGLTW-RMIT}
 \date{}
 
@@ -12,6 +12,31 @@
 
 \section*{Purpose}
 This supplementary note defines every metric used in the AEGIS evaluation and ablation tables. Metrics are reported at the query, candidate, answer, or system level as indicated below.
+
+\section*{Terminology and techniques}
+The following entries define the model names, processing tools, retrieval components, and system techniques introduced in the main manuscript and Figure~\ref{fig:system-pipeline}; the table is provided as supplementary material because these terms are implementation details rather than new evaluation metrics.
+\begin{table}[ht]
+\centering
+\small
+\caption{Terminology and techniques used in AEGIS.}
+\label{tab:terminology}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{3.0cm} X}
+\toprule
+\textbf{Term} & \textbf{Category} & \textbf{Meaning and role in AEGIS} \\
+\midrule
+WeMM-Embedding-4B & Multimodal encoder & Tencent image--text embedding model producing unified 2,048-dimensional vectors for visual and textual retrieval. \\
+SigLIP & Vision--language encoder & Complementary visual encoder whose similarity scores provide a second dense retrieval signal. \\
+PP-OCRv6 & OCR system & Optical character recognition pipeline that extracts on-screen text and adds it to the searchable payload. \\
+Whisper / faster-whisper & Speech recognition & Automatic speech recognition used to produce searchable transcripts from video audio. \\
+Qdrant HNSW & Vector index & Approximate nearest-neighbor index for low-latency dense retrieval; HNSW denotes Hierarchical Navigable Small World graphs. \\
+BM25 & Lexical retrieval & Term-weighted full-text ranking over the enriched text payload, complementing dense similarity. \\
+RRF & Rank fusion & Weighted Reciprocal Rank Fusion combining dense, lexical, and secondary-encoder rankings. \\
+CQR / HyDE & Query expansion & Contextual Query Rewriting preserves conversational constraints; Hypothetical Document Embeddings provide an optional expanded retrieval query. \\
+MRL & Representation technique & Matryoshka Representation Learning supports truncated embedding dimensions for speed--recall trade-offs. \\
+Fail-closed VQA & Safety policy & Returns \texttt{UNKNOWN/N/A} when media provenance or visual evidence is unavailable, preventing unsupported answers. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \begin{table}[ht]
 \centering

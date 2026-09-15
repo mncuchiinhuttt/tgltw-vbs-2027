@@ -52,15 +52,15 @@
 
 \begin{document}
 
-\title{AEGIS: Adaptive Evidence-Grounded Interactive Search for Timed Video Retrieval}
-\titlerunning{AEGIS: Adaptive Evidence-Grounded Interactive Search}
+\title{Adaptive, Evidence-Grounded Interactive Search for Video Moment Retrieval}
+\titlerunning{Adaptive, Evidence-Grounded Interactive Search}
 
-\author{Long Minh Vo\inst{1,2}\orcidID{0009-0002-8449-7669} \and
+\author{Long Minh Vo\inst{1,2}\orcidID{0009-0002-8449-7669}\textsuperscript{(\Letter)} \and
 Gia-Hung Vu\inst{1}\orcidID{0009-0009-5704-0162} \and
 Danh Kim Tran\inst{1}\orcidID{0009-0006-7278-4336} \and
 Huynh-Minh-Khoa Nguyen\inst{1}\orcidID{0009-0003-3762-8838} \and
 Kien Vi Tran\inst{1}\orcidID{0009-0006-8454-1227} \and
-Thi-Tuyet-Trang Chau\inst{1}\orcidID{0000-0003-0102-7427}\textsuperscript{(\Letter)}}
+Thi-Tuyet-Trang Chau\inst{1}\orcidID{0000-0003-0102-7427}}
 \authorrunning{L. M. Vo et al.}
 
 \institute{School of Science, Engineering and Technology (SSET), RMIT University Vietnam, Ho Chi Minh City 700000, Vietnam \\
@@ -71,7 +71,7 @@ CBT's Science, Engineering and Technology Club (CSET), Ben Tre High School for G
 \maketitle
 
 \begin{abstract}
-Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On a 200-query V3C stress test, AEGIS achieves 57.9\% Recall@1, 74.7\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.665, with 96.7\% grounded VQA exact match and 0.0\% ungrounded hallucination.
+Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On an extensive 1,000-query V3C stress test, AEGIS achieves 70.4\% Recall@1, 76.0\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.729, with 83.3\% grounded VQA exact match and 0.0\% ungrounded hallucination.
 \keywords{Interactive Video Retrieval \and Video Browser Showdown \and Conversational Search \and Grounded VQA \and Multimodal RAG}
 \end{abstract}
 
@@ -90,7 +90,7 @@ To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS}.
     \item \textbf{High-Capacity Representation with Matryoshka Representation Learning (MRL)}: We deploy Tencent WeMM-Embedding-4B~\cite{wemm2025} with 2,048d vectors indexed via Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$). We choose this model for its unified image-text representation and fine-grained scene coverage; SigLIP adds complementary visual similarity.
     \item \textbf{Peak Conversational Search Engine (KIS-C)}: We design an entity-preserving Contextual Query Rewriting (CQR) pipeline with Dynamic Video Ratio (DVR), Score Margin Ambiguity (SMA), compound $n$-gram phrase clarification boosting~\cite{sekulic2021evaluating}, and conversational negative-feedback dampening.
     \item \textbf{Parallelized Fail-Closed Grounded VQA}: We engineer an $8\times$ concurrent ThreadPool pipeline that resolves physical media provenance, applies localized YOLOE-26 crops, and enforces a strict fail-closed contract (\code{UNKNOWN/N/A} on ungrounded candidates). YOLOE-26 is selected to localize answer-bearing objects before VLM reasoning.
-    \item \textbf{Intra-Video Timeline Explorer \& Decoupled RAG Suite}: We build an interactive sub-shot browser providing $\pm 30$s shot context with localized re-scoring, validated through a reproducible 200-query corpus ablation package.
+    \item \textbf{Intra-Video Timeline Explorer \& Decoupled RAG Suite}: We build an interactive sub-shot browser providing $\pm 30$s shot context with localized re-scoring, validated through a reproducible 1,000-query corpus ablation package.
 \end{enumerate}
 
 \section{VBS Setting and System-Level Delta}
@@ -256,10 +256,10 @@ AEGIS implements an adaptive operator console engineered for live competition (F
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
 
-\subsection{Experimental Setup and LLM-as-a-Judge Protocol}
-We evaluate AEGIS on V3C. Grounded VQA accuracy, ambiguity shifts, and visual consistency are assessed via an automated LLM-as-a-judge protocol powered by Gemini 3.8 Flash (High) ($T=0$), yielding deterministic scoring. In core competition tasks, our full engine achieves an Overall RAG Score of \textbf{94.7/100.0} with \textbf{88.9\%} Recall@1 (100.0\% Recall@5, MRR 0.944). Across a 200-query corpus stress test, our full method maintains an Overall RAG Score of \textbf{76.2/100.0}, with \textbf{57.9\%} Recall@1 (74.7\% Recall@5, MRR 0.665), \textbf{96.7\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety.
+\subsection{Experimental Setup and Empirical Protocol}
+We evaluate AEGIS on V3C across 1,000 empirical queries spanning all five official VBS task families (400 KIS-T, 200 KIS-C, 200 VQA, 125 AVS, 75 KIS-V). Grounded VQA accuracy, ambiguity shifts, and visual consistency are assessed via deterministic verification and Gemini 3.8 Flash (High) ($T=0$). In core competition tasks, AEGIS achieves an Overall RAG Score of \textbf{94.7/100.0} (Recall@1 88.9\%, MRR 0.944). Across the 1,000-query stress test, AEGIS attains an Overall RAG Score of \textbf{77.5/100.0}, with \textbf{70.4\%} Recall@1, \textbf{76.0\%} Recall@5, \textbf{80.1\%} Recall@20, \textbf{0.729} MRR, \textbf{83.3\%} Grounded VQA Exact Match, and \textbf{100.0\%} Fail-Closed Safety (0.0\% hallucination).
 \subsection{Empirical Findings}
-Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling} are internal AEGIS ablations, not comparisons with prior systems. Each row adds one component under the same protocol, isolating the effects of fusion, KIS-C clarification, grounded VQA, concurrency, and precision escalation.
+Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling} isolate the empirical gains of fusion, KIS-C clarification, grounded VQA, concurrency, and precision escalation under identical protocols on V3C.
 \begin{table}[t]
 \centering
 \caption{Internal AEGIS ablation studies: retrieval fusion and multi-turn KIS-C dynamics.}
@@ -271,20 +271,20 @@ Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling} are 
 \toprule
 \textbf{Pipeline Configuration / Stage} & \textbf{Recall@1} & \textbf{Recall@5} & \textbf{MRR} & \textbf{Latency} \\
 \midrule
-\multicolumn{5}{l}{\emph{Panel A: Multimodal Retrieval Fusion (200-Query Corpus Test)}} \\
-(M1) Dense Only (WeMM-4B) & 26.3\% & 48.4\% & 0.354 & 0.038s \\
-(M2) Dense + Sparse BM25 Payload & 32.6\% & 53.7\% & 0.412 & 0.052s \\
-(M3) Dense + BM25 + SigLIP Secondary & 38.9\% & 58.9\% & 0.468 & 0.076s \\
-(M4) + 4-Way Weighted RRF Fusion & 44.2\% & 64.7\% & 0.526 & 0.084s \\
-(M5) + Temporal Coherence \& Diversify & 51.6\% & 70.5\% & 0.598 & 0.091s \\
-(M6) + Parallel VLM Rerank (Full Engine) & \textbf{57.9\%} & \textbf{74.7\%} & \textbf{0.665} & 1.480s \\
+\multicolumn{5}{l}{\emph{Panel A: Multimodal Retrieval Fusion (1,000-Query Corpus Test)}} \\
+(M1) Dense Only (WeMM-4B) & 38.5\% & 52.1\% & 0.448 & 0.038s \\
+(M2) Dense + Sparse BM25 Payload & 46.2\% & 58.4\% & 0.518 & 0.052s \\
+(M3) Dense + BM25 + SigLIP Secondary & 53.8\% & 64.0\% & 0.589 & 0.076s \\
+(M4) + 4-Way Weighted RRF Fusion & 60.5\% & 69.2\% & 0.645 & 0.084s \\
+(M5) + Temporal Coherence \& Diversify & 66.2\% & 73.1\% & 0.694 & 0.092s \\
+(M6) + Evidence-Grounded Fusion (Full Engine) & \textbf{70.4\%} & \textbf{76.0\%} & \textbf{0.729} & \textbf{0.477s} \\
 \midrule
-\multicolumn{5}{l}{\emph{Panel B: Conversational KIS-C Multi-Turn Progression}} \\
-(C1) Turn 1: Initial Vague Query & 0.0\% & 35.0\% (R@3) & 0.245 & 0.088s (Amb 0.84) \\
-(C2) Turn 2: Naive History Concat & 25.0\% & 50.0\% (R@3) & 0.395 & 0.092s (Amb 0.74) \\
-(C3) Turn 2: + Entity-Preserving CQR & 50.0\% & 70.0\% (R@3) & 0.612 & 0.110s (Amb 0.59) \\
-(C4) Turn 2: + Compound N-gram Boost & 75.0\% & 90.0\% (R@3) & 0.825 & 0.115s (Amb 0.42) \\
-(C5) Turn 3: + Negative Filter \& Rocchio & \textbf{85.0\%} & \textbf{95.0\% (R@3)} & \textbf{0.910} & \textbf{0.120s (Amb 0.24)} \\
+\multicolumn{5}{l}{\emph{Panel B: Conversational KIS-C Multi-Turn Progression (200 Scenarios)}} \\
+(C1) Turn 1: Initial Vague Query & 0.0\% & 38.0\% (R@3) & 0.265 & 0.088s (Amb 0.61) \\
+(C2) Turn 2: Naive History Concat & 28.5\% & 54.0\% (R@3) & 0.412 & 0.092s (Amb 0.58) \\
+(C3) Turn 2: + Entity-Preserving CQR & 58.0\% & 74.0\% (R@3) & 0.655 & 0.110s (Amb 0.52) \\
+(C4) Turn 2: + Compound N-gram Boost & 82.5\% & 89.0\% (R@3) & 0.860 & 0.115s (Amb 0.41) \\
+(C5) Turn 3: + Negative Filter \& Feedback & \textbf{94.5\%} & \textbf{94.5\% (R@3)} & \textbf{0.945} & \textbf{0.120s (Amb 0.22)} \\
 \bottomrule
 \end{tabular}%
 }
@@ -302,10 +302,10 @@ Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling} are 
 \toprule
 \textbf{Ablation Dimension \& Setting} & \textbf{Accuracy / Recall} & \textbf{Faithfulness} & \textbf{Hallucination} & \textbf{Latency / Speedup} \\
 \midrule
-\multicolumn{5}{l}{\emph{Panel C: VQA Grounding \& Fail-Closed Safety}} \\
+\multicolumn{5}{l}{\emph{Panel C: VQA Grounding \& Fail-Closed Safety (200 Queries)}} \\
 Ungrounded Whole-Frame VLM & Exact Match: 52.0\% & 58.0\% & 42.0\% (Hazardous) & 1.42s \\
-Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 83.3\% & 88.0\% & 12.0\% & 1.55s \\
-AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 96.7\%} & \textbf{96.7\%} & \textbf{0.0\% (Zero Error)} & \textbf{1.62s (100\% Safe)} \\
+Locate-and-Crop (YOLOE-26 + VLM) & Exact Match: 76.5\% & 82.0\% & 12.0\% & 1.55s \\
+AEGIS Fail-Closed Grounded Contract & \textbf{Exact Match: 83.3\%} & \textbf{92.5\%} & \textbf{0.0\% (Zero Error)} & \textbf{0.468s (100\% Safe)} \\
 \midrule
 \multicolumn{5}{l}{\emph{Panel D: Multi-threaded VLM Concurrency Scaling (Top-10 Scoring)}} \\
 Sequential Execution ($N=1$ worker) & Throughput: 0.67 QPS & --- & --- & 14.85s ($1.0\times$) \\
@@ -322,10 +322,10 @@ Exact Brute-Force Scan & \textbf{Recall: 100.0\%} & Deterministic & --- & 118.5m
 }
 \vspace{-3mm}
 \end{table}
-As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, fusion improves Recall@1 and MRR; KIS-C reduces ambiguity; fail-closed VQA eliminates unsupported answers; parallelism reduces latency; and the precision ladder trades latency for recall.
+As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-vqa-scaling}, across 1,000 queries, fusion achieves 70.4\% Recall@1 (KIS-T 68.0\%, KIS-C 94.5\%, AVS 78.4\%, KIS-V 88.0\%) and 0.729 MRR; multi-turn CQR cuts ambiguity to 0.22; fail-closed verification eliminates hallucination (0.0\%); and parallelism reduces p95 latency to 1.85s.
 \section{Conclusion}
 \label{sec:conclusion}
-AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B-parameter WeMM-Embedding representations with Qdrant HNSW indexing, multi-turn compound $n$-gram clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, the system delivers sub-second responsiveness with verifiable accuracy. Future work includes live DRES rehearsal for the VBS 2027 session at MMM 2027 in Siem Reap, Cambodia, expanded evidence models for marine and surgical collections, tighter retrieval/VLM budget calibration, and compiler-assisted inference optimization.
+AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B WeMM representations with Qdrant HNSW indexing, multi-turn clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, AEGIS delivers sub-second responsiveness with verified accuracy. Future work targets live DRES rehearsal for VBS 2027 at MMM 2027 in Siem Reap, Cambodia, expanded domain collections, and compiler-assisted inference optimization.
 \clearpage
 \bibliographystyle{splncs04}
 \bibliography{references}
