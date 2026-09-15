@@ -29,6 +29,21 @@
 \newcommand{\projectpage}{\url{https://aegis.mncuchiinhuttt.dev/}}
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
 \definecolor{placeholderred}{RGB}{180,0,0}
+
+% Caption styling: smaller font size (footnotesize) as requested
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \footnotesize
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{{\bfseries #1.} #2}%
+  \ifdim \wd\@tempboxa >\hsize
+    {\bfseries #1.} #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+\makeatother
 \tikzset{
   pbox/.style={rounded corners=2pt, draw=black!65, thick, align=center, fill=gray!6, minimum height=6.5mm},
   pstage/.style={rounded corners=2pt, draw=blue!55!black, thick, align=center, fill=blue!5, minimum height=6.5mm},
@@ -434,13 +449,14 @@ The five official VBS 2027 task routes share candidate identity, media evidence,
 
 \paragraph{Interactive Console and Qualitative Demonstrations.}
 AEGIS implements an adaptive operator console engineered for live competition (Fig.~\ref{fig:ui-demo}). The interface routes queries across dedicated workflows: multi-turn dialogue streaming for KIS-C, visual frame matching with side-by-side verification for KIS-V, grounded answer banners with temporal evidence for VQA, and dense candidate galleries for KIS-T and AVS. Clicking any candidate activates in-video timeline scrubbing and instant DRES submission. Live benchmark runs confirm verified Rank~\#1 retrieval across all five official modes: KIS-T (\code{00001.mp4}), KIS-C (\code{00003.mp4}), KIS-V (\code{00008.mp4} @ 98.4\%), grounded VQA (\code{00004.mp4}, \code{"Helicopter"}), and AVS diversity.
+
 \begin{figure}[htbp]
 \centering
-\vspace{-3.5mm}
-\includegraphics[width=0.74\textwidth]{figures/system_ui_demo.pdf}
+\vspace{-2mm}
+\includegraphics[width=\textwidth]{figures/system_ui_demo.pdf}
 \caption{The AEGIS Interactive Operator Console and qualitative task demonstrations across KIS-T, KIS-C, VQA, AVS, and KIS-V.}
 \label{fig:ui-demo}
-\vspace{-4.5mm}
+\vspace{-3.5mm}
 \end{figure}
 \section{Evaluation Protocol and Empirical Results}
 \label{sec:evaluation}
