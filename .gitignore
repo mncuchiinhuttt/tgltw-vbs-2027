@@ -115,3 +115,9 @@ VBS-2026-978-981-95-6963-2.pdf
 .agents/
 /plans/
 plans/
+
+# Local setup automation & guide
+setup_local.sh
+SETUP_LOCAL.md
+*.zip
+webapp/frontend/public/kis_v_sample_*.jpg
