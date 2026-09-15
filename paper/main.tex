@@ -26,7 +26,7 @@
 }
 
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\projectpage}{\href{https://aegis.mncuchiinhuttt.dev/}{project page}}
+\newcommand{\projectpage}{\url{https://aegis.mncuchiinhuttt.dev/}}
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
 \definecolor{placeholderred}{RGB}{180,0,0}
 \tikzset{
@@ -194,7 +194,7 @@ CBT's Science, Engineering and Technology Club (CSET), Ben Tre High School for G
 \maketitle
 
 \begin{abstract}
-Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On an extensive 1,000-query V3C stress test, AEGIS achieves 70.4\% Recall@1, 76.0\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.729, with 83.3\% grounded VQA exact match and 0.0\% ungrounded hallucination. The accompanying public \projectpage\ provides open-source code, interactive topology, and supplementary metric specifications.
+Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On an extensive 1,000-query V3C stress test, AEGIS achieves 70.4\% Recall@1, 76.0\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.729, with 83.3\% grounded VQA exact match and 0.0\% ungrounded hallucination. The accompanying project page (\projectpage) provides open-source code, interactive topology, and supplementary metric specifications.
 \keywords{Interactive Video Retrieval \and Video Browser Showdown \and Conversational Search \and Grounded VQA \and Multimodal RAG}
 \end{abstract}
 
@@ -203,17 +203,17 @@ Timed interactive video retrieval requires fast candidate exploration under stri
 
 The Video Browser Showdown (VBS) evaluates interactive video retrieval in a live, timed competitive arena~\cite{lokoc2023vbs,rossetto2025vbs}. Operators inspect candidate keyframes across multi-thousand-hour archives, including V3C, Marine Video Kit, and laparoscopic hysterectomy (LHE/GynSurg) collections, and submit timestamps or answers to the Distributed Retrieval Evaluation Server (DRES) before task countdowns expire. The VBS 2027 protocol spans five official modes: Textual Known-Item Search (KIS-T), Conversational Known-Item Search (KIS-C), Visual Question Answering (VQA), Ad-hoc Video Search (AVS), and Visual Query (KIS-V)~\cite{vbs2027call}.
 
-Recent competitive systems~\cite{jackl2026prak,tran2026niiuit,khan2026exquisitor} show that live retrieval requires sub-second candidate exploration, such as scanning a short ranked list of timestamped keyframes, comparing near-duplicate shots from the same video, or checking visually similar wedding, marine, or surgical scenes, followed by high-precision discrimination across confusing cases such as adjacent shots with the same people and setting, boats or coastlines with similar layouts, and surgical frames differing only in a small instrument or tissue state. Existing architectures face three operational bottlenecks:
+Recent competitive systems~\cite{jackl2026prak,tran2026niiuit,khan2026exquisitor} show that live retrieval requires sub-second candidate exploration across multi-thousand-hour archives, followed by fine-grained discrimination across visually confusing scenes (e.g., adjacent shots, similar boats, or subtle surgical instrument states). Existing architectures face three operational bottlenecks:
 (1)~\emph{Index Dilution and Semantic Drift}: flat keyframe indexing over millions of frames causes repetitive frames from dominant videos to crowd out relevant candidates;
 (2)~\emph{Conversational Degradation}: multi-turn KIS-C queries lose persistent entity constraints and fail to penalize operator-rejected attributes; and
 (3)~\emph{VLM Latency and Hallucination}: sequential vision-language model calls incur 10--15s latency and generate ungrounded answers under timed pressure, incurring severe penalty points.
 
 To address these challenges, team \textbf{TGLTW-RMIT} introduces \textbf{AEGIS}. Our technical contributions directly target each bottleneck:
-\begin{enumerate}\setlength{\itemsep}{1.2pt}\setlength{\parskip}{0pt}
-    \item \textbf{High-Capacity Representation (Bottleneck 1)}: To mitigate index dilution and dominant-video clutter, we deploy Tencent WeMM-Embedding-4B~\cite{wemm2025} (2,048d MRL) with Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$), combined with SigLIP visual embeddings and temporal scene diversification.
-    \item \textbf{Entity CQR Engine (Bottleneck 2)}: To resolve conversational degradation, we design an entity-preserving Contextual Query Rewriting pipeline with Dynamic Video Ratio, Score Margin Ambiguity, compound $n$-gram clarification boosting~\cite{sekulic2021evaluating}, and negative-feedback dampening against rejected attributes.
-    \item \textbf{Parallel Fail-Closed VQA (Bottleneck 3)}: To eliminate VLM latency and hallucination penalties, we engineer an $8\times$ concurrent ThreadPool pipeline ($8.03\times$ speedup) with localized YOLOE-26 crops and a strict fail-closed contract (\code{UNKNOWN/N/A}).
-    \item \textbf{Intra-Video Timeline \& Benchmark}: To resolve temporal boundary ambiguities, we provide an interactive $\pm 30$s sub-shot timeline explorer with localized re-scoring, validated via an open 1,000-query corpus ablation suite on V3C.
+\begin{enumerate}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+    \item \textbf{High-Capacity Representation (Bottleneck 1)}: To mitigate index dilution and dominant-video clutter, we deploy Tencent WeMM-4B~\cite{wemm2025} (2,048d MRL) with Qdrant HNSW~\cite{malkov2018efficient,qdrant} ($M=16, ef=128$), combined with SigLIP visual embeddings and temporal scene diversification.
+    \item \textbf{Entity CQR Engine (Bottleneck 2)}: To resolve conversational degradation, we design an entity-preserving CQR pipeline with Dynamic Video Ratio, Score Margin Ambiguity, compound $n$-gram clarification boosting~\cite{sekulic2021evaluating}, and negative-feedback dampening.
+    \item \textbf{Parallel Fail-Closed VQA (Bottleneck 3)}: To eliminate VLM latency and hallucination penalties, we engineer an $8\times$ concurrent ThreadPool ($8.03\times$ speedup) with localized YOLOE-26 crops and a strict fail-closed contract (\code{UNKNOWN/N/A}).
+    \item \textbf{Intra-Video Timeline \& Benchmark}: To resolve boundary ambiguities, we provide an interactive $\pm 30$s sub-shot timeline explorer with localized re-scoring, validated on an open 1,000-query V3C ablation suite.
 \end{enumerate}
 
 \section{VBS Setting and System-Level Delta}
