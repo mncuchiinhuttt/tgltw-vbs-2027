@@ -31,6 +31,7 @@ import { AuditHistoryView } from "@/components/AuditHistoryView"
 import { RAGBenchmarkWorkspace } from "@/components/RAGBenchmarkWorkspace"
 import { VQAWorkspace } from "@/components/VQAWorkspace"
 import { KISVWorkspace } from "@/components/KISVWorkspace"
+import { KISTWorkspace } from "@/components/KISTWorkspace"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ""
 // -------------------------------------------------------------
 // NAVIGATION COMPONENT
@@ -841,6 +842,18 @@ function SearchView() {
                   setKisVideoFile(null)
                   setResults([])
                 }}
+              />
+            ) : taskMode === "kis-t" ? (
+              <KISTWorkspace
+                query={query}
+                results={results}
+                onPlay={(name, time, frameIdx) => setSelectedVideo({ name, time, frameIdx })}
+                onInspect={(h, i) => setInspectingHit({ hit: h, rank: i })}
+                onSubmitToDres={handleSubmitToDres}
+                onFeedback={handleFeedback}
+                onUseAsQuery={handleUseAsQuery}
+                onInVideoSearch={handleInVideoSearch}
+                onBrowseVideo={handleBrowseVideo}
               />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5">
