@@ -71,7 +71,7 @@ CBT's Science, Engineering and Technology Club (CSET), Ben Tre High School for G
 \maketitle
 
 \begin{abstract}
-Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On an extensive 1,000-query V3C stress test, AEGIS achieves 70.4\% Recall@1, 76.0\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.729, with 83.3\% grounded VQA exact match and 0.0\% ungrounded hallucination.
+Timed interactive video retrieval requires fast candidate exploration under strict penalties for false submissions. In this work, we introduce \textbf{AEGIS} (\textbf{A}daptive \textbf{E}vidence-\textbf{G}rounded \textbf{I}nteractive \textbf{S}earch), a new evidence-grounded interactive video retrieval system for the Video Browser Showdown (VBS 2027). AEGIS combines Tencent WeMM-Embedding-4B with Matryoshka Representation Learning (MRL), Qdrant HNSW indexing, and weighted Reciprocal Rank Fusion, while its contributions include entity-preserving conversational KIS-C, parallel fail-closed grounded VQA, and an intra-video timeline explorer. On an extensive 1,000-query V3C stress test, AEGIS achieves 70.4\% Recall@1, 76.0\% Recall@5, and a Mean Reciprocal Rank (MRR) of 0.729, with 83.3\% grounded VQA exact match and 0.0\% ungrounded hallucination. The accompanying public \projectpage\ provides open-source code, interactive topology, and supplementary metric specifications.
 \keywords{Interactive Video Retrieval \and Video Browser Showdown \and Conversational Search \and Grounded VQA \and Multimodal RAG}
 \end{abstract}
 
@@ -326,7 +326,7 @@ As documented in Tables~\ref{tab:ablation-retrieval-kisc} and~\ref{tab:ablation-
 \section{Conclusion}
 \label{sec:conclusion}
 AEGIS introduces an evidence-carrying, live-first multimodal retrieval architecture for VBS 2027. By coupling 4B WeMM representations with Qdrant HNSW indexing, multi-turn clarification boosting, fail-closed grounded VQA, and interactive timeline exploration, AEGIS delivers sub-second responsiveness with verified accuracy. Future work targets live DRES rehearsal for VBS 2027 at MMM 2027 in Siem Reap, Cambodia, expanded domain collections, and compiler-assisted inference optimization.
-\clearpage
+
 \bibliographystyle{splncs04}
 \bibliography{references}
 \end{document}
